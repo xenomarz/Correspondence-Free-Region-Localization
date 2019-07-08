@@ -7,9 +7,12 @@
 #include <igl/opengl/glfw/imgui/ImGuiHelpers.h>
 #include <imgui/imgui.h>
 #include <plugins/basic-menu/include/basic-menu.h>
+#include <iostream>
 
-#define MODEL1_PATH "..\\..\\..\\models\\cube.off"
-#define MODEL2_PATH "..\\..\\..\\models\\cube.off"
+using namespace std;
+
+#define MODEL1_PATH "..\\..\\..\\models\\wolf.obj"
+#define MODEL2_PATH "..\\..\\..\\models\\cow.obj"
 
 int main(int argc, char * argv[])
 {
@@ -21,12 +24,12 @@ int main(int argc, char * argv[])
 	unsigned int left_view, right_view;
 	int model1_id = viewer.data_list[0].id;
 	int model2_id = viewer.data_list[1].id;
+
 	viewer.callback_init = [&](igl::opengl::glfw::Viewer &)
 	{
 		viewer.core().viewport = Eigen::Vector4f(0, 0, 640, 800);
 		left_view = viewer.core_list[0].id;
 		right_view = viewer.append_core(Eigen::Vector4f(640, 0, 640, 800));
-
 		viewer.data(model1_id).set_visible(false, left_view);
 		viewer.data(model2_id).set_visible(false, right_view);
 
@@ -34,8 +37,15 @@ int main(int argc, char * argv[])
 	};
 
 	viewer.callback_post_resize = [&](igl::opengl::glfw::Viewer &v, int w, int h) {
-		v.core(left_view).viewport = Eigen::Vector4f(0, 0, w / 2, h);
-		v.core(right_view).viewport = Eigen::Vector4f(w / 2, 0, w - (w / 2), h);
+		cout << v.core_list.size() << endl;
+		if (v.core_list.size() == 1) {
+			v.core().viewport = Eigen::Vector4f(0, 0, w, h);
+		}
+		else if (v.core_list.size() == 2) {
+			v.core(left_view).viewport = Eigen::Vector4f(0, 0, w / 2, h);
+			v.core(right_view).viewport = Eigen::Vector4f(w / 2, 0, w - (w / 2), h);
+		}
+		
 		return true;
 	};
 

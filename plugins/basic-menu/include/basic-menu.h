@@ -12,9 +12,8 @@ namespace rds
 		class BasicMenu : public igl::opengl::glfw::imgui::ImGuiMenu
 		{
 		protected:
-			unsigned int core_id_;
-			igl::opengl::ViewerCore* viewer_core_;
 			std::map<unsigned int, std::string> data_id_to_name;
+			bool test_bool;
 
 		public:
 			BasicMenu();

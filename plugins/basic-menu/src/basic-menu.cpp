@@ -12,7 +12,9 @@
 #include <algorithm>
 #include <sstream>
 #include <string>
+#include <iostream>
 
+using namespace std;
 namespace rds
 {
 	namespace plugins
@@ -34,17 +36,70 @@ namespace rds
 				);
 			};
 
+			// Mesh
+			if (ImGui::CollapsingHeader("Mesh", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				float w = ImGui::GetContentRegionAvailWidth();
+				float p = ImGui::GetStyle().FramePadding.x;
+				if (ImGui::Button("Load##Mesh", ImVec2((w - p) / 2.f, 0)))
+				{
+					viewer->open_dialog_load_mesh();
+				}
+				ImGui::SameLine(0, p);
+				if (ImGui::Button("Save##Mesh", ImVec2((w - p) / 2.f, 0)))
+				{
+					viewer->open_dialog_save_mesh();
+				}
+			}
+
+			if (ImGui::Checkbox("Test", &test_bool))
+			{
+			}
+
+			if (!test_bool)
+			{
+				/*cout << viewer->core_list.size() << endl;
+
+				unsigned int left_view, right_view;
+				int model1_id = viewer->data_list[0].id;
+				int model2_id = viewer->data_list[1].id;
+				viewer->core().viewport = Eigen::Vector4f(0, 0, 640, 800);
+				left_view = viewer->core_list[0].id;
+				*/
+				//viewer->append_core(Eigen::Vector4f(640, 0, 640, 800));
+				unsigned int id = viewer->core_list[0].id;
+				int index = viewer->core_index(id);
+				
+				
+				cout << viewer->erase_core(index) << endl;
+				test_bool = !test_bool;
+				//viewer->erase_core(viewer->core_list[1].id);
+
+				/*cout << viewer->core_list.size() << endl;
+
+				
+
+				viewer->data(model1_id).set_visible(false, left_view);
+				viewer->data(model2_id).set_visible(false, right_view);*/
+			}
+
+			
+
 			for (auto& core : viewer->core_list)
 			{
 				ImGui::PushID(core.id);
+
 				std::stringstream ss;
 				ss << "Core " << core.id;
+
 				if (ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					ImGui::ColorEdit4("Background", core.background_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 				}
+
 				ImGui::PopID();
 			}
+			
 
 			for (auto& data : viewer->data_list)
 			{
