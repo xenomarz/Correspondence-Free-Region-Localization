@@ -8,8 +8,8 @@
 #include <imgui/imgui.h>
 #include <plugins/basic-menu/include/basic-menu.h>
 
-#define MODEL1_PATH "..\\..\\..\\models\\cow.obj"
-#define MODEL2_PATH "..\\..\\..\\models\\wolf.obj"
+#define MODEL1_PATH "..\\..\\..\\models\\cube.off"
+#define MODEL2_PATH "..\\..\\..\\models\\cube.off"
 
 int main(int argc, char * argv[])
 {
