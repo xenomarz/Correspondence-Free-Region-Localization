@@ -5,6 +5,10 @@
 #include <igl/igl_inline.h>
 #include <map>
 
+// Expose an enumeration type
+enum Orientation { Two_views = 0, Left_view, Right_view };
+static Orientation view;
+
 namespace rds
 {
 	namespace plugins
@@ -13,12 +17,16 @@ namespace rds
 		{
 		protected:
 			std::map<unsigned int, std::string> data_id_to_name;
-			bool test_bool;
+			
 
 		public:
+			int show_models[2];
+			bool test_bool;
 			BasicMenu();
 			IGL_INLINE virtual void draw_viewer_menu() override;
 			void set_name_mapping(unsigned int data_id, std::string name);
+			
+			char* getModelNames();
 		};
 	}
 }
