@@ -1,24 +1,11 @@
 #include <basic-menu/include/basic-menu.h>
-#include <igl/opengl/glfw/imgui/ImGuiHelpers.h>
-#include <igl/project.h>
-#include <imgui/imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#include <imgui_fonts_droid_sans.h>
-#include <GLFW/glfw3.h>
-#include <igl/opengl/glfw/Viewer.h>
-#include <igl/opengl/glfw/ViewerPlugin.h>
-#include <igl/igl_inline.h>
-#include <algorithm>
-#include <sstream>
-#include <string>
-#include <iostream>
-#include <igl/unproject_in_mesh.h>
-#include <igl/Hit.h>
-#include <igl/rotate_by_quat.h>
-#include <memory>
 
-using namespace std;
+#define RED_COLOR Eigen::Vector3d(1, 0, 0)
+#define BLUE_COLOR Eigen::Vector3d(0, 0, 1)
+#define GREEN_COLOR Eigen::Vector3d(0, 1, 0)
+#define GOLD_COLOR Eigen::Vector3d(1, 215.0f / 255.0f, 0)
+
+
 namespace rds
 {
 	namespace plugins
@@ -26,12 +13,17 @@ namespace rds
 		BasicMenu::BasicMenu() :
 			igl::opengl::glfw::imgui::ImGuiMenu()
 		{
-			show_models[0] = 1;
-			show_models[1] = 0;
+			ShowModelIndex = 0;
+			param_type = HARMONIC;
 			test_bool = 0;
-			set_name_mapping(0,"wolf");
-			set_name_mapping(1,"cow");
-			set_name_mapping(2,"cube");
+			//set_name_mapping(0,"wolf");
+			//set_name_mapping(1,"cow");
+			//set_name_mapping(2,"cube");
+			onMouse_triangle_color = RED_COLOR;
+			selected_faces_color = BLUE_COLOR;
+			selected_vertices_color = GREEN_COLOR;
+			model_color = GOLD_COLOR;
+			mouse_mode = NONE;
 			
 		}
 
@@ -53,19 +45,15 @@ namespace rds
 				float p = ImGui::GetStyle().FramePadding.x;
 				if (ImGui::Button("Load##Mesh", ImVec2((w - p) / 2.f, 0)))
 				{
-					viewer->open_dialog_load_mesh();
-					for (auto& core : viewer->core_list)
+					//Load new model that has two copies
+					std::string fname = igl::file_dialog_open();
+					if (fname.length() != 0)
 					{
-						for (auto& data : viewer->data_list)
-						{
-							viewer->data(data.id).set_visible(false, core.id);
-						}
-						viewer->data(show_models[core.id - 1]).set_visible(true, core.id);
-						Eigen::MatrixXd V = viewer->data(show_models[core.id - 1]).V;
-						Eigen::MatrixXi F = viewer->data(show_models[core.id - 1]).F;
-						core.align_camera_center(V, F);
+						viewer->load_mesh_from_file(fname.c_str());
+						viewer->load_mesh_from_file(fname.c_str());
 					}
-
+					///////////////
+					Update_view();
 				}
 				ImGui::SameLine(0, p);
 				if (ImGui::Button("Save##Mesh", ImVec2((w - p) / 2.f, 0)))
@@ -74,22 +62,68 @@ namespace rds
 				}
 			}
 
-			if (ImGui::Checkbox("Test", &test_bool))
+			
+			//For the first time compute harmonic param.
+			static int once = true;
+			if (once)
 			{
+				compute_harmonic_param(1);
+				once = false;
 			}
 
-			
 
+			float col[3] = { onMouse_triangle_color[0] , onMouse_triangle_color[1] ,onMouse_triangle_color[2] };
+			ImGui::ColorEdit3("Follow face colors", col, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			onMouse_triangle_color << col[0], col[1], col[2];
+
+			col[0] = selected_faces_color[0]; col[1] = selected_faces_color[1]; col[2] = selected_faces_color[2];
+			ImGui::ColorEdit3("selected faces color", col, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			selected_faces_color << col[0], col[1], col[2];
+
+			col[0] = selected_vertices_color[0]; col[1] = selected_vertices_color[1]; col[2] = selected_vertices_color[2];
+			ImGui::ColorEdit3("selected vertices color", col, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			selected_vertices_color << col[0], col[1], col[2];
 			
+			col[0] = model_color[0]; col[1] = model_color[1]; col[2] = model_color[2];
+			ImGui::ColorEdit3("model color", col, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			model_color << col[0], col[1], col[2];
+
+
 			Orientation prev_view = view;
 			ImGui::Combo("View", (int *)(&view), "Two views\0Left view\0Right view\0\0");
+
+			MouseMode prev_mouse_mode = mouse_mode;
+			ImGui::Combo("Mouse Mode", (int *)(&mouse_mode), "NONE\0FACE_SELECT\0VERTEX_SELECT\0CLEAR\0\0");
+
+			Parametrization prev_param_type = param_type;
+			ImGui::Combo("Parametrization type", (int *)(&param_type), "HARMONIC\0LSCM\0ARAP\0\0");
+
+			//when a change occured on mouse mode
+			if (prev_mouse_mode != mouse_mode) {
+				if (mouse_mode == CLEAR) {
+					selected_faces.clear();
+					selected_vertices.clear();
+				}
+			}
 			
+			//when a change occured on parametrization type
+			if (prev_param_type != param_type) {
+				if (param_type == HARMONIC) {
+					compute_harmonic_param(CurrmodelID(Right));
+				}
+				else if (param_type == LSCM) {
+					compute_lscm_param(CurrmodelID(Right));
+				}
+				else {
+					compute_ARAP_param(CurrmodelID(Right));
+				}
+			}
 
 			// That's how you get the current width/height of the frame buffer (for example, after the window was resized)
 			int frameBufferWidth, frameBufferHeight;
 			static int prev_width = 0, prev_height = 0;
 			glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
-			
+
 
 			//when a change occured on view mode
 			if (prev_view != view) {
@@ -107,92 +141,33 @@ namespace rds
 				}
 			}
 
-			
-			
+			int prev_model = ShowModelIndex;
+			ImGui::Combo("Choose model", (int *)(&ShowModelIndex), getModelNames(), IM_ARRAYSIZE(getModelNames()));
+
+			//if a the mesh is changes then update the view
+			if (prev_model != ShowModelIndex) {
+				Update_view();
+			}
 
 			for (auto& core : viewer->core_list)
 			{
 				ImGui::PushID(core.id);
-
 				std::stringstream ss;
 				ss << "Core " << core.id;
-
 				if (ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					char* items = getModelNames();
 					ImGui::ColorEdit4("Background", core.background_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-					
-					int prev_model = show_models[core.id - 1];
-					ImGui::Combo("Choose model", (int *)(&show_models[core.id-1]), items, IM_ARRAYSIZE(items));
-					if (prev_model != show_models[core.id - 1]) {
-						for (auto& data : viewer->data_list)
-						{
-							viewer->data(data.id).set_visible(false, core.id);
-						}
-						viewer->data(show_models[core.id - 1]).set_visible(true, core.id);
-						Eigen::MatrixXd V = viewer->data(show_models[core.id - 1]).V;
-						Eigen::MatrixXi F = viewer->data(show_models[core.id - 1]).F;
-						core.align_camera_center(V, F);
-					}
 				}
-
-				if (test_bool) {
-					////////////////////////
-					int down_mouse_x = viewer->current_mouse_x;
-					int down_mouse_y = viewer->current_mouse_y;
-
-					Eigen::MatrixXd V = viewer->data(show_models[core.id - 1]).V;
-					Eigen::MatrixXi F = viewer->data(show_models[core.id - 1]).F;
-
-
-
-					//////////////////////////////////////////////////////////////////
-					//int f = pick_face(viewer, down_mouse_x, down_mouse_y, V, F);
-
-					double x = down_mouse_x;
-					double y = core.viewport(3) - down_mouse_y;
-
-					Eigen::RowVector3d pt;
-
-					Eigen::Matrix4f modelview = core.view;
-					int vi = -1;
-
-					std::vector<igl::Hit> hits;
-
-					igl::unproject_in_mesh(Eigen::Vector2f(x, y), core.view,
-						core.proj, core.viewport, V, F, pt, hits);
-
-					int f = -1;
-					if (hits.size() > 0) {
-						f = hits[0].id;
-					}
-					/////////////////////////////////////////////////////////////////
-
-					if (f != -1)
-					{
-						//selected_faces.insert(f);
-						//selected_v = -1;
-						Eigen::MatrixXd colors_per_face;
-						colors_per_face.resize(F.rows(), 3);
-						for (int i = 0; i < colors_per_face.rows(); i++)
-						{
-							colors_per_face.row(i) << 1, 215.0f / 255.0f, 0;
-						}
-						colors_per_face.row(f) << 1, 0, 0;
-						viewer->data(show_models[core.id - 1]).set_colors(colors_per_face);
-					}
-				}
-				
-
 				ImGui::PopID();
 			}
-			
+
+			follow_and_mark_selected_faces();
 
 			for (auto& data : viewer->data_list)
 			{
 				ImGui::PushID(data.id);
 				std::stringstream ss;
-				
+
 				if (data_id_to_name.count(data.id) > 0)
 				{
 					ss << data_id_to_name[data.id];
@@ -219,13 +194,115 @@ namespace rds
 			}
 		}
 
+
+		void BasicMenu::Update_view() {
+			for (auto& core : viewer->core_list)
+			{
+				for (auto& data : viewer->data_list)
+				{
+					viewer->data(data.id).set_visible(false, core.id);
+				}
+			}
+			viewer->data(CurrmodelID(Left)).set_visible(true, viewer->core(Left + 1).id);
+			viewer->core(Left + 1).align_camera_center(viewer->data(CurrmodelID(Left)).V, viewer->data(CurrmodelID(Left)).F);
+
+			viewer->data(CurrmodelID(Right)).set_visible(true, viewer->core(Right + 1).id);
+			viewer->core(Right + 1).align_camera_center(viewer->data(CurrmodelID(Right)).V, viewer->data(CurrmodelID(Right)).F);
+		}
+
+		void BasicMenu::follow_and_mark_selected_faces() {
+			//check if there faces which is selected on the left screen
+			int f = pick_face(viewer->data(CurrmodelID(Left)).V, viewer->data(CurrmodelID(Left)).F, Left);
+			if (f == -1) {
+				//check if there faces which is selected on the right screen
+				f = pick_face(viewer->data(CurrmodelID(Right)).V, viewer->data(CurrmodelID(Right)).F, Right);
+			}
+
+			if (f != -1)
+			{
+
+
+				colors_per_face.resize(viewer->data(CurrmodelID(Left)).F.rows(), 3);
+				for (int i = 0; i < colors_per_face.rows(); i++)
+				{
+					colors_per_face.row(i) = model_color;
+				}
+				//Mark the selected faces
+				colors_per_face.row(f) = onMouse_triangle_color;
+				for (auto fi : selected_faces) { colors_per_face.row(fi) = selected_faces_color; }
+
+				//Mark the selected vert
+				Eigen::MatrixXd P_Left;
+				Eigen::MatrixXd P_Right;
+				Eigen::MatrixXd C;
+				P_Left.resize(selected_vertices.size(), 3);
+				P_Right.resize(selected_vertices.size(), 3);
+				C.resize(selected_vertices.size(), 3);
+				int idx = 0;
+				for (auto vi : selected_vertices) {
+					P_Left.row(idx) = viewer->data(CurrmodelID(Left)).V.row(vi);
+					C.row(idx) = selected_vertices_color;
+					P_Right.row(idx) = viewer->data(CurrmodelID(Right)).V.row(vi);
+				}
+				viewer->data(CurrmodelID(Left)).set_points(P_Left, C);
+				viewer->data(CurrmodelID(Right)).set_points(P_Right, C);
+
+				//Update the model's faces colors in the two screens
+				viewer->data(CurrmodelID(Left)).set_colors(colors_per_face);
+				viewer->data(CurrmodelID(Right)).set_colors(colors_per_face);
+			}
+		}
+
+		bool BasicMenu::mouse_down(int button, int modifier) {
+			if (mouse_mode == FACE_SELECT)
+			{
+				//check if there faces which is selected on the left screen
+				int f = pick_face(viewer->data(CurrmodelID(Left)).V, viewer->data(CurrmodelID(Left)).F, Left);
+				if (f == -1) {
+					//check if there faces which is selected on the right screen
+					f = pick_face(viewer->data(CurrmodelID(Right)).V, viewer->data(CurrmodelID(Right)).F, Right);
+				}
+
+				if (f != -1)
+				{
+					selected_faces.insert(f);
+				}
+
+			}
+			else if (mouse_mode == VERTEX_SELECT)
+			{
+				MatrixXd vertices;
+				//check if there faces which is selected on the left screen
+				int v = pick_vertex(viewer->data(CurrmodelID(Left)).V, viewer->data(CurrmodelID(Left)).F, Left);
+				vertices = viewer->data(CurrmodelID(Left)).V;
+				if (v == -1) {
+					//check if there faces which is selected on the right screen
+					v = pick_vertex(viewer->data(CurrmodelID(Right)).V, viewer->data(CurrmodelID(Right)).F, Right);
+					vertices = viewer->data(CurrmodelID(Right)).V;
+				}
+
+				if (v != -1)
+				{
+					selected_vertices.insert(v);
+				}
+			}
+
+			return false;
+		}
+	
 		void BasicMenu::set_name_mapping(unsigned int data_id, std::string name)
 		{
 			data_id_to_name[data_id] = name;
 		}
 
-		
-
+		int BasicMenu::CurrmodelID(View LR) {
+			if (LR == Right) {
+				return (2 * ShowModelIndex) + 1;
+			}
+			else {
+				return 2 * ShowModelIndex;
+			}
+		}
 
 		char* BasicMenu::getModelNames()
 		{
@@ -233,20 +310,20 @@ namespace rds
 			for (auto& data : viewer->data_list)
 			{
 				std::stringstream ss;
-				if (data_id_to_name.count(data.id) > 0)
-				{
-					ss << data_id_to_name[data.id];
+				if (data.id % 2 == 0) {
+					if (data_id_to_name.count(data.id) > 0)
+					{
+						ss << data_id_to_name[data.id];
+					}
+					else
+					{
+						ss << "Model " << data.id;
+					}
+					cStr += ss.str().c_str();
+					cStr += " ";
+					cStr += '\0';
 				}
-				else
-				{
-					ss << "Model " << data.id;
-				}
-
-				//char curr_name = data.id + '0';
 				
-				cStr += ss.str().c_str();
-				cStr += " ";
-				cStr += '\0';
 			}
 			cStr += '\0';
 
@@ -259,20 +336,20 @@ namespace rds
 			return comboList;
 		}
 
-		int pick_face(igl::opengl::glfw::Viewer* viewer, int mouse_x, int mouse_y, const Eigen::MatrixXd& V, const Eigen::MatrixXi& F) {
+		int BasicMenu::pick_face(Eigen::MatrixXd& V,Eigen::MatrixXi& F, View LR) {
 			// Cast a ray in the view direction starting from the mouse position
-			double x = mouse_x;
-			double y = viewer->core().viewport(3) - mouse_y;
+			double x = viewer->current_mouse_x;
+			double y = viewer->core(LR+1).viewport(3) - viewer->current_mouse_y;
 
 			Eigen::RowVector3d pt;
 
-			Eigen::Matrix4f modelview = viewer->core().view;
+			Eigen::Matrix4f modelview = viewer->core(LR+1).view;
 			int vi = -1;
 
 			std::vector<igl::Hit> hits;
 
-			igl::unproject_in_mesh(Eigen::Vector2f(x, y), viewer->core().view,
-				viewer->core().proj, viewer->core().viewport, V, F, pt, hits);
+			igl::unproject_in_mesh(Eigen::Vector2f(x, y), viewer->core(LR+1).view,
+				viewer->core(LR+1).proj, viewer->core(LR+1).viewport, V, F, pt, hits);
 
 			int fi = -1;
 			if (hits.size() > 0) {
@@ -280,6 +357,32 @@ namespace rds
 			}
 			return fi;
 		}
+
+		int BasicMenu::pick_vertex(Eigen::MatrixXd& V, Eigen::MatrixXi& F,View LR) {
+			// Cast a ray in the view direction starting from the mouse position
+			double x = viewer->current_mouse_x;
+			double y = viewer->core(LR + 1).viewport(3) - viewer->current_mouse_y;
+
+			Eigen::RowVector3d pt;
+
+			Eigen::Matrix4f modelview = viewer->core(LR + 1).view;
+			int vi = -1;
+
+			std::vector<igl::Hit> hits;
+			
+			igl::unproject_in_mesh(Eigen::Vector2f(x, y), viewer->core(LR + 1).view,
+				viewer->core(LR + 1).proj, viewer->core(LR + 1).viewport, V, F, pt, hits);
+
+			if (hits.size() > 0) {
+				int fi = hits[0].id;
+				Eigen::RowVector3d bc;
+				bc << 1.0 - hits[0].u - hits[0].v, hits[0].u, hits[0].v;
+				bc.maxCoeff(&vi);
+				vi = F(fi, vi);
+			}
+			return vi;
+		}
+
 		void draw_menu(igl::opengl::glfw::Viewer* viewer) {
 			// Viewing options
 			if (ImGui::CollapsingHeader("Viewing Options", ImGuiTreeNodeFlags_DefaultOpen))
@@ -369,5 +472,115 @@ namespace rds
 				ImGui::Checkbox("Show faces labels", &(viewer->data().show_faceid));
 			}
 		}
+	
+
+		void BasicMenu::compute_ARAP_param(int model_index) {
+			// Compute the initial solution for ARAP (harmonic parametrization)
+			Eigen::VectorXi bnd;
+			Eigen::MatrixXd V_uv, initial_guess;
+
+			igl::boundary_loop(viewer->data(model_index).F, bnd);
+			Eigen::MatrixXd bnd_uv;
+			igl::map_vertices_to_circle(viewer->data(model_index).V, bnd, bnd_uv);
+
+			igl::harmonic(viewer->data(model_index).V, viewer->data(model_index).F, bnd, bnd_uv, 1, initial_guess);
+
+			// Add dynamic regularization to avoid to specify boundary conditions
+			igl::ARAPData arap_data;
+			arap_data.with_dynamics = true;
+			Eigen::VectorXi b = Eigen::VectorXi::Zero(0);
+			Eigen::MatrixXd bc = Eigen::MatrixXd::Zero(0, 0);
+
+			// Initialize ARAP
+			arap_data.max_iter = 100;
+			// 2 means that we're going to *solve* in 2d
+			arap_precomputation(viewer->data(model_index).V, viewer->data(model_index).F, 2, b, arap_data);
+
+
+			// Solve arap using the harmonic map as initial guess
+			V_uv = initial_guess;
+
+			arap_solve(bc, arap_data, V_uv);
+
+
+			// Scale UV to make the texture more clear
+			V_uv *= 20;
+
+
+			// Plot the mesh
+			viewer->data(model_index).set_mesh(viewer->data(model_index).V, viewer->data(model_index).F);
+			viewer->data(model_index).set_uv(V_uv);
+
+			viewer->data(model_index).set_mesh(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+
+			viewer->data(model_index).compute_normals();
+
+			
+			viewer->core(2).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+
+			// Draw checkerboard texture
+			viewer->data(model_index).show_texture = true;
+		}
+
+		void BasicMenu::compute_harmonic_param(int model_index) {
+			// Find the open boundary
+			Eigen::VectorXi bnd;
+			Eigen::MatrixXd V_uv;
+			igl::boundary_loop(viewer->data(model_index).F, bnd);
+
+			// Map the boundary to a circle, preserving edge proportions
+			Eigen::MatrixXd bnd_uv;
+			igl::map_vertices_to_circle(viewer->data(model_index).V, bnd, bnd_uv);
+
+			// Harmonic parametrization for the internal vertices
+			igl::harmonic(viewer->data(model_index).V, viewer->data(model_index).F, bnd, bnd_uv, 1, V_uv);
+
+			// Scale UV to make the texture more clear
+			V_uv *= 5;
+
+			// Plot the mesh
+			viewer->data(model_index).set_mesh(viewer->data(model_index).V, viewer->data(model_index).F);
+			viewer->data(model_index).set_uv(V_uv);
+
+			viewer->data(model_index).set_mesh(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+
+			viewer->data(model_index).compute_normals();
+			viewer->core(2).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+
+			// Draw checkerboard texture
+			viewer->data(model_index).show_texture = true;
+		}
+
+		void BasicMenu::compute_lscm_param(int model_index)
+		{
+			// Fix two points on the boundary
+			VectorXi bnd, b(2, 1);
+			Eigen::MatrixXd V_uv;
+			igl::boundary_loop(viewer->data(model_index).F, bnd);
+			b(0) = bnd(0);
+			b(1) = bnd(round(bnd.size() / 2));
+			MatrixXd bc(2, 2);
+			bc << 0, 0, 1, 0;
+
+			// LSCM parametrization
+			igl::lscm(viewer->data(model_index).V, viewer->data(model_index).F, b, bc, V_uv);
+
+			// Scale UV to make the texture more clear
+			V_uv *= 5;
+
+			// Plot the mesh
+			viewer->data(model_index).set_mesh(viewer->data(model_index).V, viewer->data(model_index).F);
+			viewer->data(model_index).set_uv(V_uv);
+
+			viewer->data(model_index).set_mesh(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+
+			viewer->data(model_index).compute_normals();
+			viewer->core(2).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+
+			// Draw checkerboard texture
+			viewer->data(model_index).show_texture = true;
+		}
+
+
 	}
 }
