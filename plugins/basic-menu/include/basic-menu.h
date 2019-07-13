@@ -28,17 +28,15 @@
 #include <igl/map_vertices_to_circle.h>
 #include <igl/arap.h>
 
+#define RED_COLOR Eigen::Vector3d(1, 0, 0)
+#define BLUE_COLOR Eigen::Vector3d(0, 0, 1)
+#define GREEN_COLOR Eigen::Vector3d(0, 1, 0)
+#define GOLD_COLOR Eigen::Vector3d(1, 215.0f / 255.0f, 0)
+#define MODEL2_PATH "..\\..\\..\\models\\camel_head.off"
+#define MODEL1_PATH "..\\..\\..\\models\\cube.off"
 
 using namespace std;
 using namespace Eigen;
-
-// Expose an enumeration type
-enum Orientation { Two_views = 0, Left_view, Right_view };
-enum View {Left = 0, Right};
-enum MouseMode { NONE=0, FACE_SELECT, VERTEX_SELECT , CLEAR};
-enum Parametrization { HARMONIC =0, LSCM, ARAP};
-
-static Orientation view;
 
 
 namespace rds
@@ -47,8 +45,18 @@ namespace rds
 	{
 		class BasicMenu : public igl::opengl::glfw::imgui::ImGuiMenu
 		{
-		protected:
-			std::map<unsigned int, std::string> data_id_to_name;
+		private:
+			// Expose an enumeration type
+			enum Orientation { Two_views = 0, Left_view, Right_view };
+			enum View { Left = 0, Right };
+			enum MouseMode { NONE = 0, FACE_SELECT, VERTEX_SELECT, CLEAR };
+			enum Parametrization { HARMONIC = 0, LSCM, ARAP };
+
+			unsigned int left_view, right_view;
+			int model0_id, model1_id;
+			Orientation view;
+			MouseMode mouse_mode;
+			Parametrization param_type;
 			Eigen::Vector3d onMouse_triangle_color;
 			Eigen::Vector3d selected_faces_color;
 			Eigen::Vector3d selected_vertices_color;
@@ -57,9 +65,15 @@ namespace rds
 			std::set<int> selected_faces;
 			std::set<int> selected_vertices;
 			int ShowModelIndex;
-			bool test_bool;
-			MouseMode mouse_mode;
-			Parametrization param_type;
+			
+
+			// Pointer to the imgui
+			igl::opengl::glfw::imgui::ImGuiMenu menu;
+
+			
+		protected:
+			std::map<unsigned int, std::string> data_id_to_name;
+			
 		public:
 			BasicMenu();
 			IGL_INLINE virtual void draw_viewer_menu() override;
@@ -74,6 +88,8 @@ namespace rds
 			void compute_ARAP_param(int model_index);
 			void compute_harmonic_param(int model_index);
 			void compute_lscm_param(int model_index);
+			//void init(igl::opengl::glfw::Viewer *viewer);
+			void post_resize(int w, int h);
 		};
 	}
 }

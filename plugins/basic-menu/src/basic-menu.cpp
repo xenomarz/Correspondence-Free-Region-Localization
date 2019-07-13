@@ -1,10 +1,5 @@
 #include <basic-menu/include/basic-menu.h>
 
-#define RED_COLOR Eigen::Vector3d(1, 0, 0)
-#define BLUE_COLOR Eigen::Vector3d(0, 0, 1)
-#define GREEN_COLOR Eigen::Vector3d(0, 1, 0)
-#define GOLD_COLOR Eigen::Vector3d(1, 215.0f / 255.0f, 0)
-
 
 namespace rds
 {
@@ -15,7 +10,6 @@ namespace rds
 		{
 			ShowModelIndex = 0;
 			param_type = HARMONIC;
-			test_bool = 0;
 			//set_name_mapping(0,"wolf");
 			//set_name_mapping(1,"cow");
 			//set_name_mapping(2,"cube");
@@ -24,6 +18,7 @@ namespace rds
 			selected_vertices_color = GREEN_COLOR;
 			model_color = GOLD_COLOR;
 			mouse_mode = NONE;
+			view = Two_views;
 			
 		}
 
@@ -127,18 +122,7 @@ namespace rds
 
 			//when a change occured on view mode
 			if (prev_view != view) {
-				if (view == Two_views) {
-					viewer->core_list[0].viewport = Eigen::Vector4f(0, 0, frameBufferWidth / 2, frameBufferHeight);
-					viewer->core_list[1].viewport = Eigen::Vector4f(frameBufferWidth / 2, 0, frameBufferWidth - (frameBufferWidth / 2), frameBufferHeight);
-				}
-				if (view == Left_view) {
-					viewer->core_list[0].viewport = Eigen::Vector4f(0, 0, frameBufferWidth, frameBufferHeight);
-					viewer->core_list[1].viewport = Eigen::Vector4f(frameBufferWidth + 1, frameBufferHeight + 1, frameBufferWidth + 2, frameBufferHeight + 2);
-				}
-				if (view == Right_view) {
-					viewer->core_list[0].viewport = Eigen::Vector4f(frameBufferWidth + 1, frameBufferHeight + 1, frameBufferWidth + 2, frameBufferHeight + 2);
-					viewer->core_list[1].viewport = Eigen::Vector4f(0, 0, frameBufferWidth, frameBufferHeight);
-				}
+				post_resize(frameBufferWidth, frameBufferHeight);
 			}
 
 			int prev_model = ShowModelIndex;
@@ -473,7 +457,6 @@ namespace rds
 			}
 		}
 	
-
 		void BasicMenu::compute_ARAP_param(int model_index) {
 			// Compute the initial solution for ARAP (harmonic parametrization)
 			Eigen::VectorXi bnd;
@@ -581,6 +564,78 @@ namespace rds
 			viewer->data(model_index).show_texture = true;
 		}
 
+		//void BasicMenu::init(igl::opengl::glfw::Viewer *viewer) {
+			//viewer->load_mesh_from_file(std::string(MODEL1_PATH));
+			//viewer->load_mesh_from_file(std::string(MODEL1_PATH));
+
+			//model0_id = viewer->data_list[0].id;
+			//model1_id = viewer->data_list[1].id;
+
+			//viewer->core().viewport = Eigen::Vector4f(0, 0, 640, 800);
+			//left_view = viewer->core(0).id;
+			//right_view = viewer->append_core(Eigen::Vector4f(640, 0, 640, 800));
+			//viewer->data(model1_id).set_visible(false, left_view);
+			//viewer->data(model0_id).set_visible(false, right_view);
+
+			//viewer->core(left_view).align_camera_center(viewer->data(model0_id).V, viewer->data(model0_id).F);
+			//viewer->core(right_view).align_camera_center(viewer->data(model1_id).V, viewer->data(model1_id).F);
+		
+			///////////////
+			//this->viewer = viewer;
+			////viewer->plugins.push_back(&menu);
+
+			//menu.callback_draw_viewer_menu = [&, viewer]()
+			//{
+			//	menu.draw_viewer_menu();
+			//	
+			//};
+			//menu.callback_draw_custom_window = [&]()
+			//{
+			//	// Define next window position + size
+			//	ImGui::SetNextWindowPos(ImVec2(180.f * menu.menu_scaling(), 10), ImGuiSetCond_FirstUseEver);
+			//	ImGui::SetNextWindowSize(ImVec2(200, 160), ImGuiSetCond_FirstUseEver);
+			//	ImGui::Begin(
+			//		"Solver", nullptr,
+			//		ImGuiWindowFlags_NoSavedSettings
+			//	);
+			//	if (ImGui::Button("Start"))
+			//		start_solver_thread();
+			//	ImGui::SameLine();
+			//	if (ImGui::Button("Stop"))
+			//		stop_solver_thread();
+
+			//	if (ImGui::Button("Check gradients"))
+			//		checkGradients();
+
+			//	if (ImGui::Button("Check Hessians"))
+			//		checkHessians();
+
+			//	ImGui::End();
+			//};
+		
+		//}
+
+		void BasicMenu::post_resize(int w, int h)
+		{
+			if (viewer)
+			{
+				left_view = viewer->core(0).id;
+				right_view = viewer->core(1).id;
+
+				if (view == Two_views) {
+					viewer->core(left_view).viewport = Eigen::Vector4f(0, 0, w / 2, h);
+					viewer->core(right_view).viewport = Eigen::Vector4f(w / 2, 0, w - (w / 2), h);
+				}
+				if (view == Left_view) {
+					viewer->core(left_view).viewport = Eigen::Vector4f(0, 0, w, h);
+					viewer->core(right_view).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
+				}
+				if (view == Right_view) {
+					viewer->core(left_view).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
+					viewer->core(right_view).viewport = Eigen::Vector4f(0, 0, w, h);
+				}
+			}
+		}
 
 	}
 }
