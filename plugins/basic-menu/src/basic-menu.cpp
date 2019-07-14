@@ -19,7 +19,8 @@ namespace rds
 			model_color = GOLD_COLOR;
 			mouse_mode = NONE;
 			view = Two_views;
-			
+			left_view_id = 1;
+			right_view_id = 2;			
 		}
 
 		IGL_INLINE void BasicMenu::draw_viewer_menu()
@@ -84,7 +85,7 @@ namespace rds
 			model_color << col[0], col[1], col[2];
 
 
-			Orientation prev_view = view;
+			View prev_view = view;
 			ImGui::Combo("View", (int *)(&view), "Two views\0Left view\0Right view\0\0");
 
 			MouseMode prev_mouse_mode = mouse_mode;
@@ -104,13 +105,13 @@ namespace rds
 			//when a change occured on parametrization type
 			if (prev_param_type != param_type) {
 				if (param_type == HARMONIC) {
-					compute_harmonic_param(CurrmodelID(Right));
+					compute_harmonic_param(RightModelID());
 				}
 				else if (param_type == LSCM) {
-					compute_lscm_param(CurrmodelID(Right));
+					compute_lscm_param(RightModelID());
 				}
 				else {
-					compute_ARAP_param(CurrmodelID(Right));
+					compute_ARAP_param(RightModelID());
 				}
 			}
 
@@ -180,6 +181,7 @@ namespace rds
 
 
 		void BasicMenu::Update_view() {
+			cout << "l1 = " << left_view_id << " , R = " << right_view_id << endl;
 			for (auto& core : viewer->core_list)
 			{
 				for (auto& data : viewer->data_list)
@@ -187,26 +189,26 @@ namespace rds
 					viewer->data(data.id).set_visible(false, core.id);
 				}
 			}
-			viewer->data(CurrmodelID(Left)).set_visible(true, viewer->core(Left + 1).id);
-			viewer->core(Left + 1).align_camera_center(viewer->data(CurrmodelID(Left)).V, viewer->data(CurrmodelID(Left)).F);
+			viewer->data(LeftModelID()).set_visible(true, viewer->core(left_view_id).id);
+			viewer->core(left_view_id).align_camera_center(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F);
 
-			viewer->data(CurrmodelID(Right)).set_visible(true, viewer->core(Right + 1).id);
-			viewer->core(Right + 1).align_camera_center(viewer->data(CurrmodelID(Right)).V, viewer->data(CurrmodelID(Right)).F);
+			viewer->data(RightModelID()).set_visible(true, viewer->core(right_view_id).id);
+			viewer->core(right_view_id).align_camera_center(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F);
 		}
 
 		void BasicMenu::follow_and_mark_selected_faces() {
 			//check if there faces which is selected on the left screen
-			int f = pick_face(viewer->data(CurrmodelID(Left)).V, viewer->data(CurrmodelID(Left)).F, Left);
+			int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, Left_view);
 			if (f == -1) {
 				//check if there faces which is selected on the right screen
-				f = pick_face(viewer->data(CurrmodelID(Right)).V, viewer->data(CurrmodelID(Right)).F, Right);
+				f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, Right_view);
 			}
 
 			if (f != -1)
 			{
 
 
-				colors_per_face.resize(viewer->data(CurrmodelID(Left)).F.rows(), 3);
+				colors_per_face.resize(viewer->data(LeftModelID()).F.rows(), 3);
 				for (int i = 0; i < colors_per_face.rows(); i++)
 				{
 					colors_per_face.row(i) = model_color;
@@ -224,16 +226,16 @@ namespace rds
 				C.resize(selected_vertices.size(), 3);
 				int idx = 0;
 				for (auto vi : selected_vertices) {
-					P_Left.row(idx) = viewer->data(CurrmodelID(Left)).V.row(vi);
+					P_Left.row(idx) = viewer->data(LeftModelID()).V.row(vi);
 					C.row(idx) = selected_vertices_color;
-					P_Right.row(idx) = viewer->data(CurrmodelID(Right)).V.row(vi);
+					P_Right.row(idx) = viewer->data(RightModelID()).V.row(vi);
 				}
-				viewer->data(CurrmodelID(Left)).set_points(P_Left, C);
-				viewer->data(CurrmodelID(Right)).set_points(P_Right, C);
+				viewer->data(LeftModelID()).set_points(P_Left, C);
+				viewer->data(RightModelID()).set_points(P_Right, C);
 
 				//Update the model's faces colors in the two screens
-				viewer->data(CurrmodelID(Left)).set_colors(colors_per_face);
-				viewer->data(CurrmodelID(Right)).set_colors(colors_per_face);
+				viewer->data(LeftModelID()).set_colors(colors_per_face);
+				viewer->data(RightModelID()).set_colors(colors_per_face);
 			}
 		}
 
@@ -241,10 +243,10 @@ namespace rds
 			if (mouse_mode == FACE_SELECT)
 			{
 				//check if there faces which is selected on the left screen
-				int f = pick_face(viewer->data(CurrmodelID(Left)).V, viewer->data(CurrmodelID(Left)).F, Left);
+				int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, Left_view);
 				if (f == -1) {
 					//check if there faces which is selected on the right screen
-					f = pick_face(viewer->data(CurrmodelID(Right)).V, viewer->data(CurrmodelID(Right)).F, Right);
+					f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, Right_view);
 				}
 
 				if (f != -1)
@@ -257,12 +259,12 @@ namespace rds
 			{
 				MatrixXd vertices;
 				//check if there faces which is selected on the left screen
-				int v = pick_vertex(viewer->data(CurrmodelID(Left)).V, viewer->data(CurrmodelID(Left)).F, Left);
-				vertices = viewer->data(CurrmodelID(Left)).V;
+				int v = pick_vertex(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, Left_view);
+				vertices = viewer->data(LeftModelID()).V;
 				if (v == -1) {
 					//check if there faces which is selected on the right screen
-					v = pick_vertex(viewer->data(CurrmodelID(Right)).V, viewer->data(CurrmodelID(Right)).F, Right);
-					vertices = viewer->data(CurrmodelID(Right)).V;
+					v = pick_vertex(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, Right_view);
+					vertices = viewer->data(RightModelID()).V;
 				}
 
 				if (v != -1)
@@ -279,13 +281,12 @@ namespace rds
 			data_id_to_name[data_id] = name;
 		}
 
-		int BasicMenu::CurrmodelID(View LR) {
-			if (LR == Right) {
-				return (2 * ShowModelIndex) + 1;
-			}
-			else {
-				return 2 * ShowModelIndex;
-			}
+		int BasicMenu::LeftModelID() {
+			return 2 * ShowModelIndex;
+		}
+
+		int BasicMenu::RightModelID() {
+			return (2 * ShowModelIndex) + 1;
 		}
 
 		char* BasicMenu::getModelNames()
@@ -322,18 +323,26 @@ namespace rds
 
 		int BasicMenu::pick_face(Eigen::MatrixXd& V,Eigen::MatrixXi& F, View LR) {
 			// Cast a ray in the view direction starting from the mouse position
+			cout << "l2 = " << left_view_id << " , R = " << right_view_id << endl;
+			int core_index;
+			if (LR == Right_view) {
+				core_index = right_view_id;
+			}
+			else if (LR == Left_view) {
+				core_index = left_view_id;
+			}
 			double x = viewer->current_mouse_x;
-			double y = viewer->core(LR+1).viewport(3) - viewer->current_mouse_y;
+			double y = viewer->core(core_index).viewport(3) - viewer->current_mouse_y;
 
 			Eigen::RowVector3d pt;
 
-			Eigen::Matrix4f modelview = viewer->core(LR+1).view;
+			Eigen::Matrix4f modelview = viewer->core(core_index).view;
 			int vi = -1;
 
 			std::vector<igl::Hit> hits;
 
-			igl::unproject_in_mesh(Eigen::Vector2f(x, y), viewer->core(LR+1).view,
-				viewer->core(LR+1).proj, viewer->core(LR+1).viewport, V, F, pt, hits);
+			igl::unproject_in_mesh(Eigen::Vector2f(x, y), viewer->core(core_index).view,
+				viewer->core(core_index).proj, viewer->core(core_index).viewport, V, F, pt, hits);
 
 			int fi = -1;
 			if (hits.size() > 0) {
@@ -344,18 +353,27 @@ namespace rds
 
 		int BasicMenu::pick_vertex(Eigen::MatrixXd& V, Eigen::MatrixXi& F,View LR) {
 			// Cast a ray in the view direction starting from the mouse position
+			cout << "l3 = " << left_view_id << " , R = " << right_view_id << endl;
+			int core_index;
+			if (LR == Right_view) {
+				core_index = right_view_id;
+			}
+			else if (LR == Left_view) {
+				core_index = left_view_id;
+			}
+
 			double x = viewer->current_mouse_x;
-			double y = viewer->core(LR + 1).viewport(3) - viewer->current_mouse_y;
+			double y = viewer->core(core_index).viewport(3) - viewer->current_mouse_y;
 
 			Eigen::RowVector3d pt;
 
-			Eigen::Matrix4f modelview = viewer->core(LR + 1).view;
+			Eigen::Matrix4f modelview = viewer->core(core_index).view;
 			int vi = -1;
 
 			std::vector<igl::Hit> hits;
 			
-			igl::unproject_in_mesh(Eigen::Vector2f(x, y), viewer->core(LR + 1).view,
-				viewer->core(LR + 1).proj, viewer->core(LR + 1).viewport, V, F, pt, hits);
+			igl::unproject_in_mesh(Eigen::Vector2f(x, y), viewer->core(core_index).view,
+				viewer->core(core_index).proj, viewer->core(core_index).viewport, V, F, pt, hits);
 
 			if (hits.size() > 0) {
 				int fi = hits[0].id;
@@ -498,8 +516,8 @@ namespace rds
 
 			viewer->data(model_index).compute_normals();
 
-			
-			viewer->core(2).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+			cout << "l4 = " << left_view_id << " , R = " << right_view_id << endl;
+			viewer->core(right_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
 
 			// Draw checkerboard texture
 			viewer->data(model_index).show_texture = true;
@@ -528,7 +546,8 @@ namespace rds
 			viewer->data(model_index).set_mesh(viewer->data(model_index).V_uv, viewer->data(model_index).F);
 
 			viewer->data(model_index).compute_normals();
-			viewer->core(2).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+			cout << "l5 = " << left_view_id << " , R = " << right_view_id << endl;
+			viewer->core(right_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
 
 			// Draw checkerboard texture
 			viewer->data(model_index).show_texture = true;
@@ -558,7 +577,8 @@ namespace rds
 			viewer->data(model_index).set_mesh(viewer->data(model_index).V_uv, viewer->data(model_index).F);
 
 			viewer->data(model_index).compute_normals();
-			viewer->core(2).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+			cout << "l6 = " << left_view_id << " , R = " << right_view_id << endl;
+			viewer->core(right_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
 
 			// Draw checkerboard texture
 			viewer->data(model_index).show_texture = true;
@@ -619,20 +639,19 @@ namespace rds
 		{
 			if (viewer)
 			{
-				left_view = viewer->core(0).id;
-				right_view = viewer->core(1).id;
+				cout << "l0 = " << left_view_id << " , R = " << right_view_id << endl;
 
 				if (view == Two_views) {
-					viewer->core(left_view).viewport = Eigen::Vector4f(0, 0, w / 2, h);
-					viewer->core(right_view).viewport = Eigen::Vector4f(w / 2, 0, w - (w / 2), h);
+					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w / 2, h);
+					viewer->core(right_view_id).viewport = Eigen::Vector4f(w / 2, 0, w - (w / 2), h);
 				}
 				if (view == Left_view) {
-					viewer->core(left_view).viewport = Eigen::Vector4f(0, 0, w, h);
-					viewer->core(right_view).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
+					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w, h);
+					viewer->core(right_view_id).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
 				}
 				if (view == Right_view) {
-					viewer->core(left_view).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
-					viewer->core(right_view).viewport = Eigen::Vector4f(0, 0, w, h);
+					viewer->core(left_view_id).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
+					viewer->core(right_view_id).viewport = Eigen::Vector4f(0, 0, w, h);
 				}
 			}
 		}

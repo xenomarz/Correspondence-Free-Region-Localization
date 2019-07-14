@@ -26,6 +26,8 @@ int main(int argc, char * argv[])
 		viewer.core().viewport = Eigen::Vector4f(0, 0, 640, 800);
 		left_view = viewer.core(0).id;
 		right_view = viewer.append_core(Eigen::Vector4f(640, 0, 640, 800));
+
+		cout << "l = " << viewer.core(1).id << " , R = " << viewer.core(2).id << endl;
 		viewer.data(model1_id).set_visible(false, left_view);
 		viewer.data(model0_id).set_visible(false, right_view);
 

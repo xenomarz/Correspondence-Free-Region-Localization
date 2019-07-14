@@ -47,14 +47,14 @@ namespace rds
 		{
 		private:
 			// Expose an enumeration type
-			enum Orientation { Two_views = 0, Left_view, Right_view };
-			enum View { Left = 0, Right };
+			enum View { Two_views = 0, Left_view, Right_view };
+			//enum View { Left = 0, Right };
 			enum MouseMode { NONE = 0, FACE_SELECT, VERTEX_SELECT, CLEAR };
 			enum Parametrization { HARMONIC = 0, LSCM, ARAP };
 
-			unsigned int left_view, right_view;
+			unsigned int left_view_id, right_view_id;
 			int model0_id, model1_id;
-			Orientation view;
+			View view;
 			MouseMode mouse_mode;
 			Parametrization param_type;
 			Eigen::Vector3d onMouse_triangle_color;
@@ -78,7 +78,8 @@ namespace rds
 			BasicMenu();
 			IGL_INLINE virtual void draw_viewer_menu() override;
 			void set_name_mapping(unsigned int data_id, std::string name);
-			int CurrmodelID(View LR);
+			int LeftModelID();
+			int RightModelID();
 			int pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, View LR);
 			int pick_vertex(Eigen::MatrixXd& V, Eigen::MatrixXi& F, View LR);
 			void follow_and_mark_selected_faces();
