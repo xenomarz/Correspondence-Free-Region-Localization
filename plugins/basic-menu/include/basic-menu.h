@@ -47,7 +47,7 @@ namespace rds
 		{
 		private:
 			// Expose an enumeration type
-			enum View { Two_views = 0, Left_view, Right_view };
+			enum View { Horizontal = 0 , Vertical , Core_1 , Core_2 };
 			enum MouseMode { NONE = 0, FACE_SELECT, VERTEX_SELECT, CLEAR };
 			enum Parametrization { HARMONIC = 0, LSCM, ARAP };
 
@@ -68,14 +68,14 @@ namespace rds
 			// Pointer to the imgui
 			igl::opengl::glfw::imgui::ImGuiMenu menu;
 		protected:
-			std::map<unsigned int, std::string> data_id_to_name;
+			std::map<unsigned int, string> data_id_to_name;
 			
 		public:
 			BasicMenu();
 			IGL_INLINE virtual void draw_viewer_menu() override;
 			IGL_INLINE virtual void init(igl::opengl::glfw::Viewer *_viewer) override;
 
-			void set_name_mapping(unsigned int data_id, std::string name);
+			void set_name_mapping(unsigned int data_id, string name);
 			int LeftModelID();
 			int RightModelID();
 			int pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, View LR);
@@ -83,7 +83,7 @@ namespace rds
 			void follow_and_mark_selected_faces();
 			void Update_view();
 			char* getModelNames();
-			const char* BasicMenu::filename(const string& str);
+			string filename(const string& str);
 			bool mouse_down(int button, int modifier);
 			void compute_ARAP_param(int model_index);
 			void compute_harmonic_param(int model_index);

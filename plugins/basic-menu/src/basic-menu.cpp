@@ -19,15 +19,13 @@ namespace rds
 			{
 				ShowModelIndex = 0;
 				param_type = HARMONIC;
-				set_name_mapping(0,"wolf");
-				set_name_mapping(1,"cow");
-				set_name_mapping(2,"cube");
+				set_name_mapping(0, filename(MODEL1_PATH));
 				onMouse_triangle_color = RED_COLOR;
 				selected_faces_color = BLUE_COLOR;
 				selected_vertices_color = GREEN_COLOR;
 				model_color = GOLD_COLOR;
 				mouse_mode = NONE;
-				view = Two_views;
+				view = Horizontal;
 
 				viewer->load_mesh_from_file(std::string(MODEL1_PATH));
 				viewer->load_mesh_from_file(std::string(MODEL1_PATH));
@@ -65,7 +63,7 @@ namespace rds
 					std::string fname = igl::file_dialog_open();
 					if (fname.length() != 0)
 					{
-						filename(fname);
+						set_name_mapping(viewer->data_list.size(), filename(fname));
 						viewer->load_mesh_from_file(fname.c_str());
 						viewer->load_mesh_from_file(fname.c_str());
 					}
@@ -100,7 +98,7 @@ namespace rds
 
 
 			View prev_view = view;
-			ImGui::Combo("View", (int *)(&view), "Two views\0Left view\0Right view\0\0");
+			ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0Core_1\0Core_2\0\0");
 
 			MouseMode prev_mouse_mode = mouse_mode;
 			ImGui::Combo("Mouse Mode", (int *)(&mouse_mode), "NONE\0FACE_SELECT\0VERTEX_SELECT\0CLEAR\0\0");
@@ -212,10 +210,10 @@ namespace rds
 
 		void BasicMenu::follow_and_mark_selected_faces() {
 			//check if there faces which is selected on the left screen
-			int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, Left_view);
+			int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, Core_1);
 			if (f == -1) {
 				//check if there faces which is selected on the right screen
-				f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, Right_view);
+				f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, Core_2);
 			}
 
 			if (f != -1)
@@ -255,10 +253,10 @@ namespace rds
 			if (mouse_mode == FACE_SELECT)
 			{
 				//check if there faces which is selected on the left screen
-				int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, Left_view);
+				int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, Core_1);
 				if (f == -1) {
 					//check if there faces which is selected on the right screen
-					f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, Right_view);
+					f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, Core_2);
 				}
 
 				if (f != -1)
@@ -271,11 +269,11 @@ namespace rds
 			{
 				MatrixXd vertices;
 				//check if there faces which is selected on the left screen
-				int v = pick_vertex(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, Left_view);
+				int v = pick_vertex(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, Core_1);
 				vertices = viewer->data(LeftModelID()).V;
 				if (v == -1) {
 					//check if there faces which is selected on the right screen
-					v = pick_vertex(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, Right_view);
+					v = pick_vertex(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, Core_2);
 					vertices = viewer->data(RightModelID()).V;
 				}
 
@@ -288,9 +286,10 @@ namespace rds
 			return false;
 		}
 	
-		void BasicMenu::set_name_mapping(unsigned int data_id, std::string name)
+		void BasicMenu::set_name_mapping(unsigned int data_id, string name)
 		{
 			data_id_to_name[data_id] = name;
+			data_id_to_name[data_id+1] = name + " (Param.)";
 		}
 
 		int BasicMenu::LeftModelID() {
@@ -333,28 +332,21 @@ namespace rds
 			return comboList;
 		}
 
-		const char* BasicMenu::filename(const string& str)
+		string BasicMenu::filename(const string& str)
 		{
-			const char* path;
-			size_t found;
-			found = str.find_last_of("/\\");
-			path = (str.substr(found + 1)).c_str();
-
-			cout << str.substr(found + 1); // ------------> is name ok 
-
-			printf("\n\n");
-			printf(path); // ------------> is name not ok random numbers
-			printf("\n\n");
-			return  path; // ------------> is not ok random numbers
+			size_t head,tail;
+			head = str.find_last_of("/\\");
+			tail = str.find_last_of("/.");
+			return (str.substr((head + 1),(tail-head-1)));
 		}
 
 		int BasicMenu::pick_face(Eigen::MatrixXd& V,Eigen::MatrixXi& F, View LR) {
 			// Cast a ray in the view direction starting from the mouse position
 			int core_index;
-			if (LR == Right_view) {
+			if (LR == Core_2) {
 				core_index = right_view_id;
 			}
-			else if (LR == Left_view) {
+			else if (LR == Core_1) {
 				core_index = left_view_id;
 			}
 			double x = viewer->current_mouse_x;
@@ -380,10 +372,10 @@ namespace rds
 		int BasicMenu::pick_vertex(Eigen::MatrixXd& V, Eigen::MatrixXi& F,View LR) {
 			// Cast a ray in the view direction starting from the mouse position
 			int core_index;
-			if (LR == Right_view) {
+			if (LR == Core_2) {
 				core_index = right_view_id;
 			}
-			else if (LR == Left_view) {
+			else if (LR == Core_1) {
 				core_index = left_view_id;
 			}
 
@@ -545,6 +537,7 @@ namespace rds
 
 			// Draw checkerboard texture
 			viewer->data(model_index).show_texture = true;
+			Update_view();
 		}
 
 		void BasicMenu::compute_harmonic_param(int model_index) {
@@ -574,7 +567,7 @@ namespace rds
 
 			// Draw checkerboard texture
 			viewer->data(model_index).show_texture = true;
-			viewer->data().copy_options(viewer->core_list[0], viewer->core_list[1]);
+			Update_view();
 		}
 
 		void BasicMenu::compute_lscm_param(int model_index)
@@ -605,21 +598,26 @@ namespace rds
 
 			// Draw checkerboard texture
 			viewer->data(model_index).show_texture = true;
+			Update_view();
 		}
 
 		void BasicMenu::post_resize(int w, int h)
 		{
 			if (viewer)
 			{
-				if (view == Two_views) {
+				if (view == Horizontal) {
 					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w / 2, h);
 					viewer->core(right_view_id).viewport = Eigen::Vector4f(w / 2, 0, w - (w / 2), h);
 				}
-				if (view == Left_view) {
+				if (view == Vertical) {
+					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w, h/2);
+					viewer->core(right_view_id).viewport = Eigen::Vector4f(0, h/2, w, h - (h / 2));
+				}
+				if (view == Core_1) {
 					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w, h);
 					viewer->core(right_view_id).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
 				}
-				if (view == Right_view) {
+				if (view == Core_2) {
 					viewer->core(left_view_id).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
 					viewer->core(right_view_id).viewport = Eigen::Vector4f(0, 0, w, h);
 				}
