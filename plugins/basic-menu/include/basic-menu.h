@@ -74,7 +74,8 @@ namespace rds
 			BasicMenu();
 			IGL_INLINE virtual void draw_viewer_menu() override;
 			IGL_INLINE virtual void init(igl::opengl::glfw::Viewer *_viewer) override;
-
+			//void draw_menu();
+			void Draw_menu_for_each_core(igl::opengl::ViewerCore& core);
 			void set_name_mapping(unsigned int data_id, string name);
 			int LeftModelID();
 			int RightModelID();
