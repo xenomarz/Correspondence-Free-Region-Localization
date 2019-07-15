@@ -13,28 +13,6 @@
 int main(int argc, char * argv[])
 {
 	igl::opengl::glfw::Viewer viewer;
-
-	viewer.callback_init = [&](igl::opengl::glfw::Viewer &)
-	{
-		viewer.load_mesh_from_file(std::string(MODEL1_PATH));
-		viewer.load_mesh_from_file(std::string(MODEL1_PATH));
-
-		unsigned int left_view, right_view;
-		int model0_id = viewer.data_list[0].id;
-		int model1_id = viewer.data_list[1].id;
-
-		viewer.core().viewport = Eigen::Vector4f(0, 0, 640, 800);
-		left_view = viewer.core(0).id;
-		right_view = viewer.append_core(Eigen::Vector4f(640, 0, 640, 800));
-
-		cout << "l = " << viewer.core(1).id << " , R = " << viewer.core(2).id << endl;
-		viewer.data(model1_id).set_visible(false, left_view);
-		viewer.data(model0_id).set_visible(false, right_view);
-
-		viewer.core(left_view).align_camera_center(viewer.data(model0_id).V, viewer.data(model0_id).F);
-		viewer.core(right_view).align_camera_center(viewer.data(model1_id).V, viewer.data(model1_id).F);
-		return false;
-	};
 	
 	// Attach a menu plugin
 	rds::plugins::BasicMenu menu;
