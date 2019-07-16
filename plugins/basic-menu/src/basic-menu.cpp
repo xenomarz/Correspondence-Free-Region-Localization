@@ -18,6 +18,7 @@ namespace rds
 			if (_viewer)
 			{
 				ShowModelIndex = 0;
+				core_percentage_size = 0.5;
 				param_type = HARMONIC;
 				set_name_mapping(0, filename(MODEL1_PATH));
 				onMouse_triangle_color = RED_COLOR;
@@ -33,8 +34,6 @@ namespace rds
 				viewer->core().viewport = Eigen::Vector4f(0, 0, 640, 800);
 				left_view_id = viewer->core(0).id;
 				right_view_id = viewer->append_core(Eigen::Vector4f(640, 0, 640, 800));
-				viewer->data_list[0].show_texture = true;
-				viewer->data_list[1].show_texture = true;
 				
 				Update_view();
 				compute_harmonic_param(1);
@@ -43,69 +42,54 @@ namespace rds
 
 		IGL_INLINE void BasicMenu::draw_viewer_menu()
 		{
-
-			// Helper for setting viewport specific mesh options
-			auto make_checkbox = [&](const char *label, unsigned int &option, unsigned int &core_id)
+			float w = ImGui::GetContentRegionAvailWidth();
+			float p = ImGui::GetStyle().FramePadding.x;
+			if (ImGui::Button("Load##Mesh", ImVec2((w - p) / 2.f, 0)))
 			{
-				return ImGui::Checkbox(label,
-					[&]() { return viewer->core(core_id).is_set(option); },
-					[&](bool value) { return viewer->core(core_id).set(option, value); }
-				);
-			};
-
-			//draw_menu();
-
-			// Mesh
-			if (ImGui::CollapsingHeader("Mesh", ImGuiTreeNodeFlags_DefaultOpen))
-			{
-				float w = ImGui::GetContentRegionAvailWidth();
-				float p = ImGui::GetStyle().FramePadding.x;
-				if (ImGui::Button("Load##Mesh", ImVec2((w - p) / 2.f, 0)))
+				//Load new model that has two copies
+				std::string fname = igl::file_dialog_open();
+				if (fname.length() != 0)
 				{
-					//Load new model that has two copies
-					std::string fname = igl::file_dialog_open();
-					if (fname.length() != 0)
-					{
-						set_name_mapping(viewer->data_list.size(), filename(fname));
-						viewer->load_mesh_from_file(fname.c_str());
-						viewer->load_mesh_from_file(fname.c_str());
-					}
-					///////////////
-					Update_view();
+					set_name_mapping(viewer->data_list.size(), filename(fname));
+					viewer->load_mesh_from_file(fname.c_str());
+					viewer->load_mesh_from_file(fname.c_str());
 				}
-				ImGui::SameLine(0, p);
-				if (ImGui::Button("Save##Mesh", ImVec2((w - p) / 2.f, 0)))
-				{
-					viewer->open_dialog_save_mesh();
-				}
+				///////////////
+				Update_view();
 			}
-
-
-			float col[3] = { onMouse_triangle_color[0] , onMouse_triangle_color[1] ,onMouse_triangle_color[2] };
-			ImGui::ColorEdit3("Follow face colors", col, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-			onMouse_triangle_color << col[0], col[1], col[2];
-
-			col[0] = selected_faces_color[0]; col[1] = selected_faces_color[1]; col[2] = selected_faces_color[2];
-			ImGui::ColorEdit3("selected faces color", col, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-			selected_faces_color << col[0], col[1], col[2];
-
-			col[0] = selected_vertices_color[0]; col[1] = selected_vertices_color[1]; col[2] = selected_vertices_color[2];
-			ImGui::ColorEdit3("selected vertices color", col, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-			selected_vertices_color << col[0], col[1], col[2];
+			ImGui::SameLine(0, p);
+			if (ImGui::Button("Save##Mesh", ImVec2((w - p) / 2.f, 0)))
+			{
+				viewer->open_dialog_save_mesh();
+			}
 			
-			col[0] = model_color[0]; col[1] = model_color[1]; col[2] = model_color[2];
-			ImGui::ColorEdit3("model color", col, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-			model_color << col[0], col[1], col[2];
-
+			ImGui::ColorEdit3("Follow face colors", onMouse_triangle_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			ImGui::ColorEdit3("selected faces color", selected_faces_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			ImGui::ColorEdit3("selected vertices color", selected_vertices_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			ImGui::ColorEdit3("model color", model_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 
 			View prev_view = view;
 			ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0Core_1\0Core_2\0\0");
+			if ((view == Horizontal) || (view == Vertical)) {
+				float prev_size = core_percentage_size;
+				ImGui::SliderFloat("Core Size", &core_percentage_size, 0, 1, to_string(core_percentage_size).c_str(), 1);
+				//when a change occured on core percentage size
+				if (prev_size != core_percentage_size) {
+					// That's how you get the current width/height of the frame buffer (for example, after the window was resized)
+					int frameBufferWidth, frameBufferHeight;
+					glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
+					post_resize(frameBufferWidth, frameBufferHeight);
+				}
+			}
 
 			MouseMode prev_mouse_mode = mouse_mode;
 			ImGui::Combo("Mouse Mode", (int *)(&mouse_mode), "NONE\0FACE_SELECT\0VERTEX_SELECT\0CLEAR\0\0");
 
 			Parametrization prev_param_type = param_type;
 			ImGui::Combo("Parametrization type", (int *)(&param_type), "HARMONIC\0LSCM\0ARAP\0\0");
+
+			int prev_model = ShowModelIndex;
+			ImGui::Combo("Choose model", (int *)(&ShowModelIndex), getModelNames(), IM_ARRAYSIZE(getModelNames()));
 
 			//when a change occured on mouse mode
 			if (prev_mouse_mode != mouse_mode) {
@@ -136,9 +120,6 @@ namespace rds
 				post_resize(frameBufferWidth, frameBufferHeight);
 			}
 
-			int prev_model = ShowModelIndex;
-			ImGui::Combo("Choose model", (int *)(&ShowModelIndex), getModelNames(), IM_ARRAYSIZE(getModelNames()));
-
 			//if a the mesh is changes then update the view
 			if (prev_model != ShowModelIndex) {
 				Update_view();
@@ -148,37 +129,12 @@ namespace rds
 			{
 				Draw_menu_for_each_core(core);
 			}
-
+			
 			follow_and_mark_selected_faces();
 
 			for (auto& data : viewer->data_list)
 			{
-				ImGui::PushID(data.id);
-				std::stringstream ss;
-
-				if (data_id_to_name.count(data.id) > 0)
-				{
-					ss << data_id_to_name[data.id];
-				}
-				else
-				{
-					ss << "Data " << data.id;
-				}
-
-				if (ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					if (ImGui::Checkbox("Face-based", &(viewer->data(data.id).face_based)))
-					{
-						viewer->data(data.id).dirty = igl::opengl::MeshGL::DIRTY_ALL;
-					}
-
-					//make_checkbox("Wireframe", viewer->data(data.id).show_lines);
-					//make_checkbox("Fill", viewer->data(data.id).show_faces);
-
-					ImGui::ColorEdit4("Line color", viewer->data(data.id).line_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-					ImGui::DragFloat("Shininess", &(viewer->data(data.id).shininess), 0.05f, 0.0f, 100.0f);
-				}
-				ImGui::PopID();
+				Draw_menu_for_each_model(data);
 			}
 		}
 
@@ -241,6 +197,61 @@ namespace rds
 			ImGui::PopID();
 		}
 
+		void BasicMenu::Draw_menu_for_each_model(igl::opengl::ViewerData& data) {
+			// Helper for setting viewport specific mesh options
+			auto make_checkbox = [&](const char *label, unsigned int &option, int data_id)
+			{
+				int core_id = right_view_id;
+				if (data_id % 2 == 0) {
+					core_id = left_view_id;
+				}
+
+				return ImGui::Checkbox(label,
+					[&]() { return viewer->core(core_id).is_set(option); },
+					[&](bool value) { return viewer->core(core_id).set(option, value); }
+				);
+			};
+
+			ImGui::PushID(data.id);
+			std::stringstream ss;
+
+			if (data_id_to_name.count(data.id) > 0)
+			{
+				ss << data_id_to_name[data.id];
+			}
+			else
+			{
+				ss << "Data " << data.id;
+			}
+			
+			if (ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				if (ImGui::Checkbox("Face-based", &(data.face_based)))
+				{
+					data.dirty = igl::opengl::MeshGL::DIRTY_ALL;
+				}
+
+				make_checkbox("Show texture", data.show_texture, data.id);
+				if (ImGui::Checkbox("Invert normals", &(data.invert_normals)))
+				{
+					data.dirty |= igl::opengl::MeshGL::DIRTY_NORMAL;
+				}
+				make_checkbox("Show overlay", data.show_overlay, data.id);
+				make_checkbox("Show overlay depth", data.show_overlay_depth, data.id);
+				ImGui::ColorEdit4("Line color", data.line_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+				ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.3f);
+				ImGui::DragFloat("Shininess", &(data.shininess), 0.05f, 0.0f, 100.0f);
+				ImGui::PopItemWidth();
+
+				make_checkbox("Wireframe", data.show_lines, data.id);
+				make_checkbox("Fill", data.show_faces, data.id);
+				ImGui::Checkbox("Show vertex labels", &(data.show_vertid));
+				ImGui::Checkbox("Show faces labels", &(data.show_faceid));
+			}
+			Update_view();
+			ImGui::PopID();
+		}
+
 		void BasicMenu::Update_view() {
 			viewer->data().copy_options(viewer->core_list[0], viewer->core_list[1]);
 			for (auto& core : viewer->core_list)
@@ -271,11 +282,11 @@ namespace rds
 				colors_per_face.resize(viewer->data(LeftModelID()).F.rows(), 3);
 				for (int i = 0; i < colors_per_face.rows(); i++)
 				{
-					colors_per_face.row(i) = model_color;
+					colors_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
 				}
 				//Mark the selected faces
-				colors_per_face.row(f) = onMouse_triangle_color;
-				for (auto fi : selected_faces) { colors_per_face.row(fi) = selected_faces_color; }
+				colors_per_face.row(f) << double(onMouse_triangle_color[0]) , double(onMouse_triangle_color[1]) , double(onMouse_triangle_color[2]);
+				for (auto fi : selected_faces) { colors_per_face.row(fi) << double(selected_faces_color[0]), double(selected_faces_color[1]), double(selected_faces_color[2]); }
 
 				//Mark the selected vertices
 				Eigen::MatrixXd P_Left;
@@ -287,7 +298,7 @@ namespace rds
 				int idx = 0;
 				for (auto vi : selected_vertices) {
 					P_Left.row(idx) = viewer->data(LeftModelID()).V.row(vi);
-					C.row(idx) = selected_vertices_color;
+					C.row(idx) << double(selected_vertices_color[0]), double(selected_vertices_color[1]), double(selected_vertices_color[2]);
 					P_Right.row(idx) = viewer->data(RightModelID()).V.row(vi);
 					idx++;
 				}
@@ -402,6 +413,10 @@ namespace rds
 			}
 			double x = viewer->current_mouse_x;
 			double y = viewer->core(core_index).viewport(3) - viewer->current_mouse_y;
+			if (view == Vertical) {
+				y = (viewer->core(left_view_id).viewport(3) / core_percentage_size) - viewer->current_mouse_y;
+			}
+
 
 			Eigen::RowVector3d pt;
 
@@ -432,6 +447,9 @@ namespace rds
 
 			double x = viewer->current_mouse_x;
 			double y = viewer->core(core_index).viewport(3) - viewer->current_mouse_y;
+			if (view == Vertical) {
+				y = (viewer->core(left_view_id).viewport(3) / core_percentage_size) - viewer->current_mouse_y;
+			}
 
 			Eigen::RowVector3d pt;
 
@@ -452,96 +470,6 @@ namespace rds
 			}
 			return vi;
 		}
-
-		//void draw_menu() {
-		//	// Viewing options
-		//	if (ImGui::CollapsingHeader("Viewing Options", ImGuiTreeNodeFlags_DefaultOpen))
-		//	{
-		//		if (ImGui::Button("Center object", ImVec2(-1, 0)))
-		//		{
-		//			viewer->core().align_camera_center(viewer->data().V, viewer->data().F);
-		//		}
-		//		if (ImGui::Button("Snap canonical view", ImVec2(-1, 0)))
-		//		{
-		//			viewer->snap_to_canonical_quaternion();
-		//		}
-
-		//		// Zoom
-		//		ImGui::PushItemWidth(80 * menu_scaling());
-		//		ImGui::DragFloat("Zoom", &(viewer->core().camera_zoom), 0.05f, 0.1f, 20.0f);
-
-		//		// Select rotation type
-		//		int rotation_type = static_cast<int>(viewer->core().rotation_type);
-		//		static Eigen::Quaternionf trackball_angle = Eigen::Quaternionf::Identity();
-		//		static bool orthographic = true;
-		//		if (ImGui::Combo("Camera Type", &rotation_type, "Trackball\0Two Axes\0002D Mode\0\0"))
-		//		{
-		//			using RT = igl::opengl::ViewerCore::RotationType;
-		//			auto new_type = static_cast<RT>(rotation_type);
-		//			if (new_type != viewer->core().rotation_type)
-		//			{
-		//				if (new_type == RT::ROTATION_TYPE_NO_ROTATION)
-		//				{
-		//					trackball_angle = viewer->core().trackball_angle;
-		//					orthographic = viewer->core().orthographic;
-		//					viewer->core().trackball_angle = Eigen::Quaternionf::Identity();
-		//					viewer->core().orthographic = true;
-		//				}
-		//				else if (viewer->core().rotation_type == RT::ROTATION_TYPE_NO_ROTATION)
-		//				{
-		//					viewer->core().trackball_angle = trackball_angle;
-		//					viewer->core().orthographic = orthographic;
-		//				}
-		//				viewer->core().set_rotation_type(new_type);
-		//			}
-		//		}
-
-		//		// Orthographic view
-		//		ImGui::Checkbox("Orthographic view", &(viewer->core().orthographic));
-		//		ImGui::PopItemWidth();
-		//	}
-
-		//	// Helper for setting viewport specific mesh options
-		//	auto make_checkbox = [&](const char *label, unsigned int &option)
-		//	{
-		//		return ImGui::Checkbox(label,
-		//			[&]() { return viewer->core().is_set(option); },
-		//			[&](bool value) { return viewer->core().set(option, value); }
-		//		);
-		//	};
-
-		//	// Draw options
-		//	if (ImGui::CollapsingHeader("Draw Options", ImGuiTreeNodeFlags_DefaultOpen))
-		//	{
-		//		if (ImGui::Checkbox("Face-based", &(viewer->data().face_based)))
-		//		{
-		//			viewer->data().dirty = igl::opengl::MeshGL::DIRTY_ALL;
-		//		}
-		//		make_checkbox("Show texture", viewer->data().show_texture);
-		//		if (ImGui::Checkbox("Invert normals", &(viewer->data().invert_normals)))
-		//		{
-		//			viewer->data().dirty |= igl::opengl::MeshGL::DIRTY_NORMAL;
-		//		}
-		//		make_checkbox("Show overlay", viewer->data().show_overlay);
-		//		make_checkbox("Show overlay depth", viewer->data().show_overlay_depth);
-		//		ImGui::ColorEdit4("Background", viewer->core().background_color.data(),
-		//			ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-		//		ImGui::ColorEdit4("Line color", viewer->data().line_color.data(),
-		//			ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-		//		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.3f);
-		//		ImGui::DragFloat("Shininess", &(viewer->data().shininess), 0.05f, 0.0f, 100.0f);
-		//		ImGui::PopItemWidth();
-		//	}
-
-		//	// Overlays
-		//	if (ImGui::CollapsingHeader("Overlays", ImGuiTreeNodeFlags_DefaultOpen))
-		//	{
-		//		make_checkbox("Wireframe", viewer->data().show_lines);
-		//		make_checkbox("Fill", viewer->data().show_faces);
-		//		ImGui::Checkbox("Show vertex labels", &(viewer->data().show_vertid));
-		//		ImGui::Checkbox("Show faces labels", &(viewer->data().show_faceid));
-		//	}
-		//}
 	
 		void BasicMenu::compute_ARAP_param(int model_index) {
 			// Compute the initial solution for ARAP (harmonic parametrization)
@@ -585,9 +513,6 @@ namespace rds
 			viewer->data(model_index).compute_normals();
 
 			viewer->core(right_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
-
-			// Draw checkerboard texture
-			viewer->data(model_index).show_texture = true;
 			Update_view();
 		}
 
@@ -615,9 +540,6 @@ namespace rds
 
 			viewer->data(model_index).compute_normals();
 			viewer->core(right_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
-
-			// Draw checkerboard texture
-			viewer->data(model_index).show_texture = true;
 			Update_view();
 		}
 
@@ -646,9 +568,6 @@ namespace rds
 
 			viewer->data(model_index).compute_normals();
 			viewer->core(right_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
-
-			// Draw checkerboard texture
-			viewer->data(model_index).show_texture = true;
 			Update_view();
 		}
 
@@ -657,12 +576,12 @@ namespace rds
 			if (viewer)
 			{
 				if (view == Horizontal) {
-					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w / 2, h);
-					viewer->core(right_view_id).viewport = Eigen::Vector4f(w / 2, 0, w - (w / 2), h);
+					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w * core_percentage_size, h);
+					viewer->core(right_view_id).viewport = Eigen::Vector4f(w * core_percentage_size, 0, w - (w * core_percentage_size), h);
 				}
 				if (view == Vertical) {
-					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w, h/2);
-					viewer->core(right_view_id).viewport = Eigen::Vector4f(0, h/2, w, h - (h / 2));
+					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w, h * core_percentage_size);
+					viewer->core(right_view_id).viewport = Eigen::Vector4f(0, h* core_percentage_size, w, h - (h * core_percentage_size));
 				}
 				if (view == Core_1) {
 					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w, h);

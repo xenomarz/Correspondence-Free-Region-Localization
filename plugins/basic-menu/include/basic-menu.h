@@ -28,10 +28,10 @@
 #include <igl/map_vertices_to_circle.h>
 #include <igl/arap.h>
 
-#define RED_COLOR Eigen::Vector3d(1, 0, 0)
-#define BLUE_COLOR Eigen::Vector3d(0, 0, 1)
-#define GREEN_COLOR Eigen::Vector3d(0, 1, 0)
-#define GOLD_COLOR Eigen::Vector3d(1, 215.0f / 255.0f, 0)
+#define RED_COLOR Eigen::Vector3f(1, 0, 0)
+#define BLUE_COLOR Eigen::Vector3f(0, 0, 1)
+#define GREEN_COLOR Eigen::Vector3f(0, 1, 0)
+#define GOLD_COLOR Eigen::Vector3f(1, 215.0f / 255.0f, 0)
 #define MODEL2_PATH "..\\..\\..\\models\\camel_head.off"
 #define MODEL1_PATH "..\\..\\..\\models\\cube.off"
 
@@ -52,19 +52,18 @@ namespace rds
 			enum Parametrization { HARMONIC = 0, LSCM, ARAP };
 
 			unsigned int left_view_id, right_view_id;
-			int model0_id, model1_id;
 			View view;
 			MouseMode mouse_mode;
 			Parametrization param_type;
-			Eigen::Vector3d onMouse_triangle_color;
-			Eigen::Vector3d selected_faces_color;
-			Eigen::Vector3d selected_vertices_color;
-			Eigen::Vector3d model_color;
+			Eigen::Vector3f onMouse_triangle_color;
+			Eigen::Vector3f selected_faces_color;
+			Eigen::Vector3f selected_vertices_color;
+			Eigen::Vector3f model_color;
 			Eigen::MatrixXd colors_per_face;
 			std::set<int> selected_faces;
 			std::set<int> selected_vertices;
 			int ShowModelIndex;
-			
+			float core_percentage_size;
 			// Pointer to the imgui
 			igl::opengl::glfw::imgui::ImGuiMenu menu;
 		protected:
@@ -74,8 +73,8 @@ namespace rds
 			BasicMenu();
 			IGL_INLINE virtual void draw_viewer_menu() override;
 			IGL_INLINE virtual void init(igl::opengl::glfw::Viewer *_viewer) override;
-			//void draw_menu();
 			void Draw_menu_for_each_core(igl::opengl::ViewerCore& core);
+			void Draw_menu_for_each_model(igl::opengl::ViewerData& data);
 			void set_name_mapping(unsigned int data_id, string name);
 			int LeftModelID();
 			int RightModelID();
