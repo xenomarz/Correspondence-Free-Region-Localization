@@ -83,8 +83,10 @@ namespace rds
 
 			//Draw menu methods
 			IGL_INLINE virtual void draw_viewer_menu() override;
-			void Draw_menu_for_each_core(igl::opengl::ViewerCore& core);
-			void Draw_menu_for_each_model(igl::opengl::ViewerData& data);
+			void Draw_menu_for_cores();
+			void Draw_menu_for_models();
+			void Draw_menu_for_Parametrization();
+			void Draw_menu_for_Solver();
 
 			//Pick faces & vertices and highlight them
 			int pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, View LR);
