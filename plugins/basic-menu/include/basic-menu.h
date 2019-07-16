@@ -32,6 +32,7 @@
 #define BLUE_COLOR Eigen::Vector3f(0, 0, 1)
 #define GREEN_COLOR Eigen::Vector3f(0, 1, 0)
 #define GOLD_COLOR Eigen::Vector3f(1, 215.0f / 255.0f, 0)
+#define GREY_COLOR Eigen::Vector3f(0.75, 0.75, 0.75)
 #define MODEL2_PATH "..\\..\\..\\models\\camel_head.off"
 #define MODEL1_PATH "..\\..\\..\\models\\cube.off"
 
@@ -71,8 +72,12 @@ namespace rds
 			
 		public:
 			BasicMenu();
+			// callbacks
 			IGL_INLINE virtual void draw_viewer_menu() override;
 			IGL_INLINE virtual void init(igl::opengl::glfw::Viewer *_viewer) override;
+			IGL_INLINE virtual void post_resize(int w, int h) override;
+			IGL_INLINE virtual bool mouse_move(int mouse_x, int mouse_y) override;
+
 			void Draw_menu_for_each_core(igl::opengl::ViewerCore& core);
 			void Draw_menu_for_each_model(igl::opengl::ViewerData& data);
 			void set_name_mapping(unsigned int data_id, string name);
@@ -88,7 +93,6 @@ namespace rds
 			void compute_ARAP_param(int model_index);
 			void compute_harmonic_param(int model_index);
 			void compute_lscm_param(int model_index);
-			void post_resize(int w, int h);
 		};
 	}
 }

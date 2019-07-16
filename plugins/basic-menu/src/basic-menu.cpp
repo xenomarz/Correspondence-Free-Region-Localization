@@ -24,7 +24,7 @@ namespace rds
 				onMouse_triangle_color = RED_COLOR;
 				selected_faces_color = BLUE_COLOR;
 				selected_vertices_color = GREEN_COLOR;
-				model_color = GOLD_COLOR;
+				model_color = GREY_COLOR;
 				mouse_mode = NONE;
 				view = Horizontal;
 
@@ -130,12 +130,39 @@ namespace rds
 				Draw_menu_for_each_core(core);
 			}
 			
-			follow_and_mark_selected_faces();
-
 			for (auto& data : viewer->data_list)
 			{
 				Draw_menu_for_each_model(data);
 			}
+		}
+
+		IGL_INLINE void BasicMenu::post_resize(int w, int h)
+		{
+			if (viewer)
+			{
+				if (view == Horizontal) {
+					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w * core_percentage_size, h);
+					viewer->core(right_view_id).viewport = Eigen::Vector4f(w * core_percentage_size, 0, w - (w * core_percentage_size), h);
+				}
+				if (view == Vertical) {
+					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w, h * core_percentage_size);
+					viewer->core(right_view_id).viewport = Eigen::Vector4f(0, h* core_percentage_size, w, h - (h * core_percentage_size));
+				}
+				if (view == Core_1) {
+					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w, h);
+					viewer->core(right_view_id).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
+				}
+				if (view == Core_2) {
+					viewer->core(left_view_id).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
+					viewer->core(right_view_id).viewport = Eigen::Vector4f(0, 0, w, h);
+				}
+			}
+		}
+
+		IGL_INLINE bool BasicMenu::mouse_move(int mouse_x, int mouse_y)
+		{
+			follow_and_mark_selected_faces();
+			return ImGuiMenu::mouse_move(mouse_x, mouse_y);
 		}
 
 		void BasicMenu::Draw_menu_for_each_core(igl::opengl::ViewerCore& core) {
@@ -569,29 +596,6 @@ namespace rds
 			viewer->data(model_index).compute_normals();
 			viewer->core(right_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
 			Update_view();
-		}
-
-		void BasicMenu::post_resize(int w, int h)
-		{
-			if (viewer)
-			{
-				if (view == Horizontal) {
-					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w * core_percentage_size, h);
-					viewer->core(right_view_id).viewport = Eigen::Vector4f(w * core_percentage_size, 0, w - (w * core_percentage_size), h);
-				}
-				if (view == Vertical) {
-					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w, h * core_percentage_size);
-					viewer->core(right_view_id).viewport = Eigen::Vector4f(0, h* core_percentage_size, w, h - (h * core_percentage_size));
-				}
-				if (view == Core_1) {
-					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w, h);
-					viewer->core(right_view_id).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
-				}
-				if (view == Core_2) {
-					viewer->core(left_view_id).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
-					viewer->core(right_view_id).viewport = Eigen::Vector4f(0, 0, w, h);
-				}
-			}
 		}
 	}
 }
