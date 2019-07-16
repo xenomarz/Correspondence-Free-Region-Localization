@@ -17,6 +17,8 @@ namespace rds
 
 			if (_viewer)
 			{
+				Position_Weight = Seamless_Weight = Integer_Spacing = Integer_Weight = Delta = Lambda = 0.5;
+					
 				ShowModelIndex = 0;
 				core_percentage_size = 0.5;
 				param_type = HARMONIC;
@@ -27,14 +29,14 @@ namespace rds
 				model_color = GOLD_COLOR;
 				mouse_mode = NONE;
 				view = Horizontal;
+				SolverMode = false;
+
 
 				viewer->load_mesh_from_file(std::string(MODEL1_PATH));
-				viewer->load_mesh_from_file(std::string(MODEL1_PATH));
-												
+				viewer->load_mesh_from_file(std::string(MODEL1_PATH));			
 				viewer->core().viewport = Eigen::Vector4f(0, 0, 640, 800);
 				left_view_id = viewer->core(0).id;
 				right_view_id = viewer->append_core(Eigen::Vector4f(640, 0, 640, 800));
-				
 				Update_view();
 				compute_harmonic_param(1);
 			}
@@ -124,6 +126,59 @@ namespace rds
 			if (prev_model != ShowModelIndex) {
 				Update_view();
 			}
+
+
+			if (ImGui::CollapsingHeader("Energy Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
+				float prev_Lambda = Lambda;
+				float prev_Delta = Delta;
+				float prev_Integer_Weight = Integer_Weight;
+				float prev_Integer_Spacing = Integer_Spacing;
+				float prev_Seamless_Weight = Seamless_Weight;
+				float prev_Position_Weight = Position_Weight;
+
+
+				ImGui::SliderFloat("Lambda", &Lambda, 0, 1, to_string(Lambda).c_str(), 1);
+				ImGui::SliderFloat("Delta", &Delta, 0, 1, to_string(Delta).c_str(), 1);
+				ImGui::SliderFloat("Integer Weight", &Integer_Weight, 0, 1, to_string(Integer_Weight).c_str(), 1);
+				ImGui::SliderFloat("Integer Spacing", &Integer_Spacing, 0, 1, to_string(Integer_Spacing).c_str(), 1);
+				ImGui::SliderFloat("Seamless Weight", &Seamless_Weight, 0, 1, to_string(Seamless_Weight).c_str(), 1);
+				ImGui::SliderFloat("Position Weight", &Position_Weight, 0, 1, to_string(Position_Weight).c_str(), 1);
+
+				
+				//when a change occured on Lambda
+				if (prev_Lambda != Lambda) {
+					
+				}
+				//when a change occured on Delta
+				if (prev_Delta != Delta) {
+
+				}
+				//when a change occured on Integer_Weight
+				if (prev_Integer_Weight != Integer_Weight) {
+
+				}
+				//when a change occured on Integer_Spacing
+				if (prev_Integer_Spacing != Integer_Spacing) {
+
+				}
+				//when a change occured on Seamless_Weight
+				if (prev_Seamless_Weight != Seamless_Weight) {
+
+				}
+				//when a change occured on Position_Weight
+				if (prev_Position_Weight != Position_Weight) {
+
+				}
+
+			}
+
+			if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen)) {
+				if(SolverMode)
+					ImGui::Checkbox("On", &SolverMode);
+				else
+					ImGui::Checkbox("Off", &SolverMode);
+			}
+			
 
 			for (auto& core : viewer->core_list)
 			{

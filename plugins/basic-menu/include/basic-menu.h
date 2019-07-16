@@ -35,6 +35,9 @@
 #define MODEL2_PATH "..\\..\\..\\models\\camel_head.off"
 #define MODEL1_PATH "..\\..\\..\\models\\cube.off"
 
+
+
+
 using namespace std;
 using namespace Eigen;
 
@@ -47,48 +50,65 @@ namespace rds
 		{
 		private:
 			// Expose an enumeration type
-			enum View { Horizontal = 0 , Vertical , Core_1 , Core_2 };
+			enum View { Horizontal = 0, Vertical, Core_1, Core_2 };
 			enum MouseMode { NONE = 0, FACE_SELECT, VERTEX_SELECT, CLEAR };
 			enum Parametrization { HARMONIC = 0, LSCM, ARAP };
 
-			unsigned int left_view_id, right_view_id;
+			//Basic (necessary) parameteres
+			int left_view_id, right_view_id, ShowModelIndex;
 			View view;
 			MouseMode mouse_mode;
 			Parametrization param_type;
-			Eigen::Vector3f onMouse_triangle_color;
-			Eigen::Vector3f selected_faces_color;
-			Eigen::Vector3f selected_vertices_color;
-			Eigen::Vector3f model_color;
-			Eigen::MatrixXd colors_per_face;
-			std::set<int> selected_faces;
-			std::set<int> selected_vertices;
-			int ShowModelIndex;
+			Vector3f onMouse_triangle_color, selected_faces_color, selected_vertices_color, model_color;
+			MatrixXd colors_per_face;
+			set<int> selected_faces, selected_vertices;
 			float core_percentage_size;
-			// Pointer to the imgui
 			igl::opengl::glfw::imgui::ImGuiMenu menu;
+
+			//Solver Parameters
+			bool SolverMode;
+			
+			//Parametrization Parameters
+			float Lambda, Delta, Integer_Weight, Integer_Spacing, Seamless_Weight, Position_Weight;
+
+
 		protected:
+			//Basic (necessary) parameteres
 			std::map<unsigned int, string> data_id_to_name;
 			
 		public:
+			//Constructor & initialization
 			BasicMenu();
-			IGL_INLINE virtual void draw_viewer_menu() override;
 			IGL_INLINE virtual void init(igl::opengl::glfw::Viewer *_viewer) override;
+
+			//Draw menu methods
+			IGL_INLINE virtual void draw_viewer_menu() override;
 			void Draw_menu_for_each_core(igl::opengl::ViewerCore& core);
 			void Draw_menu_for_each_model(igl::opengl::ViewerData& data);
-			void set_name_mapping(unsigned int data_id, string name);
-			int LeftModelID();
-			int RightModelID();
+
+			//Pick faces & vertices and highlight them
 			int pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, View LR);
 			int pick_vertex(Eigen::MatrixXd& V, Eigen::MatrixXi& F, View LR);
 			void follow_and_mark_selected_faces();
-			void Update_view();
+
+			//Name's methods
+			void set_name_mapping(unsigned int data_id, string name);
 			char* getModelNames();
 			string filename(const string& str);
+
+			//Basic Methods
+			int LeftModelID();
+			int RightModelID();
+			void Update_view();
+			
+			//Events methods
 			bool mouse_down(int button, int modifier);
+			void post_resize(int w, int h);
+
+			//Parametrizations
 			void compute_ARAP_param(int model_index);
 			void compute_harmonic_param(int model_index);
 			void compute_lscm_param(int model_index);
-			void post_resize(int w, int h);
 		};
 	}
 }
