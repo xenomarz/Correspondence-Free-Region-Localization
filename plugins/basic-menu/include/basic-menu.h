@@ -27,6 +27,7 @@
 #include <igl/harmonic.h>
 #include <igl/map_vertices_to_circle.h>
 #include <igl/arap.h>
+#include <igl/file_dialog_open.h>
 
 #define RED_COLOR Eigen::Vector3f(1, 0, 0)
 #define BLUE_COLOR Eigen::Vector3f(0, 0, 1)
