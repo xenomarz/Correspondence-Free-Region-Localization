@@ -17,6 +17,7 @@ namespace rds
 
 			if (_viewer)
 			{
+				//Basic (necessary) parameteres
 				ShowModelIndex = 0;
 				core_percentage_size = 0.5;
 				param_type = HARMONIC;
@@ -28,13 +29,22 @@ namespace rds
 				mouse_mode = NONE;
 				view = Horizontal;
 
+				//Solver Parameters
+				SolverMode = false;
+
+				//Parametrization Parameters
+				Position_Weight = Seamless_Weight = Integer_Spacing = Integer_Weight = Delta = Lambda = 0.5;
+					
+				//Load model
 				viewer->load_mesh_from_file(std::string(MODEL1_PATH));
-				viewer->load_mesh_from_file(std::string(MODEL1_PATH));
-												
+				viewer->load_mesh_from_file(std::string(MODEL1_PATH));	
+
+				//Load two views
 				viewer->core().viewport = Eigen::Vector4f(0, 0, 640, 800);
 				left_view_id = viewer->core(0).id;
 				right_view_id = viewer->append_core(Eigen::Vector4f(640, 0, 640, 800));
-				
+
+				//Update scene
 				Update_view();
 				compute_harmonic_param(1);
 			}
@@ -54,7 +64,6 @@ namespace rds
 					viewer->load_mesh_from_file(fname.c_str());
 					viewer->load_mesh_from_file(fname.c_str());
 				}
-				///////////////
 				Update_view();
 			}
 			ImGui::SameLine(0, p);
@@ -125,15 +134,10 @@ namespace rds
 				Update_view();
 			}
 
-			for (auto& core : viewer->core_list)
-			{
-				Draw_menu_for_each_core(core);
-			}
-			
-			for (auto& data : viewer->data_list)
-			{
-				Draw_menu_for_each_model(data);
-			}
+			Draw_menu_for_Parametrization();
+			Draw_menu_for_Solver();
+			Draw_menu_for_cores();
+			Draw_menu_for_models();
 		}
 
 		IGL_INLINE void BasicMenu::post_resize(int w, int h)
@@ -165,118 +169,180 @@ namespace rds
 			return ImGuiMenu::mouse_move(mouse_x, mouse_y);
 		}
 
-		void BasicMenu::Draw_menu_for_each_core(igl::opengl::ViewerCore& core) {
-			ImGui::PushID(core.id);
-			std::stringstream ss;
-			ss << "Core " << core.id;
-			if (ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-			{
-				int data_id = RightModelID();
-				if (core.id == 1) {
-					data_id = LeftModelID();
+
+		void BasicMenu::Draw_menu_for_Parametrization() {
+			if (ImGui::CollapsingHeader("Energy Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
+				float prev_Lambda = Lambda;
+				float prev_Delta = Delta;
+				float prev_Integer_Weight = Integer_Weight;
+				float prev_Integer_Spacing = Integer_Spacing;
+				float prev_Seamless_Weight = Seamless_Weight;
+				float prev_Position_Weight = Position_Weight;
+
+
+				ImGui::SliderFloat("Lambda", &Lambda, 0, 1, to_string(Lambda).c_str(), 1);
+				ImGui::SliderFloat("Delta", &Delta, 0, 1, to_string(Delta).c_str(), 1);
+				ImGui::SliderFloat("Integer Weight", &Integer_Weight, 0, 1, to_string(Integer_Weight).c_str(), 1);
+				ImGui::SliderFloat("Integer Spacing", &Integer_Spacing, 0, 1, to_string(Integer_Spacing).c_str(), 1);
+				ImGui::SliderFloat("Seamless Weight", &Seamless_Weight, 0, 1, to_string(Seamless_Weight).c_str(), 1);
+				ImGui::SliderFloat("Position Weight", &Position_Weight, 0, 1, to_string(Position_Weight).c_str(), 1);
+
+
+				//when a change occured on Lambda
+				if (prev_Lambda != Lambda) {
+
+				}
+				//when a change occured on Delta
+				if (prev_Delta != Delta) {
+
+				}
+				//when a change occured on Integer_Weight
+				if (prev_Integer_Weight != Integer_Weight) {
+
+				}
+				//when a change occured on Integer_Spacing
+				if (prev_Integer_Spacing != Integer_Spacing) {
+
+				}
+				//when a change occured on Seamless_Weight
+				if (prev_Seamless_Weight != Seamless_Weight) {
+
+				}
+				//when a change occured on Position_Weight
+				if (prev_Position_Weight != Position_Weight) {
+
 				}
 
-				if (ImGui::Button("Center object", ImVec2(-1, 0)))
-				{
-					core.align_camera_center(viewer->data(data_id).V, viewer->data(data_id).F);
-				}
-				if (ImGui::Button("Snap canonical view", ImVec2(-1, 0)))
-				{
-					viewer->snap_to_canonical_quaternion();
-				}
-
-				// Zoom
-				ImGui::PushItemWidth(80 * menu_scaling());
-				ImGui::DragFloat("Zoom", &(core.camera_zoom), 0.05f, 0.1f, 20.0f);
-
-				// Select rotation type
-				int rotation_type = static_cast<int>(core.rotation_type);
-				static Eigen::Quaternionf trackball_angle = Eigen::Quaternionf::Identity();
-				static bool orthographic = true;
-				if (ImGui::Combo("Camera Type", &rotation_type, "Trackball\0Two Axes\0002D Mode\0\0"))
-				{
-					using RT = igl::opengl::ViewerCore::RotationType;
-					auto new_type = static_cast<RT>(rotation_type);
-					if (new_type != core.rotation_type)
-					{
-						if (new_type == RT::ROTATION_TYPE_NO_ROTATION)
-						{
-							trackball_angle = core.trackball_angle;
-							orthographic = core.orthographic;
-							core.trackball_angle = Eigen::Quaternionf::Identity();
-							core.orthographic = true;
-						}
-						else if (core.rotation_type == RT::ROTATION_TYPE_NO_ROTATION)
-						{
-							core.trackball_angle = trackball_angle;
-							core.orthographic = orthographic;
-						}
-						core.set_rotation_type(new_type);
-					}
-				}
-
-				// Orthographic view
-				ImGui::Checkbox("Orthographic view", &(core.orthographic));
-				ImGui::PopItemWidth();
-				ImGui::ColorEdit4("Background", core.background_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 			}
-			Update_view();
-			ImGui::PopID();
 		}
 
-		void BasicMenu::Draw_menu_for_each_model(igl::opengl::ViewerData& data) {
-			// Helper for setting viewport specific mesh options
-			auto make_checkbox = [&](const char *label, unsigned int &option, int data_id)
-			{
-				int core_id = right_view_id;
-				if (data_id % 2 == 0) {
-					core_id = left_view_id;
-				}
-
-				return ImGui::Checkbox(label,
-					[&]() { return viewer->core(core_id).is_set(option); },
-					[&](bool value) { return viewer->core(core_id).set(option, value); }
-				);
-			};
-
-			ImGui::PushID(data.id);
-			std::stringstream ss;
-
-			if (data_id_to_name.count(data.id) > 0)
-			{
-				ss << data_id_to_name[data.id];
+		void BasicMenu::Draw_menu_for_Solver() {
+			if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen)) {
+				if (SolverMode)
+					ImGui::Checkbox("On", &SolverMode);
+				else
+					ImGui::Checkbox("Off", &SolverMode);
 			}
-			else
+		}
+
+		void BasicMenu::Draw_menu_for_cores() {
+			for (auto& core : viewer->core_list)
 			{
-				ss << "Data " << data.id;
-			}
-			
-			if (ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-			{
-				if (ImGui::Checkbox("Face-based", &(data.face_based)))
+				ImGui::PushID(core.id);
+				std::stringstream ss;
+				ss << "Core " << core.id;
+				if (ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					data.dirty = igl::opengl::MeshGL::DIRTY_ALL;
-				}
+					int data_id = RightModelID();
+					if (core.id == 1) {
+						data_id = LeftModelID();
+					}
 
-				make_checkbox("Show texture", data.show_texture, data.id);
-				if (ImGui::Checkbox("Invert normals", &(data.invert_normals)))
-				{
-					data.dirty |= igl::opengl::MeshGL::DIRTY_NORMAL;
-				}
-				make_checkbox("Show overlay", data.show_overlay, data.id);
-				make_checkbox("Show overlay depth", data.show_overlay_depth, data.id);
-				ImGui::ColorEdit4("Line color", data.line_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-				ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.3f);
-				ImGui::DragFloat("Shininess", &(data.shininess), 0.05f, 0.0f, 100.0f);
-				ImGui::PopItemWidth();
+					if (ImGui::Button("Center object", ImVec2(-1, 0)))
+					{
+						core.align_camera_center(viewer->data(data_id).V, viewer->data(data_id).F);
+					}
+					if (ImGui::Button("Snap canonical view", ImVec2(-1, 0)))
+					{
+						viewer->snap_to_canonical_quaternion();
+					}
 
-				make_checkbox("Wireframe", data.show_lines, data.id);
-				make_checkbox("Fill", data.show_faces, data.id);
-				ImGui::Checkbox("Show vertex labels", &(data.show_vertid));
-				ImGui::Checkbox("Show faces labels", &(data.show_faceid));
+					// Zoom
+					ImGui::PushItemWidth(80 * menu_scaling());
+					ImGui::DragFloat("Zoom", &(core.camera_zoom), 0.05f, 0.1f, 20.0f);
+
+					// Select rotation type
+					int rotation_type = static_cast<int>(core.rotation_type);
+					static Eigen::Quaternionf trackball_angle = Eigen::Quaternionf::Identity();
+					static bool orthographic = true;
+					if (ImGui::Combo("Camera Type", &rotation_type, "Trackball\0Two Axes\0002D Mode\0\0"))
+					{
+						using RT = igl::opengl::ViewerCore::RotationType;
+						auto new_type = static_cast<RT>(rotation_type);
+						if (new_type != core.rotation_type)
+						{
+							if (new_type == RT::ROTATION_TYPE_NO_ROTATION)
+							{
+								trackball_angle = core.trackball_angle;
+								orthographic = core.orthographic;
+								core.trackball_angle = Eigen::Quaternionf::Identity();
+								core.orthographic = true;
+							}
+							else if (core.rotation_type == RT::ROTATION_TYPE_NO_ROTATION)
+							{
+								core.trackball_angle = trackball_angle;
+								core.orthographic = orthographic;
+							}
+							core.set_rotation_type(new_type);
+						}
+					}
+
+					// Orthographic view
+					ImGui::Checkbox("Orthographic view", &(core.orthographic));
+					ImGui::PopItemWidth();
+					ImGui::ColorEdit4("Background", core.background_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+				}
+				Update_view();
+				ImGui::PopID();
 			}
-			Update_view();
-			ImGui::PopID();
+		}
+
+		void BasicMenu::Draw_menu_for_models() {
+			for (auto& data : viewer->data_list)
+			{
+				// Helper for setting viewport specific mesh options
+				auto make_checkbox = [&](const char *label, unsigned int &option, int data_id)
+				{
+					int core_id = right_view_id;
+					if (data_id % 2 == 0) {
+						core_id = left_view_id;
+					}
+
+					return ImGui::Checkbox(label,
+						[&]() { return viewer->core(core_id).is_set(option); },
+						[&](bool value) { return viewer->core(core_id).set(option, value); }
+					);
+				};
+
+				ImGui::PushID(data.id);
+				std::stringstream ss;
+
+				if (data_id_to_name.count(data.id) > 0)
+				{
+					ss << data_id_to_name[data.id];
+				}
+				else
+				{
+					ss << "Data " << data.id;
+				}
+
+				if (ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					if (ImGui::Checkbox("Face-based", &(data.face_based)))
+					{
+						data.dirty = igl::opengl::MeshGL::DIRTY_ALL;
+					}
+
+					make_checkbox("Show texture", data.show_texture, data.id);
+					if (ImGui::Checkbox("Invert normals", &(data.invert_normals)))
+					{
+						data.dirty |= igl::opengl::MeshGL::DIRTY_NORMAL;
+					}
+					make_checkbox("Show overlay", data.show_overlay, data.id);
+					make_checkbox("Show overlay depth", data.show_overlay_depth, data.id);
+					ImGui::ColorEdit4("Line color", data.line_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+					ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.3f);
+					ImGui::DragFloat("Shininess", &(data.shininess), 0.05f, 0.0f, 100.0f);
+					ImGui::PopItemWidth();
+
+					make_checkbox("Wireframe", data.show_lines, data.id);
+					make_checkbox("Fill", data.show_faces, data.id);
+					ImGui::Checkbox("Show vertex labels", &(data.show_vertid));
+					ImGui::Checkbox("Show faces labels", &(data.show_faceid));
+				}
+				Update_view();
+				ImGui::PopID();
+			}
 		}
 
 		void BasicMenu::Update_view() {
