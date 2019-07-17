@@ -61,7 +61,8 @@ namespace rds
 			View view;
 			MouseMode mouse_mode;
 			Parametrization param_type;
-			Vector3f onMouse_triangle_color, selected_faces_color, selected_vertices_color, model_color;
+			Vector3f Highlighted_face_color, Fixed_face_color, Fixed_vertex_color;
+			Vector3f model_color, Dragged_face_color, Dragged_vertex_color, Vertex_Energy_color;
 			MatrixXd colors_per_face;
 			set<int> selected_faces, selected_vertices;
 			float core_percentage_size;
@@ -111,8 +112,8 @@ namespace rds
 			string filename(const string& str);
 
 			//Basic Methods
-			int LeftModelID();
-			int RightModelID();
+			int InputModelID();
+			int OutputModelID();
 			void Update_view();
 
 			//Parametrizations

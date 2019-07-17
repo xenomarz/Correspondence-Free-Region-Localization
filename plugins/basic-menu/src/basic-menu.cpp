@@ -22,9 +22,12 @@ namespace rds
 				core_percentage_size = 0.5;
 				param_type = HARMONIC;
 				set_name_mapping(0, filename(MODEL1_PATH));
-				onMouse_triangle_color = RED_COLOR;
-				selected_faces_color = BLUE_COLOR;
-				selected_vertices_color = GREEN_COLOR;
+				Highlighted_face_color = RED_COLOR;
+				Fixed_face_color = BLUE_COLOR;
+				Dragged_face_color = GREEN_COLOR;
+				Vertex_Energy_color = RED_COLOR;
+				Dragged_vertex_color = GREEN_COLOR;
+				Fixed_vertex_color = BLUE_COLOR;
 				model_color = GREY_COLOR;
 				mouse_mode = NONE;
 				view = Horizontal;
@@ -74,10 +77,13 @@ namespace rds
 				viewer->open_dialog_save_mesh();
 			}
 			
-			ImGui::ColorEdit3("Follow face colors", onMouse_triangle_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-			ImGui::ColorEdit3("selected faces color", selected_faces_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-			ImGui::ColorEdit3("selected vertices color", selected_vertices_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-			ImGui::ColorEdit3("model color", model_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			ImGui::ColorEdit3("Highlighted face color", Highlighted_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			ImGui::ColorEdit3("Fixed face color", Fixed_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			ImGui::ColorEdit3("Dragged face color", Dragged_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			ImGui::ColorEdit3("Fixed vertex color", Fixed_vertex_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			ImGui::ColorEdit3("Dragged vertex color", Dragged_vertex_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			ImGui::ColorEdit3("Model color", model_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+			ImGui::ColorEdit3("Vertex Energy color", Vertex_Energy_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 
 			View prev_view = view;
 			ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0InputOnly\0OutputOnly\0\0");
@@ -113,13 +119,13 @@ namespace rds
 			//when a change occured on parametrization type
 			if (prev_param_type != param_type) {
 				if (param_type == HARMONIC) {
-					compute_harmonic_param(RightModelID());
+					compute_harmonic_param(OutputModelID());
 				}
 				else if (param_type == LSCM) {
-					compute_lscm_param(RightModelID());
+					compute_lscm_param(OutputModelID());
 				}
 				else {
-					compute_ARAP_param(RightModelID());
+					compute_ARAP_param(OutputModelID());
 				}
 			}
 
@@ -218,14 +224,13 @@ namespace rds
 			down_mouse_x = viewer->current_mouse_x;
 			down_mouse_y = viewer->current_mouse_y;
 			
-
 			if (mouse_mode == FACE_SELECT && button == GLFW_MOUSE_BUTTON_LEFT)
 			{
 				//check if there faces which is selected on the left screen
-				int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, InputOnly);
+				int f = pick_face(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, InputOnly);
 				if (f == -1) {
 					//check if there faces which is selected on the right screen
-					f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, OutputOnly);
+					f = pick_face(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, OutputOnly);
 				}
 
 				if (f != -1)
@@ -243,10 +248,10 @@ namespace rds
 			else if (mouse_mode == VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_LEFT)
 			{
 				//check if there faces which is selected on the left screen
-				int v = pick_vertex(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, InputOnly);
+				int v = pick_vertex(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, InputOnly);
 				if (v == -1) {
 					//check if there faces which is selected on the right screen
-					v = pick_vertex(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, OutputOnly);
+					v = pick_vertex(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, OutputOnly);
 				}
 
 				if (v != -1)
@@ -266,13 +271,13 @@ namespace rds
 				if (!selected_faces.empty())
 				{
 					//check if there faces which is selected on the left screen
-					int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, InputOnly);
-					Model_Translate_ID = LeftModelID();
+					int f = pick_face(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, InputOnly);
+					Model_Translate_ID = InputModelID();
 					Core_Translate_ID = input_view_id;
 					if (f == -1) {
 						//check if there faces which is selected on the right screen
-						f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, OutputOnly);
-						Model_Translate_ID = RightModelID();
+						f = pick_face(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, OutputOnly);
+						Model_Translate_ID = OutputModelID();
 						Core_Translate_ID = output_view_id;
 					}
 
@@ -288,13 +293,13 @@ namespace rds
 				if (!selected_vertices.empty())
 				{
 					//check if there faces which is selected on the left screen
-					int v = pick_vertex(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, InputOnly);
-					Model_Translate_ID = LeftModelID();
+					int v = pick_vertex(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, InputOnly);
+					Model_Translate_ID = InputModelID();
 					Core_Translate_ID = input_view_id;
 					if (v == -1) {
 						//check if there faces which is selected on the right screen
-						v = pick_vertex(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, OutputOnly);
-						Model_Translate_ID = RightModelID();
+						v = pick_vertex(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, OutputOnly);
+						Model_Translate_ID = OutputModelID();
 						Core_Translate_ID = output_view_id;
 					}
 
@@ -372,9 +377,9 @@ namespace rds
 				ss << "Core " << core.id;
 				if (ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					int data_id = RightModelID();
+					int data_id = OutputModelID();
 					if (core.id == 1) {
-						data_id = LeftModelID();
+						data_id = InputModelID();
 					}
 
 					if (ImGui::Button("Center object", ImVec2(-1, 0)))
@@ -489,52 +494,81 @@ namespace rds
 				}
 			}
 			
-			viewer->data(LeftModelID()).set_visible(true, input_view_id);
-			viewer->core(input_view_id).align_camera_center(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F);
+			viewer->data(InputModelID()).set_visible(true, input_view_id);
+			viewer->core(input_view_id).align_camera_center(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F);
 
-			viewer->data(RightModelID()).set_visible(true, output_view_id);
-			viewer->core(output_view_id).align_camera_center(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F);
+			viewer->data(OutputModelID()).set_visible(true, output_view_id);
+			viewer->core(output_view_id).align_camera_center(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F);
 		}
 
 		void BasicMenu::follow_and_mark_selected_faces() {
 			//check if there faces which is selected on the left screen
-			int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, InputOnly);
+			int f = pick_face(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, InputOnly);
 			if (f == -1) {
 				//check if there faces which is selected on the right screen
-				f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, OutputOnly);
+				f = pick_face(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, OutputOnly);
 			}
 
 			if (f != -1)
 			{
-				colors_per_face.resize(viewer->data(LeftModelID()).F.rows(), 3);
+				////////////////////////////////////////////////////////////////
+				////////////////////////////////////////////////////////////////
+				//Mark the faces
+				colors_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
 				for (int i = 0; i < colors_per_face.rows(); i++)
 				{
 					colors_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
 				}
-				//Mark the selected faces
-				colors_per_face.row(f) << double(onMouse_triangle_color[0]) , double(onMouse_triangle_color[1]) , double(onMouse_triangle_color[2]);
-				for (auto fi : selected_faces) { colors_per_face.row(fi) << double(selected_faces_color[0]), double(selected_faces_color[1]), double(selected_faces_color[2]); }
-
-				//Mark the selected vertices
-				Eigen::MatrixXd P_Left;
-				Eigen::MatrixXd P_Right;
-				Eigen::MatrixXd C;
-				P_Left.resize(selected_vertices.size(), 3);
-				P_Right.resize(selected_vertices.size(), 3);
-				C.resize(selected_vertices.size(), 3);
-				int idx = 0;
-				for (auto vi : selected_vertices) {
-					P_Left.row(idx) = viewer->data(LeftModelID()).V.row(vi);
-					C.row(idx) << double(selected_vertices_color[0]), double(selected_vertices_color[1]), double(selected_vertices_color[2]);
-					P_Right.row(idx) = viewer->data(RightModelID()).V.row(vi);
-					idx++;
+				//Mark the fixed faces
+				colors_per_face.row(f) << double(Highlighted_face_color[0]) , double(Highlighted_face_color[1]) , double(Highlighted_face_color[2]);
+				for (auto fi : selected_faces) { colors_per_face.row(fi) << double(Fixed_face_color[0]), double(Fixed_face_color[1]), double(Fixed_face_color[2]); }
+				//Mark the Dragged face
+				if (IsTranslate && (mouse_mode == FACE_SELECT)) {
+					colors_per_face.row(Translate_Index) << double(Dragged_face_color[0]), double(Dragged_face_color[1]), double(Dragged_face_color[2]);
 				}
-				viewer->data(LeftModelID()).set_points(P_Left, C);
-				viewer->data(RightModelID()).set_points(P_Right, C);
+				
+				//TODO:
+				//Mark Energy faces (incomplete)!!!
+				
 
 				//Update the model's faces colors in the two screens
-				viewer->data(LeftModelID()).set_colors(colors_per_face);
-				viewer->data(RightModelID()).set_colors(colors_per_face);
+				viewer->data(InputModelID()).set_colors(colors_per_face);
+				viewer->data(OutputModelID()).set_colors(colors_per_face);
+
+
+				////////////////////////////////////////////////////////////////
+				////////////////////////////////////////////////////////////////
+				//Mark the vertices
+				Eigen::MatrixXd P_Input;
+				Eigen::MatrixXd P_output;
+				Eigen::MatrixXd colors_per_vertex;
+				int idx = 0;
+
+				P_Input.resize(selected_vertices.size(), 3);
+				P_output.resize(selected_vertices.size(), 3);
+				colors_per_vertex.resize(selected_vertices.size(), 3);
+				//Mark the dragged vertex
+				if (IsTranslate && (mouse_mode == VERTEX_SELECT)) {
+					P_Input.resize(selected_vertices.size()+1, 3);
+					P_output.resize(selected_vertices.size()+1, 3);
+					colors_per_vertex.resize(selected_vertices.size()+1, 3);
+
+					P_Input.row(idx) = viewer->data(InputModelID()).V.row(Translate_Index);
+					colors_per_vertex.row(idx) << double(Dragged_vertex_color[0]), double(Dragged_vertex_color[1]), double(Dragged_vertex_color[2]);
+					P_output.row(idx) = viewer->data(OutputModelID()).V.row(Translate_Index);
+					idx++;
+				}
+				
+				//Mark the fixed vertices
+				for (auto vi : selected_vertices) {
+					P_Input.row(idx) = viewer->data(InputModelID()).V.row(vi);
+					colors_per_vertex.row(idx) << double(Fixed_vertex_color[0]), double(Fixed_vertex_color[1]), double(Fixed_vertex_color[2]);
+					P_output.row(idx) = viewer->data(OutputModelID()).V.row(vi);
+					idx++;
+				}
+				//Update the model's vertex colors in the two screens
+				viewer->data(InputModelID()).set_points(P_Input, colors_per_vertex);
+				viewer->data(OutputModelID()).set_points(P_output, colors_per_vertex);
 			}
 		}
 	
@@ -544,11 +578,11 @@ namespace rds
 			data_id_to_name[data_id+1] = name + " (Param.)";
 		}
 
-		int BasicMenu::LeftModelID() {
+		int BasicMenu::InputModelID() {
 			return 2 * ShowModelIndex;
 		}
 
-		int BasicMenu::RightModelID() {
+		int BasicMenu::OutputModelID() {
 			return (2 * ShowModelIndex) + 1;
 		}
 
