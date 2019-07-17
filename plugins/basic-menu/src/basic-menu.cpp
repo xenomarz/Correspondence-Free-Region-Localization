@@ -78,7 +78,7 @@ namespace rds
 			ImGui::ColorEdit3("model color", model_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 
 			View prev_view = view;
-			ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0Core_1\0Core_2\0\0");
+			ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0InputOnly\0OutputOnly\0\0");
 			if ((view == Horizontal) || (view == Vertical)) {
 				float prev_size = core_percentage_size;
 				ImGui::SliderFloat("Core Size", &core_percentage_size, 0, 1, to_string(core_percentage_size).c_str(), 1);
@@ -327,17 +327,12 @@ namespace rds
 			for (auto& data : viewer->data_list)
 			{
 				// Helper for setting viewport specific mesh options
-				auto make_checkbox = [&](const char *label, unsigned int &option, int data_id)
+				auto make_checkbox = [&](const char *label, unsigned int &option)
 				{
-					int core_id = output_view_id;
-					if (data_id % 2 == 0) {
-						core_id = input_view_id;
-					}
-
-					return ImGui::Checkbox(label,
-						[&]() { return viewer->core(core_id).is_set(option); },
-						[&](bool value) { return viewer->core(core_id).set(option, value); }
-					);
+					bool temp = option;
+					bool res = ImGui::Checkbox(label, &temp);
+					option = temp;
+					return res;
 				};
 
 				ImGui::PushID(data.id);
@@ -359,20 +354,20 @@ namespace rds
 						data.dirty = igl::opengl::MeshGL::DIRTY_ALL;
 					}
 
-					make_checkbox("Show texture", data.show_texture, data.id);
+					make_checkbox("Show texture", data.show_texture);
 					if (ImGui::Checkbox("Invert normals", &(data.invert_normals)))
 					{
 						data.dirty |= igl::opengl::MeshGL::DIRTY_NORMAL;
 					}
-					make_checkbox("Show overlay", data.show_overlay, data.id);
-					make_checkbox("Show overlay depth", data.show_overlay_depth, data.id);
+					make_checkbox("Show overlay", data.show_overlay);
+					make_checkbox("Show overlay depth", data.show_overlay_depth);
 					ImGui::ColorEdit4("Line color", data.line_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 					ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.3f);
 					ImGui::DragFloat("Shininess", &(data.shininess), 0.05f, 0.0f, 100.0f);
 					ImGui::PopItemWidth();
 
-					make_checkbox("Wireframe", data.show_lines, data.id);
-					make_checkbox("Fill", data.show_faces, data.id);
+					make_checkbox("Wireframe", data.show_lines);
+					make_checkbox("Fill", data.show_faces);
 					ImGui::Checkbox("Show vertex labels", &(data.show_vertid));
 					ImGui::Checkbox("Show faces labels", &(data.show_faceid));
 				}
