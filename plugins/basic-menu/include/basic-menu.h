@@ -65,6 +65,8 @@ namespace rds
 			MatrixXd colors_per_face;
 			set<int> selected_faces, selected_vertices;
 			float core_percentage_size;
+			bool IsTranslate;
+			int Translate_Index, Model_Translate_ID, Core_Translate_ID, down_mouse_x, down_mouse_y;
 			igl::opengl::glfw::imgui::ImGuiMenu menu;
 
 			//Solver Parameters
@@ -81,13 +83,15 @@ namespace rds
 		public:
 			//Constructor & initialization
 			BasicMenu();
+
 			// callbacks
 			IGL_INLINE virtual void draw_viewer_menu() override;
 			IGL_INLINE virtual void init(igl::opengl::glfw::Viewer *_viewer) override;
 			IGL_INLINE virtual void post_resize(int w, int h) override;
 			IGL_INLINE virtual bool mouse_move(int mouse_x, int mouse_y) override;
 			IGL_INLINE virtual bool mouse_down(int button, int modifier) override;
-
+			IGL_INLINE virtual bool mouse_up(int button, int modifier) override;
+			
 			//Draw menu methods
 			void Draw_menu_for_cores();
 			void Draw_menu_for_models();
@@ -98,6 +102,8 @@ namespace rds
 			int pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, View LR);
 			int pick_vertex(Eigen::MatrixXd& V, Eigen::MatrixXi& F, View LR);
 			void follow_and_mark_selected_faces();
+			RowVector3d get_face_avg();
+			Vector3f computeTranslation(int mouse_x,int from_x,int mouse_y,int from_y,RowVector3d pt3D);
 
 			//Name's methods
 			void set_name_mapping(unsigned int data_id, string name);
@@ -108,8 +114,6 @@ namespace rds
 			int LeftModelID();
 			int RightModelID();
 			void Update_view();
-			
-			//Events methods
 
 			//Parametrizations
 			void compute_ARAP_param(int model_index);

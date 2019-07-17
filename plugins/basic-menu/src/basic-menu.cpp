@@ -28,6 +28,8 @@ namespace rds
 				model_color = GREY_COLOR;
 				mouse_mode = NONE;
 				view = Horizontal;
+				IsTranslate = false;
+				down_mouse_x = down_mouse_y = -1;
 
 				//Solver Parameters
 				SolverMode = false;
@@ -166,11 +168,58 @@ namespace rds
 		IGL_INLINE bool BasicMenu::mouse_move(int mouse_x, int mouse_y)
 		{
 			follow_and_mark_selected_faces();
+
+			if (!IsTranslate)
+			{
+				return ImGuiMenu::mouse_move(mouse_x, mouse_y);;
+			}
+			if (mouse_mode == FACE_SELECT)
+			{
+				if (!selected_faces.empty())
+				{
+					Eigen::RowVector3d face_avg_pt = get_face_avg();
+					RowVector3i face = viewer->data(Model_Translate_ID).F.row(Translate_Index);
+
+					Eigen::Vector3f translation = computeTranslation(mouse_x,down_mouse_x,mouse_y,down_mouse_y,face_avg_pt);
+					viewer->data(Model_Translate_ID).V.row(face[0]) += translation.cast<double>();
+					viewer->data(Model_Translate_ID).V.row(face[1]) += translation.cast<double>();
+					viewer->data(Model_Translate_ID).V.row(face[2]) += translation.cast<double>();
+
+					viewer->data(Model_Translate_ID).set_mesh(viewer->data(Model_Translate_ID).V, viewer->data(Model_Translate_ID).F);
+					down_mouse_x = mouse_x;
+					down_mouse_y = mouse_y;
+					return true;
+				}
+			}
+			else if (mouse_mode == VERTEX_SELECT)
+			{
+				if (!selected_vertices.empty())
+				{
+					Eigen::RowVector3d vertex_pos = viewer->data(Model_Translate_ID).V.row(Translate_Index);
+					Eigen::Vector3f translation = computeTranslation(mouse_x, down_mouse_x, mouse_y, down_mouse_y, vertex_pos);
+					viewer->data(Model_Translate_ID).V.row(Translate_Index) += translation.cast<double>();
+					
+					viewer->data(Model_Translate_ID).set_mesh(viewer->data(Model_Translate_ID).V, viewer->data(Model_Translate_ID).F);
+					down_mouse_x = mouse_x;
+					down_mouse_y = mouse_y;
+					return true;
+				}
+			}
+
 			return ImGuiMenu::mouse_move(mouse_x, mouse_y);
 		}
 
+		IGL_INLINE bool BasicMenu::mouse_up(int button, int modifier) {
+			IsTranslate = false;
+			return false;
+		}
+
 		IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
-			if (mouse_mode == FACE_SELECT)
+			down_mouse_x = viewer->current_mouse_x;
+			down_mouse_y = viewer->current_mouse_y;
+			
+
+			if (mouse_mode == FACE_SELECT && button == GLFW_MOUSE_BUTTON_LEFT)
 			{
 				//check if there faces which is selected on the left screen
 				int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, InputOnly);
@@ -181,25 +230,79 @@ namespace rds
 
 				if (f != -1)
 				{
-					selected_faces.insert(f);
+					if (std::find(selected_faces.begin(), selected_faces.end(), f) != selected_faces.end())
+					{
+						selected_faces.erase(f);
+					}
+					else {
+						selected_faces.insert(f);
+					}
 				}
 
 			}
-			else if (mouse_mode == VERTEX_SELECT)
+			else if (mouse_mode == VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_LEFT)
 			{
-				MatrixXd vertices;
 				//check if there faces which is selected on the left screen
 				int v = pick_vertex(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, InputOnly);
-				vertices = viewer->data(LeftModelID()).V;
 				if (v == -1) {
 					//check if there faces which is selected on the right screen
 					v = pick_vertex(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, OutputOnly);
-					vertices = viewer->data(RightModelID()).V;
 				}
 
 				if (v != -1)
 				{
-					selected_vertices.insert(v);
+					if (std::find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
+					{
+						selected_vertices.erase(v);
+					}
+					else {
+						selected_vertices.insert(v);
+					}
+					
+				}
+			}
+			else if (mouse_mode == FACE_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
+			{
+				if (!selected_faces.empty())
+				{
+					//check if there faces which is selected on the left screen
+					int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, InputOnly);
+					Model_Translate_ID = LeftModelID();
+					Core_Translate_ID = input_view_id;
+					if (f == -1) {
+						//check if there faces which is selected on the right screen
+						f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, OutputOnly);
+						Model_Translate_ID = RightModelID();
+						Core_Translate_ID = output_view_id;
+					}
+
+					if (std::find(selected_faces.begin(), selected_faces.end(), f) != selected_faces.end())
+					{
+						IsTranslate = true;
+						Translate_Index = f;
+					}
+				}
+			}
+			else if (mouse_mode == VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
+			{
+				if (!selected_vertices.empty())
+				{
+					//check if there faces which is selected on the left screen
+					int v = pick_vertex(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, InputOnly);
+					Model_Translate_ID = LeftModelID();
+					Core_Translate_ID = input_view_id;
+					if (v == -1) {
+						//check if there faces which is selected on the right screen
+						v = pick_vertex(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, OutputOnly);
+						Model_Translate_ID = RightModelID();
+						Core_Translate_ID = output_view_id;
+					}
+
+					if (std::find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
+					{
+						IsTranslate = true;
+						Translate_Index = v;
+					}
 				}
 			}
 
@@ -487,6 +590,54 @@ namespace rds
 			head = str.find_last_of("/\\");
 			tail = str.find_last_of("/.");
 			return (str.substr((head + 1),(tail-head-1)));
+		}
+
+		RowVector3d BasicMenu::get_face_avg() {
+			RowVector3d avg; avg << 0, 0, 0;
+			RowVector3i face = viewer->data(Model_Translate_ID).F.row(Translate_Index);
+
+			avg += viewer->data(Model_Translate_ID).V.row(face[0]);
+			avg += viewer->data(Model_Translate_ID).V.row(face[1]);
+			avg += viewer->data(Model_Translate_ID).V.row(face[2]);
+			avg /= 3;
+
+			return avg;
+		}
+
+		//computes translation for the vertices of the moving handle based on the mouse motion
+		Vector3f BasicMenu::computeTranslation(int mouse_x, int from_x, int mouse_y, int from_y, RowVector3d pt3D) {
+			Eigen::Matrix4f modelview = viewer->core(Core_Translate_ID).view;
+			//project the given point (typically the handle centroid) to get a screen space depth
+			Eigen::Vector3f proj = igl::project(pt3D.transpose().cast<float>().eval(),
+				modelview,
+				viewer->core(Core_Translate_ID).proj,
+				viewer->core(Core_Translate_ID).viewport);
+			float depth = proj[2];
+
+			double x, y;
+			Eigen::Vector3f pos1, pos0;
+
+			//unproject from- and to- points
+			x = mouse_x;
+			y = viewer->core(Core_Translate_ID).viewport(3) - mouse_y;
+			pos1 = igl::unproject(Eigen::Vector3f(x, y, depth),
+				modelview,
+				viewer->core(Core_Translate_ID).proj,
+				viewer->core(Core_Translate_ID).viewport);
+
+
+			x = from_x;
+			y = viewer->core(Core_Translate_ID).viewport(3) - from_y;
+			pos0 = igl::unproject(Eigen::Vector3f(x, y, depth),
+				modelview,
+				viewer->core(Core_Translate_ID).proj,
+				viewer->core(Core_Translate_ID).viewport);
+
+			//translation is the vector connecting the two
+			Eigen::Vector3f translation;
+			translation = pos1 - pos0;
+
+			return translation;
 		}
 
 		int BasicMenu::pick_face(Eigen::MatrixXd& V,Eigen::MatrixXi& F, View LR) {
