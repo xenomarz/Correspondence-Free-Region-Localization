@@ -52,12 +52,12 @@ namespace rds
 		{
 		private:
 			// Expose an enumeration type
-			enum View { Horizontal = 0, Vertical, Core_1, Core_2 };
+			enum View { Horizontal = 0, Vertical, InputOnly, OutputOnly };
 			enum MouseMode { NONE = 0, FACE_SELECT, VERTEX_SELECT, CLEAR };
 			enum Parametrization { HARMONIC = 0, LSCM, ARAP };
 
 			//Basic (necessary) parameteres
-			int left_view_id, right_view_id, ShowModelIndex;
+			int input_view_id, output_view_id, ShowModelIndex;
 			View view;
 			MouseMode mouse_mode;
 			Parametrization param_type;

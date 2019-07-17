@@ -41,8 +41,8 @@ namespace rds
 
 				//Load two views
 				viewer->core().viewport = Eigen::Vector4f(0, 0, 640, 800);
-				left_view_id = viewer->core(0).id;
-				right_view_id = viewer->append_core(Eigen::Vector4f(640, 0, 640, 800));
+				input_view_id = viewer->core(0).id;
+				output_view_id = viewer->append_core(Eigen::Vector4f(640, 0, 640, 800));
 
 				//Update scene
 				Update_view();
@@ -145,20 +145,20 @@ namespace rds
 			if (viewer)
 			{
 				if (view == Horizontal) {
-					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w * core_percentage_size, h);
-					viewer->core(right_view_id).viewport = Eigen::Vector4f(w * core_percentage_size, 0, w - (w * core_percentage_size), h);
+					viewer->core(input_view_id).viewport = Eigen::Vector4f(0, 0, w * core_percentage_size, h);
+					viewer->core(output_view_id).viewport = Eigen::Vector4f(w * core_percentage_size, 0, w - (w * core_percentage_size), h);
 				}
 				if (view == Vertical) {
-					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w, h * core_percentage_size);
-					viewer->core(right_view_id).viewport = Eigen::Vector4f(0, h* core_percentage_size, w, h - (h * core_percentage_size));
+					viewer->core(input_view_id).viewport = Eigen::Vector4f(0, 0, w, h * core_percentage_size);
+					viewer->core(output_view_id).viewport = Eigen::Vector4f(0, h* core_percentage_size, w, h - (h * core_percentage_size));
 				}
-				if (view == Core_1) {
-					viewer->core(left_view_id).viewport = Eigen::Vector4f(0, 0, w, h);
-					viewer->core(right_view_id).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
+				if (view == InputOnly) {
+					viewer->core(input_view_id).viewport = Eigen::Vector4f(0, 0, w, h);
+					viewer->core(output_view_id).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
 				}
-				if (view == Core_2) {
-					viewer->core(left_view_id).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
-					viewer->core(right_view_id).viewport = Eigen::Vector4f(0, 0, w, h);
+				if (view == OutputOnly) {
+					viewer->core(input_view_id).viewport = Eigen::Vector4f(w + 1, h + 1, w + 2, h + 2);
+					viewer->core(output_view_id).viewport = Eigen::Vector4f(0, 0, w, h);
 				}
 			}
 		}
@@ -169,6 +169,42 @@ namespace rds
 			return ImGuiMenu::mouse_move(mouse_x, mouse_y);
 		}
 
+		IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
+			if (mouse_mode == FACE_SELECT)
+			{
+				//check if there faces which is selected on the left screen
+				int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, InputOnly);
+				if (f == -1) {
+					//check if there faces which is selected on the right screen
+					f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, OutputOnly);
+				}
+
+				if (f != -1)
+				{
+					selected_faces.insert(f);
+				}
+
+			}
+			else if (mouse_mode == VERTEX_SELECT)
+			{
+				MatrixXd vertices;
+				//check if there faces which is selected on the left screen
+				int v = pick_vertex(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, InputOnly);
+				vertices = viewer->data(LeftModelID()).V;
+				if (v == -1) {
+					//check if there faces which is selected on the right screen
+					v = pick_vertex(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, OutputOnly);
+					vertices = viewer->data(RightModelID()).V;
+				}
+
+				if (v != -1)
+				{
+					selected_vertices.insert(v);
+				}
+			}
+
+			return false;
+		}
 
 		void BasicMenu::Draw_menu_for_Parametrization() {
 			if (ImGui::CollapsingHeader("Energy Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -293,9 +329,9 @@ namespace rds
 				// Helper for setting viewport specific mesh options
 				auto make_checkbox = [&](const char *label, unsigned int &option, int data_id)
 				{
-					int core_id = right_view_id;
+					int core_id = output_view_id;
 					if (data_id % 2 == 0) {
-						core_id = left_view_id;
+						core_id = input_view_id;
 					}
 
 					return ImGui::Checkbox(label,
@@ -355,19 +391,19 @@ namespace rds
 				}
 			}
 			
-			viewer->data(LeftModelID()).set_visible(true, left_view_id);
-			viewer->core(left_view_id).align_camera_center(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F);
+			viewer->data(LeftModelID()).set_visible(true, input_view_id);
+			viewer->core(input_view_id).align_camera_center(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F);
 
-			viewer->data(RightModelID()).set_visible(true, right_view_id);
-			viewer->core(right_view_id).align_camera_center(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F);
+			viewer->data(RightModelID()).set_visible(true, output_view_id);
+			viewer->core(output_view_id).align_camera_center(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F);
 		}
 
 		void BasicMenu::follow_and_mark_selected_faces() {
 			//check if there faces which is selected on the left screen
-			int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, Core_1);
+			int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, InputOnly);
 			if (f == -1) {
 				//check if there faces which is selected on the right screen
-				f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, Core_2);
+				f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, OutputOnly);
 			}
 
 			if (f != -1)
@@ -402,43 +438,6 @@ namespace rds
 				viewer->data(LeftModelID()).set_colors(colors_per_face);
 				viewer->data(RightModelID()).set_colors(colors_per_face);
 			}
-		}
-
-		bool BasicMenu::mouse_down(int button, int modifier) {
-			if (mouse_mode == FACE_SELECT)
-			{
-				//check if there faces which is selected on the left screen
-				int f = pick_face(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, Core_1);
-				if (f == -1) {
-					//check if there faces which is selected on the right screen
-					f = pick_face(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, Core_2);
-				}
-
-				if (f != -1)
-				{
-					selected_faces.insert(f);
-				}
-
-			}
-			else if (mouse_mode == VERTEX_SELECT)
-			{
-				MatrixXd vertices;
-				//check if there faces which is selected on the left screen
-				int v = pick_vertex(viewer->data(LeftModelID()).V, viewer->data(LeftModelID()).F, Core_1);
-				vertices = viewer->data(LeftModelID()).V;
-				if (v == -1) {
-					//check if there faces which is selected on the right screen
-					v = pick_vertex(viewer->data(RightModelID()).V, viewer->data(RightModelID()).F, Core_2);
-					vertices = viewer->data(RightModelID()).V;
-				}
-
-				if (v != -1)
-				{
-					selected_vertices.insert(v);
-				}
-			}
-
-			return false;
 		}
 	
 		void BasicMenu::set_name_mapping(unsigned int data_id, string name)
@@ -498,16 +497,16 @@ namespace rds
 		int BasicMenu::pick_face(Eigen::MatrixXd& V,Eigen::MatrixXi& F, View LR) {
 			// Cast a ray in the view direction starting from the mouse position
 			int core_index;
-			if (LR == Core_2) {
-				core_index = right_view_id;
+			if (LR == OutputOnly) {
+				core_index = output_view_id;
 			}
-			else if (LR == Core_1) {
-				core_index = left_view_id;
+			else if (LR == InputOnly) {
+				core_index = input_view_id;
 			}
 			double x = viewer->current_mouse_x;
 			double y = viewer->core(core_index).viewport(3) - viewer->current_mouse_y;
 			if (view == Vertical) {
-				y = (viewer->core(left_view_id).viewport(3) / core_percentage_size) - viewer->current_mouse_y;
+				y = (viewer->core(input_view_id).viewport(3) / core_percentage_size) - viewer->current_mouse_y;
 			}
 
 
@@ -531,17 +530,17 @@ namespace rds
 		int BasicMenu::pick_vertex(Eigen::MatrixXd& V, Eigen::MatrixXi& F,View LR) {
 			// Cast a ray in the view direction starting from the mouse position
 			int core_index;
-			if (LR == Core_2) {
-				core_index = right_view_id;
+			if (LR == OutputOnly) {
+				core_index = output_view_id;
 			}
-			else if (LR == Core_1) {
-				core_index = left_view_id;
+			else if (LR == InputOnly) {
+				core_index = input_view_id;
 			}
 
 			double x = viewer->current_mouse_x;
 			double y = viewer->core(core_index).viewport(3) - viewer->current_mouse_y;
 			if (view == Vertical) {
-				y = (viewer->core(left_view_id).viewport(3) / core_percentage_size) - viewer->current_mouse_y;
+				y = (viewer->core(input_view_id).viewport(3) / core_percentage_size) - viewer->current_mouse_y;
 			}
 
 			Eigen::RowVector3d pt;
@@ -605,7 +604,7 @@ namespace rds
 
 			viewer->data(model_index).compute_normals();
 
-			viewer->core(right_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+			viewer->core(output_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
 			Update_view();
 		}
 
@@ -632,7 +631,7 @@ namespace rds
 			viewer->data(model_index).set_mesh(viewer->data(model_index).V_uv, viewer->data(model_index).F);
 
 			viewer->data(model_index).compute_normals();
-			viewer->core(right_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+			viewer->core(output_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
 			Update_view();
 		}
 
@@ -660,7 +659,7 @@ namespace rds
 			viewer->data(model_index).set_mesh(viewer->data(model_index).V_uv, viewer->data(model_index).F);
 
 			viewer->data(model_index).compute_normals();
-			viewer->core(right_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+			viewer->core(output_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
 			Update_view();
 		}
 	}
