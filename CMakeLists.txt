@@ -13,5 +13,9 @@ find_package(LIBIGL REQUIRED QUIET)
 add_subdirectory("libs/optimization-lib")
 add_subdirectory("plugins")
 
+if (CMAKE_JS_VERSION)
+    add_subdirectory("node-addon")
+endif()
+
 # applications
 add_subdirectory("apps/autoquads")
