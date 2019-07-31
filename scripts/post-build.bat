@@ -28,6 +28,8 @@ FOR %%i IN ("%sourceFilePath%") DO (
   SET fileExtension=%%~xi
 )
 
+ECHO %sourceFilePath%
+
 SET appendedFileName=%fileName%_%fullDate%%fileExtension%
 SET targetFilePath=%targetDirectoryPath%%appendedFileName%
 
