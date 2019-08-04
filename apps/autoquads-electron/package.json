@@ -4,15 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "prestart": "polymer build && node pre-start.js",
     "start": "electron ."
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@polymer/paper-slider": "^3.0.1",
     "@vaadin/vaadin": "^13.0.11",
     "electron": "^6.0.0",
     "lit-element": "^2.2.1",
-    "paper-slider": "0.0.0",
+    "nano-id": "^1.1.0",
+    "pwa-helpers": "^0.9.1",
+    "redux": "^4.0.4",
     "three": "^0.107.0"
   }
 }

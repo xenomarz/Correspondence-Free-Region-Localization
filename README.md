@@ -12,7 +12,9 @@
   - Install [NodeJS](https://nodejs.org).
   - Install [Visual Studio Code](https://code.visualstudio.com/).
   - Open command prompt, and run the following commands:
-    - `npm install -g cmake-js`
+      1. `npm install -g cmake-js`
+      2. `npm install -g polymer-cli`
+      3. `npm install`
 
 ## Build instructions:
  1. Clone repository recursively - `git clone --recursive https://github.com/HaifaGraphics/RDS.git`
@@ -21,5 +23,4 @@
        1. Generate Visual Studio project using CMake GUI (Need to be done after a modification to a CMakeLists.txt file).
     - For electron applications:
       1. Open command prompt:
-         1. Run `npm install` from the repository's root folder (need to be done only once).
-         2. Run `cmake-js` from the repository's root folder (Need to be done after a modification to a CMakeLists.txt file).
+         1. Run `cmake-js` from the repository's root folder (Need to be done after a modification to a CMakeLists.txt file).

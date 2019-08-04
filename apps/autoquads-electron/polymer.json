@@ -1,0 +1,31 @@
+{
+  "npm": true,
+  "lint": {
+    "rules": [
+      "polymer-3"
+    ]
+  },
+  "sources": [
+    "src/**.js",
+    "manifest/**"
+   ],
+  "builds": [
+    {
+      "name": "es6-bundled",
+      "js": {
+        "compile": "es2015",
+        "minify": false,
+        "transformModulesToAmd": true
+      },
+      "css": {
+        "minify": false
+      },
+      "html": {
+        "minify": false
+      },
+      "bundle": false,
+      "addServiceWorker": true
+    }
+  ],
+  "moduleResolution": "node"
+}

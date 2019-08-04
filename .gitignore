@@ -3,3 +3,7 @@ build
 
 # Node
 node_modules
+web_modules
+
+# Node addons
+*.node

@@ -5,6 +5,7 @@
       "name": "Debug Main Process",
       "type": "node",
       "request": "launch",
+      "preLaunchTask": "build",
       "cwd": "${workspaceRoot}",
       "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
       "windows": {
@@ -17,6 +18,7 @@
       "name": "Debug Renderer Process",
       "type": "chrome",
       "request": "launch",
+      "preLaunchTask": "build",
       "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
       "windows": {
         "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"

@@ -17,7 +17,7 @@ function createWindow () {
   })
 
   // and load the index.html of the app.
-  mainWindow.loadFile('index.html')
+  mainWindow.loadFile('build/es6-bundled/index.html')
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
