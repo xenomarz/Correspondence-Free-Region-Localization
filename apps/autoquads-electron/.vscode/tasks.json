@@ -6,6 +6,12 @@
             "type": "npm",
             "script": "prestart",
             "problemMatcher": []
-        }
+        },
+        {
+            "label": "postinstall",
+            "type": "npm",
+            "script": "postinstall",
+            "problemMatcher": []
+        }        
     ]
 }

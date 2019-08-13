@@ -1,23 +1,39 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow} = require('electron')
-const path = require('path')
+const {app, protocol, BrowserWindow} = require('electron');
+const path = require('path');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
+let mainWindow;
+
+// Base path used to resolve modules
+const base = app.getAppPath();
+
+// Protocol will be "app://./…"
+const scheme = 'app';
+
+// Register scheme
+protocol.registerSchemesAsPrivileged([{scheme: scheme, privileges: { bypassCSP: true }}]);
+
+// Create protocol
+require('./create-protocol')(scheme, base);
 
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
   })
 
+  mainWindow.maximize();
+  mainWindow.show();
+  
   // and load the index.html of the app.
-  mainWindow.loadFile('build/es6-bundled/index.html')
+  mainWindow.loadURL('app://./index.html');
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()

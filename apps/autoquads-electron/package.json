@@ -4,19 +4,45 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prestart": "polymer build && node pre-start.js",
-    "start": "electron ."
+    "prestart": "node prestart.js",
+    "start": "electron .",
+    "postinstall": "npx @pika/web"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@pika/web": "^0.5.1",
+    "@polymer/iron-collapse": "^3.0.1",
+    "@polymer/iron-icon": "^3.0.1",
+    "@polymer/iron-icons": "^3.0.1",
+    "@polymer/paper-button": "^3.0.1",
     "@polymer/paper-slider": "^3.0.1",
-    "@vaadin/vaadin": "^13.0.11",
+    "@polymer/paper-toggle-button": "^3.0.1",
+    "@vaadin/vaadin": "^14.0.0",
     "electron": "^6.0.0",
+    "fs-extra": "^8.1.0",
     "lit-element": "^2.2.1",
     "nano-id": "^1.1.0",
     "pwa-helpers": "^0.9.1",
     "redux": "^4.0.4",
     "three": "^0.107.0"
+  },
+  "@pika/web": {
+    "webDependencies": [
+      "@polymer/paper-button",
+      "@polymer/paper-slider",
+      "@polymer/iron-collapse",
+      "@polymer/iron-icons",
+      "@polymer/iron-icon",
+      "@polymer/paper-toggle-button",
+      "@vaadin/vaadin-button",
+      "@vaadin/vaadin-checkbox",
+      "@vaadin/vaadin-combo-box",
+      "@vaadin/vaadin-split-layout",
+      "@vaadin/vaadin-text-field/vaadin-text-field.js",
+      "@vaadin/vaadin-text-field/vaadin-number-field.js",
+      "@vaadin/vaadin-select",
+      "lit-element"
+    ]
   }
 }
