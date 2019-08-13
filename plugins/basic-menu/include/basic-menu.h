@@ -34,7 +34,8 @@
 #define GREEN_COLOR Eigen::Vector3f(0, 1, 0)
 #define GOLD_COLOR Eigen::Vector3f(1, 215.0f / 255.0f, 0)
 #define GREY_COLOR Eigen::Vector3f(0.75, 0.75, 0.75)
-#define MODEL2_PATH "..\\..\\..\\models\\camel_head.off"
+//#define MODEL1_PATH "..\\..\\..\\models\\cactus.off"
+//#define MODEL1_PATH "..\\..\\..\\models\\camel_head.off"
 #define MODEL1_PATH "..\\..\\..\\models\\cube.off"
 
 

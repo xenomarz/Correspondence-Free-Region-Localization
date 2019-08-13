@@ -10,8 +10,10 @@ option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use ImGui"                    ON)
 find_package(LIBIGL REQUIRED QUIET)
 
 # libraries and plugins
-add_subdirectory("libs/optimization-lib")
+add_subdirectory("libs/optimization_lib")
 add_subdirectory("plugins")
 
 # applications
 add_subdirectory("apps/autoquads")
+add_subdirectory("apps/optimization_lib_tests")
+add_subdirectory("apps/plugins_tests")

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(autoquads)
+project(plugins-tests)
 
 # Add your project files
 set(SOURCES src/main.cpp ${CMAKE_SOURCE_DIR}/natvis/eigen.natvis)
@@ -14,6 +14,6 @@ target_link_libraries(${PROJECT_NAME}
         igl::core
         igl::opengl
         igl::opengl_glfw
-        igl::opengl_glfw_imgui
+        igl::opengl_glfw_imgui		
         rds::optimization_lib
         rds::plugins)
