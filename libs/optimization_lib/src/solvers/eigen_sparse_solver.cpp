@@ -1,4 +1,4 @@
-#include "EigenSparseSolver.h"
+#include <solvers/eigen_sparse_solver.h>
 #include <vector>
 using namespace std;
 

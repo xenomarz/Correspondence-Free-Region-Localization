@@ -4,7 +4,7 @@
 #include <functional>
 #include <Eigen/Core>
 #include <Eigen/Sparse>
-#include <objective-function.h>
+#include <objective_functions/objective_function.h>
 
 using namespace Eigen;
 typedef Triplet<double> T;
@@ -12,21 +12,20 @@ typedef SparseMatrix<double> SpMat;
 typedef Matrix<double, 6, 6> Matrix6d;
 typedef Matrix<double, 6, 1> Vector6d;
 
-class ObjectiveSymmetricDirichlet : public ObjectiveFunction
+class PenaltyDynamics : public ObjectiveFunction
 {
 
 public:
 
 	/**************************************************************************************************************************/
 	//INITIALIZATION 
-	ObjectiveSymmetricDirichlet();
+	PenaltyDynamics();
 
 	virtual void init();
 	virtual void updateX(const VectorXd& X);
 	virtual double value();
 	virtual void gradient(VectorXd& g);
-    void gradient_old(VectorXd& g);
-    virtual void hessian();
+	virtual void hessian();
 
 	//loop implementation
 	void prepare_hessian();
@@ -45,10 +44,11 @@ public:
 	VectorXd b;
 	VectorXd c;
 	VectorXd d;
-	VectorXd detJ;		//Jacobian determinant (ad-bc)
-    // cones alpha and beta
-    MatrixX2d alpha;  
-    MatrixX2d beta;
+	//Eigen::MatrixXd Juv;		//[a,b,c,d]
+	//Eigen::MatrixXd invJuv;	//the order and the signs isn't important because the energy is squared anyway thus will be [a,b,c,d]*1/(ad-bc)
+	VectorXd detJuv;		//(ad-bc)
+	VectorXd invdetJuv;	//1/(ad-bc)
+	SparseMatrix<double> DdetJuv_DUV; //jacobian of the function (detJuv) by UV
 
 	//singular values
 	MatrixX2d s; //Singular values s[0]>s[1]

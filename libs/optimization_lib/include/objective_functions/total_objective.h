@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include <optimization-lib\objective-function.h>
+#include <objective_functions/objective_function.h>
 
 #include <memory>
 

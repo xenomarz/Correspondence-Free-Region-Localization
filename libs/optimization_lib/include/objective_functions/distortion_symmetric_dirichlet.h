@@ -4,7 +4,7 @@
 #include <functional>
 #include <Eigen/Core>
 #include <Eigen/Sparse>
-#include <objective-function.h>
+#include <objective_functions/objective_function.h>
 
 using namespace Eigen;
 typedef Triplet<double> T;

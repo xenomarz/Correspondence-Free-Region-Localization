@@ -1,4 +1,4 @@
-#include "total-objective.h"
+#include <objective_functions/total_objective.h>
 
 TotalObjective::TotalObjective()
 {

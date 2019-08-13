@@ -1,4 +1,4 @@
-#include "ConstraintsPositional.h"
+#include <objective_functions/constraints_positional.h>
 
 using namespace std;
 using namespace Eigen;

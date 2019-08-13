@@ -1,4 +1,4 @@
-#include "objective-function.h"
+#include <objective_functions/objective_function.h>
 
 ObjectiveFunction::ObjectiveFunction()
 {

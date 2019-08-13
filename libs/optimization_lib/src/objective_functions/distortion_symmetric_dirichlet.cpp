@@ -1,4 +1,4 @@
-#include "distortion-symmetric-dirichlet.h"
+#include <objective_functions/distortion_symmetric_dirichlet.h>
 #include <limits>
 
 

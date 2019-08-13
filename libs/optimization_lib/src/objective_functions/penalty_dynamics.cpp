@@ -1,7 +1,5 @@
-#include "PenaltyDynamics.h"
+#include <objective_functions/penalty_dynamics.h>
 #include <limits>
-
-
 #include <igl/doublearea.h>
 
 //#include <chrono>

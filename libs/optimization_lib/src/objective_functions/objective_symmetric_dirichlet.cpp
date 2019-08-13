@@ -1,9 +1,6 @@
-#include "objective-symmetric-dirichlet.h"
+#include <objective_functions/objective_symmetric_dirichlet.h>
 #include <limits>
-
-
 #include <igl/doublearea.h>
-
 //#include <chrono>
 
 using namespace std;

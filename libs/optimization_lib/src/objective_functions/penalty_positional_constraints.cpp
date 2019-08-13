@@ -1,4 +1,4 @@
-#include "PenaltyPositionalConstraints.h"
+#include <objective_functions/penalty_positional_constraints.h>
 
 using namespace std;
 using namespace Eigen;

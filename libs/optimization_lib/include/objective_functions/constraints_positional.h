@@ -2,16 +2,16 @@
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
-#include <optimization-lib\objective-function.h>
+#include <objective_functions/objective_function.h>
 
-class PenaltyPositionalConstraints : public ObjectiveFunction
+class ConstraintsPositional : public ObjectiveFunction
 {
 
 public:
 
 	/**************************************************************************************************************************/
 	//INITIALIZATION 
-	PenaltyPositionalConstraints();
+	ConstraintsPositional();
 
 	virtual void init();
 	virtual void updateX(const VectorXd& X);
@@ -25,5 +25,8 @@ public:
 	std::vector<int> ConstrainedVerticesInd;
 	Eigen::MatrixX2d ConstrainedVerticesPos;
 	Eigen::MatrixX2d CurrConstrainedVerticesPos;
-	int numV=0;
+	int numV;
+
+private:
+	int n;
 };

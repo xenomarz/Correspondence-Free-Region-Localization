@@ -5,7 +5,7 @@
 //  Copyright (c) 2015 Olga Diamanti. All rights reserved.
 //
 
-#include "PardisoSolver.h"
+#include <solvers/pardiso_solver.h>
 #include <igl/sortrows.h>
 #include <igl/unique.h>
 #include <igl/unique_rows.h>
