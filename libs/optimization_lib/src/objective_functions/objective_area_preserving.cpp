@@ -83,6 +83,9 @@ void ObjectiveAreaPreserving::updateX(const VectorXd& X)
 double ObjectiveAreaPreserving::value()
 {
 	// E = ||J||^2+||J^-1||^2 = ||J||^2+||J||^2/det(J)^2
+	// E = (det(J) - 1)^2
+	// E = (ad - bc - 1)^2
+
 	Eigen::VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
 	//Eigen::VectorXd dirichlet = 2*(alpha.cwiseAbs2().rowwise().sum() + beta.cwiseAbs2().rowwise().sum());
 	Eigen::VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
