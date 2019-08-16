@@ -121,7 +121,7 @@ export class SideBarParameterInput extends LitElement {
     }
     
     disconnectedCallback() {
-        document.removeEventListener('keydown', this._handleDocumentKeyDown.bind(this));
+        // TODO: Remove event listeners
         super.disconnectedCallback();
     }
 

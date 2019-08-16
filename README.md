@@ -14,6 +14,7 @@
   - Open command prompt, and run the following commands:
       1. `npm install -g cmake-js`
       2. `npm install -g polymer-cli`
+      3. `npm install -g @pika/cli`
       3. `npm install`
 
 ## Build instructions:
