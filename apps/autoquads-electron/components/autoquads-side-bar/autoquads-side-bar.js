@@ -15,6 +15,18 @@ import '../side-bar-collapsable-section/side-bar-collapsable-section.js';
 import '../side-bar-parameter-input/side-bar-parameter-input.js';
 import '../side-bar-color-picker/side-bar-color-picker.js';
 
+import { 
+    SplitOrientation,
+    Visibility,
+    EnergyType,
+    SolverState,
+    isVisible
+} from '../../redux/reducer.js';
+
+import * as Actions from '../../redux/actions.js';
+import { store } from '../../redux/store.js';
+import { connect } from '../../web_modules/pwa-helpers.js';
+
 export class AutoquadsSideBar extends SideBar {
     static get styles() {
         return [
@@ -85,15 +97,15 @@ export class AutoquadsSideBar extends SideBar {
                 <vaadin-select label="Vertex Energy" value="Seperation">
                     <template>
                         <vaadin-list-box>
-                            <vaadin-item>Seperation</vaadin-item>
-                            <vaadin-item>Seamless</vaadin-item>
+                            <vaadin-item value="seperation">Seperation</vaadin-item>
+                            <vaadin-item value="seamless">Seamless</vaadin-item>
                         </vaadin-list-box>
                     </template>
                 </vaadin-select>
             </side-bar-collapsable-section>
 
-            <!-- <side-bar-collapsable-section caption="Viewports" caption-size="3">
-                <vaadin-dropdown-menu label="Split Orientation" value="horizontal" on-value-changed="_splitOrientationChanged">
+            <side-bar-collapsable-section caption="Viewports" caption-size="3">
+                <vaadin-dropdown-menu label="Split Orientation" value="${this._splitOrientation}" on-value-changed="_splitOrientationChanged">
                     <template>
                     <vaadin-list-box>
                         <vaadin-item value="vertical">Vertical</vaadin-item>
@@ -101,17 +113,15 @@ export class AutoquadsSideBar extends SideBar {
                     </vaadin-list-box>
                     </template>
                 </vaadin-dropdown-menu>
-                <side-bar-color-picker on-color-changed="_modelViewportColorChanged" color="#757575" caption="Model Viewport Color"></side-bar-color-picker>
-                <side-bar-color-picker on-color-changed="_solverViewportColorChanged" color="#757575" caption="Solver Viewport Color"></side-bar-color-picker>
-                <side-bar-color-picker on-color-changed="_modelColorChanged" color="#ffffff" caption="Model Color"></side-bar-color-picker>
-                <side-bar-color-picker on-color-changed="_solverColorChanged" color="#ffffff" caption="Solver Color"></side-bar-color-picker>
-                <vaadin-checkbox on-checked-changed="_showMeshViewChanged" checked>Show Mesh View</vaadin-checkbox>
-                <vaadin-checkbox on-checked-changed="_showSolverViewChanged" checked>Show Solver View</vaadin-checkbox>
-                <vaadin-checkbox on-checked-changed="_showInfographicsChanged">Show Infographics</vaadin-checkbox>
-                <vaadin-checkbox on-checked-changed="_showUnitGridChanged">Show Unit Grid</vaadin-checkbox>
-                <vaadin-checkbox on-checked-changed="_showGridTextureInSuopViewChanged">Show Grid Texture In Soup View</vaadin-checkbox>
-                <vaadin-checkbox on-checked-changed="_showOptimizationDataMonitorChanged" checked="{{showOptimizationDataMonitor}}">Show Optimization Data Monitor</vaadin-checkbox>
-            </side-bar-collapsable-section> -->
+                <side-bar-color-picker @color-changed="${this._modelViewportColorChanged}" color="${this._modelViewportColor}" caption="Model Viewport Color"></side-bar-color-picker>
+                <side-bar-color-picker @color-changed="${this._suopViewportColorChanged}" color="${this._suopViewportColor}" caption="Suop Viewport Color"></side-bar-color-picker>
+                <side-bar-color-picker @color-changed="${this._modelColorChanged}" color="${this._modelColor}" caption="Model Color"></side-bar-color-picker>
+                <side-bar-color-picker @color-changed="${this._suopColorChanged}" color="${this._suopColor}" caption="Suop Color"></side-bar-color-picker>
+                <vaadin-checkbox @change="_modelViewVisibilityChanged" ?checked=${isVisible(this._modelViewVisibility)}>Show Model View</vaadin-checkbox>
+                <vaadin-checkbox @change="_suopViewVisibilityChanged" ?checked=${isVisible(this._suoplViewVisibility)}>Show Suop View</vaadin-checkbox>
+                <vaadin-checkbox @change="_unitGridVisibilityChanged" ?checked=${isVisible(this._unitGridVisibility)}>Show Unit Grid</vaadin-checkbox>
+                <vaadin-checkbox @change="_optimizationDataMonitorVisibilityChanged" ?checked=${isVisible(this._optimizationDataMonitorVisibility)}>Show Optimization Data Monitor</vaadin-checkbox>
+            </side-bar-collapsable-section>
 
             <!-- <side-bar-collapsable-section caption="Grid">
                 <side-bar-color-picker on-color-changed="_gridHorizontalColorInputChanged" color="#000000" caption="Horizontal Color"></side-bar-color-picker>
@@ -186,6 +196,19 @@ export class AutoquadsSideBar extends SideBar {
         };
     }
 
+    stateChanged(state) {
+        this._splitOrientation = state.splitOrientation;
+        this._modelViewportColor = state.modelViewportColor;
+        this._suopViewportColor = state.suopViewportColor;
+        this._modelColor = state.modelColor;
+        this._suopColor = state.suopColor;
+        this._modelViewVisibility = state.modelViewVisibility;
+        this._suopViewVisibility = state.suopViewVisibility;
+        this._unitGridVisibility = state.suopViewVisibility;
+        this._suopViewGridTextureVisibility  = state.suopViewGridTextureVisibility;
+        this._optimizationDataMonitorVisibility = state.optimizationDataMonitorVisibility;
+    }   
+
     constructor() {
         super();
         this.solverText = "Off";
@@ -225,7 +248,7 @@ export class AutoquadsSideBar extends SideBar {
     disconnectedCallback() {
         // TODO: Remove event listeners
         super.disconnectedCallback();
-    }       
+    }
 
     _documentKeyDown(e) {
         if (e.which === 32) {
@@ -278,15 +301,16 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     _modelViewportColorChanged(e) {
-        this.dispatch('changeModelViewportColor', e.detail.value);
+        // this.dispatch('changeModelViewportColor', e.detail.value);
+        store.dispatch(Actions.changeModelViewportColor(e.detail.color));
     }
 
-    _solverViewportColorChanged(e) {
-        this.dispatch('changeSolverViewportColor', e.detail.value);
+    _suopViewportColorChanged(e) {
+        // this.dispatch('changeSolverViewportColor', e.detail.value);
     }
 
     _modelColorChanged(e) {
-        this.dispatch('changeModelColor', e.detail.value);
+        // this.dispatch('changeModelColor', e.detail.value);
     }
 
     _solverColorChanged(e) {

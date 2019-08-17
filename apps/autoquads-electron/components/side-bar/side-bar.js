@@ -1,5 +1,8 @@
 import { LitElement, html, css } from '../../web_modules/lit-element.js';
-export class SideBar extends LitElement {
+import { store } from '../../redux/store.js';
+import { connect } from '../../web_modules/pwa-helpers.js';
+
+export class SideBar extends connect(store)(LitElement) {
     static get styles() {
         return [css`
             :host {
