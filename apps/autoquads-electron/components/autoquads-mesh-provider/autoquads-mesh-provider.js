@@ -1,8 +1,9 @@
+import { MeshProvider } from '../mesh-provider/mesh-provider.js';
 export class AutoquadsMeshProvider extends MeshProvider {
-    constructor(autocutsEngine, vertexEnergy, energyColor, meshColor) {
+    constructor(engine, vertexEnergyType, energyColor, meshColor) {
         super();
-        this._autocutsEngine = autocutsEngine;
-        this._vertexEnergy = vertexEnergy;
+        this._engine = engine;
+        this._vertexEnergyType = vertexEnergyType;
         this._energyColor = energyColor;
         this._meshColor = meshColor;
     }
@@ -23,17 +24,17 @@ export class AutoquadsMeshProvider extends MeshProvider {
         return this._meshColor;
     }
 
-    set vertexEnergy(value) {
-        this._vertexEnergy = value;
+    set vertexEnergyType(value) {
+        this._vertexEnergyType = value;
     }
 
-    get vertexEnergy() {
-        return this._vertexEnergy;
+    get vertexEnergyType() {
+        return this._vertexEnergyType;
     }
 
     get bufferedMeshUvs() {
         let _bufferedMeshUvs = new Array();
-        let bufferedVertices = this._autocutsEngine.solverBufferedMeshVertices;
+        let bufferedVertices = this._engine.solverBufferedMeshVertices;
         let bufferedVerticesLength = bufferedVertices.length;
         let j = 0;
         for (let i = 0; i < bufferedVerticesLength; i++) {
@@ -52,12 +53,12 @@ export class AutoquadsMeshProvider extends MeshProvider {
 
         let vertexEnergyArray;
         let factor;
-        if (this._vertexEnergy === 'separation') {
+        if (this._vertexEnergyType === 'separation') {
             factor = 1;
-            vertexEnergyArray = this._autocutsEngine.separationVertexEnergy;
-        } else if (this._vertexEnergy === 'seamless') {
+            vertexEnergyArray = this._engine.separationVertexEnergy;
+        } else if (this._vertexEnergyType === 'seamless') {
             factor = 7000;
-            vertexEnergyArray = this._autocutsEngine.seamlessVertexEnergy;
+            vertexEnergyArray = this._engine.seamlessVertexEnergy;
         }
 
         for (let i = 0; i < vertexEnergyArray.length; i++) {

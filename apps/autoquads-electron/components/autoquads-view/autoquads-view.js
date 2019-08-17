@@ -5,6 +5,9 @@ import { PubSub } from '../../web_modules/pubsub-js.js';
 import * as THREE from '../../web_modules/three.js';
 import '../mesh-view/mesh-view.js';
 import '../autoquads-side-bar/autoquads-side-bar.js';
+import { MeshProvider } from '../mesh-provider/mesh-provider.js';
+import { AutoquadsModelMeshProvider } from '../autoquads-model-mesh-provider/autoquads-model-mesh-provider.js';
+import { AutoquadsSuopMeshProvider } from '../autoquads-suop-mesh-provider/autoquads-suop-mesh-provider.js';
 export class AutoquadsView extends LitElement {
     static get styles() {
         return [css`
@@ -42,44 +45,44 @@ export class AutoquadsView extends LitElement {
                             enable-mesh-rotation
                             enable-vertex-selection
                             caption="Mesh View"
-                            grid-horizontal-color="${gridHorizontalColor}"
-                            grid-vertical-color="${gridVerticalColor}"
-                            grid-background-color1="${gridBackgroundColor1}"
-                            grid-background-color2="${gridBackgroundColor2}"
-                            grid-size="${gridSize}"
-                            grid-texture-size="${gridTextureSize}"
-                            grid-line-width="${gridLineWidth}"
-                            show-wireframe="${showWireframe}"
-                            background-color="${modelViewportColor}"
-                            mesh-color="${modelColor}"
-                            mesh-provider="${modelMeshProvider}"
-                            mesh-interaction="${meshInteraction}"
-                            highlighted-face-color="${highlightedFaceColor}"
-                            dragged-face-color="${draggedFaceColor}"
-                            selected-face-color="${fixedFaceColor}"
+                            grid-horizontal-color="${this.gridHorizontalColor}"
+                            grid-vertical-color="${this.gridVerticalColor}"
+                            grid-background-color1="${this.gridBackgroundColor1}"
+                            grid-background-color2="${this.gridBackgroundColor2}"
+                            grid-size="${this.gridSize}"
+                            grid-texture-size="${this.gridTextureSize}"
+                            grid-line-width="${this.gridLineWidth}"
+                            show-wireframe="${this.showWireframe}"
+                            background-color="${this.modelViewportColor}"
+                            mesh-color="${this.modelColor}"
+                            mesh-provider="${this._modelMeshProvider}"
+                            mesh-interaction="${this.meshInteraction}"
+                            highlighted-face-color="${this.highlightedFaceColor}"
+                            dragged-face-color="${this.draggedFaceColor}"
+                            selected-face-color="${this.fixedFaceColor}"
                             show-grid-texture>
                         </mesh-view>
                         <mesh-view 
                             id="solver-mesh-view"
                             enable-face-dragging caption="Solver View"
-                            show-grid="${showUnitGrid}"
-                            grid-horizontal-color="${gridHorizontalColor}"
-                            grid-vertical-color="${gridVerticalColor}"
-                            grid-background-color1="${gridBackgroundColor1}"
-                            grid-background-color2="${gridBackgroundColor2}"
-                            grid-size="${gridSize}"
-                            grid-texture-size="${gridTextureSize}"
-                            grid-line-width="${gridLineWidth}"
-                            show-wireframe="${showWireframe}"
-                            background-color="${solverViewportColor}"
-                            mesh-color="${solverColor}"
-                            mesh-provider="${solverMeshProvider}"
-                            mesh-interaction="${meshInteraction}"
-                            highlighted-face-color="${highlightedFaceColor}"
-                            dragged-face-color="${draggedFaceColor}"
-                            selected-face-color="${fixedFaceColor}"
-                            show-debug-data="${showOptimizationDataMonitor}"
-                            show-grid-texture="${showGridTextureInSuopView}">
+                            show-grid="${this.showUnitGrid}"
+                            grid-horizontal-color="${this.gridHorizontalColor}"
+                            grid-vertical-color="${this.gridVerticalColor}"
+                            grid-background-color1="${this.gridBackgroundColor1}"
+                            grid-background-color2="${this.gridBackgroundColor2}"
+                            grid-size="${this.gridSize}"
+                            grid-texture-size="${this.gridTextureSize}"
+                            grid-line-width="${this.gridLineWidth}"
+                            show-wireframe="${this.showWireframe}"
+                            background-color="${this.solverViewportColor}"
+                            mesh-color="${this.solverColor}"
+                            mesh-provider="${this._suopMeshProvider}"
+                            mesh-interaction="${this.meshInteraction}"
+                            highlighted-face-color="${this.highlightedFaceColor}"
+                            dragged-face-color="${this.draggedFaceColor}"
+                            selected-face-color="${this.fixedFaceColor}"
+                            show-debug-data="${this.showOptimizationDataMonitor}"
+                            show-grid-texture="${this.showGridTextureInSuopView}">
                         </mesh-view>
                     </vaadin-split-layout>
                 </vaadin-split-layout>
@@ -124,7 +127,6 @@ export class AutoquadsView extends LitElement {
             delta: {
                 type: Number,
                 attribute: 'delta'
-
             },
             lambda: {
                 type: Number,
@@ -229,8 +231,8 @@ export class AutoquadsView extends LitElement {
         super.connectedCallback();
         this.reloadModelSubscriptionToken = PubSub.subscribe('reload-model', (name, payload) => {
             this._reloadModel(payload.modelFilename);
-            // this.modelMeshProvider = new AutocutsModelMeshProvider(this.autoquads, this.vertexEnergy, this._vertexEnergyColor, this._modelColor);
-            // this.solverMeshProvider = new AutocutsSolverMeshProvider(this.autoquads, this.vertexEnergy, this._vertexEnergyColor, this._solverColor);
+            this._modelMeshProvider = new AutoquadsModelMeshProvider(this._engine, this.vertexEnergy, this._vertexEnergyColor, this._modelColor);
+            this._suopMeshProvider = new AutoquadsSuopMeshProvider(this._engine, this.vertexEnergy, this._vertexEnergyColor, this._solverColor);
         });
             
         this.reloadModuleSubscriptionToken = PubSub.subscribe('reload-module', () => {
@@ -238,26 +240,26 @@ export class AutoquadsView extends LitElement {
         });
             
         this._meshViewFaceDraggingBeginSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging-begin', (name, payload) => {
-            // this.autoquads.setMovingTriangleFaceId(payload.face.id);
+            // this._engine.setMovingTriangleFaceId(payload.face.id);
             PubSub.publish('mesh-view-set-dragged-face', payload);
         });
             
         this._meshViewFaceDraggingSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging', (name, payload) => {
-            // this.autoquads.updateMovingTrianglePosition(payload.offset.x, payload.offset.y);
+            // this._engine.updateMovingTrianglePosition(payload.offset.x, payload.offset.y);
         });
             
         this._meshViewFaceDraggingEndSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging-end', (name, payload) => {
-            // this.autoquads.resetMovingTriangleFaceId();
+            // this._engine.resetMovingTriangleFaceId();
             PubSub.publish('mesh-view-reset-dragged-face', payload);
         });
             
         this._meshViewFaceSelectedSubscriptionToken = PubSub.subscribe('mesh-view-face-selected', (name, payload) => {
-            // this.autoquads.addTriangleToFixedPositionSet(payload.face.id);
+            // this._engine.addTriangleToFixedPositionSet(payload.face.id);
             PubSub.publish('mesh-view-select-face', payload);
         });
             
         this._meshViewFaceUnselectedSubscriptionToken = PubSub.subscribe('mesh-view-face-unselected', (name, payload) => {
-            // this.autoquads.removeTriangleFromFixedPositionSet(payload.face.id);
+            // this._engine.removeTriangleFromFixedPositionSet(payload.face.id);
             PubSub.publish('mesh-view-unselect-face', payload);
         });
             
@@ -270,12 +272,12 @@ export class AutoquadsView extends LitElement {
         });
             
         this._meshViewVertexDownSubscriptionToken = PubSub.subscribe('mesh-view-vertex-selected', (name, payload) => {
-            // this.autoquads.addVertexToIntegerSet(payload.vertexId);
+            // this._engine.addVertexToIntegerSet(payload.vertexId);
             PubSub.publish('mesh-view-select-vertex', payload);
         });
             
         this._meshViewVertexDownSubscriptionToken = PubSub.subscribe('mesh-view-vertex-unselected', (name, payload) => {
-            // this.autoquads.removeVertexFromIntegerSet(payload.vertexId);
+            // this._engine.removeVertexFromIntegerSet(payload.vertexId);
             PubSub.publish('mesh-view-unselect-vertex', payload);
         });
             
@@ -300,10 +302,11 @@ export class AutoquadsView extends LitElement {
     }
 
     _loadModule() {
-        // let AutoquadsModule = require('./autoquads.node');
-        // this.autoquads = new AutoquadsModule.Autoquads();
-        // this.modelMeshProvider = new MeshProvider();
-        // this.solverMeshProvider = new MeshProvider();
+        const { join } = require('path');
+        let RDSModule = require(join(appRoot, 'node-addon.node'));
+        this._engine = new RDSModule.Engine(5);
+        this._modelMeshProvider = new MeshProvider();
+        this._suopMeshProvider = new MeshProvider();
     }
 
     _reloadModule() {
@@ -353,13 +356,13 @@ export class AutoquadsView extends LitElement {
 
     _vertexEnergyColorChanged(vertexEnergyColor) {
         this._vertexEnergyColor = new THREE.Color(vertexEnergyColor);
-        this.modelMeshProvider.energyColor = this._vertexEnergyColor;
-        this.solverMeshProvider.energyColor = this._vertexEnergyColor;
+        this._modelMeshProvider.energyColor = this._vertexEnergyColor;
+        this._suopMeshProvider.energyColor = this._vertexEnergyColor;
     }
 
     _vertexEnergyChanged(vertexEnergy) {
-        this.modelMeshProvider.vertexEnergy = vertexEnergy;
-        this.solverMeshProvider.vertexEnergy = vertexEnergy;
+        this._modelMeshProvider.vertexEnergy = vertexEnergy;
+        this._suopMeshProvider.vertexEnergy = vertexEnergy;
     }
 
     _modelColorChanged(modelColor) {

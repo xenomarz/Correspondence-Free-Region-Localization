@@ -17,12 +17,12 @@ files.sort(function (a, b) {
 
 let latestModulePath = latestBuildsFolderPath + files[files.length - 1];
 
-fs.copy(latestModulePath, './autoquads.node', function (err) {
+fs.copy(latestModulePath, './node-addon.node', function (err) {
     if (err){
         console.log('An error occured while copying latest node-addon build.')
         return console.error(err)
     }
-    console.log('Copy "autoquads.node" completed!')
+    console.log('Copy "node-addon.node" completed!')
 });
 
 fs.copy(electronComponentsFolderPath, './components', function (err) {

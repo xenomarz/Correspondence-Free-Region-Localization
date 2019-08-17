@@ -34,7 +34,7 @@ export class SideBarCollapsableSection extends LitElement {
 
     render(){
         return html`
-            <div id="header" @click="${this.toggle}" class="section-header-container">
+            <div id="header" @click="${this._collapseStateChanged}" class="section-header-container">
                 <iron-icon icon="${this.icon}"></iron-icon>
                 <div class="section-header">${this.caption}</div>
             </div>
@@ -81,7 +81,7 @@ export class SideBarCollapsableSection extends LitElement {
         return this._expanded;
     }
 
-    toggle() {
+    _collapseStateChanged() {
         this.expanded = !this.expanded;
         this.icon = this.resolveIcon();
     }

@@ -96,10 +96,10 @@ export class MeshView extends LitElement {
                 type: String,
                 attribute: 'id'
             },
-            meshProvider: {
-                type: Object,
-                attribute: 'mesh-provider'
-            },
+            // meshProvider: {
+            //     type: Object,
+            //     attribute: 'mesh-provider'
+            // },
             caption: {
                 type: String,
                 attribute: 'caption'

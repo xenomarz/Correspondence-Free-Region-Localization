@@ -10,3 +10,5 @@ window.addEventListener('DOMContentLoaded', () => {
     replaceText(`${type}-version`, process.versions[type])
   }
 })
+
+global.appRoot = window.appRoot = __dirname;

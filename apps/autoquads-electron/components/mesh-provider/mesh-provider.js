@@ -1,4 +1,4 @@
-class MeshProvider {
+export class MeshProvider {
     constructor() {
 
     }

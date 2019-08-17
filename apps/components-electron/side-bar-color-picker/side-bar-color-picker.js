@@ -25,7 +25,7 @@ export class SideBarColorPicker extends LitElement {
 
     render() {
         return html`
-            <input type="color" id="color" value="${this.color}" />
+            <input type="color" id="color" value="${this.color}" @change="${this._colorChanged}" />
             <div class="caption-container">
                 <span>${this.caption}</span>
             </div> 
@@ -36,13 +36,41 @@ export class SideBarColorPicker extends LitElement {
         return {
             color: {
                 type: String,
+                attribute: 'color',
                 reflect: true
             },
             caption: {
                 type: String
             }
         }
-    } 
+    }
+
+    constructor() {
+        super();
+        this._color = 'rgb(0,0,0)';
+    }
+
+    set color(value) {
+        const oldValue = this._color;
+        this._color = value;
+        let colorChangedEvent = new CustomEvent('color-changed', { 
+            detail: { 
+                color: value
+            },
+            bubbles: true, 
+            composed: true 
+        });
+        this.dispatchEvent(colorChangedEvent);
+        this.requestUpdate('color', oldValue);
+    }
+
+    get color() {
+        return this._color;
+    }
+    
+    _colorChanged(e) {
+        this.color = e.srcElement.value;
+    }    
 }
 
 customElements.define('side-bar-color-picker', SideBarColorPicker);

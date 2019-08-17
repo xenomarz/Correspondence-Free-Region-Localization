@@ -96,112 +96,111 @@ export class MeshView extends LitElement {
                 type: String,
                 attribute: 'id'
             },
-            meshProvider: {
-                type: Object,
-                attribute: 'mesh-provider'
+            // meshProvider: {
+            //     type: Object,
+            //     attribute: 'mesh-provider'
+            // },
+            caption: {
+                type: String,
+                attribute: 'caption'
+            },
+            backgroundColor: {
+                type: String,
+                attribute: 'background-color'
+            },
+            meshColor: {
+                type: String,
+                attribute: 'mesh-color'
+            },
+            useGridTexture: {
+                type: Boolean,
+                attribute: 'use-grid-texture'
+            },
+            showWireframe: {
+                type: Boolean,
+                attribute: 'show-wireframe'
+            },
+            showGrid: {
+                type: Boolean,
+                attribute: 'show-grid'
+            },
+            syncFaceSelection: {
+                type: Boolean,
+                attribute: 'sync-face-selection'
+            },
+            syncVertexSelection: {
+                type: Boolean,
+                attribute: 'sync-vertex-selection'
+            },
+            enableVertexSelection: {
+                type: Boolean,
+                attribute: 'enable-vertex-selection'
+            },
+            enableMeshRotation: {
+                type: Boolean,
+                attribute: 'enable-mesh-rotation'
+            },
+            enableFaceDragging: {
+                type: Boolean,
+                attribute: 'enable-face-dragging'
+            },
+            gridHorizontalColor: {
+                type: String,
+                attribute: 'grid-horizontal-color'
+            },
+            gridVerticalColor: {
+                type: String,
+                attribute: 'grid-vertical-color'
+            },
+            gridBackgroundColor1: {
+                type: String,
+                attribute: 'grid-background-color1'
+            },
+            gridBackgroundColor2: {
+                type: String,
+                attribute: 'grid-background-color2'
+            },
+            gridSize: {
+                type: Number,
+                attribute: 'grid-size'
+            },
+            gridTextureSize: {
+                type: Number,
+                attribute: 'grid-texture-size'
+            },
+            gridLineWidth: {
+                type: Number,
+                attribute: 'grid-line-width'
+            },
+            highlightedFaceColor: {
+                type: String,
+                attribute: 'highlighted-face-color'
+            },
+            draggedFaceColor: {
+                type: String,
+                attribute: 'dragged-face-color'
+            },
+            selectedFaceColor: {
+                type: String,
+                attribute: 'selected-face-color'
+            },
+            showDebugData: {
+                type: Boolean,
+                attribute: 'show-debug-data'
+            },
+            showUnitGrid: {
+                type: Boolean,
+                attribute: 'show-unit-grid'
+            },
+            showGridTexture: {
+                type: Boolean,
+                attribute: 'show-grid-texture'
+            },
+            useLights: {
+                type: Boolean,
+                attribute: 'use-lights'
             }
-            // caption: {
-            //     type: String,
-            //     attribute: 'caption'
-            // },
-            // backgroundColor: {
-            //     type: String,
-            //     attribute: 'background-color'
-            // },
-            // meshColor: {
-            //     type: String,
-            //     attribute: 'mesh-color'
-            // },
-            // useGridTexture: {
-            //     type: Boolean,
-            //     attribute: 'use-grid-texture'
-            // },
-            // showWireframe: {
-            //     type: Boolean,
-            //     attribute: 'show-wireframe'
-            // },
-            // showGrid: {
-            //     type: Boolean,
-            //     attribute: 'show-grid'
-            // },
-            // syncFaceSelection: {
-            //     type: Boolean,
-            //     attribute: 'sync-face-selection'
-            // },
-            // syncVertexSelection: {
-            //     type: Boolean,
-            //     attribute: 'sync-vertex-selection'
-            // },
-            // enableVertexSelection: {
-            //     type: Boolean,
-            //     attribute: 'enable-vertex-selection'
-            // },
-            // enableMeshRotation: {
-            //     type: Boolean,
-            //     attribute: 'enable-mesh-rotation'
-            // },
-            // enableFaceDragging: {
-            //     type: Boolean,
-            //     attribute: 'enable-face-dragging'
-            // },
-            // gridHorizontalColor: {
-            //     type: String,
-            //     attribute: 'grid-horizontal-color'
-            // },
-            // gridVerticalColor: {
-            //     type: String,
-            //     attribute: 'grid-vertical-color'
-            // },
-            // gridBackgroundColor1: {
-            //     type: String,
-            //     attribute: 'grid-background-color1'
-            // },
-            // gridBackgroundColor2: {
-            //     type: String,
-            //     attribute: 'grid-background-color2'
-            // },
-            // gridSize: {
-            //     type: Number,
-            //     attribute: 'grid-size'
-            // },
-            // gridTextureSize: {
-            //     type: Number,
-            //     attribute: 'grid-texture-size'
-            // },
-            // gridLineWidth: {
-            //     type: Number,
-            //     attribute: 'grid-line-width'
-            // },
-            // highlightedFaceColor: {
-            //     type: String,
-            //     attribute: 'highlighted-face-color'
-            // },
-            // draggedFaceColor: {
-            //     type: String,
-            //     attribute: 'dragged-face-color'
-            // },
-            // selectedFaceColor: {
-            //     type: String,
-            //     attribute: 'selected-face-color'
-            // },
-            // showDebugData: {
-            //     type: Boolean,
-            //     attribute: 'show-debug-data'
-            // },
-            // showUnitGrid: {
-            //     type: Boolean,
-            //     attribute: 'show-unit-grid'
-            // },
-            // showGridTexture: {
-            //     type: Boolean,
-            //     attribute: 'show-grid-texture'
-            // },
-            // useLights: {
-            //     type: Boolean,
-            //     attribute: 'use-lights'
-            // }
         };
-        // return {};
     }
 
     constructor() {

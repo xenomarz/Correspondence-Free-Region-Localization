@@ -1,22 +1,23 @@
-class AutocutsModelMeshProvider extends AutoquadsMeshProvider {
-  constructor(autocutsEngine, vertexEnergy, energyColor, meshColor) {
-    super(autocutsEngine, vertexEnergy, energyColor, meshColor);
+import { AutoquadsMeshProvider } from '../autoquads-mesh-provider/autoquads-mesh-provider.js';
+export class AutoquadsModelMeshProvider extends AutoquadsMeshProvider {
+  constructor(engine, vertexEnergyType, energyColor, meshColor) {
+    super(engine, vertexEnergyType, energyColor, meshColor);
   }
 
   get vertices() {
-    return this._autocutsEngine.modelVertices;
+    return this._engine.modelVertices;
   }
 
   get faces() {
-    return this._autocutsEngine.modelFaces;
+    return this._engine.modelFaces;
   }
 
   get bufferedVertices() {
-    return this._autocutsEngine.modelBufferedVertices;
+    return this._engine.modelBufferedVertices;
   }
 
   get bufferedMeshVertices() {
-    return this._autocutsEngine.modelBufferedMeshVertices;
+    return this._engine.modelBufferedMeshVertices;
   }
 
   get debugData() {
