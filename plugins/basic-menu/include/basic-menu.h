@@ -17,6 +17,8 @@
 #include <sstream>
 #include <string>
 #include <iostream>
+#include <thread>
+#include <mutex>
 #include <igl/unproject_in_mesh.h>
 #include <igl/Hit.h>
 #include <igl/rotate_by_quat.h>
@@ -28,7 +30,8 @@
 #include <igl/map_vertices_to_circle.h>
 #include <igl/arap.h>
 #include <igl/file_dialog_open.h>
-#include <unproject.h>
+#include <igl/unproject.h>
+#include <../../../libs/optimization_lib/include/solvers/newton_solver.h>
 
 #define RED_COLOR Eigen::Vector3f(1, 0, 0)
 #define BLUE_COLOR Eigen::Vector3f(0, 0, 1)
@@ -73,19 +76,31 @@ namespace rds
 			igl::opengl::glfw::imgui::ImGuiMenu menu;
 
 			//Solver Parameters
-			bool SolverMode;
+			bool solver_on_internal;
+			bool solver_on;
 			
 			//Parametrization Parameters
 			float Lambda, Delta, Integer_Weight, Integer_Spacing, Seamless_Weight, Position_Weight;
+
+			// Solver thread
+			std::thread solver_thread;
+			std::mutex solver_mutex;
+			bool solver_thread_alive;
 
 
 		protected:
 			//Basic (necessary) parameteres
 			std::map<unsigned int, string> data_id_to_name;
+
+			// Solver
+			Newton newton;
+
+			void RunSolver();
 			
 		public:
 			//Constructor & initialization
 			BasicMenu();
+			~BasicMenu();
 
 			// callbacks
 			IGL_INLINE virtual void draw_viewer_menu() override;

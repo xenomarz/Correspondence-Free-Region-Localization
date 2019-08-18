@@ -6,9 +6,31 @@ namespace rds
 	namespace plugins
 	{
 		BasicMenu::BasicMenu() :
-			igl::opengl::glfw::imgui::ImGuiMenu()
+			igl::opengl::glfw::imgui::ImGuiMenu(),
+			solver_thread_alive(true)
 		{
 				
+		}
+
+		BasicMenu::~BasicMenu()
+		{
+			this->solver_thread_alive = false;
+			this->solver_thread.join();
+		}
+
+		void BasicMenu::RunSolver()
+		{
+			newton = Newton()
+			while (this->solver_thread_alive)
+			{
+				//solver_mutex.lock();
+				if (this->solver_on)
+				{
+					this->viewer->data(1)
+				}
+				//cout << "Hello " << this->solver_mode << endl;
+				//solver_mutex.unlock();
+			}
 		}
 
 		IGL_INLINE void BasicMenu::init(igl::opengl::glfw::Viewer *_viewer)
@@ -35,7 +57,8 @@ namespace rds
 				down_mouse_x = down_mouse_y = -1;
 
 				//Solver Parameters
-				SolverMode = false;
+				solver_on_internal = false;
+				solver_on = solver_on_internal;
 
 				//Parametrization Parameters
 				Position_Weight = Seamless_Weight = Integer_Spacing = Integer_Weight = Delta = Lambda = 0.5;
@@ -52,6 +75,9 @@ namespace rds
 				//Update scene
 				Update_view();
 				compute_harmonic_param(1);
+
+				// Initialize solver thread
+				solver_thread = std::thread(&BasicMenu::RunSolver, this);
 			}
 		}
 
@@ -361,11 +387,14 @@ namespace rds
 		}
 
 		void BasicMenu::Draw_menu_for_Solver() {
-			if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen)) {
-				if (SolverMode)
-					ImGui::Checkbox("On", &SolverMode);
-				else
-					ImGui::Checkbox("Off", &SolverMode);
+			if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				if (ImGui::Checkbox(solver_on_internal ? "On" : "Off", &solver_on_internal))
+				{
+					//solver_mutex.lock();
+					solver_on = solver_on_internal;
+					//solver_mutex.unlock();
+				}
 			}
 		}
 
