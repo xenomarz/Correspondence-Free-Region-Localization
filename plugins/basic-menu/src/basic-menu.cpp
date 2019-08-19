@@ -20,13 +20,13 @@ namespace rds
 
 		void BasicMenu::RunSolver()
 		{
-			newton = Newton()
+			//newton = Newton()
 			while (this->solver_thread_alive)
 			{
 				//solver_mutex.lock();
 				if (this->solver_on)
 				{
-					this->viewer->data(1)
+					this->viewer->data(1);
 				}
 				//cout << "Hello " << this->solver_mode << endl;
 				//solver_mutex.unlock();

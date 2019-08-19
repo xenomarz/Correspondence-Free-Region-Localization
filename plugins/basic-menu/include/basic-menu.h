@@ -32,6 +32,8 @@
 #include <igl/file_dialog_open.h>
 #include <igl/unproject.h>
 #include <../../../libs/optimization_lib/include/solvers/newton_solver.h>
+#include <../../../libs/optimization_lib/include/solvers/solver.h>
+
 
 #define RED_COLOR Eigen::Vector3f(1, 0, 0)
 #define BLUE_COLOR Eigen::Vector3f(0, 0, 1)
@@ -93,7 +95,7 @@ namespace rds
 			std::map<unsigned int, string> data_id_to_name;
 
 			// Solver
-			Newton newton;
+			//Newton newton;
 
 			void RunSolver();
 			

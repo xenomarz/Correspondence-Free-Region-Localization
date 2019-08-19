@@ -1,13 +1,13 @@
 #pragma once
 #define USE_PARDISO
 
+#include "solver.h"
 
-#include <solvers/solver.h>
 
 #ifdef USE_PARDISO
-	#include <solvers/pardiso_solver.h>
+	#include "pardiso_solver.h"
 #else
-	#include <solvers/eigen_sparse_solver.h>
+	#include "eigen_sparse_solver.h"
 #endif
 
 #include <iostream>

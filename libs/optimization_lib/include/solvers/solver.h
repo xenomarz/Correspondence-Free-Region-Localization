@@ -1,6 +1,7 @@
 #pragma once
 
-#include <objective_functions/total_objective.h>
+//#include <objective_functions/total_objective.h>
+#include "../objective_functions/total_objective.h"
 
 #include <atomic>
 #include <functional>
