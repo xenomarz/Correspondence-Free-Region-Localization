@@ -9,7 +9,7 @@ export class SideBar extends connect(store)(LitElement) {
                 padding: 10px;
                 display: flex;
                 flex-direction: column;
-                width: 250px;
+                width: 350px;
                 align-items: stretch;
                 background-color: #d8d8d8;
                 font-size: 16px;

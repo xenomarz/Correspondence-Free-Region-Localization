@@ -5,7 +5,7 @@ export const CHANGE_SUOP_VIEWPORT_COLOR = 'CHANGE_SUOP_VIEWPORT_COLOR';
 export const CHANGE_MODEL_COLOR = 'CHANGE_MODEL_COLOR';
 export const CHANGE_SUOP_COLOR = 'CHANGE_SUOP_COLOR';
 export const CHANGE_WIREFRAME_VISIBILITY = 'CHANGE_WIREFRAME_VISIBILITY';
-export const CHANGE_MESH_VIEW_VISIBILITY = 'CHANGE_MESH_VIEW_VISIBILITY';
+export const CHANGE_MODEL_VIEW_VISIBILITY = 'CHANGE_MODEL_VIEW_VISIBILITY';
 export const CHANGE_SUOP_VIEW_VISIBILITY = 'CHANGE_SUOP_VIEW_VISIBILITY';
 export const CHANGE_DELTA = 'CHANGE_DELTA';
 export const CHANGE_LAMBDA = 'CHANGE_LAMBDA';
@@ -71,9 +71,9 @@ export const changeWireframeVisibility = visibility => {
     };
 };
 
-export const changeMeshViewVisibility = visibility => {
+export const changeModelViewVisibility = visibility => {
     return {
-        type: CHANGE_MESH_VIEW_VISIBILITY,
+        type: CHANGE_Model_VIEW_VISIBILITY,
         visibility: visibility
     };
 };

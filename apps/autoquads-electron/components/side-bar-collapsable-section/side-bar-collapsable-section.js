@@ -18,7 +18,7 @@ export class SideBarCollapsableSection extends LitElement {
             }
 
             .section-header {
-
+                font-weight: bold;
             }
 
             .section-collapse {

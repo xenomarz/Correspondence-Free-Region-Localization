@@ -7,6 +7,7 @@ import '../../web_modules/@polymer/paper-toggle-button.js';
 import '../../web_modules/@vaadin/vaadin-button.js';
 import '../../web_modules/@vaadin/vaadin-combo-box.js';
 import '../../web_modules/@vaadin/vaadin-checkbox.js';
+import '../../web_modules/@vaadin/vaadin-text-field/vaadin-number-field.js';
 import '../../web_modules/@vaadin/vaadin-select.js';
 
 // Components Imports
@@ -14,16 +15,8 @@ import { SideBar } from '../side-bar/side-bar.js';
 import '../side-bar-collapsable-section/side-bar-collapsable-section.js';
 import '../side-bar-parameter-input/side-bar-parameter-input.js';
 import '../side-bar-color-picker/side-bar-color-picker.js';
-
-import { 
-    SplitOrientation,
-    Visibility,
-    EnergyType,
-    SolverState,
-    isVisible
-} from '../../redux/reducer.js';
-
-import * as Actions from '../../redux/actions.js';
+import * as ReducerExports from '../../redux/reducer.js';
+import * as ActionsExports from '../../redux/actions.js';
 import { store } from '../../redux/store.js';
 import { connect } from '../../web_modules/pwa-helpers.js';
 
@@ -68,70 +61,217 @@ export class AutoquadsSideBar extends SideBar {
 
     render() {
         return html`
-            <side-bar-collapsable-section caption="Model Options">
-                <vaadin-button theme="contrast primary" @click="${this._loadModel}">
+            <side-bar-collapsable-section
+                caption="Model Options">
+                <vaadin-button
+                    theme="contrast primary"
+                    @click="${this._loadModel}">
                     <span>Load Model...</span>
                 </vaadin-button>
-                <vaadin-number-field label="Number" value="1" min="1" max="10" step="0.0002" has-controls>
-                </vaadin-number-field>            
+                <vaadin-checkbox
+                    @change="${this._wireframeVisibilityChanged}"
+                    checked>
+                    <span>Show Wireframe</span>
+                </vaadin-checkbox>   
             </side-bar-collapsable-section>
-
-            <side-bar-collapsable-section caption="Energy Parameters">
-                <side-bar-parameter-input id="lambda" increase-key="d" decrease-key="a" value="0.5" min="0" max="1" step="0.01" label="Lambda"></side-bar-parameter-input>
-                <!-- <side-bar-parameter-input id="delta" is-exponential increase-key="w" decrease-key="s" value="0.5" min="0" max="1" step="2" label="Delta"></side-bar-parameter-input>
-                <side-bar-parameter-input id="integer-weight" value="0" min="0" max="1" step="0.0001" label="Integer Weight"></side-bar-parameter-input>
-                <side-bar-parameter-input id="integer-spacing" value="0" min="0" max="100" step="0.1" label="Integer Spacing"></side-bar-parameter-input>
-                <side-bar-parameter-input id="seamless-weight" increase-key="c" decrease-key="x" value="0" min="0" max="2" step="0.01" label="Seamless Weight"></side-bar-parameter-input>
-                <side-bar-parameter-input id="position-weight" value="100" min="0" max="10000" step="1" label="Position Weight"></side-bar-parameter-input> -->
+            <side-bar-collapsable-section
+                caption="Energy Parameters">
+                <side-bar-parameter-input
+                    id="lambda"
+                    increase-key="d"
+                    decrease-key="a"
+                    value="${this._lambda}"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    label="Lambda">
+                </side-bar-parameter-input>
+                <side-bar-parameter-input
+                    id="delta"
+                    increase-key="w"
+                    decrease-key="s"
+                    value="${this._delta}"
+                    min="0"
+                    max="1"
+                    step="2"
+                    label="Delta"
+                    is-exponential>
+                </side-bar-parameter-input>
+                <side-bar-parameter-input
+                    id="seamless-weight"
+                    increase-key="c"
+                    decrease-key="x"
+                    value="${this._seamlessWeight}"
+                    min="0"
+                    max="2"
+                    step="0.01"
+                    label="Seamless Weight">
+                </side-bar-parameter-input>
+                <side-bar-parameter-input
+                    id="position-weight"
+                    value="${this.positionWeight}"
+                    min="0"
+                    max="10000"
+                    step="1"
+                    label="Position Weight">
+                </side-bar-parameter-input>
             </side-bar-collapsable-section>
-
-            <side-bar-collapsable-section caption="Solver">
-                <paper-toggle-button class="solver" checked="${this.solverOn}" disabled>${this.solverText}</paper-toggle-button>
+            <side-bar-collapsable-section
+                caption="Solver">
+                <paper-toggle-button
+                    class="solver"
+                    checked="${ReducerExports.isSolverOn(this._solverState)}"
+                    disabled
+                    @change="${this._solverStateChanged}">
+                    <span>${ReducerExports.solverStateText(this._solverState)}</span>
+                </paper-toggle-button>
             </side-bar-collapsable-section>
-
-            <side-bar-collapsable-section caption="Interaction">
-                <side-bar-color-picker @color-changed="${this._highlightedFaceColorChanged}" color="#ff00d0" caption="Highlighted Face Color"></side-bar-color-picker>
-                <side-bar-color-picker @color-changed="${this._draggedFaceColorChanged}" color="#0000ff" caption="Dragged Face Color"></side-bar-color-picker>
-                <side-bar-color-picker @color-changed="${this._fixedFaceColorChanged}" color="#00ff00" caption="Fixed Face Color"></side-bar-color-picker>
-                <side-bar-color-picker @color-changed="${this._vertexEnergyColorChanged}" color="#ff0000" caption="Vertex Energy Color"></side-bar-color-picker>
-                <vaadin-select label="Vertex Energy" value="Seperation">
+            <side-bar-collapsable-section
+                caption="Interaction">
+                <side-bar-color-picker
+                    caption="Highlighted Face Color"
+                    color="${this._highlightedFaceColor}"
+                    @color-changed="${this._highlightedFaceColorChanged}">
+                </side-bar-color-picker>
+                <side-bar-color-picker
+                    caption="Dragged Face Color"
+                    color="${this._draggedFaceColor}"
+                    @color-changed="${this._draggedFaceColorChanged}">
+                </side-bar-color-picker>
+                <side-bar-color-picker
+                    caption="Fixed Face Color"
+                    color="${this._fixedFaceColor}"
+                    @color-changed="${this._fixedFaceColorChanged}">
+                </side-bar-color-picker>
+                <side-bar-color-picker
+                    caption="Vertex Energy Color"
+                    color="${this._vertexEnergyColor}"
+                    @color-changed="${this._vertexEnergyColorChanged}">
+                </side-bar-color-picker>
+                <vaadin-select
+                    label="Vertex Energy Type"
+                    value="${this._vertexEnergyType}"
+                    @change=${this._vertexEnergyTypeChanged}>
                     <template>
                         <vaadin-list-box>
-                            <vaadin-item value="seperation">Seperation</vaadin-item>
-                            <vaadin-item value="seamless">Seamless</vaadin-item>
+                            <vaadin-item
+                                value="${ReducerExports.EnergyType.SEPERATION}">
+                                <span>${ReducerExports.energyTypeText(ReducerExports.EnergyType.SEPERATION)}</span>
+                            </vaadin-item>
+                            <vaadin-item
+                                value="${ReducerExports.EnergyType.SEAMLESS}">
+                                <span>${ReducerExports.energyTypeText(ReducerExports.EnergyType.SEAMLESS)}</span>
+                            </vaadin-item>
                         </vaadin-list-box>
                     </template>
                 </vaadin-select>
             </side-bar-collapsable-section>
-
-            <side-bar-collapsable-section caption="Viewports" caption-size="3">
-                <vaadin-dropdown-menu label="Split Orientation" value="${this._splitOrientation}" on-value-changed="_splitOrientationChanged">
+            <side-bar-collapsable-section
+                caption="Viewports">
+                <vaadin-dropdown-menu
+                    label="Split Orientation"
+                    value="${this._splitOrientation}"
+                    @change="${this._splitOrientationChanged}">
                     <template>
                     <vaadin-list-box>
-                        <vaadin-item value="vertical">Vertical</vaadin-item>
-                        <vaadin-item value="horizontal">Horizontal</vaadin-item>
+                        <vaadin-item
+                            value="${ReducerExports.SplitOrientation.HORIZONTAL}">
+                            <span>${ReducerExports.splitOrientationText(ReducerExports.SplitOrientation.HORIZONTAL)}</span>
+                        </vaadin-item>
+                        <vaadin-item
+                            value="${ReducerExports.SplitOrientation.VERTICAL}">
+                            <span>${ReducerExports.splitOrientationText(ReducerExports.SplitOrientation.VERTICAL)}</span>
+                        </vaadin-item>
                     </vaadin-list-box>
                     </template>
                 </vaadin-dropdown-menu>
-                <side-bar-color-picker @color-changed="${this._modelViewportColorChanged}" color="${this._modelViewportColor}" caption="Model Viewport Color"></side-bar-color-picker>
-                <side-bar-color-picker @color-changed="${this._suopViewportColorChanged}" color="${this._suopViewportColor}" caption="Suop Viewport Color"></side-bar-color-picker>
-                <side-bar-color-picker @color-changed="${this._modelColorChanged}" color="${this._modelColor}" caption="Model Color"></side-bar-color-picker>
-                <side-bar-color-picker @color-changed="${this._suopColorChanged}" color="${this._suopColor}" caption="Suop Color"></side-bar-color-picker>
-                <vaadin-checkbox @change="_modelViewVisibilityChanged" ?checked=${isVisible(this._modelViewVisibility)}>Show Model View</vaadin-checkbox>
-                <vaadin-checkbox @change="_suopViewVisibilityChanged" ?checked=${isVisible(this._suoplViewVisibility)}>Show Suop View</vaadin-checkbox>
-                <vaadin-checkbox @change="_unitGridVisibilityChanged" ?checked=${isVisible(this._unitGridVisibility)}>Show Unit Grid</vaadin-checkbox>
-                <vaadin-checkbox @change="_optimizationDataMonitorVisibilityChanged" ?checked=${isVisible(this._optimizationDataMonitorVisibility)}>Show Optimization Data Monitor</vaadin-checkbox>
+                <side-bar-color-picker
+                    caption="Model Viewport Color"
+                    color="${this._modelViewportColor}"
+                    @color-changed="${this._modelViewportColorChanged}">
+                </side-bar-color-picker>
+                <side-bar-color-picker
+                    caption="Suop Viewport Color"
+                    color="${this._suopViewportColor}"
+                    @color-changed="${this._suopViewportColorChanged}">
+                </side-bar-color-picker>
+                <side-bar-color-picker
+                    caption="Model Color"
+                    color="${this._modelColor}"
+                    @color-changed="${this._modelColorChanged}">
+                </side-bar-color-picker>
+                <side-bar-color-picker
+                    caption="Suop Color"
+                    color="${this._suopColor}"
+                    @color-changed="${this._suopColorChanged}">
+                </side-bar-color-picker>
+                <vaadin-checkbox
+                    ?checked=${ReducerExports.isVisible(this._modelViewVisibility)}
+                    @change="${this._modelViewVisibilityChanged}">
+                    <span>Show Model View</span>
+                </vaadin-checkbox>
+                <vaadin-checkbox
+                    ?checked=${ReducerExports.isVisible(this._suopViewVisibility)}
+                    @change="${this._suopViewVisibilityChanged}">
+                    <span>Show Suop View</span>
+                </vaadin-checkbox>
+                <vaadin-checkbox
+                    ?checked=${ReducerExports.isVisible(this._unitGridVisibility)}
+                    @change="${this._unitGridVisibilityChanged}">
+                    <span>Show Unit Grid</span>
+                </vaadin-checkbox>
+                <vaadin-checkbox
+                    ?checked=${ReducerExports.isVisible(this._optimizationDataMonitorVisibility)}
+                    @change="${this._optimizationDataMonitorVisibilityChanged}">
+                    <span>Show Optimization Data Monitor</span>
+                </vaadin-checkbox>
             </side-bar-collapsable-section>
-
-            <!-- <side-bar-collapsable-section caption="Grid">
-                <side-bar-color-picker on-color-changed="_gridHorizontalColorInputChanged" color="#000000" caption="Horizontal Color"></side-bar-color-picker>
-                <side-bar-color-picker on-color-changed="_gridVerticalColorInputChanged" color="#000000" caption="Vertical Color"></side-bar-color-picker>
-                <side-bar-color-picker on-color-changed="_gridBackgroundColor1InputChanged" color="#6585ff" caption="Background Color 1"></side-bar-color-picker>
-                <side-bar-color-picker on-color-changed="_gridBackgroundColor2InputChanged" color="#fffdb8" caption="Background Color 2"></side-bar-color-picker>
-                <paper-input on-change="_gridSizeInputChanged" value="3" always-float-label label="Grid Unit Size (2^exp)" type="number" min="0" step="1"></paper-input>
-                <paper-input on-change="_gridTextureSizeInputChanged" value="8" always-float-label label="Grid Texture Size (2^exp)" type="number" min="0" step="1"></paper-input>
-                <paper-input on-change="_gridLineWidthInputChanged" value="0" always-float-label label="Grid Line Width" type="number" min="0" step="1"></paper-input>
-            </side-bar-collapsable-section> -->
+            <side-bar-collapsable-section
+                caption="Grid">
+                <side-bar-color-picker
+                    color="${this._gridHorizontalColor}"
+                    caption="Horizontal Color"
+                    @color-changed="${this._gridHorizontalColorChanged}">
+                </side-bar-color-picker>
+                <side-bar-color-picker
+                    color="${this._gridVerticalColor}"
+                    caption="Vertical Color"
+                    @color-changed="${this._gridVerticalColorChanged}"></side-bar-color-picker>
+                <side-bar-color-picker
+                    color="${this._gridBackgroundColor1}"
+                    caption="Background Color 1"
+                    @color-changed="${this._gridBackgroundColor1Changed}">
+                </side-bar-color-picker>
+                <side-bar-color-picker
+                    caption="Background Color 2"
+                    color="${this._gridBackgroundColor2}"
+                    @color-changed="${this._gridBackgroundColor2Changed}">
+                </side-bar-color-picker>
+                <vaadin-number-field
+                    label="Grid Unit Size (2^exp)"
+                    value="${this._gridSize}"
+                    min="0"
+                    step="1"
+                    always-float-label
+                    @change="${this._gridSizeChanged}">
+                </vaadin-number-field>
+                <vaadin-number-field
+                    label="Grid Texture Size (2^exp)"
+                    value="${this._gridTextureSize}"
+                    min="0"
+                    step="1"
+                    always-float-label
+                    @change="${this._gridTextureSizeChanged}">
+                </vaadin-number-field>
+                <vaadin-number-field
+                    label="Grid Line Width"
+                    value="${this._gridLineWidth}"
+                    min="0"
+                    step="1"
+                    always-float-label
+                    @change="${this._gridLineWidthChanged}">
+                </vaadin-number-field>
+            </side-bar-collapsable-section>
         `;
     }
 
@@ -202,23 +342,42 @@ export class AutoquadsSideBar extends SideBar {
         this._suopViewportColor = state.suopViewportColor;
         this._modelColor = state.modelColor;
         this._suopColor = state.suopColor;
+        this._wireframeVisibility = state.wireframeVisibility;
         this._modelViewVisibility = state.modelViewVisibility;
         this._suopViewVisibility = state.suopViewVisibility;
-        this._unitGridVisibility = state.suopViewVisibility;
-        this._suopViewGridTextureVisibility  = state.suopViewGridTextureVisibility;
+        this._delta = state.delta;
+        this._lambda = state.lambda;
+        this._seamlessWeight = state.seamlessWeight;
+        this._positionWeight = state.positionWeight;
+        this._gridHorizontalColor = state.gridHorizontalColor;
+        this._gridVerticalColor = state.gridVerticalColor;
+        this._gridBackgroundColor1 = state.gridBackgroundColor1;
+        this._gridBackgroundColor2 = state.gridBackgroundColor2;
+        this._highlightedFaceColor = state.highlightedFaceColor;
+        this._draggedFaceColor = state.draggedFaceColor;
+        this._fixedFaceColor = state.fixedFaceColor;
+        this._vertexEnergyColor = state.vertexEnergyColor;
+        this._vertexEnergyType = state.vertexEnergyType;
+        this._gridSize = state.gridSize;
+        this._gridTextureSize = state.gridTextureSize;
+        this._gridLineWidth = state.gridLineWidth;
+        this._unitGridVisibility = state.unitGridVisibility;
+        this._suopViewGridTextureVisibility = state.suopViewGridTextureVisibility;
         this._optimizationDataMonitorVisibility = state.optimizationDataMonitorVisibility;
+        this._solverState = state.solverState;
     }   
 
     constructor() {
         super();
-        this.solverText = "Off";
-        this.lambda = 0.1;
-        this.delta = 0.9;
-        this.seamlessWeight = 0;
-        this.positionWeight = 0;
-        this.showOptimizationDataMonitor = true; 
-        this.solverOn = false;
-        this.editingTool = 'camera';       
+        // this.solverText = "Off";
+        // this.lambda = 0.1;
+        // this.delta = 0.9;
+        // this.seamlessWeight = 0;
+        // this.positionWeight = 0;
+        // this.showOptimizationDataMonitor = true; 
+        // this.solverOn = false;
+        // this.editingTool = 'camera';
+        // this._highlightedFaceColor = 'rgb(255,0,0)';
     }
 
     connectedCallback() {
@@ -296,191 +455,111 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     _splitOrientationChanged(e) {
-        this.dispatch('changeSplitOrientation', e.detail.value);
-        PubSub.publish('mesh-view.resize');
+        store.dispatch(Actions.changeSplitOrientation(e.srcElement.value));    
     }
 
     _modelViewportColorChanged(e) {
-        // this.dispatch('changeModelViewportColor', e.detail.value);
         store.dispatch(Actions.changeModelViewportColor(e.detail.color));
     }
 
     _suopViewportColorChanged(e) {
-        // this.dispatch('changeSolverViewportColor', e.detail.value);
+        store.dispatch(Actions.changeSuopViewportColor(e.detail.color));
     }
 
     _modelColorChanged(e) {
-        // this.dispatch('changeModelColor', e.detail.value);
+        store.dispatch(Actions.changeModelColor(e.detail.color));
     }
 
-    _solverColorChanged(e) {
-        this.dispatch('changeSolverColor', e.detail.value);
+    _suopColorChanged(e) {
+        store.dispatch(Actions.changeSuopColor(e.detail.color));
     }
 
     _highlightedFaceColorChanged(e) {
-        this.dispatch('changeHighlightedFaceColor', e.detail.value);
+        store.dispatch(Actions.changeHighlightedFaceColor(e.detail.color));
     }
 
     _draggedFaceColorChanged(e) {
-        this.dispatch('changeDraggedFaceColor', e.detail.value);
+        store.dispatch(Actions.changeDraggedFaceColor(e.detail.color));
     }
 
     _fixedFaceColorChanged(e) {
-        this.dispatch('changeFixedFaceColor', e.detail.value);
+        store.dispatch(Actions.changeFixedFaceColor(e.detail.color));
     }
 
     _vertexEnergyColorChanged(e) {
-        this.dispatch('changeVertexEnergyColor', e.detail.value);
+        store.dispatch(Actions.changeVertexEnergyColor(e.detail.color));
     }
 
-    _vertexEnergyChanged(e) {
-        this.dispatch('changeVertexEnergy', e.detail.value);
+    _vertexEnergyTypeChanged(e) {
+        store.dispatch(Actions.changeVertexEnergyType(e.srcElement.value));
     }
 
-    _showWireframeChanged(e) {
-        this.dispatch('changeShowWireframe', e.detail.value);
+    _wireframeVisibilityChanged(e) {
+        store.dispatch(Actions.changeWireframeVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked)));
     }
 
-    _showMeshViewChanged(e) {
-        this.dispatch('changeShowMeshView', e.detail.value);
-        require('pubsub-js').publish('mesh-view.resize');
+    _modelViewVisibilityChanged(e) {
+        store.dispatch(Actions.changeModelViewVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked)));        
     }
 
-    _showSolverViewChanged(e) {
-        this.dispatch('changeShowSolverView', e.detail.value);
-        require('pubsub-js').publish('mesh-view.resize');
+    _suopViewVisiblityChanged(e) {
+        store.dispatch(Actions.changeSuopViewVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked))); 
     }
 
-    _showInfographicsChanged(e) {
-        this.dispatch('changeShowInfographics', e.detail.value);
-        require('pubsub-js').publish('mesh-view.resize');
+    _unitGridVisiblityChanged(e) {
+        store.dispatch(Actions.changeUnitGridVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked))); 
     }
 
-    _showUnitGridChanged(e) {
-        this.dispatch('changeShowUnitGrid', e.detail.value);
+    _optimizationDataMonitorVisibilityChanged(e) {
+        store.dispatch(Actions.changeOptimizationDataMonitorVisibility(ReducerExports.visibilityFromBool(e.srcElement.checked))); 
     }
 
-    _showGridTextureInSuopViewChanged(e) {
-        this.dispatch('changeShowGridTextureInSuopView', e.detail.value);
+    _deltaChanged(e) {
+        store.dispatch(Actions.changeDelta(e.srcElement.value)); 
     }
 
-    _showOptimizationDataMonitorChanged(e) {
-        // this.dispatch('changeShowOptimizationDataMonitor', e.detail.value);
+    _lambdaChanged(e) {
+        store.dispatch(Actions.changeLambda(e.srcElement.value)); 
     }
 
-    _deltaChanged(delta) {
-        this.dispatch('changeDelta', delta);
+    _seamlessWeightChanged(e) {
+        store.dispatch(Actions.changeSeamlessWeight(e.srcElement.value)); 
     }
 
-    _lambdaChanged(lambda) {
-        this.dispatch('changeLambda', lambda);
+    _positionWeightChanged(e) {
+        store.dispatch(Actions.changePositionWeight(e.srcElement.value)); 
     }
 
-    _integerWeightChanged(integerWeight) {
-        this.dispatch('changeIntegerWeight', integerWeight);
+    _solverStateChanged(e) {
+        store.dispatch(Actions.changeSolverState(ReducerExports.solverStateFromBool(e.srcElement.checked))); 
     }
 
-    _integerSpacingChanged(integerSpacing) {
-        this.dispatch('changeIntegerSpacing', integerSpacing);
+    _gridHorizontalColorChanged(e) {
+        store.dispatch(Actions.changeGridHorizontalColor(e.detail.color));
     }
 
-    _seamlessWeightChanged(seamlessWeight) {
-        this.dispatch('changeSeamlessWeight', seamlessWeight);
+    _gridVerticalColorChanged(e) {
+        store.dispatch(Actions.changeGridVerticalColor(e.detail.color));
     }
 
-    _positionWeightChanged(positionWeight) {
-        this.dispatch('changePositionWeight', positionWeight);
+    _gridBackgroundColor1Changed(e) {
+        store.dispatch(Actions.changeBackgroundColor1(e.detail.color));
     }
 
-    _solverChanged(solver) {
-        this.dispatch('changeSolver', solver);
+    _gridBackgroundColor2Changed(e) {
+        store.dispatch(Actions.changeBackgroundColor2(e.detail.color));
     }
 
-    _editingToolChanged(editingTool) {
-        this.dispatch('changeEditingTool', editingTool);
+    _gridSizeChanged(e) {
+        store.dispatch(Actions.changeGridSize(e.srcElement.value));
     }
 
-    _gridHorizontalColorChanged(gridHorizontalColor) {
-        this.dispatch('changeGridHorizontalColor', gridHorizontalColor);
+    _gridTextureSizeChanged(e) {
+        store.dispatch(Actions.changeGridTextureSize(e.srcElement.value));
     }
 
-    _gridVerticalColorChanged(gridVerticalColor) {
-        this.dispatch('changeGridVerticalColor', gridVerticalColor);
-    }
-
-    _gridBackgroundColor1Changed(gridBackgroundColor1) {
-        this.dispatch('changeGridBackgroundColor1', gridBackgroundColor1);
-    }
-
-    _gridBackgroundColor2Changed(gridBackgroundColor2) {
-        this.dispatch('changeGridBackgroundColor2', gridBackgroundColor2);
-    }
-
-    _gridSizeChanged(gridSize) {
-        this.dispatch('changeGridSize', gridSize);
-    }
-
-    _gridTextureSizeChanged(gridTextureSize) {
-        this.dispatch('changeGridTextureSize', gridTextureSize);
-    }
-
-    _gridLineWidthChanged(gridLineWidthSize) {
-        this.dispatch('changeGridLineWidth', gridLineWidthSize);
-    }
-
-    _gridHorizontalColorInputChanged(e) {
-        this.gridHorizontalColor = e.detail.value;
-    }
-
-    _gridVerticalColorInputChanged(e) {
-        this.gridVerticalColor = e.detail.value;
-    }
-
-    _gridBackgroundColor1InputChanged(e) {
-        this.gridBackgroundColor1 = e.detail.value;
-    }
-
-    _gridBackgroundColor2InputChanged(e) {
-        this.gridBackgroundColor2 = e.detail.value;
-    }
-
-    _gridSizeInputChanged(e) {
-        this.gridSize = parseFloat(e.srcElement.value);
-    }
-
-    _gridTextureSizeInputChanged(e) {
-        this.gridTextureSize = parseFloat(e.srcElement.value);
-    }
-
-    _gridLineWidthInputChanged(e) {
-        this.gridLineWidth = parseFloat(e.srcElement.value);
-    }
-
-    _showOptimizationDataMonitorChanged() {
-        this.dispatch('changeShowOptimizationDataMonitor', this.showOptimizationDataMonitor);
-    }
-
-    _sideBarParameterInputValueChanged(e) {
-        switch (e.detail.id) {
-            case "lambda":
-                this.lambda = e.detail.value;
-                break;
-            case "delta":
-                this.delta = e.detail.value;
-                break;
-            case "integer-weight":
-                this.integerWeight = e.detail.value;
-                break;
-            case "integer-spacing":
-                this.integerSpacing = e.detail.value;
-                break;
-            case "seamless-weight":
-                this.seamlessWeight = e.detail.value;
-                break;
-            case "position-weight":
-                this.positionWeight = e.detail.value;
-                break;
-        }
+    _gridLineWidthChanged(e) {
+        store.dispatch(Actions.changeGridLineWidth(e.srcElement.value));
     }
 }
 

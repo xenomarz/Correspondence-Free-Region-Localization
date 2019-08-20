@@ -1,6 +1,7 @@
 import { LitElement, html, css } from '../../web_modules/lit-element.js';
 import '../../web_modules/@polymer/iron-icons.js';
 import '../../web_modules/@polymer/iron-collapse.js';
+import chroma from '../../web_modules/chroma-js.js';
 export class SideBarColorPicker extends LitElement {
     static get styles() {
         return [css`
@@ -25,7 +26,7 @@ export class SideBarColorPicker extends LitElement {
 
     render() {
         return html`
-            <input type="color" id="color" value="${this.color}" @change="${this._colorChanged}" />
+            <input type="color" id="color" value="${chroma(this._color).hex()}" @change="${this._colorChanged}" />
             <div class="caption-container">
                 <span>${this.caption}</span>
             </div> 
@@ -69,7 +70,7 @@ export class SideBarColorPicker extends LitElement {
     }
     
     _colorChanged(e) {
-        this.color = e.srcElement.value;
+        this.color = chroma(e.srcElement.value).css();
     }    
 }
 

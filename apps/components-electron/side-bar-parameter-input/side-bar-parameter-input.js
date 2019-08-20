@@ -17,6 +17,11 @@ export class SideBarParameterInput extends LitElement {
                 margin-bottom: 10px;
             }
 
+            /* HACK - check why vaadin-number-field has 'width: 8em' property on its host element */
+            vaadin-number-field {
+                width: 90%;
+            } 
+
             paper-slider {
                 width: 100%;
             }
@@ -30,29 +35,14 @@ export class SideBarParameterInput extends LitElement {
             }
 
             .parameter-input {
-                flex-grow: 1;
                 padding-left: 10px;
                 padding-right: 10px;
             }
 
             .slider-parameter-input {
-                flex-grow: 1;
                 padding-left: 10px;
                 padding-right: 10px;
             }
-
-            /* vaadin-checkbox {
-                display: block;
-                padding-left: 7px;
-            }
-
-            vaadin-number-field {
-                display: block;
-            }
-
-            vaadin-text-field {
-                display: block;
-            }                         */
         `];
     }
 

@@ -5,7 +5,7 @@ import {
     CHANGE_MODEL_COLOR,
     CHANGE_SUOP_COLOR,
     CHANGE_WIREFRAME_VISIBILITY,
-    CHANGE_MESH_VIEW_VISIBILITY,
+    CHANGE_MODEL_VIEW_VISIBILITY,
     CHANGE_SUOP_VIEW_VISIBILITY,
     CHANGE_DELTA,
     CHANGE_LAMBDA,
@@ -51,7 +51,31 @@ export const SolverState = {
 };
 
 export const isVisible = (visibility) => {
-    return visibility == Visibility.VISIBLE;
+    return visibility === Visibility.VISIBLE;
+};
+
+export const isSolverOn = (solverState) => {
+    return solverState === SolverState.ON;
+};
+
+export const  visibilityFromBool = (bool) => {
+    return bool ? Visibility.VISIBLE : Visibility.HIDDEN;
+};
+
+export const  SolverStateFromBool = (bool) => {
+    return bool ? SolverState.ON : SolverState.OFF;
+};
+
+export const solverStateText = (solverState) => {
+    return solverState;
+};
+
+export const energyTypeText = (energyType) => {
+    return energyType;
+};
+
+export const splitOrientationText = (splitOrientation) => {
+    return splitOrientation;
 };
 
 const INITIAL_STATE = {
@@ -61,7 +85,7 @@ const INITIAL_STATE = {
     modelColor: 'rgb(255, 255, 255)',
     suopColor: 'rgb(255, 255, 255)',
     wireframeVisibility: Visibility.VISIBLE,
-    meshViewVisibility: Visibility.VISIBLE,
+    modelViewVisibility: Visibility.VISIBLE,
     suopViewVisibility: Visibility.VISIBLE,
     delta: 0.9,
     lambda: 0.1,
@@ -117,10 +141,10 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 wireframeVisibility: action.visibility
             };
-        case CHANGE_MESH_VIEW_VISIBILITY:
+        case CHANGE_MODEL_VIEW_VISIBILITY:
             return {
                 ...state,
-                meshViewVisibility: action.visibility
+                modelViewVisibility: action.visibility
             };
         case CHANGE_SUOP_VIEW_VISIBILITY:
             return {
