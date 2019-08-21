@@ -1,14 +1,20 @@
+// Web Modules Imports
 import { LitElement, html, css } from '../../web_modules/lit-element.js';
 import '../../web_modules/@vaadin/vaadin-button.js';
 import '../../web_modules/@vaadin/vaadin-split-layout.js';
 import { PubSub } from '../../web_modules/pubsub-js.js';
 import * as THREE from '../../web_modules/three.js';
+import { connect } from '../../web_modules/pwa-helpers.js';
+
+// Components Imports
 import '../mesh-view/mesh-view.js';
 import '../autoquads-side-bar/autoquads-side-bar.js';
 import { MeshProvider } from '../mesh-provider/mesh-provider.js';
 import { AutoquadsModelMeshProvider } from '../autoquads-model-mesh-provider/autoquads-model-mesh-provider.js';
 import { AutoquadsSuopMeshProvider } from '../autoquads-suop-mesh-provider/autoquads-suop-mesh-provider.js';
-export class AutoquadsView extends LitElement {
+import { store } from '../../redux/store.js';
+
+export class AutoquadsView extends connect(store)(LitElement) {
     static get styles() {
         return [css`
             :host {
@@ -45,44 +51,44 @@ export class AutoquadsView extends LitElement {
                             enable-mesh-rotation
                             enable-vertex-selection
                             caption="Mesh View"
-                            grid-horizontal-color="${this.gridHorizontalColor}"
-                            grid-vertical-color="${this.gridVerticalColor}"
-                            grid-background-color1="${this.gridBackgroundColor1}"
-                            grid-background-color2="${this.gridBackgroundColor2}"
-                            grid-size="${this.gridSize}"
-                            grid-texture-size="${this.gridTextureSize}"
-                            grid-line-width="${this.gridLineWidth}"
-                            show-wireframe="${this.showWireframe}"
-                            background-color="${this.modelViewportColor}"
-                            mesh-color="${this.modelColor}"
+                            grid-horizontal-color="${this._gridHorizontalColor}"
+                            grid-vertical-color="${this._gridVerticalColor}"
+                            grid-background-color1="${this._gridBackgroundColor1}"
+                            grid-background-color2="${this._gridBackgroundColor2}"
+                            grid-size="${this._gridSize}"
+                            grid-texture-size="${this._gridTextureSize}"
+                            grid-line-width="${this._gridLineWidth}"
+                            show-wireframe="${this._showWireframe}"
+                            background-color="${this._modelViewportColor}"
+                            mesh-color="${this._modelColor}"
                             mesh-provider="${this._modelMeshProvider}"
-                            mesh-interaction="${this.meshInteraction}"
-                            highlighted-face-color="${this.highlightedFaceColor}"
-                            dragged-face-color="${this.draggedFaceColor}"
-                            selected-face-color="${this.fixedFaceColor}"
+                            mesh-interaction="${this._meshInteraction}"
+                            highlighted-face-color="${this._highlightedFaceColor}"
+                            dragged-face-color="${this._draggedFaceColor}"
+                            selected-face-color="${this._fixedFaceColor}"
                             show-grid-texture>
                         </mesh-view>
                         <mesh-view 
-                            id="solver-mesh-view"
-                            enable-face-dragging caption="Solver View"
-                            show-grid="${this.showUnitGrid}"
-                            grid-horizontal-color="${this.gridHorizontalColor}"
-                            grid-vertical-color="${this.gridVerticalColor}"
-                            grid-background-color1="${this.gridBackgroundColor1}"
-                            grid-background-color2="${this.gridBackgroundColor2}"
-                            grid-size="${this.gridSize}"
-                            grid-texture-size="${this.gridTextureSize}"
-                            grid-line-width="${this.gridLineWidth}"
-                            show-wireframe="${this.showWireframe}"
-                            background-color="${this.solverViewportColor}"
-                            mesh-color="${this.solverColor}"
+                            id="suop-mesh-view"
+                            enable-face-dragging caption="Suop View"
+                            show-grid="${this._showUnitGrid}"
+                            grid-horizontal-color="${this._gridHorizontalColor}"
+                            grid-vertical-color="${this._gridVerticalColor}"
+                            grid-background-color1="${this._gridBackgroundColor1}"
+                            grid-background-color2="${this._gridBackgroundColor2}"
+                            grid-size="${this._gridSize}"
+                            grid-texture-size="${this._gridTextureSize}"
+                            grid-line-width="${this._gridLineWidth}"
+                            show-wireframe="${this._showWireframe}"
+                            background-color="${this._suopViewportColor}"
+                            mesh-color="${this._solverColor}"
                             mesh-provider="${this._suopMeshProvider}"
-                            mesh-interaction="${this.meshInteraction}"
-                            highlighted-face-color="${this.highlightedFaceColor}"
-                            dragged-face-color="${this.draggedFaceColor}"
-                            selected-face-color="${this.fixedFaceColor}"
-                            show-debug-data="${this.showOptimizationDataMonitor}"
-                            show-grid-texture="${this.showGridTextureInSuopView}">
+                            mesh-interaction="${this._meshInteraction}"
+                            highlighted-face-color="${this._highlightedFaceColor}"
+                            dragged-face-color="${this._draggedFaceColor}"
+                            selected-face-color="${this._fixedFaceColor}"
+                            show-debug-data="${this._showOptimizationDataMonitor}"
+                            show-grid-texture="${this._showGridTextureInSuopView}">
                         </mesh-view>
                     </vaadin-split-layout>
                 </vaadin-split-layout>
@@ -222,6 +228,37 @@ export class AutoquadsView extends LitElement {
             }
         };
     }
+
+    stateChanged(state) {
+        this._splitOrientation = state.splitOrientation;
+        this._modelViewportColor = state.modelViewportColor;
+        this._suopViewportColor = state.suopViewportColor;
+        // this._modelColor = state.modelColor;
+        // this._suopColor = state.suopColor;
+        // this._wireframeVisibility = state.wireframeVisibility;
+        // this._modelViewVisibility = state.modelViewVisibility;
+        // this._suopViewVisibility = state.suopViewVisibility;
+        // this._delta = state.delta;
+        // this._lambda = state.lambda;
+        // this._seamlessWeight = state.seamlessWeight;
+        // this._positionWeight = state.positionWeight;
+        // this._gridHorizontalColor = state.gridHorizontalColor;
+        // this._gridVerticalColor = state.gridVerticalColor;
+        // this._gridBackgroundColor1 = state.gridBackgroundColor1;
+        // this._gridBackgroundColor2 = state.gridBackgroundColor2;
+        // this._highlightedFaceColor = state.highlightedFaceColor;
+        // this._draggedFaceColor = state.draggedFaceColor;
+        // this._fixedFaceColor = state.fixedFaceColor;
+        // this._vertexEnergyColor = state.vertexEnergyColor;
+        // this._vertexEnergyType = state.vertexEnergyType;
+        // this._gridSize = state.gridSize;
+        // this._gridTextureSize = state.gridTextureSize;
+        // this._gridLineWidth = state.gridLineWidth;
+        // this._unitGridVisibility = state.unitGridVisibility;
+        // this._suopViewGridTextureVisibility = state.suopViewGridTextureVisibility;
+        // this._optimizationDataMonitorVisibility = state.optimizationDataMonitorVisibility;
+        // this._solverState = state.solverState;
+    }    
 
     constructor() {
         super();

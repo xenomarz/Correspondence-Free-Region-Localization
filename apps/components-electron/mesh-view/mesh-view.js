@@ -1,7 +1,13 @@
+// Web Modules Imports
 import { LitElement, html, css } from '../../web_modules/lit-element.js';
 import { Machine, interpret } from '../../web_modules/xstate.js';
 import { PubSub } from '../../web_modules/pubsub-js.js';
 import * as THREE from '../../web_modules/three.js';
+import OrbitControls from '../../web_modules/three-orbit-controls.js';
+
+// Components Imports
+import { MeshProvider } from '../../components/mesh-provider/mesh-provider.js';
+
 export class MeshView extends LitElement {
     static get styles() {
         return [css`
@@ -205,84 +211,162 @@ export class MeshView extends LitElement {
 
     constructor() {
         super();
+        this._faceIntersection = null;
+        this._previousFaceIntersection = null;
+        this._selectedFaces = {};
+        this._selectedVerticesPoints = {};
+        this._draggedFace = null;
+        this._highlightedFace = null;
+        this._hoveredVertexSize = 20;
+        this._vertexSize = 15;
+        this._vertexColors = [];
+        this._mouseInCanvas = false;
+        this._debugData = [];
+        this._createCamera();
+        this._createRenderer();
+        this._createMaterials();
+        this._createScene();
+        this._createOrbitControl();
+        this._createRaycaster();
+
         // this.meshProvider = new MeshProvider();
-        this.backgroundColor = 'rgb(0, 0, 0)';
-        this.meshColor = 'rgb(255, 255, 255)';
-        this.useGridTexture = false;
-        this.showWireframe = false;
-        this.showGrid = false;
-        this.syncFaceSelection = true;
-        this.syncVertexSelection = true;
-        this.enableVertexSelection = false;
-        this.enableMeshRotation = false;
-        this.enableFaceDragging = false;
-        this.gridHorizontalColor = 'rgb(0, 0, 255)';
-        this.gridVerticalColor = 'rgb(0, 0, 255)';
-        this.gridBackgroundColor1 = 'rgb(255, 255, 255)';
-        this.gridBackgroundColor2 = 'rgb(255, 255, 255)';
-        this.gridSize = 3;
-        this.gridTextureSize = 8;
-        this.gridLineWidth = 0;
-        this.useLights = false;
+        // this.backgroundColor = 'rgb(0, 0, 0)';
+        // this.meshColor = 'rgb(255, 255, 255)';
+        // this.useGridTexture = false;
+        // this.showWireframe = false;
+        // this.showGrid = false;
+        // this.syncFaceSelection = true;
+        // this.syncVertexSelection = true;
+        // this.enableVertexSelection = false;
+        // this.enableMeshRotation = false;
+        // this.enableFaceDragging = false;
+        // this.gridHorizontalColor = 'rgb(0, 0, 255)';
+        // this.gridVerticalColor = 'rgb(0, 0, 255)';
+        // this.gridBackgroundColor1 = 'rgb(255, 255, 255)';
+        // this.gridBackgroundColor2 = 'rgb(255, 255, 255)';
+        // this.gridSize = 3;
+        // this.gridTextureSize = 8;
+        // this.gridLineWidth = 0;
+        // this.useLights = false;
     }    
 
     firstUpdated() {
-        // this._resizeScene();
-        // this._connectScene();
-        // this._renderScene();
+        // super.connectedCallback();
+        // this._renderer.domElement.onmousedown = this._mouseDownHandler.bind(this);
+        // this._renderer.domElement.onmousemove = this._mouseMoveHandler.bind(this);
+        // this._renderer.domElement.onmouseleave = this._mouseLeaveHandler.bind(this);
+        // this._renderer.domElement.onmouseenter = this._mouseEnterHandler.bind(this);
+        // this._renderer.domElement.onmouseup = this._mouseUpHandler.bind(this);
+        // this._renderer.domElement.onclick = this._mouseClickHandler.bind(this);
+        // this._renderer.domElement.oncontextmenu = this._contextMenuHandler.bind(this);
+        // window.addEventListener('keydown', this._keydown.bind(this));
+        // window.addEventListener('keyup', this._keyup.bind(this));
+
+        // https://stackoverflow.com/questions/54512325/getting-width-height-in-a-slotted-lit-element-in-edge
+        window.setTimeout(() => {
+            this.shadowRoot.querySelector('.container').appendChild(this._renderer.domElement);
+            this._resizeScene();
+            this._renderer.render(this._scene, this._camera);
+        }, 0);
+
+
+        
+        // this.stats = new Stats();
+        // this.stats.showPanel(1);
+        // this.stats.dom.style.position = 'absolute';
+        // this.stats.dom.style.top = '';
+        // this.stats.dom.style.bottom = '0px';
+        // this.root.querySelector('.container').appendChild(this.stats.dom);
     }
 
-    connectedCallback() {
-        super.connectedCallback();
-        // this.addEventListener('iron-resize', e => this._resizeScene());
-        // this.THREE = require('three');
+    /**
+     * Properties
+     */
 
-        // this.meshViewResizeSubscriptionToken = require('pubsub-js').subscribe('mesh-view.resize', () => {
-        //     this._resizeScene()
-        // });
-
-        // this.meshViewSelectFaceSubscriptionToken = require('pubsub-js').subscribe('mesh-view-select-face', (name, payload) => {
-        //     if (payload.meshViewId !== this.id) {
-        //         this._selectFace(payload.face);
-        //     }
-        // });
-
-        // this.meshViewUnselectFaceSubscriptionToken = require('pubsub-js').subscribe('mesh-view-unselect-face', (name, payload) => {
-        //     if (payload.meshViewId !== this.id) {
-        //         this._unselectFace(payload.face);
-        //     }
-        // });
-
-        // this.meshViewHighlightFaceSubscriptionToken = require('pubsub-js').subscribe('mesh-view-highlight-face', (name, payload) => {
-        //     if (payload.meshViewId !== this.id) {
-        //         this._setHighlightedFace(payload.face);
-        //         this._externalFaceHighlight = true;
-        //     }
-        // });
-
-        // this.meshViewUnhighlightFaceSubscriptionToken = require('pubsub-js').subscribe('mesh-view-unhighlight-face', (name, payload) => {
-        //     if (payload.meshViewId !== this.id) {
-        //         this._resetHighlightedFace();
-        //         this._externalFaceHighlight = false;
-        //     }
-        // });
-
-        // this.meshViewSetDraggedFaceSubscriptionToken = require('pubsub-js').subscribe('mesh-view-set-dragged-face', (name, payload) => {
-        //     if (payload.meshViewId !== this.id) {
-        //         this._setDraggedFace(payload.face);
-        //     }
-        // });
-
-        // this.meshViewResetDraggedFaceSubscriptionToken = require('pubsub-js').subscribe('mesh-view-reset-dragged-face', (name, payload) => {
-        //     if (payload.meshViewId !== this.id) {
-        //         this._resetDraggedFace();
-        //     }
-        // });
-
-        // this._debugData = [];
-
-        // this._initialize();      
+    set backgroundColor(value) {
+        const oldValue = this._backgroundColor;
+        this._backgroundColor = value;
+        this._renderer.setClearColor(new THREE.Color(value), 1.0);
+        // this._renderer.render(this._scene, this._camera);
+        this.requestUpdate('backgroundColor', oldValue);
     }
+
+    get backgroundColor() {
+        return this._backgroundColor;
+    }
+
+    _createCamera() {
+        this._camera = new THREE.PerspectiveCamera(45, 0, 0.1, 10000);
+        this._camera.position.x = 0;
+        this._camera.position.y = 0;
+        this._camera.position.z = 3;
+    }
+
+    _createRenderer() {
+        this._renderer = new THREE.WebGLRenderer({
+            antialias: true
+        });
+        this._renderer.setPixelRatio(window.devicePixelRatio);
+    }
+
+    _createMaterials() {
+        this._sphereMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff0000
+        });
+    }   
+
+    _createScene() {
+      this._scene = new THREE.Scene();
+    }
+
+    _createOrbitControl() {
+        this._controls = new (OrbitControls(THREE))(this._camera, this._renderer.domElement);
+        this._controls.enableDamping = true;
+        this._controls.dampingFactor = 0.25;
+        this._controls.screenSpacePanning = false;
+        this._controls.enableKeys = false;
+        this._controls.minDistance = 0;
+        this._controls.maxDistance = 1000;
+        this._controls.maxPolarAngle = 2 * Math.PI;
+        this._controls.enableRotate = false;
+    }
+
+    _createRaycaster() {
+        this._raycaster = new THREE.Raycaster();
+        this._raycaster.params.Points.threshold = 0.05;
+    }
+
+    _connectScene() {
+    //   this._renderer.domElement.onmousedown = this._mouseDownHandler.bind(this);
+    //   this._renderer.domElement.onmousemove = this._mouseMoveHandler.bind(this);
+    //   this._renderer.domElement.onmouseleave = this._mouseLeaveHandler.bind(this);
+    //   this._renderer.domElement.onmouseenter = this._mouseEnterHandler.bind(this);
+    //   this._renderer.domElement.onmouseup = this._mouseUpHandler.bind(this);
+    //   this._renderer.domElement.onclick = this._mouseClickHandler.bind(this);
+    //   this._renderer.domElement.oncontextmenu = this._contextMenuHandler.bind(this);
+    //   window.addEventListener('keydown', this._keydown.bind(this));
+    //   window.addEventListener('keyup', this._keyup.bind(this));
+
+    //   this.root.querySelector('.container').appendChild(this._renderer.domElement);
+    //   this.stats = new Stats();
+    //   this.stats.showPanel(1);
+    //   this.stats.dom.style.position = 'absolute';
+    //   this.stats.dom.style.top = '';
+    //   this.stats.dom.style.bottom = '0px';
+    //   this.root.querySelector('.container').appendChild(this.stats.dom);
+    }
+
+    _resizeScene() {
+        this._camera.aspect = this.offsetWidth / this.offsetHeight;
+        this._camera.updateProjectionMatrix();
+        this._renderer.setSize(this.offsetWidth, this.offsetHeight);
+    }
+
+
+
+
+
+
 
     // ready() {
 

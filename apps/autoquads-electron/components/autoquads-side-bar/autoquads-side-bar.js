@@ -18,7 +18,6 @@ import '../side-bar-color-picker/side-bar-color-picker.js';
 import * as ReducerExports from '../../redux/reducer.js';
 import * as ActionsExports from '../../redux/actions.js';
 import { store } from '../../redux/store.js';
-import { connect } from '../../web_modules/pwa-helpers.js';
 
 export class AutoquadsSideBar extends SideBar {
     static get styles() {
@@ -455,111 +454,111 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     _splitOrientationChanged(e) {
-        store.dispatch(Actions.changeSplitOrientation(e.srcElement.value));    
+        store.dispatch(ActionsExports.changeSplitOrientation(e.srcElement.value));    
     }
 
     _modelViewportColorChanged(e) {
-        store.dispatch(Actions.changeModelViewportColor(e.detail.color));
+        store.dispatch(ActionsExports.changeModelViewportColor(e.detail.color));
     }
 
     _suopViewportColorChanged(e) {
-        store.dispatch(Actions.changeSuopViewportColor(e.detail.color));
+        store.dispatch(ActionsExports.changeSuopViewportColor(e.detail.color));
     }
 
     _modelColorChanged(e) {
-        store.dispatch(Actions.changeModelColor(e.detail.color));
+        store.dispatch(ActionsExports.changeModelColor(e.detail.color));
     }
 
     _suopColorChanged(e) {
-        store.dispatch(Actions.changeSuopColor(e.detail.color));
+        store.dispatch(ActionsExports.changeSuopColor(e.detail.color));
     }
 
     _highlightedFaceColorChanged(e) {
-        store.dispatch(Actions.changeHighlightedFaceColor(e.detail.color));
+        store.dispatch(ActionsExports.changeHighlightedFaceColor(e.detail.color));
     }
 
     _draggedFaceColorChanged(e) {
-        store.dispatch(Actions.changeDraggedFaceColor(e.detail.color));
+        store.dispatch(ActionsExports.changeDraggedFaceColor(e.detail.color));
     }
 
     _fixedFaceColorChanged(e) {
-        store.dispatch(Actions.changeFixedFaceColor(e.detail.color));
+        store.dispatch(ActionsExports.changeFixedFaceColor(e.detail.color));
     }
 
     _vertexEnergyColorChanged(e) {
-        store.dispatch(Actions.changeVertexEnergyColor(e.detail.color));
+        store.dispatch(ActionsExports.changeVertexEnergyColor(e.detail.color));
     }
 
     _vertexEnergyTypeChanged(e) {
-        store.dispatch(Actions.changeVertexEnergyType(e.srcElement.value));
+        store.dispatch(ActionsExports.changeVertexEnergyType(e.srcElement.value));
     }
 
     _wireframeVisibilityChanged(e) {
-        store.dispatch(Actions.changeWireframeVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked)));
+        store.dispatch(ActionsExports.changeWireframeVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked)));
     }
 
     _modelViewVisibilityChanged(e) {
-        store.dispatch(Actions.changeModelViewVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked)));        
+        store.dispatch(ActionsExports.changeModelViewVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked)));        
     }
 
     _suopViewVisiblityChanged(e) {
-        store.dispatch(Actions.changeSuopViewVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked))); 
+        store.dispatch(ActionsExports.changeSuopViewVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked))); 
     }
 
     _unitGridVisiblityChanged(e) {
-        store.dispatch(Actions.changeUnitGridVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked))); 
+        store.dispatch(ActionsExports.changeUnitGridVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked))); 
     }
 
     _optimizationDataMonitorVisibilityChanged(e) {
-        store.dispatch(Actions.changeOptimizationDataMonitorVisibility(ReducerExports.visibilityFromBool(e.srcElement.checked))); 
+        store.dispatch(ActionsExports.changeOptimizationDataMonitorVisibility(ReducerExports.visibilityFromBool(e.srcElement.checked))); 
     }
 
     _deltaChanged(e) {
-        store.dispatch(Actions.changeDelta(e.srcElement.value)); 
+        store.dispatch(ActionsExports.changeDelta(e.srcElement.value)); 
     }
 
     _lambdaChanged(e) {
-        store.dispatch(Actions.changeLambda(e.srcElement.value)); 
+        store.dispatch(ActionsExports.changeLambda(e.srcElement.value)); 
     }
 
     _seamlessWeightChanged(e) {
-        store.dispatch(Actions.changeSeamlessWeight(e.srcElement.value)); 
+        store.dispatch(ActionsExports.changeSeamlessWeight(e.srcElement.value)); 
     }
 
     _positionWeightChanged(e) {
-        store.dispatch(Actions.changePositionWeight(e.srcElement.value)); 
+        store.dispatch(ActionsExports.changePositionWeight(e.srcElement.value)); 
     }
 
     _solverStateChanged(e) {
-        store.dispatch(Actions.changeSolverState(ReducerExports.solverStateFromBool(e.srcElement.checked))); 
+        store.dispatch(ActionsExports.changeSolverState(ReducerExports.solverStateFromBool(e.srcElement.checked))); 
     }
 
     _gridHorizontalColorChanged(e) {
-        store.dispatch(Actions.changeGridHorizontalColor(e.detail.color));
+        store.dispatch(ActionsExports.changeGridHorizontalColor(e.detail.color));
     }
 
     _gridVerticalColorChanged(e) {
-        store.dispatch(Actions.changeGridVerticalColor(e.detail.color));
+        store.dispatch(ActionsExports.changeGridVerticalColor(e.detail.color));
     }
 
     _gridBackgroundColor1Changed(e) {
-        store.dispatch(Actions.changeBackgroundColor1(e.detail.color));
+        store.dispatch(ActionsExports.changeBackgroundColor1(e.detail.color));
     }
 
     _gridBackgroundColor2Changed(e) {
-        store.dispatch(Actions.changeBackgroundColor2(e.detail.color));
+        store.dispatch(ActionsExports.changeBackgroundColor2(e.detail.color));
     }
 
     _gridSizeChanged(e) {
-        store.dispatch(Actions.changeGridSize(e.srcElement.value));
+        store.dispatch(ActionsExports.changeGridSize(e.srcElement.value));
     }
 
     _gridTextureSizeChanged(e) {
-        store.dispatch(Actions.changeGridTextureSize(e.srcElement.value));
+        store.dispatch(ActionsExports.changeGridTextureSize(e.srcElement.value));
     }
 
     _gridLineWidthChanged(e) {
-        store.dispatch(Actions.changeGridLineWidth(e.srcElement.value));
+        store.dispatch(ActionsExports.changeGridLineWidth(e.srcElement.value));
     }
 }
 

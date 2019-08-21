@@ -28,6 +28,7 @@
     "pwa-helpers": "^0.9.1",
     "redux": "^4.0.4",
     "three": "^0.107.0",
+    "three-orbit-controls": "^82.1.0",
     "xstate": "^4.6.7"
   },
   "@pika/web": {
@@ -51,6 +52,7 @@
       "pwa-helpers",
       "redux",
       "three",
+      "three-orbit-controls",
       "xstate",
       "chroma-js"
     ]
