@@ -1,5 +1,4 @@
 #include <plugins/basic-menu/include/basic-menu.h>
-#include <libs/optimization_lib/include/solvers/solver.h>
 
 int main(int argc, char * argv[])
 {

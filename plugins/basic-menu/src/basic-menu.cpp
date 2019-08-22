@@ -6,32 +6,9 @@ namespace rds
 	namespace plugins
 	{
 		BasicMenu::BasicMenu() :
-			igl::opengl::glfw::imgui::ImGuiMenu(),
-			solver_thread_alive(true)
-		{
-				
-		}
+			igl::opengl::glfw::imgui::ImGuiMenu(){}
 
-		BasicMenu::~BasicMenu()
-		{
-			this->solver_thread_alive = false;
-			this->solver_thread.join();
-		}
-
-		void BasicMenu::RunSolver()
-		{
-			//newton = Newton()
-			while (this->solver_thread_alive)
-			{
-				//solver_mutex.lock();
-				if (this->solver_on)
-				{
-					this->viewer->data(1);
-				}
-				//cout << "Hello " << this->solver_mode << endl;
-				//solver_mutex.unlock();
-			}
-		}
+		BasicMenu::~BasicMenu(){}
 
 		IGL_INLINE void BasicMenu::init(igl::opengl::glfw::Viewer *_viewer)
 		{
@@ -57,8 +34,7 @@ namespace rds
 				down_mouse_x = down_mouse_y = -1;
 
 				//Solver Parameters
-				solver_on_internal = false;
-				solver_on = solver_on_internal;
+				solver_on = false;
 
 				//Parametrization Parameters
 				Position_Weight = Seamless_Weight = Integer_Spacing = Integer_Weight = Delta = Lambda = 0.5;
@@ -77,7 +53,8 @@ namespace rds
 				compute_harmonic_param(1);
 
 				// Initialize solver thread
-				solver_thread = std::thread(&BasicMenu::RunSolver, this);
+				solver = make_unique<Newton>();
+				totalObjective = make_shared<TotalObjective>();
 			}
 		}
 
@@ -111,8 +88,6 @@ namespace rds
 			ImGui::ColorEdit3("Model color", model_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 			ImGui::ColorEdit3("Vertex Energy color", Vertex_Energy_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 
-			View prev_view = view;
-			ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0InputOnly\0OutputOnly\0\0");
 			if ((view == Horizontal) || (view == Vertical)) {
 				float prev_size = core_percentage_size;
 				ImGui::SliderFloat("Core Size", &core_percentage_size, 0, 1, to_string(core_percentage_size).c_str(), 1);
@@ -125,25 +100,21 @@ namespace rds
 				}
 			}
 
-			MouseMode prev_mouse_mode = mouse_mode;
-			ImGui::Combo("Mouse Mode", (int *)(&mouse_mode), "NONE\0FACE_SELECT\0VERTEX_SELECT\0CLEAR\0\0");
+			if (ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0InputOnly\0OutputOnly\0\0")) {
+				// That's how you get the current width/height of the frame buffer (for example, after the window was resized)
+				int frameBufferWidth, frameBufferHeight;
+				glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
+				post_resize(frameBufferWidth, frameBufferHeight);
+			}
 
-			Parametrization prev_param_type = param_type;
-			ImGui::Combo("Parametrization type", (int *)(&param_type), "HARMONIC\0LSCM\0ARAP\0\0");
-
-			int prev_model = ShowModelIndex;
-			ImGui::Combo("Choose model", (int *)(&ShowModelIndex), getModelNames(), IM_ARRAYSIZE(getModelNames()));
-
-			//when a change occured on mouse mode
-			if (prev_mouse_mode != mouse_mode) {
+			if(ImGui::Combo("Mouse Mode", (int *)(&mouse_mode), "NONE\0FACE_SELECT\0VERTEX_SELECT\0CLEAR\0\0")) {
 				if (mouse_mode == CLEAR) {
 					selected_faces.clear();
 					selected_vertices.clear();
 				}
 			}
-			
-			//when a change occured on parametrization type
-			if (prev_param_type != param_type) {
+
+			if (ImGui::Combo("Parametrization type", (int *)(&param_type), "HARMONIC\0LSCM\0ARAP\0\0")) {
 				if (param_type == HARMONIC) {
 					compute_harmonic_param(OutputModelID());
 				}
@@ -155,16 +126,7 @@ namespace rds
 				}
 			}
 
-			//when a change occured on view mode
-			if (prev_view != view) {
-				// That's how you get the current width/height of the frame buffer (for example, after the window was resized)
-				int frameBufferWidth, frameBufferHeight;
-				glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
-				post_resize(frameBufferWidth, frameBufferHeight);
-			}
-
-			//if a the mesh is changes then update the view
-			if (prev_model != ShowModelIndex) {
+			if (ImGui::Combo("Choose model", (int *)(&ShowModelIndex), getModelNames(), IM_ARRAYSIZE(getModelNames()))) {
 				Update_view();
 			}
 
@@ -389,11 +351,21 @@ namespace rds
 		void BasicMenu::Draw_menu_for_Solver() {
 			if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
 			{
-				if (ImGui::Checkbox(solver_on_internal ? "On" : "Off", &solver_on_internal))
-				{
-					//solver_mutex.lock();
-					solver_on = solver_on_internal;
-					//solver_mutex.unlock();
+				if (ImGui::Checkbox(solver_on ? "On" : "Off", &solver_on)) {
+					if (solver_on) {
+						start_solver_thread();
+					}
+					else {
+						stop_solver_thread();
+					}
+				}
+
+				if (ImGui::Button("Check gradients")) {
+					checkGradients();
+				}
+
+				if (ImGui::Button("Check Hessians")) {
+					checkHessians();
 				}
 			}
 		}
@@ -870,6 +842,41 @@ namespace rds
 			viewer->data(model_index).compute_normals();
 			viewer->core(output_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
 			Update_view();
+		}
+	
+		void BasicMenu::checkGradients()
+		{
+			stop_solver_thread();
+			for (auto const &objective : totalObjective->objectiveList)
+				objective->checkGradient(solver->ext_x);
+			start_solver_thread();
+		}
+
+		void BasicMenu::checkHessians()
+		{
+			stop_solver_thread();
+			for (auto const &objective : totalObjective->objectiveList)
+				objective->checkHessian(solver->ext_x);
+			start_solver_thread();
+		}
+
+		void BasicMenu::start_solver_thread() {
+			cout << "start new solver" << endl;
+			solver_on = true;
+			solver_thread = thread(&Solver::run, solver.get());
+			solver_thread.detach();
+		}
+
+		void BasicMenu::stop_solver_thread() {
+			cout << "stopping solver..." << endl;
+			solver_on = false;
+			solver->stop();
+			cout << "solver stopped!" << endl;
+		}
+
+		void BasicMenu::shutdown()
+		{
+			stop_solver_thread();
 		}
 	}
 }

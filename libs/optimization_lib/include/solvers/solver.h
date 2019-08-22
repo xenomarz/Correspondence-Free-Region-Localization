@@ -12,7 +12,7 @@ class Solver
 {
 public:
 	Solver();
-
+	bool blabla = true;
 	int run();
 	void stop();
 	void get_data(Eigen::VectorXd& X);

@@ -46,6 +46,7 @@ add_library(rds::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
+		${CMAKE_SOURCE_DIR}
 		${PROJECT_SOURCE_DIR}/include)
 
 target_link_libraries(${PROJECT_NAME}

@@ -31,8 +31,9 @@
 #include <igl/arap.h>
 #include <igl/file_dialog_open.h>
 #include <igl/unproject.h>
-#include <../../../libs/optimization_lib/include/solvers/newton_solver.h>
-#include <../../../libs/optimization_lib/include/solvers/solver.h>
+#include "../../libs/optimization_lib/include/solvers/newton_solver.h"
+#include "../../libs/optimization_lib/include/objective_functions/objective_symmetric_dirichlet.h"
+#include <atomic>
 
 
 #define RED_COLOR Eigen::Vector3f(1, 0, 0)
@@ -77,17 +78,16 @@ namespace rds
 			int Translate_Index, Model_Translate_ID, Core_Translate_ID, down_mouse_x, down_mouse_y;
 			igl::opengl::glfw::imgui::ImGuiMenu menu;
 
-			//Solver Parameters
-			bool solver_on_internal;
+			//Solver Button Parameters
 			bool solver_on;
-			
+
 			//Parametrization Parameters
 			float Lambda, Delta, Integer_Weight, Integer_Spacing, Seamless_Weight, Position_Weight;
 
 			// Solver thread
-			std::thread solver_thread;
-			std::mutex solver_mutex;
-			bool solver_thread_alive;
+			thread solver_thread;
+			unique_ptr<Newton> solver;
+			shared_ptr<TotalObjective> totalObjective;
 
 
 		protected:
@@ -95,14 +95,13 @@ namespace rds
 			std::map<unsigned int, string> data_id_to_name;
 
 			// Solver
-			//Newton newton;
-
-			void RunSolver();
+			Newton* newton;
 			
 		public:
 			//Constructor & initialization
 			BasicMenu();
 			~BasicMenu();
+			void shutdown();
 
 			// callbacks
 			IGL_INLINE virtual void draw_viewer_menu() override;
@@ -139,6 +138,14 @@ namespace rds
 			void compute_ARAP_param(int model_index);
 			void compute_harmonic_param(int model_index);
 			void compute_lscm_param(int model_index);
+
+			//Start/Stop the solver Thread
+			void start_solver_thread();
+			void stop_solver_thread();
+
+			//FD check
+			void checkGradients();
+			void checkHessians();
 		};
 	}
 }

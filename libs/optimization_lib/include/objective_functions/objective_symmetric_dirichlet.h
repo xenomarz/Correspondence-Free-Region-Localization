@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Utils.h"
 #include <functional>
 #include <Eigen/Core>
 #include <Eigen/Sparse>
-#include <objective_functions/objective_function.h>
+#include <libs/optimization_lib/include/objective_functions/objective_function.h>
+#include <libs/optimization_lib/include/utils.h>
 
 using namespace Eigen;
 typedef Triplet<double> T;

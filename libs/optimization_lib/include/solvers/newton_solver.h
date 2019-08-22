@@ -1,13 +1,13 @@
 #pragma once
-#define USE_PARDISO
+//#define USE_PARDISO
 
-#include "solver.h"
+#include <libs/optimization_lib/include/solvers/solver.h>
 
 
 #ifdef USE_PARDISO
-	#include "pardiso_solver.h"
+	#include <libs/optimization_lib/include/solvers/pardiso_solver.h>
 #else
-	#include "eigen_sparse_solver.h"
+	#include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
 #endif
 
 #include <iostream>
@@ -24,7 +24,20 @@ public:
 	bool test_progress();
 	void internal_init();
 
+	void init_new(MatrixXd& X) {
+		X_new = X;
+	}
+
+	void solve_new() {
+		X_new = 1.0001*X_new;
+	}
+
+	void get_data_new(MatrixXd& X) {
+		X = this->X_new;
+	}
+
 private:
+	MatrixXd X_new;
 	// norm of the progress on the mesh
 	double diff_norm;
 	#ifdef USE_PARDISO
