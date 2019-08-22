@@ -27,7 +27,7 @@ export const CHANGE_UNIT_GRID_VISIBILITY = 'CHANGE_UNIT_GRID_VISIBILITY';
 export const CHANGE_SUOP_VIEW_GRID_TEXTURE_VISIBILITY = 'CHANGE_SUOP_VIEW_GRID_TEXTURE_VISIBILITY';
 export const CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY = 'CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY';
 export const CHANGE_SOLVER_STATE = 'CHANGE_SOLVER_STATE';
-export const CHANGE_EDITING_TOOL_TYPE = 'CHANGE_EDITING_TOOL_TYPE';
+export const CHANGE_MODEL_FILENAME = 'CHANGE_MODEL_FILENAME';
 
 export const changeSplitOrientation = orientation => {
     return {
@@ -225,9 +225,9 @@ export const changeSolverState = state => {
     };
 };
 
-export const changeEditingToolType = type => {
+export const changeModelFilename = filename => {
     return {
-        type: CHANGE_EDITING_TOOL_TYPE,
-        type: type
+        type: CHANGE_MODEL_FILENAME,
+        filename: filename
     };
 };

@@ -26,7 +26,8 @@ import {
     CHANGE_UNIT_GRID_VISIBILITY,
     CHANGE_SUOP_VIEW_GRID_TEXTURE_VISIBILITY,
     CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY,
-    CHANGE_SOLVER_STATE
+    CHANGE_SOLVER_STATE,
+    CHANGE_MODEL_FILENAME
 } from './actions.js';
 
 export const SplitOrientation = {
@@ -105,7 +106,8 @@ const INITIAL_STATE = {
     unitGridVisibility: Visibility.HIDDEN,
     suopViewGridTextureVisibility: Visibility.HIDDEN,
     optimizationDataMonitorVisibility: Visibility.VISIBLE,
-    solverState: SolverState.OFF
+    solverState: SolverState.OFF,
+    modelFilename: ''
 };
 
 export const reducer = (state = INITIAL_STATE, action) => {
@@ -251,6 +253,11 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 solverState: action.state
             };
+        case CHANGE_MODEL_FILENAME:
+            return {
+                ...state,
+                modelFilename: action.filename
+            };            
         default:
             return state;
     }

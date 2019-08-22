@@ -258,6 +258,8 @@ export class AutoquadsView extends connect(store)(LitElement) {
         // this._suopViewGridTextureVisibility = state.suopViewGridTextureVisibility;
         // this._optimizationDataMonitorVisibility = state.optimizationDataMonitorVisibility;
         // this._solverState = state.solverState;
+
+        this._reloadModel(state.modelFilename);
     }    
 
     constructor() {
@@ -334,14 +336,19 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
 
     _reloadModel(modelFilename) {
-        // this.autoquads.loadModel(modelFilename);
-        this.modelFilename = modelFilename;
+        if(modelFilename != this._modelFilename) {
+            this._modelFilename = modelFilename;
+        }
+
+        if(this._modelFilename) {
+            this._engine.loadModel(modelFilename);
+        }
     }
 
     _loadModule() {
         const { join } = require('path');
         let RDSModule = require(join(appRoot, 'node-addon.node'));
-        this._engine = new RDSModule.Engine(5);
+        this._engine = new RDSModule.Engine();
         this._modelMeshProvider = new MeshProvider();
         this._suopMeshProvider = new MeshProvider();
     }

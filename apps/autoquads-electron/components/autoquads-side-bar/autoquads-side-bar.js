@@ -364,7 +364,8 @@ export class AutoquadsSideBar extends SideBar {
         this._suopViewGridTextureVisibility = state.suopViewGridTextureVisibility;
         this._optimizationDataMonitorVisibility = state.optimizationDataMonitorVisibility;
         this._solverState = state.solverState;
-    }   
+        this._modelFilename = state.modelFilename;
+    }
 
     constructor() {
         super();
@@ -430,7 +431,7 @@ export class AutoquadsSideBar extends SideBar {
 
     _loadModel() {
         const { dialog } = require('electron').remote;
-        let files = dialog.showOpenDialog({
+        let files = dialog.showOpenDialogSync({
             properties: ['openFile'],
             filters: [
                 {
@@ -444,9 +445,7 @@ export class AutoquadsSideBar extends SideBar {
             ]
         });
 
-        PubSub.publish('reload-model', {
-            modelFilename: files[0]
-        });
+        store.dispatch(ActionsExports.changeModelFilename(files[0])); 
     }
 
     _reloadModule() {

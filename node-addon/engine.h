@@ -2,6 +2,7 @@
 #define ENGINE_H
 
 #include <napi.h>
+#include <Eigen/Core>
 
 class Engine : public Napi::ObjectWrap<Engine> {
 public:
@@ -9,13 +10,30 @@ public:
 	Engine(const Napi::CallbackInfo& info);
 
 private:
+	enum class ModelFileType
+	{
+		OBJ,
+		OFF,
+		UNKNOWN
+	};
+
 	static Napi::FunctionReference constructor;
 
-	Napi::Value GetValue(const Napi::CallbackInfo& info);
-	Napi::Value PlusOne(const Napi::CallbackInfo& info);
-	Napi::Value Multiply(const Napi::CallbackInfo& info);
+	/**
+	 * NAPI Instance Methods
+	 */
+	Napi::Value LoadModel(const Napi::CallbackInfo& info);
 
-	double value_;
+	/**
+	 * Regular Instance Methods
+	 */
+	ModelFileType GetModelFileType(std::string filename);
+
+	/**
+	 * Fields
+	 */
+	Eigen::MatrixXd V_;
+	Eigen::MatrixXi F_;
 };
 
 #endif

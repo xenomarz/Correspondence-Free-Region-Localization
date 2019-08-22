@@ -262,6 +262,7 @@ export class MeshView extends LitElement {
         // window.addEventListener('keydown', this._keydown.bind(this));
         // window.addEventListener('keyup', this._keyup.bind(this));
 
+        // https://stackoverflow.com/questions/54512325/getting-width-height-in-a-slotted-lit-element-in-edge
         window.setTimeout(() => {
             this.shadowRoot.querySelector('.container').appendChild(this._renderer.domElement);
             this._resizeScene();
