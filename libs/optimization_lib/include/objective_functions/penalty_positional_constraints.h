@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
-#include <objective_functions/objective_function.h>
+#include <libs/optimization_lib/include/objective_functions/objective_function.h>
 
 class PenaltyPositionalConstraints : public ObjectiveFunction
 {

@@ -17,6 +17,7 @@ namespace rds
 			if (_viewer)
 			{
 				//Basic (necessary) parameteres
+				texture_size = 0.5;
 				ShowModelIndex = 0;
 				core_percentage_size = 0.5;
 				param_type = HARMONIC;
@@ -55,6 +56,7 @@ namespace rds
 				// Initialize solver thread
 				solver = make_unique<Newton>();
 				totalObjective = make_shared<TotalObjective>();
+				initializeSolver();
 			}
 		}
 
@@ -302,6 +304,17 @@ namespace rds
 			return false;
 		}
 
+		IGL_INLINE void BasicMenu::shutdown()
+		{
+			stop_solver_thread();
+		}
+
+		IGL_INLINE bool BasicMenu::pre_draw() {
+			if (solver->progressed)
+				update_mesh();
+			return false;
+		}
+
 		void BasicMenu::Draw_menu_for_Parametrization() {
 			if (ImGui::CollapsingHeader("Energy Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
 				float prev_Lambda = Lambda;
@@ -515,61 +528,58 @@ namespace rds
 				////////////////////////////////////////////////////////////////
 				////////////////////////////////////////////////////////////////
 				//Mark the faces
-				colors_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
-				for (int i = 0; i < colors_per_face.rows(); i++)
+				color_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
+				for (int i = 0; i < color_per_face.rows(); i++)
 				{
-					colors_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
+					color_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
 				}
 				//Mark the fixed faces
-				colors_per_face.row(f) << double(Highlighted_face_color[0]) , double(Highlighted_face_color[1]) , double(Highlighted_face_color[2]);
-				for (auto fi : selected_faces) { colors_per_face.row(fi) << double(Fixed_face_color[0]), double(Fixed_face_color[1]), double(Fixed_face_color[2]); }
+				color_per_face.row(f) << double(Highlighted_face_color[0]) , double(Highlighted_face_color[1]) , double(Highlighted_face_color[2]);
+				for (auto fi : selected_faces) { color_per_face.row(fi) << double(Fixed_face_color[0]), double(Fixed_face_color[1]), double(Fixed_face_color[2]); }
 				//Mark the Dragged face
 				if (IsTranslate && (mouse_mode == FACE_SELECT)) {
-					colors_per_face.row(Translate_Index) << double(Dragged_face_color[0]), double(Dragged_face_color[1]), double(Dragged_face_color[2]);
+					color_per_face.row(Translate_Index) << double(Dragged_face_color[0]), double(Dragged_face_color[1]), double(Dragged_face_color[2]);
 				}
 				
 				//TODO:
 				//Mark Energy faces (incomplete)!!!
 				
 
-				//Update the model's faces colors in the two screens
-				viewer->data(InputModelID()).set_colors(colors_per_face);
-				viewer->data(OutputModelID()).set_colors(colors_per_face);
+				////Update the model's faces colors in the two screens
+				//viewer->data(InputModelID()).set_colors(color_per_face);
+				//viewer->data(OutputModelID()).set_colors(color_per_face);
 
 
 				////////////////////////////////////////////////////////////////
 				////////////////////////////////////////////////////////////////
 				//Mark the vertices
-				Eigen::MatrixXd P_Input;
-				Eigen::MatrixXd P_output;
-				Eigen::MatrixXd colors_per_vertex;
 				int idx = 0;
 
-				P_Input.resize(selected_vertices.size(), 3);
-				P_output.resize(selected_vertices.size(), 3);
-				colors_per_vertex.resize(selected_vertices.size(), 3);
+				Vertices_Input.resize(selected_vertices.size(), 3);
+				Vertices_output.resize(selected_vertices.size(), 3);
+				color_per_vertex.resize(selected_vertices.size(), 3);
 				//Mark the dragged vertex
 				if (IsTranslate && (mouse_mode == VERTEX_SELECT)) {
-					P_Input.resize(selected_vertices.size()+1, 3);
-					P_output.resize(selected_vertices.size()+1, 3);
-					colors_per_vertex.resize(selected_vertices.size()+1, 3);
+					Vertices_Input.resize(selected_vertices.size()+1, 3);
+					Vertices_output.resize(selected_vertices.size()+1, 3);
+					color_per_vertex.resize(selected_vertices.size()+1, 3);
 
-					P_Input.row(idx) = viewer->data(InputModelID()).V.row(Translate_Index);
-					colors_per_vertex.row(idx) << double(Dragged_vertex_color[0]), double(Dragged_vertex_color[1]), double(Dragged_vertex_color[2]);
-					P_output.row(idx) = viewer->data(OutputModelID()).V.row(Translate_Index);
+					Vertices_Input.row(idx) = viewer->data(InputModelID()).V.row(Translate_Index);
+					color_per_vertex.row(idx) << double(Dragged_vertex_color[0]), double(Dragged_vertex_color[1]), double(Dragged_vertex_color[2]);
+					Vertices_output.row(idx) = viewer->data(OutputModelID()).V.row(Translate_Index);
 					idx++;
 				}
 				
 				//Mark the fixed vertices
 				for (auto vi : selected_vertices) {
-					P_Input.row(idx) = viewer->data(InputModelID()).V.row(vi);
-					colors_per_vertex.row(idx) << double(Fixed_vertex_color[0]), double(Fixed_vertex_color[1]), double(Fixed_vertex_color[2]);
-					P_output.row(idx) = viewer->data(OutputModelID()).V.row(vi);
+					Vertices_Input.row(idx) = viewer->data(InputModelID()).V.row(vi);
+					color_per_vertex.row(idx) << double(Fixed_vertex_color[0]), double(Fixed_vertex_color[1]), double(Fixed_vertex_color[2]);
+					Vertices_output.row(idx) = viewer->data(OutputModelID()).V.row(vi);
 					idx++;
 				}
-				//Update the model's vertex colors in the two screens
-				viewer->data(InputModelID()).set_points(P_Input, colors_per_vertex);
-				viewer->data(OutputModelID()).set_points(P_output, colors_per_vertex);
+				////Update the model's vertex colors in the two screens
+				//viewer->data(InputModelID()).set_points(Vertices_Input, color_per_vertex);
+				//viewer->data(OutputModelID()).set_points(Vertices_output, color_per_vertex);
 			}
 		}
 	
@@ -874,9 +884,120 @@ namespace rds
 			cout << "solver stopped!" << endl;
 		}
 
-		void BasicMenu::shutdown()
+		void BasicMenu::update_mesh()
 		{
-			stop_solver_thread();
+			VectorXd X;
+			solver->get_data(X);
+			MatrixX3d V(X.rows() / 2, 3);
+			V.leftCols(2) = Map<MatrixX2d>(X.data(), X.rows() / 2, 2);
+			V.rightCols(1).setZero();
+
+			viewer->data(OutputModelID()).set_vertices(V);
+
+			// set UV of 3d mesh with newX vertices
+			// prepare first for 3d mesh soup
+			viewer->data(InputModelID()).set_uv(texture_size * V.leftCols(2));
+
+			//Update the model's faces colors in the two screens
+			viewer->data(InputModelID()).set_colors(color_per_face);
+			viewer->data(OutputModelID()).set_colors(color_per_face);
+
+			//Update the model's vertex colors in the two screens
+			viewer->data(InputModelID()).set_points(Vertices_Input, color_per_vertex);
+			viewer->data(OutputModelID()).set_points(Vertices_output, color_per_vertex);
 		}
+
+		void BasicMenu::initializeSolver()
+		{
+			MatrixX3d V = viewer->data(OutputModelID()).V;
+			MatrixX3i F = viewer->data(OutputModelID()).F;
+
+			if (solver->is_running)
+				solver->stop();
+
+			while (solver->is_running);
+
+			if (V.rows() == 0 || F.rows() == 0)
+				return;
+
+			// initialize the energy
+			auto symDirichlet = make_unique<ObjectiveSymmetricDirichlet>();
+			symDirichlet->V = V.leftCols(2);
+			symDirichlet->F = F;
+			symDirichlet->init();
+			auto constraintsPositional = make_unique<PenaltyPositionalConstraints>();
+			constraintsPositional->numV = V.rows();
+			constraintsPositional->init();
+			//HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
+			//HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
+			totalObjective->objectiveList.push_back(std::move(symDirichlet));
+			totalObjective->objectiveList.push_back(std::move(constraintsPositional));
+
+			totalObjective->init();
+			// initialize the solver
+			VectorXd XX = Map<const VectorXd>(V.data(), V.rows() * 2);
+			solver->init(totalObjective, XX);
+			solver->setFlipAvoidingLineSearch(F);
+			//     start_solver_thread();
+			//solverInitialized = true;
+		}
+
+		/*bool BasicMenu::load(string filename)
+		{
+			if (solver->is_running)
+				stop_solver_thread();
+
+			bool read_obj = false;
+			bool read_off = false;
+
+			string file_format = filename.substr(filename.length() - 3, 3);
+			if (file_format.compare("obj") == 0)
+			{
+				if (!igl::readOBJ(filename, V, F))
+				{
+					cerr << "Failed to load mesh: " << filename << endl;
+					return false;
+				}
+			}
+			else if (file_format.compare("off") == 0)
+			{
+				if (!igl::readOFF(filename, V, F))
+				{
+					cerr << "Failed to load mesh: " << filename << endl;
+					return false;
+				}
+			}
+			else
+			{
+				cerr << "Unknown file format " << filename << endl;
+				return false;
+			}
+
+			initializeSolver();
+
+			if (processed_mesh_id != 0) {
+				viewer->data_list[processed_mesh_id].clear();
+				viewer->data_list[source_mesh_id].clear();
+			}
+			else
+			{
+				processed_mesh_id = viewer->append_mesh();
+			}
+			viewer->data(source_mesh_id).set_mesh(V, F);
+			viewer->data(source_mesh_id).set_uv(V);
+			viewer->data(source_mesh_id).set_colors(Eigen::MatrixX3d::Ones(F.rows(), 3));
+
+			viewer->data(processed_mesh_id).set_mesh(V, F);
+			viewer->data(processed_mesh_id).set_colors(Eigen::MatrixX3d::Ones(F.rows(), 3));
+			viewer->data(source_mesh_id).set_visible(false, leftView);
+			viewer->data(source_mesh_id).point_size = 10;
+
+			viewer->data(processed_mesh_id).set_visible(false, rightView);
+			viewer->data(processed_mesh_id).point_size = 10;
+
+			mesh_filename = filename;
+
+			return true;
+		}*/
 	}
 }

@@ -33,6 +33,7 @@
 #include <igl/unproject.h>
 #include "../../libs/optimization_lib/include/solvers/newton_solver.h"
 #include "../../libs/optimization_lib/include/objective_functions/objective_symmetric_dirichlet.h"
+#include "../../libs/optimization_lib/include/objective_functions/penalty_positional_constraints.h"
 #include <atomic>
 
 
@@ -71,9 +72,9 @@ namespace rds
 			Parametrization param_type;
 			Vector3f Highlighted_face_color, Fixed_face_color, Fixed_vertex_color;
 			Vector3f model_color, Dragged_face_color, Dragged_vertex_color, Vertex_Energy_color;
-			MatrixXd colors_per_face;
+			MatrixXd color_per_face, Vertices_Input, Vertices_output, color_per_vertex;
 			set<int> selected_faces, selected_vertices;
-			float core_percentage_size;
+			float core_percentage_size, texture_size;
 			bool IsTranslate;
 			int Translate_Index, Model_Translate_ID, Core_Translate_ID, down_mouse_x, down_mouse_y;
 			igl::opengl::glfw::imgui::ImGuiMenu menu;
@@ -89,19 +90,14 @@ namespace rds
 			unique_ptr<Newton> solver;
 			shared_ptr<TotalObjective> totalObjective;
 
-
 		protected:
 			//Basic (necessary) parameteres
 			std::map<unsigned int, string> data_id_to_name;
 
-			// Solver
-			Newton* newton;
-			
 		public:
 			//Constructor & initialization
 			BasicMenu();
 			~BasicMenu();
-			void shutdown();
 
 			// callbacks
 			IGL_INLINE virtual void draw_viewer_menu() override;
@@ -110,6 +106,8 @@ namespace rds
 			IGL_INLINE virtual bool mouse_move(int mouse_x, int mouse_y) override;
 			IGL_INLINE virtual bool mouse_down(int button, int modifier) override;
 			IGL_INLINE virtual bool mouse_up(int button, int modifier) override;
+			IGL_INLINE virtual bool pre_draw() override;
+			IGL_INLINE virtual void shutdown() override;
 			
 			//Draw menu methods
 			void Draw_menu_for_cores();
@@ -133,6 +131,7 @@ namespace rds
 			int InputModelID();
 			int OutputModelID();
 			void Update_view();
+			void update_mesh();
 
 			//Parametrizations
 			void compute_ARAP_param(int model_index);
@@ -142,6 +141,7 @@ namespace rds
 			//Start/Stop the solver Thread
 			void start_solver_thread();
 			void stop_solver_thread();
+			void initializeSolver();
 
 			//FD check
 			void checkGradients();
