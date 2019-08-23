@@ -45,6 +45,7 @@
 //#define MODEL1_PATH "..\\..\\..\\models\\cactus.off"
 //#define MODEL1_PATH "..\\..\\..\\models\\camel_head.off"
 #define MODEL1_PATH "..\\..\\..\\models\\cube.off"
+//#define MODEL1_PATH "..\\..\\..\\models\\woody-hi.off"
 
 
 

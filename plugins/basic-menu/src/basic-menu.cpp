@@ -313,6 +313,11 @@ namespace rds
 		IGL_INLINE bool BasicMenu::pre_draw() {
 			//call parent function
 			igl::opengl::glfw::imgui::ImGuiMenu::pre_draw();
+			if (IsTranslate) {
+				cout << "Translate" << endl;
+				initializeSolver();
+			}
+
 			if (solver->progressed)
 				update_mesh();
 
@@ -917,7 +922,7 @@ namespace rds
 		{
 			MatrixX3d V = viewer->data(OutputModelID()).V;
 			MatrixX3i F = viewer->data(OutputModelID()).F;
-
+			solver_on = false;
 			if (solver->is_running)
 				solver->stop();
 
@@ -936,6 +941,7 @@ namespace rds
 			constraintsPositional->init();
 			//HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
 			//HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
+			totalObjective->objectiveList.clear();
 			totalObjective->objectiveList.push_back(std::move(symDirichlet));
 			totalObjective->objectiveList.push_back(std::move(constraintsPositional));
 

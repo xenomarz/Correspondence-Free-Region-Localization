@@ -26,6 +26,7 @@ double Newton::step()
 #else
 	eigen_solver->factorize(objective->II, objective->JJ, objective->SS);
 	VectorXd rhs = -g;
+	cout << "g.norm() = " << g.norm() << endl;
 	p = eigen_solver->solve(rhs);
 #endif
 	return f;
