@@ -15,13 +15,12 @@ Solver::Solver()
 }
 
 
-//xxx yyy
 void Solver::init(shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0)
 {
-	/*this->objective = objective;
+	this->objective = objective;
 	X = X0;
 	ext_x = X;
-	internal_init();*/
+	internal_init();
 }
 
 void Solver::setFlipAvoidingLineSearch(MatrixX3i & F)
@@ -32,11 +31,13 @@ void Solver::setFlipAvoidingLineSearch(MatrixX3i & F)
 
 int Solver::run()
 {
-	blabla = true;
+	/*blabla = true;
 	while (blabla) {
 		cout << "gfd" << endl;
 	}
-	/*is_running = true;
+	return 0;
+	*/
+	is_running = true;
 	halt = false;
 	int steps = 0;
 	do
@@ -47,7 +48,6 @@ int Solver::run()
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
 	cout << "solver stopped" << endl;
-	return 0;*/
 	return 0;
 }
 
@@ -93,10 +93,10 @@ void Solver::linesearch()
 
 void Solver::stop()
 {
-	blabla = false;
-	/*wait_for_parameter_update_slot();
+	//blabla = false;
+	wait_for_parameter_update_slot();
 	halt = true;
-	release_parameter_update_slot();*/
+	release_parameter_update_slot();
 }
 
 void Solver::update_external_data()

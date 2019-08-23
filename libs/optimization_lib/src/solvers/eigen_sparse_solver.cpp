@@ -1,5 +1,6 @@
 #include <solvers/eigen_sparse_solver.h>
 #include <vector>
+#include <iostream>
 using namespace std;
 
 template <typename vectorTypeI, typename vectorTypeS>
@@ -22,6 +23,7 @@ void EigenSparseSolver<vectorTypeI, vectorTypeS>::set_pattern(const vectorTypeI 
 	assert(rows == cols && "Rows == Cols at Newton internal init");
 	for (int i = 0; i<II.size(); i++)
 		tripletList.push_back(Eigen::Triplet<double>(II[i], JJ[i], SS[i]));
+	A.resize(rows, cols);
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
 }
 

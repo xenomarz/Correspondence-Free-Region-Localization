@@ -34,12 +34,13 @@ void TotalObjective::gradient(VectorXd& g)
 {
 	VectorXd gi;
 	g.setZero();
-	for (auto &objective : objectiveList)
-        if (objective->w != 0)
-	        {
-		        objective->gradient(gi);
-		        g += objective->w*gi;
-	        }
+	for (auto &objective : objectiveList) {
+		if (objective->w != 0)
+		{
+			objective->gradient(gi);
+			g += objective->w*gi;
+		}
+	}
 }
 
 void TotalObjective::hessian()

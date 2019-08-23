@@ -38,37 +38,40 @@ bool Newton::test_progress()
 
 void Newton::internal_init()
 {
-//#ifdef USE_PARDISO
-//	bool needs_init = pardiso == nullptr;
-//
-//	if (needs_init)
-//	{
-//		pardiso = make_unique<PardisoSolver<vector<int>, vector<double>>>();
-//		pardiso->set_type(2, true);
-//	}
-//#else
-//	bool needs_init = eigen_solver == nullptr;
-//
-//	if (needs_init)
-//	{
-//		eigen_solver = make_unique<EigenSparseSolver<vector<int>, vector<double>>>();
-//	}
-//#endif
-//	objective->updateX(X);
-//	g.resize(X.size());
-//	objective->hessian();
-//
-//#ifdef USE_PARDISO
-//	if (needs_init)
-//	{ 
-//		pardiso->set_pattern(objective->II, objective->JJ, objective->SS);
-//		pardiso->analyze_pattern();
-//	}
-//#else
-//	if (needs_init)
-//	{
-//		eigen_solver->set_pattern(objective->II, objective->JJ, objective->SS);
-//		eigen_solver->analyze_pattern();
-//	}
-//#endif
+#ifdef USE_PARDISO
+	bool needs_init = pardiso == nullptr;
+
+	if (needs_init)
+	{
+		pardiso = make_unique<PardisoSolver<vector<int>, vector<double>>>();
+		pardiso->set_type(2, true);
+	}
+#else
+	bool needs_init = eigen_solver == nullptr;
+
+	if (needs_init)
+	{
+		eigen_solver = make_unique<EigenSparseSolver<vector<int>, vector<double>>>();
+	}
+#endif
+	objective->updateX(X);
+	g.resize(X.size());
+	objective->hessian();
+
+#ifdef USE_PARDISO
+	if (needs_init)
+	{ 
+		pardiso->set_pattern(objective->II, objective->JJ, objective->SS);
+		pardiso->analyze_pattern();
+	}
+#else
+	if (needs_init)
+	{
+		cout << "objective->II.size() = " << objective->II.size() << endl;
+		cout << "objective->JJ.size() = " << objective->JJ.size() << endl;
+		cout << "objective->SS.size() = " << objective->SS.size() << endl;
+		eigen_solver->set_pattern(objective->II, objective->JJ, objective->SS);
+		eigen_solver->analyze_pattern();
+	}
+#endif
 }
