@@ -307,11 +307,25 @@ namespace rds
 		IGL_INLINE void BasicMenu::shutdown()
 		{
 			stop_solver_thread();
+			igl::opengl::glfw::imgui::ImGuiMenu::shutdown();
 		}
 
 		IGL_INLINE bool BasicMenu::pre_draw() {
+			//call parent function
+			igl::opengl::glfw::imgui::ImGuiMenu::pre_draw();
 			if (solver->progressed)
 				update_mesh();
+
+			//Update the model's faces colors in the two screens
+			if (color_per_face.size()) {
+				viewer->data(InputModelID()).set_colors(color_per_face);
+				viewer->data(OutputModelID()).set_colors(color_per_face);
+			}
+			
+			//Update the model's vertex colors in the two screens
+			viewer->data(InputModelID()).set_points(Vertices_Input, color_per_vertex);
+			viewer->data(OutputModelID()).set_points(Vertices_output, color_per_vertex);
+
 			return false;
 		}
 
@@ -897,14 +911,6 @@ namespace rds
 			// set UV of 3d mesh with newX vertices
 			// prepare first for 3d mesh soup
 			viewer->data(InputModelID()).set_uv(texture_size * V.leftCols(2));
-
-			//Update the model's faces colors in the two screens
-			viewer->data(InputModelID()).set_colors(color_per_face);
-			viewer->data(OutputModelID()).set_colors(color_per_face);
-
-			//Update the model's vertex colors in the two screens
-			viewer->data(InputModelID()).set_points(Vertices_Input, color_per_vertex);
-			viewer->data(OutputModelID()).set_points(Vertices_output, color_per_vertex);
 		}
 
 		void BasicMenu::initializeSolver()
