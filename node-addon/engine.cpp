@@ -189,7 +189,7 @@ Napi::Array Engine::CreateBufferedVerticesArray(Napi::Env env, Eigen::MatrixXd& 
 	{
 		float x = V(vertexIndex, 0);
 		float y = V(vertexIndex, 1);
-		float z = 0;
+		float z = V(vertexIndex, 2);
 
 		int baseIndex = 3 * vertexIndex;
 		bufferedVerticesArray[baseIndex] = x;
@@ -211,7 +211,7 @@ Napi::Array Engine::CreateBufferedMeshVerticesArray(Napi::Env env, Eigen::Matrix
 			int vertexIndex = F(faceIndex, i);
 			float x = V(vertexIndex, 0);
 			float y = V(vertexIndex, 1);
-			float z = 0;
+			float z = V(vertexIndex, 2);
 
 			int baseVertexIndex = baseIndex + 3 * i;
 			bufferedMeshVerticesArray[baseVertexIndex] = x;
