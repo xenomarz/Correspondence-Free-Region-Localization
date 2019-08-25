@@ -10,11 +10,11 @@ option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use ImGui"                    ON)
 find_package(LIBIGL REQUIRED QUIET)
 
 # libraries and plugins
-add_subdirectory("libs/optimization-lib")
+add_subdirectory("libs/optimization_lib")
 add_subdirectory("plugins")
 
 if (CMAKE_JS_VERSION)
-    add_subdirectory("node-addon")
+    add_subdirectory("node_addon")
 endif()
 
 # applications
