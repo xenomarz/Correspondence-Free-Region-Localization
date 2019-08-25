@@ -10,6 +10,7 @@ mime['.html'] =
 mime['.htm'] = 'text/html',
 mime['.json'] = 'application/json',
 mime['.css'] = 'text/css',
-mime['.svg'] = 'application/svg+xml';
+mime['.svg'] = 'application/svg+xml',
+mime['.png'] = 'image/png';
 
 module.exports = mime;

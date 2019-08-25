@@ -329,6 +329,7 @@ export class MeshView extends LitElement {
         this._initializeLights();
         this._initializeMesh();
         this._initializeMeshWireframe();
+        this._initializePointcloud();
         this.requestUpdate('meshProvider', oldValue);
     }
 
@@ -397,6 +398,51 @@ export class MeshView extends LitElement {
         this._meshWireframe.renderOrder = 1;
         this._scene.add(this._meshWireframe);
     }
+
+    _initializePointcloud() {
+        let geometry = new THREE.BufferGeometry();
+        geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(this.meshProvider.bufferedVertices), 3));
+
+        let vertices = this.meshProvider.vertices;
+        let sizes = new Float32Array(vertices.length);
+        let selected = new Float32Array(vertices.length);
+
+        for (let i = 0; i < vertices.length; i++) {
+            sizes[i] = this._vertexSize;
+            selected[i] = this._selectedVerticesPoints[i] !== undefined;
+        }
+
+        geometry.addAttribute('size', new THREE.BufferAttribute(sizes, 1));
+        geometry.addAttribute('selected', new THREE.BufferAttribute(selected, 1));
+
+        const fs = require('fs-extra');
+        const { join } = require('path');
+        let vertexshader = fs.readFileSync(join(this.meshProvider.shadersFolderAbsolutePath, 'vertexshader.glsl'), 'utf8');
+        let fragmentshader = fs.readFileSync(join(this.meshProvider.shadersFolderAbsolutePath, 'fragmentshader.glsl'), 'utf8');
+
+        let material = new THREE.ShaderMaterial({
+            uniforms: {
+                color: {
+                    value: new THREE.Color(0xff0000)
+                },
+                textureSelected: {
+                    value: new THREE.TextureLoader().load(join(this.meshProvider.texturesFolderRelativePath, 'selected_16_16.png'))
+                },
+                textureUnselected: {
+                    value: new THREE.TextureLoader().load(join(this.meshProvider.texturesFolderRelativePath, 'unselected_16_16.png'))
+                }
+            },
+            vertexShader: vertexshader,
+            fragmentShader: fragmentshader,
+            alphaTest: 0.5,
+            depthTest: false
+        });
+
+        this._pointcloud = new THREE.Points(geometry, material);
+        this._scene.add(this._pointcloud);
+        this._pointcloud.visible = false;
+    }
+
 
     _initializeStateMachine() {
         this._interactionMachine = Machine({
@@ -480,8 +526,12 @@ export class MeshView extends LitElement {
             }
         });
 
-        this._currentState = this._interactionMachine.initialState;
-    }     
+        this._interactionService = interpret(this._interactionMachine).onTransition(state => {
+            console.log(state.value);
+        });
+
+        this._interactionService.start();
+    }    
 
     /**
      * Mouse & Keyboard Handlers
@@ -489,7 +539,7 @@ export class MeshView extends LitElement {
 
     _mouseDownHandler(e) {
         if (e.button === 0) {
-            if (this._currentState.value === 'idle' && this.enableFaceDragging) {
+            if (this._interactionService.state.value === 'idle' && this.enableFaceDragging) {
                 if (this._faceIntersection) {
                     PubSub.publish('mesh-view-face-down', {
                         face: this._faceIntersection.face
@@ -504,9 +554,9 @@ export class MeshView extends LitElement {
     }
 
     _mouseLeaveHandler(e) {
-        switch (this._currentState.value) {
+        switch (this._interactionService.state.value) {
             case 'faceDragging':
-                this._currentState = this._interactionMachine.transition(this._currentState, 'END_FACE_DRAGGING');
+                    this._interactionService.send('END_FACE_DRAGGING');
                 break;
         }
 
@@ -523,34 +573,34 @@ export class MeshView extends LitElement {
     }
 
     _mouseMoveHandler(e) {
-        event.preventDefault();
+        e.preventDefault();
         this._setRaycasterWithPixel(e.offsetX, e.offsetY);
-        if (this._currentState.value === 'idle') {
+        if (this._interactionService.state.value === 'idle') {
             if (this._faceIntersection) {
                 if (e.buttons === 1 && this.enableFaceDragging) {
                     this._draggedFace = this._faceIntersection.face;
-                    this._currentState = this._interactionMachine.transition(this._currentState, 'BEGIN_FACE_DRAGGING');
+                    this._interactionService.send('BEGIN_FACE_DRAGGING');
                 }
             }
-        } else if (this._currentState.value === 'faceDragging') {
+        } else if (this._interactionService.state.value === 'faceDragging') {
             this._updateDragOffset();
         }
     }
 
     _mouseUpHandler(e) {
-        event.preventDefault();
+        e.preventDefault();
         this._setRaycasterWithPixel(e.offsetX, e.offsetY);
         if (e.button === 0) {
-            switch (this._currentState.value) {
+            switch (this._interactionService.state.value) {
                 case 'faceDragging':
-                    this._currentState = this._interactionMachine.transition(this._currentState, 'END_FACE_DRAGGING');
+                    this._interactionService.send('END_FACE_DRAGGING');
                     break;
             }
         }
     }     
 
     _mouseClickHandler(e) {
-        if (this._currentState.value === 'vertexSelection') {
+        if (this._interactionService.state.value === 'vertexSelection') {
             if (this._vertexIntersection) {
                 if (this._selectedVerticesPoints[this._vertexIntersection.vertexId]) {
                     this._unselectVertex(this._vertexIntersection.vertexId);
@@ -566,7 +616,7 @@ export class MeshView extends LitElement {
                     });
                 }
             }
-        } else if (this._currentState.value === 'faceSelection') {
+        } else if (this._interactionService.state.value === 'faceSelection') {
             if (this._faceIntersection) {
                 if (this._selectedFaces[this._faceIntersection.face.id]) {
                     this._unselectFace(this._faceIntersection.face);
@@ -586,14 +636,14 @@ export class MeshView extends LitElement {
     }
 
     _contextMenuHandler(e) {
-        if (this._currentState.value === 'faceDragging') {
+        if (this._interactionService.state.value === 'faceDragging') {
             this._selectFace(this._faceIntersection.face);
             PubSub.publish('mesh-view-face-selected', {
                 face: this._faceIntersection.face,
                 meshViewId: this.id
             });
             setTimeout(0, () => {
-                this._currentState = this._interactionMachine.transition(this._currentState, 'END_FACE_DRAGGING');
+                this._interactionService.send('END_FACE_DRAGGING');
             });
         }
     }
@@ -601,28 +651,28 @@ export class MeshView extends LitElement {
     _keyDownHandler(event) {
         if (event.keyCode === 16) {
             if (this.enableVertexSelection) {
-                this._currentState = this._interactionMachine.transition(this._currentState, 'BEGIN_VERTEX_SELECTION');
+                this._interactionService.send('BEGIN_VERTEX_SELECTION');
             }
         } else if (event.keyCode === 17) {
             if (this.enableMeshRotation) {
-                this._currentState = this._interactionMachine.transition(this._currentState, 'BEGIN_MESH_ROTATION');
+                this._interactionService.send('BEGIN_MESH_ROTATION');
             }
         } else if (event.keyCode === 18) {
-            this._currentState = this._interactionMachine.transition(this._currentState, 'BEGIN_FACE_SELECTION');
+            this._interactionService.send('BEGIN_FACE_SELECTION');
         }
     }
 
     _keyUpHandler(event) {
         if (event.keyCode === 16) {
             if (this.enableVertexSelection) {
-                this._currentState = this._interactionMachine.transition(this._currentState, 'END_VERTEX_SELECTION');
+                this._interactionService.send('END_VERTEX_SELECTION');
             }
         } else if (event.keyCode === 17) {
             if (this.enableMeshRotation) {
-                this._currentState = this._interactionMachine.transition(this._currentState, 'END_MESH_ROTATION');
+                this._interactionService.send('END_MESH_ROTATION');
             }
         } else if (event.keyCode === 18) {
-            this._currentState = this._interactionMachine.transition(this._currentState, 'END_FACE_SELECTION');
+            this._interactionService.send('END_FACE_SELECTION');
         }
     }
 
@@ -693,7 +743,7 @@ export class MeshView extends LitElement {
         this._controls.minDistance = 0;
         this._controls.maxDistance = 1000;
         this._controls.maxPolarAngle = 2 * Math.PI;
-        this._controls.enableRotate = true;
+        this._controls.enableRotate = false;
     }
 
     _createRaycaster() {
@@ -801,7 +851,7 @@ export class MeshView extends LitElement {
 
         this._pointLight.position.copy(this._camera.position);
 
-        if (this._currentState.value !== 'faceDragging' && this._mouseInCanvas) {
+        if (this._interactionService.state.value !== 'faceDragging' && this._mouseInCanvas) {
             this._faceIntersection = this._getMeshIntersection();
             this._vertexIntersection = this._getVerticesIntersection();
   
@@ -821,6 +871,14 @@ export class MeshView extends LitElement {
 
         this._renderer.render(this._scene, this._camera);
         this.scheduledAnimationFrameId = requestAnimationFrame(() => this._renderScene());
+    }
+
+    _setRaycasterWithPixel(x, y) {
+        let deviceMousePosition = new THREE.Vector2();
+        let boundingClientRect = this._renderer.domElement.getBoundingClientRect();
+        deviceMousePosition.x = (x / boundingClientRect.width) * 2 - 1;
+        deviceMousePosition.y = -(y / boundingClientRect.height) * 2 + 1;
+        this._raycaster.setFromCamera(deviceMousePosition, this._camera);
     }    
 
     /**

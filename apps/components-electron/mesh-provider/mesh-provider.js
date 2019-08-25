@@ -26,4 +26,32 @@ export class MeshProvider {
     get bufferedMeshVertexColors() {
         return [];
     }
+
+    get shadersFolderName() {
+        return 'shaders';
+    }
+
+    get shadersFolderAbsolutePath() {
+        const { join } = require('path');
+        return join(appRoot, this.shadersFolderName);
+    }
+
+    get shadersFolderRelativePath() {
+        const { join } = require('path');
+        return join('./', this.shadersFolderName);
+    }
+
+    get texturesFolderName() {
+        return 'textures';
+    }    
+
+    get texturesFolderAbsolutePath() {
+        const { join } = require('path');
+        return join(appRoot, this.texturesFolderName);
+    }
+
+    get texturesFolderRelativePath() {
+        const { join } = require('path');
+        return join('./', this.texturesFolderName);
+    }      
 }

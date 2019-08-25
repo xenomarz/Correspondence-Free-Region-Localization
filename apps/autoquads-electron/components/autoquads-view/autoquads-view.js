@@ -44,53 +44,51 @@ export class AutoquadsView extends connect(store)(LitElement) {
             <vaadin-split-layout class="outer-split">
                 <autoquads-side-bar></autoquads-side-bar>
                 <vaadin-split-layout orientation="horizontal" class="inner-split">
-                    <vaadin-split-layout orientation="horizontal" class="inner-split">
-                        <mesh-view 
-                            id="model-mesh-view"
-                            use-lights
-                            enable-mesh-rotation
-                            enable-vertex-selection
-                            caption="Mesh View"
-                            grid-horizontal-color="${this.gridHorizontalColor}"
-                            grid-vertical-color="${this.gridVerticalColor}"
-                            grid-background-color1="${this.gridBackgroundColor1}"
-                            grid-background-color2="${this.gridBackgroundColor2}"
-                            grid-size="${this.gridSize}"
-                            grid-texture-size="${this.gridTextureSize}"
-                            grid-line-width="${this.gridLineWidth}"
-                            show-wireframe="${this.showWireframe}"
-                            background-color="${this.modelViewportColor}"
-                            mesh-color="${this.modelColor}"
-                            .meshProvider="${this.modelMeshProvider}"
-                            mesh-interaction="${this.meshInteraction}"
-                            highlighted-face-color="${this.highlightedFaceColor}"
-                            dragged-face-color="${this.draggedFaceColor}"
-                            selected-face-color="${this.fixedFaceColor}"
-                            show-grid-texture>
-                        </mesh-view>
-                        <mesh-view 
-                            id="suop-mesh-view"
-                            enable-face-dragging caption="Suop View"
-                            show-grid="${this.showUnitGrid}"
-                            grid-horizontal-color="${this.gridHorizontalColor}"
-                            grid-vertical-color="${this.gridVerticalColor}"
-                            grid-background-color1="${this.gridBackgroundColor1}"
-                            grid-background-color2="${this.gridBackgroundColor2}"
-                            grid-size="${this.gridSize}"
-                            grid-texture-size="${this.gridTextureSize}"
-                            grid-line-width="${this.gridLineWidth}"
-                            show-wireframe="${this.showWireframe}"
-                            background-color="${this.suopViewportColor}"
-                            mesh-color="${this.solverColor}"
-                            .meshProvider="${this.suopMeshProvider}"
-                            mesh-interaction="${this.meshInteraction}"
-                            highlighted-face-color="${this.highlightedFaceColor}"
-                            dragged-face-color="${this.draggedFaceColor}"
-                            selected-face-color="${this.fixedFaceColor}"
-                            show-debug-data="${this.showOptimizationDataMonitor}"
-                            show-grid-texture="${this.showGridTextureInSuopView}">
-                        </mesh-view>
-                    </vaadin-split-layout>
+                    <mesh-view 
+                        id="model-mesh-view"
+                        use-lights
+                        enable-mesh-rotation
+                        enable-vertex-selection
+                        caption="Mesh View"
+                        grid-horizontal-color="${this.gridHorizontalColor}"
+                        grid-vertical-color="${this.gridVerticalColor}"
+                        grid-background-color1="${this.gridBackgroundColor1}"
+                        grid-background-color2="${this.gridBackgroundColor2}"
+                        grid-size="${this.gridSize}"
+                        grid-texture-size="${this.gridTextureSize}"
+                        grid-line-width="${this.gridLineWidth}"
+                        show-wireframe="${this.showWireframe}"
+                        background-color="${this.modelViewportColor}"
+                        mesh-color="${this.modelColor}"
+                        .meshProvider="${this.modelMeshProvider}"
+                        mesh-interaction="${this.meshInteraction}"
+                        highlighted-face-color="${this.highlightedFaceColor}"
+                        dragged-face-color="${this.draggedFaceColor}"
+                        selected-face-color="${this.fixedFaceColor}"
+                        show-grid-texture>
+                    </mesh-view>
+                    <mesh-view 
+                        id="suop-mesh-view"
+                        enable-face-dragging caption="Suop View"
+                        show-grid="${this.showUnitGrid}"
+                        grid-horizontal-color="${this.gridHorizontalColor}"
+                        grid-vertical-color="${this.gridVerticalColor}"
+                        grid-background-color1="${this.gridBackgroundColor1}"
+                        grid-background-color2="${this.gridBackgroundColor2}"
+                        grid-size="${this.gridSize}"
+                        grid-texture-size="${this.gridTextureSize}"
+                        grid-line-width="${this.gridLineWidth}"
+                        show-wireframe="${this.showWireframe}"
+                        background-color="${this.suopViewportColor}"
+                        mesh-color="${this.solverColor}"
+                        .meshProvider="${this.suopMeshProvider}"
+                        mesh-interaction="${this.meshInteraction}"
+                        highlighted-face-color="${this.highlightedFaceColor}"
+                        dragged-face-color="${this.draggedFaceColor}"
+                        selected-face-color="${this.fixedFaceColor}"
+                        show-debug-data="${this.showOptimizationDataMonitor}"
+                        show-grid-texture="${this.showGridTextureInSuopView}">
+                    </mesh-view>
                 </vaadin-split-layout>
             </vaadin-split-layout>
         `;
@@ -337,8 +335,8 @@ export class AutoquadsView extends connect(store)(LitElement) {
         // this.addEventListener('lambda-changed', this._lambdaChanged);
         // this.addEventListener('delta-changed', this._deltaChanged);
 
-        window.addEventListener('keydown', this._keydown.bind(this));
-        window.addEventListener('keyup', this._keyup.bind(this));
+        // window.addEventListener('keydown', this._keydown.bind(this));
+        // window.addEventListener('keyup', this._keyup.bind(this));
 
         this._loadModule();
     }
@@ -432,27 +430,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
     _solverColorChanged(solverColor) {
         this._solverColor = new THREE.Color(solverColor);
         // this.solverMeshProvider.meshColor = this._solverColor;
-    }
-
-    _keydown(event) {
-        if (event.keyCode === 17) {
-            this.dispatch('changeMeshInteraction', 'rotate');
-        }
-    }
-
-    _keyup(event) {
-        if (event.keyCode === 17) {
-            this.dispatch('changeMeshInteraction', 'faces');
-        }
-    }
-
-    _solverChanged(solver) {
-        // if (solver) {
-        //     this.autoquads.startSolver();
-        // } else {
-        //     this.autoquads.stopSolver();
-        // }
-    }    
+    }  
 }
 
 customElements.define('autoquads-view', AutoquadsView);
