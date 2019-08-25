@@ -311,17 +311,6 @@ export class MeshView extends LitElement {
      * Properties
      */
 
-    set backgroundColor(value) {
-        const oldValue = this._backgroundColor;
-        this._backgroundColor = value;
-        this._renderer.setClearColor(new THREE.Color(value), 1.0);
-        this.requestUpdate('backgroundColor', oldValue);
-    }
-
-    get backgroundColor() {
-        return this._backgroundColor;
-    }
-
     set meshProvider(value) {
         const oldValue = this._meshProvider;
         this._meshProvider = value;
@@ -336,6 +325,47 @@ export class MeshView extends LitElement {
     get meshProvider() {
         return this._meshProvider;
     }
+
+    set backgroundColor(value) {
+        const oldValue = this._backgroundColor;
+        this._backgroundColor = new THREE.Color(value);
+        this._renderer.setClearColor(this._backgroundColor, 1.0);
+        this.requestUpdate('backgroundColor', oldValue);
+    }
+
+    get backgroundColor() {
+        return this._backgroundColor;
+    }
+
+    set highlightedFaceColor(value) {
+        const oldValue = this._highlightedFaceColor;
+        this._highlightedFaceColor = new THREE.Color(value);
+        this.requestUpdate('highlightedFaceColor', oldValue);
+    }
+
+    get highlightedFaceColor() {
+        return this._highlightedFaceColor;
+    }
+
+    set draggedFaceColor(value) {
+        const oldValue = this._draggedFaceColor;
+        this._draggedFaceColor = new THREE.Color(value);
+        this.requestUpdate('draggedFaceColor', oldValue);
+    }
+
+    get draggedFaceColor() {
+        return this._draggedFaceColor;
+    }
+
+    set selectedFaceColor(value) {
+        const oldValue = this._selectedFaceColor;
+        this._selectedFaceColor = new THREE.Color(value);
+        this.requestUpdate('selectedFaceColor', oldValue);
+    }
+
+    get selectedFaceColor() {
+        return this._selectedFaceColor;
+    }      
 
     /**
      * Private Methods
@@ -812,11 +842,65 @@ export class MeshView extends LitElement {
         this._pointcloud.geometry.attributes.selected.array[vertexId] = 0;
         this._pointcloud.geometry.attributes.selected.needsUpdate = true;
         delete this._selectedVerticesPoints[vertexId];
-    }     
+    }
+
+    _colorVertex(vertex, color) {
+        this._vertexColors[vertex] = color;
+    }
+
+    _uncolorVertex(face) {
+        delete this._vertexColors[vertex];
+    }
+
+    _colorFace(face, color) {
+        this._colorVertex(face.a, color);
+        this._colorVertex(face.b, color);
+        this._colorVertex(face.c, color);
+    }
+
+    _uncolorFace(face) {
+        this._uncolorVertex(face.a);
+        this._uncolorVertex(face.b);
+        this._uncolorVertex(face.c);
+    }
+
+    _colorFaces() {
+        for (let faceId in this._selectedFaces) {
+            this._colorFace(this._selectedFaces[faceId], this._selectedFaceColor);
+        }
+
+        if (this._highlightedFace) {
+            this._colorFace(this._highlightedFace, this._highlightedFaceColor);
+        }
+
+        if (this._draggedFace) {
+            this._colorFace(this._draggedFace, this._draggedFaceColor);
+        }
+    }
+
+    _colorVertices() {
+        let bufferedMeshVertexColors = this.meshProvider.bufferedMeshVertexColors;
+        for (let vertexId in bufferedMeshVertexColors) {
+            this._colorVertex(vertexId, bufferedMeshVertexColors[vertexId]);
+        }
+    }
+    
+    _updateVertexColors() {
+        this._vertexColors = [];
+        // this._colorVertices();
+        this._colorFaces();
+    }
 
     /**
      * Scene manipulation
      */
+
+    _resetAttributeArray(buffer, attributeArray) {
+        let bufferLength = buffer.length;
+        for (let i = 0; i < bufferLength; i++) {
+            attributeArray[i] = buffer[i];
+        }
+    }
 
     _resizeScene() {
         this._camera.aspect = this.offsetWidth / this.offsetHeight;
@@ -854,21 +938,30 @@ export class MeshView extends LitElement {
         if (this._interactionService.state.value !== 'faceDragging' && this._mouseInCanvas) {
             this._faceIntersection = this._getMeshIntersection();
             this._vertexIntersection = this._getVerticesIntersection();
-  
-            if (this._faceIntersection) {
-              this._setHighlightedFace(this._faceIntersection.face);
-              PubSub.publish('mesh-view-face-highlighted', {
-                face: this._faceIntersection.face,
-                meshViewId: this.id
-              });
-            } else {
-              this._resetHighlightedFace();
-              PubSub.publish('mesh-view-face-unhighlighted', {
-                meshViewId: this.id
-              });
-            }
-          }
 
+            if (this._faceIntersection) {
+                this._setHighlightedFace(this._faceIntersection.face);
+                PubSub.publish('mesh-view-face-highlighted', {
+                    face: this._faceIntersection.face,
+                    meshViewId: this.id
+                });
+            } else {
+                this._resetHighlightedFace();
+                PubSub.publish('mesh-view-face-unhighlighted', {
+                    meshViewId: this.id
+                });
+            }
+        }
+
+        let bufferedMeshVertices = this.meshProvider.bufferedMeshVertices;
+
+        this._updateVertexColors();
+        this._resetAttributeArray(this._getBufferedColors(bufferedMeshVertices.length / 3), this._mesh.geometry.attributes.color.array);
+
+        this._mesh.geometry.attributes.position.needsUpdate = true;
+        this._mesh.geometry.attributes.uv.needsUpdate = true;
+        this._mesh.geometry.attributes.color.needsUpdate = true;
+        this._pointcloud.geometry.attributes.position.needsUpdate = true;        
         this._renderer.render(this._scene, this._camera);
         this.scheduledAnimationFrameId = requestAnimationFrame(() => this._renderScene());
     }

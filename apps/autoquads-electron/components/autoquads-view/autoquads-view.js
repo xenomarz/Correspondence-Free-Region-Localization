@@ -12,6 +12,8 @@ import '../autoquads-side-bar/autoquads-side-bar.js';
 import { MeshProvider } from '../mesh-provider/mesh-provider.js';
 import { AutoquadsModelMeshProvider } from '../autoquads-model-mesh-provider/autoquads-model-mesh-provider.js';
 import { AutoquadsSuopMeshProvider } from '../autoquads-suop-mesh-provider/autoquads-suop-mesh-provider.js';
+import * as ReducerExports from '../../redux/reducer.js';
+import * as ActionsExports from '../../redux/actions.js';
 import { store } from '../../redux/store.js';
 
 export class AutoquadsView extends connect(store)(LitElement) {
@@ -80,7 +82,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         grid-line-width="${this.gridLineWidth}"
                         show-wireframe="${this.showWireframe}"
                         background-color="${this.suopViewportColor}"
-                        mesh-color="${this.solverColor}"
+                        mesh-color="${this.suopColor}"
                         .meshProvider="${this.suopMeshProvider}"
                         mesh-interaction="${this.meshInteraction}"
                         highlighted-face-color="${this.highlightedFaceColor}"
@@ -204,9 +206,9 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: Boolean,
                 attribute: 'vertex-energy-color'
             },
-            vertexEnergy: {
+            vertexEnergyType: {
                 type: String,
-                attribute: 'vertex-energy'
+                attribute: 'vertex-energy-type'
             },
             gridSize: {
                 type: Number,
@@ -245,31 +247,20 @@ export class AutoquadsView extends connect(store)(LitElement) {
         this.suopViewportColor = state.suopViewportColor;
         this.modelColor = state.modelColor;
         this.suopColor = state.suopColor;
-        // this._wireframeVisibility = state.wireframeVisibility;
-        // this._modelViewVisibility = state.modelViewVisibility;
-        // this._suopViewVisibility = state.suopViewVisibility;
-        // this._delta = state.delta;
-        // this._lambda = state.lambda;
-        // this._seamlessWeight = state.seamlessWeight;
-        // this._positionWeight = state.positionWeight;
-        // this._gridHorizontalColor = state.gridHorizontalColor;
-        // this._gridVerticalColor = state.gridVerticalColor;
-        // this._gridBackgroundColor1 = state.gridBackgroundColor1;
-        // this._gridBackgroundColor2 = state.gridBackgroundColor2;
-        // this._highlightedFaceColor = state.highlightedFaceColor;
-        // this._draggedFaceColor = state.draggedFaceColor;
-        // this._fixedFaceColor = state.fixedFaceColor;
-        // this._vertexEnergyColor = state.vertexEnergyColor;
-        // this._vertexEnergyType = state.vertexEnergyType;
-        // this._gridSize = state.gridSize;
-        // this._gridTextureSize = state.gridTextureSize;
-        // this._gridLineWidth = state.gridLineWidth;
-        // this._unitGridVisibility = state.unitGridVisibility;
-        // this._suopViewGridTextureVisibility = state.suopViewGridTextureVisibility;
-        // this._optimizationDataMonitorVisibility = state.optimizationDataMonitorVisibility;
-        // this._solverState = state.solverState;
-
-        this._reloadModel(state.modelFilename);
+        this.showWireframe = ReducerExports.isVisible(state.wireframeVisibility);
+        this.showMeshView = ReducerExports.isVisible(state.modelViewVisibility);
+        this.showSuopView = ReducerExports.isVisible(state.suopViewVisibility);
+        this.gridHorizontalColor = state.gridHorizontalColor;
+        this.gridVerticalColor = state.gridVerticalColor;
+        this.gridBackgroundColor1 = state.gridBackgroundColor1;
+        this.gridBackgroundColor2 = state.gridBackgroundColor2;
+        this.highlightedFaceColor = state.highlightedFaceColor;
+        this.draggedFaceColor = state.draggedFaceColor;
+        this.fixedFaceColor = state.fixedFaceColor;
+        this.gridSize = state.gridSize;
+        this.gridTextureSize = state.gridTextureSize;
+        this.gridLineWidth = state.gridLineWidth;
+        this.modelFilename = state.modelFilename;
     }    
 
     constructor() {
@@ -278,83 +269,113 @@ export class AutoquadsView extends connect(store)(LitElement) {
         this.suopMeshProvider = new MeshProvider();           
     }
 
+    firstUpdated() {
+        this._loadModule();        
+    }
+
     connectedCallback() {
         super.connectedCallback();
-        // this.reloadModelSubscriptionToken = PubSub.subscribe('reload-model', (name, payload) => {
-        //     this._reloadModel(payload.modelFilename);
-        //     this._modelMeshProvider = new AutoquadsModelMeshProvider(this._engine, this._vertexEnergyType, this._vertexEnergyColor, this._modelColor);
-        //     this._suopMeshProvider = new AutoquadsSuopMeshProvider(this._engine, this._vertexEnergyType, this._vertexEnergyColor, this._solverColor);
-        // });
-            
-        // this.reloadModuleSubscriptionToken = PubSub.subscribe('reload-module', () => {
-        //     this._reloadModule();
-        // });
-            
-        // this._meshViewFaceDraggingBeginSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging-begin', (name, payload) => {
-        //     // this._engine.setMovingTriangleFaceId(payload.face.id);
-        //     PubSub.publish('mesh-view-set-dragged-face', payload);
-        // });
-            
-        // this._meshViewFaceDraggingSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging', (name, payload) => {
-        //     // this._engine.updateMovingTrianglePosition(payload.offset.x, payload.offset.y);
-        // });
-            
-        // this._meshViewFaceDraggingEndSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging-end', (name, payload) => {
-        //     // this._engine.resetMovingTriangleFaceId();
-        //     PubSub.publish('mesh-view-reset-dragged-face', payload);
-        // });
-            
-        // this._meshViewFaceSelectedSubscriptionToken = PubSub.subscribe('mesh-view-face-selected', (name, payload) => {
-        //     // this._engine.addTriangleToFixedPositionSet(payload.face.id);
-        //     PubSub.publish('mesh-view-select-face', payload);
-        // });
-            
-        // this._meshViewFaceUnselectedSubscriptionToken = PubSub.subscribe('mesh-view-face-unselected', (name, payload) => {
-        //     // this._engine.removeTriangleFromFixedPositionSet(payload.face.id);
-        //     PubSub.publish('mesh-view-unselect-face', payload);
-        // });
-            
-        // this._meshViewFaceHighlightedSubscriptionToken = PubSub.subscribe('mesh-view-face-highlighted', (name, payload) => {
-        //     PubSub.publish('mesh-view-highlight-face', payload);
-        // });
-            
-        // this._meshViewFaceUnhighlightedSubscriptionToken = PubSub.subscribe('mesh-view-face-unhighlighted', (name, payload) => {
-        //     PubSub.publish('mesh-view-unhighlight-face', payload);
-        // });
-            
-        // this._meshViewVertexDownSubscriptionToken = PubSub.subscribe('mesh-view-vertex-selected', (name, payload) => {
-        //     // this._engine.addVertexToIntegerSet(payload.vertexId);
-        //     PubSub.publish('mesh-view-select-vertex', payload);
-        // });
-            
-        // this._meshViewVertexDownSubscriptionToken = PubSub.subscribe('mesh-view-vertex-unselected', (name, payload) => {
-        //     // this._engine.removeVertexFromIntegerSet(payload.vertexId);
-        //     PubSub.publish('mesh-view-unselect-vertex', payload);
-        // });
-            
-        // this.addEventListener('lambda-changed', this._lambdaChanged);
-        // this.addEventListener('delta-changed', this._deltaChanged);
-
-        // window.addEventListener('keydown', this._keydown.bind(this));
-        // window.addEventListener('keyup', this._keyup.bind(this));
-
-        this._loadModule();
     }
     
     disconnectedCallback() {
         // TODO: Remove event listeners
         super.disconnectedCallback();
-    }    
+    }
 
-    _reloadModel(modelFilename) {
-        if(modelFilename != this._modelFilename) {
-            this._modelFilename = modelFilename;
+    /**
+     * Properties
+     */
+
+    set vertexEnergyType(value) {
+        const oldValue = this._vertexEnergyType;
+        this._vertexEnergyType = value;
+        
+        if(this.modelMeshProvider) {
+            this.modelMeshProvider.vertexEnergyType = vertexEnergyType;
         }
 
-        if(this._modelFilename) {
-            this._engine.loadModel(modelFilename);
-            this.modelMeshProvider = new AutoquadsModelMeshProvider(this._engine, this._vertexEnergyType, this._vertexEnergyColor, this._modelColor);
-            this.suopMeshProvider = new AutoquadsSuopMeshProvider(this._engine, this._vertexEnergyType, this._vertexEnergyColor, this._suopColor);             
+        if(this.suopMeshProvider) {
+            this.suopMeshProvider.vertexEnergyType = vertexEnergyType;
+        }
+
+        this.requestUpdate('vertexEnergyType', oldValue);
+    }
+
+    get vertexEnergyType() {
+        return this._vertexEnergyType;
+    }  
+    
+    set vertexEnergyColor(value) {
+        const oldValue = this._vertexEnergyColor;
+        this._vertexEnergyColor = value;
+        
+        if(this.modelMeshProvider) {
+            this.modelMeshProvider.vertexEnergyColor = vertexEnergyColor;
+        }
+
+        if(this.suopMeshProvider) {
+            this.suopMeshProvider.vertexEnergyColor = vertexEnergyColor;
+        }
+
+        this.requestUpdate('vertexEnergyColor', oldValue);
+    }
+
+    get vertexEnergyColor() {
+        return this._vertexEnergyColor;
+    }  
+    
+    set modelColor(value) {
+        const oldValue = this._modelColor;
+        this._modelColor = value;
+        
+        if(this.modelMeshProvider) {
+            this.modelMeshProvider.meshColor = this._modelColor;
+        }
+
+        this.requestUpdate('modelColor', oldValue);
+    }
+
+    get modelColor() {
+        return this._modelColor;
+    }  
+    
+    set suopColor(value) {
+        const oldValue = this._suopColor;
+        this._suopColor = value;
+        
+        if(this.suopMeshProvider) {
+            this.suopMeshProvider.meshColor = this._suopColor;
+        }
+
+        this.requestUpdate('suopColor', oldValue);
+    }
+
+    get suopColor() {
+        return this._suopColor;
+    }
+
+    set modelFilename(value) {
+        const oldValue = this._modelFilename;
+        this._modelFilename = value;
+        if(this._modelFilename !== oldValue) {
+            this._reloadModel(this._modelFilename);
+        }
+        this.requestUpdate('modelFilename', oldValue);
+    }
+
+    get modelFilename() {
+        return this._modelFilename;
+    }      
+    
+    /**
+     * Private Methods
+     */
+
+    _reloadModel(modelFilename) {
+        if(this._engine && this.modelFilename) {
+            this._engine.loadModel(modelFilename);   
+            this.modelMeshProvider = new AutoquadsModelMeshProvider(this._engine, this.vertexEnergyType, this.vertexEnergyColor, this.modelColor);
+            this.suopMeshProvider = new AutoquadsSuopMeshProvider(this._engine, this.vertexEnergyType, this.vertexEnergyColor, this.suopColor);     
         }
     }
 

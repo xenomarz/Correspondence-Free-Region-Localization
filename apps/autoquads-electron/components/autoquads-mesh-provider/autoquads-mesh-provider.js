@@ -1,4 +1,5 @@
 import { MeshProvider } from '../mesh-provider/mesh-provider.js';
+import * as THREE from '../../web_modules/three.js';
 export class AutoquadsMeshProvider extends MeshProvider {
     constructor(engine, vertexEnergyType, energyColor, meshColor) {
         super();
@@ -33,22 +34,21 @@ export class AutoquadsMeshProvider extends MeshProvider {
     }
 
     get bufferedMeshUvs() {
-        let _bufferedMeshUvs = new Array();
+        let bufferedMeshUvs = new Array();
         let bufferedVertices = this._engine.solverBufferedMeshVertices;
         let bufferedVerticesLength = bufferedVertices.length;
         let j = 0;
         for (let i = 0; i < bufferedVerticesLength; i++) {
             if (i % 3 !== 2) {
-                _bufferedMeshUvs[j] = bufferedVertices[i];
+                bufferedMeshUvs[j] = bufferedVertices[i];
                 j++;
             }
         }
 
-        return _bufferedMeshUvs;
+        return bufferedMeshUvs;
     }
 
     get bufferedMeshVertexColors() {
-        let THREE = require('three');
         let bufferedVertexColors = [];
 
         let vertexEnergyArray;
