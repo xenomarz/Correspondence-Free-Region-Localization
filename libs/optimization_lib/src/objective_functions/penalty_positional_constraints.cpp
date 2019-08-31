@@ -14,6 +14,7 @@ void PenaltyPositionalConstraints::init()
 	prepare_hessian();
 	w = 10000;
 }
+
 void PenaltyPositionalConstraints::updateX(const Eigen::VectorXd& X)
 {
 	CurrConstrainedVerticesPos.resizeLike(ConstrainedVerticesPos);
@@ -27,6 +28,7 @@ double PenaltyPositionalConstraints::value()
 {
 	return (ConstrainedVerticesPos - CurrConstrainedVerticesPos).squaredNorm();
 }
+
 void PenaltyPositionalConstraints::gradient(Eigen::VectorXd& g)
 {
 	MatrixXd diff = (CurrConstrainedVerticesPos - ConstrainedVerticesPos);
@@ -47,7 +49,6 @@ void PenaltyPositionalConstraints::hessian()
 		SS[ConstrainedVerticesInd[i]] = 2; SS[ConstrainedVerticesInd[i] + numV] = 2;
 	}
 }
-
 
 void PenaltyPositionalConstraints::prepare_hessian()
 {

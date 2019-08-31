@@ -31,20 +31,27 @@ void Solver::setFlipAvoidingLineSearch(MatrixX3i & F)
 
 int Solver::run()
 {
-	/*blabla = true;
-	while (blabla) {
-		cout << "gfd" << endl;
+	/*halt = false;
+	while (!halt) {
+		X(100, 0)+=0.0000001;
+		update_external_data();
 	}
-	return 0;
-	*/
+	return 0;*/
+
 	is_running = true;
 	halt = false;
 	int steps = 0;
+	VectorXd prevX;
 	do
 	{
+		prevX = X;
+		//cout << "steps = " << steps << " , ";
+		
 		currentEnergy = step();
+		cout << "currentEnergy = " << currentEnergy << " , ";
 		linesearch();
 		update_external_data();
+		cout << "diff = " << (X - prevX).norm() << endl;
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
 	cout << "solver stopped" << endl;
@@ -89,6 +96,7 @@ void Solver::linesearch()
 		}
 		cur_iter++;
 	}
+	cout << "step_size = " << step_size << " , ";
 }
 
 void Solver::stop()

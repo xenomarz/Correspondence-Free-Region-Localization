@@ -80,6 +80,9 @@ namespace rds
 			int Translate_Index, Model_Translate_ID, Core_Translate_ID, down_mouse_x, down_mouse_y;
 			igl::opengl::glfw::imgui::ImGuiMenu menu;
 
+			std::vector<int> *HandlesInd; //pointer to indices in constraitPositional
+			MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
+
 			//Solver Button Parameters
 			bool solver_on;
 
@@ -122,6 +125,7 @@ namespace rds
 			void follow_and_mark_selected_faces();
 			RowVector3d get_face_avg();
 			Vector3f computeTranslation(int mouse_x,int from_x,int mouse_y,int from_y,RowVector3d pt3D);
+			void UpdateHandles();
 
 			//Name's methods
 			void set_name_mapping(unsigned int data_id, string name);

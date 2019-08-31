@@ -7,6 +7,7 @@
 #include <Eigen/SparseCore>
 
 using namespace Eigen;
+using namespace std;
 
 class ObjectiveFunction
 {
@@ -18,18 +19,20 @@ public:
 	virtual double value() = 0;
 	virtual void gradient(VectorXd& g) = 0;
 	virtual void hessian() = 0;
-
 	virtual void prepare_hessian() = 0;
-	float w;
-    std::string name="Objective function";
 	
+	//Finite Differences check point
     void FDGradient(const VectorXd& X,VectorXd& g);
     void FDHessian(const VectorXd& X);
     bool checkGradient(const VectorXd& X);
     bool checkHessian(const VectorXd& X);
-    // Hessian sparse reprensentation
-	std::vector<int> II, JJ;
-	std::vector<double> SS;
+	
+	// Hessian sparse reprensentation
+	vector<int> II, JJ;
+	vector<double> SS;
 
+	//weight for each objective function
+	float w;
+	string name = "Objective function";
 };
 

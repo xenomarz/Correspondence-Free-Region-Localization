@@ -17,7 +17,6 @@ public:
 	virtual double value();
 	virtual void gradient(VectorXd& g);
 	virtual void hessian();
-
 	virtual void prepare_hessian();
 
 	// sub objectives

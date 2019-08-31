@@ -220,7 +220,7 @@ bool ObjectiveSymmetricDirichlet::updateJ(const VectorXd& X)
 	detJ = a.cwiseProduct(d) - b.cwiseProduct(c);
     alpha.col(0) = 0.5*(a + d);   alpha.col(1) = 0.5*(c - b);
     beta.col(0) = 0.5*(a - d);    beta.col(1) = 0.5*(c + b);
-    
+	
 	return ((detJ.array() < 0).any());
 };
 void ObjectiveSymmetricDirichlet::UpdateSSVDFunction()

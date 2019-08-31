@@ -57,6 +57,13 @@ namespace rds
 				solver = make_unique<Newton>();
 				totalObjective = make_shared<TotalObjective>();
 				initializeSolver();
+
+				//Mark the faces
+				color_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
+				for (int i = 0; i < color_per_face.rows(); i++)
+				{
+					color_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
+				}
 			}
 		}
 
@@ -113,6 +120,7 @@ namespace rds
 				if (mouse_mode == CLEAR) {
 					selected_faces.clear();
 					selected_vertices.clear();
+					UpdateHandles();
 				}
 			}
 
@@ -228,9 +236,11 @@ namespace rds
 					if (std::find(selected_faces.begin(), selected_faces.end(), f) != selected_faces.end())
 					{
 						selected_faces.erase(f);
+						UpdateHandles();
 					}
 					else {
 						selected_faces.insert(f);
+						UpdateHandles();
 					}
 				}
 
@@ -249,9 +259,11 @@ namespace rds
 					if (std::find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
 					{
 						selected_vertices.erase(v);
+						UpdateHandles();
 					}
 					else {
 						selected_vertices.insert(v);
+						UpdateHandles();
 					}
 					
 				}
@@ -313,11 +325,7 @@ namespace rds
 		IGL_INLINE bool BasicMenu::pre_draw() {
 			//call parent function
 			igl::opengl::glfw::imgui::ImGuiMenu::pre_draw();
-			if (IsTranslate) {
-				cout << "Translate" << endl;
-				initializeSolver();
-			}
-
+			
 			if (solver->progressed)
 				update_mesh();
 
@@ -517,6 +525,50 @@ namespace rds
 			}
 		}
 
+		void BasicMenu::UpdateHandles() {
+			std::vector<int> CurrHandlesInd;
+			MatrixX2d CurrHandlesPosDeformed;
+			CurrHandlesInd.clear();
+
+			//First, we push each vertices index to the handles
+			for (auto vi : selected_vertices) {
+				CurrHandlesInd.push_back(vi);
+			}
+			//Then, we push each face vertices index to the handle (3 vertices)
+			for (auto fi : selected_faces) {
+				//Here we get the 3 vertice's index that build each face
+				int v0 = viewer->data(OutputModelID()).F(fi,0);
+				int v1 = viewer->data(OutputModelID()).F(fi,1);
+				int v2 = viewer->data(OutputModelID()).F(fi,2);
+
+				//check whether the handle already exist
+				if (!(std::find(CurrHandlesInd.begin(), CurrHandlesInd.end(), v0) != CurrHandlesInd.end())){
+					CurrHandlesInd.push_back(v0);
+				}
+
+				if (!(std::find(CurrHandlesInd.begin(), CurrHandlesInd.end(), v1) != CurrHandlesInd.end())) {
+					CurrHandlesInd.push_back(v1);
+				}
+
+				if (!(std::find(CurrHandlesInd.begin(), CurrHandlesInd.end(), v2) != CurrHandlesInd.end())) {
+					CurrHandlesInd.push_back(v2);
+				}
+			}
+			
+			//Here we update the positions for each handle
+			CurrHandlesPosDeformed.resize(CurrHandlesInd.size(),2);
+			int idx = 0;
+			for (auto hi : CurrHandlesInd) {
+				CurrHandlesPosDeformed.row(idx++) << viewer->data(OutputModelID()).V(hi, 0), viewer->data(OutputModelID()).V(hi, 1);
+			}
+
+			//Finally, we update the handles in the constraints positional object
+			(*HandlesInd) = CurrHandlesInd;
+			(*HandlesPosDeformed) = CurrHandlesPosDeformed;
+
+			cout << "v = " << HandlesInd->size() << " , " << HandlesPosDeformed->size() << endl;
+		}
+
 		void BasicMenu::Update_view() {
 			viewer->data().copy_options(viewer->core_list[0], viewer->core_list[1]);
 			for (auto& core : viewer->core_list)
@@ -592,9 +644,8 @@ namespace rds
 				//Mark the fixed vertices
 				for (auto vi : selected_vertices) {
 					Vertices_Input.row(idx) = viewer->data(InputModelID()).V.row(vi);
-					color_per_vertex.row(idx) << double(Fixed_vertex_color[0]), double(Fixed_vertex_color[1]), double(Fixed_vertex_color[2]);
 					Vertices_output.row(idx) = viewer->data(OutputModelID()).V.row(vi);
-					idx++;
+					color_per_vertex.row(idx++) << double(Fixed_vertex_color[0]), double(Fixed_vertex_color[1]), double(Fixed_vertex_color[2]);
 				}
 				////Update the model's vertex colors in the two screens
 				//viewer->data(InputModelID()).set_points(Vertices_Input, color_per_vertex);
@@ -939,8 +990,9 @@ namespace rds
 			auto constraintsPositional = make_unique<PenaltyPositionalConstraints>();
 			constraintsPositional->numV = V.rows();
 			constraintsPositional->init();
-			//HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
-			//HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
+			HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
+			HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
+
 			totalObjective->objectiveList.clear();
 			totalObjective->objectiveList.push_back(std::move(symDirichlet));
 			totalObjective->objectiveList.push_back(std::move(constraintsPositional));

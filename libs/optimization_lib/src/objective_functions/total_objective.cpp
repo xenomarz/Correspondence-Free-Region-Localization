@@ -8,9 +8,9 @@ TotalObjective::TotalObjective()
 void TotalObjective::init()
 {
 	//assume that each objective's member have been set outside
-	for (auto &objective : objectiveList)
+	for (auto &objective : objectiveList) {
 		objective->init();
-
+	}
 	prepare_hessian();
 }
 
