@@ -51,14 +51,11 @@ void ObjectiveFunction::FDHessian(const VectorXd& X)
         Xd(i) = tmpVal - dX;
         updateX(Xd);
         gradient(gm);
-
         //now reset the ith param value
         Xd(i) = tmpVal;
         //and compute the row of the hessian
         Hi = (gp - gm) / (2 * dX);
-
         //each vector is a column vector of the hessian, so copy it in place...
-
         for (int j = i; j < X.size(); j++)
         {
             if (abs(Hi[j]) > 1e-8)
@@ -77,19 +74,19 @@ bool ObjectiveFunction::checkGradient(const VectorXd& X)
     double tol = 1e-4;
     double eps = 1e-10;
 
-    VectorXd gd(X.size());
-    VectorXd g(X.size());
+    VectorXd FD_gradient(X.size());
+    VectorXd Analytic_gradient(X.size());
 
     updateX(X);
-    gradient(g);
-    FDGradient(X, gd);
+    gradient(Analytic_gradient);
+    FDGradient(X, FD_gradient);
 
-    std::cout << name << ": testing gradients...norms: analytic:" << g.norm() << " FD: " << gd.norm() << std::endl;
-    for (int i = 0; i < g.size(); i++) {
-        double absErr = std::abs(gd[i] - g[i]);
-        double relError = 2 * absErr / (eps + g[i] + gd[i]);
+    std::cout << name << ": g.norm() = " << Analytic_gradient.norm() << "(analytic) , " << FD_gradient.norm() << "(FD)" << std::endl;
+    for (int i = 0; i < Analytic_gradient.size(); i++) {
+        double absErr = std::abs(FD_gradient[i] - Analytic_gradient[i]);
+        double relError = 2 * absErr / (eps + Analytic_gradient[i] + FD_gradient[i]);
         if (relError > tol && absErr > 1e-6) {
-            printf("Mismatch element %d: Analytic val: %lf, FD val: %lf. Error: %lf(%lf%%)\n", i, g(i), gd(i), absErr, relError * 100);
+            printf("Mismatch element %d: Analytic val: %lf, FD val: %lf. Error: %lf(%lf%%)\n", i, Analytic_gradient(i), FD_gradient(i), absErr, relError * 100);
             return false;
         }
     }

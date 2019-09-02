@@ -24,18 +24,6 @@ public:
 	bool test_progress();
 	void internal_init();
 
-	void init_new(MatrixXd& X) {
-		X_new = X;
-	}
-
-	void solve_new() {
-		X_new = 1.0001*X_new;
-	}
-
-	void get_data_new(MatrixXd& X) {
-		X = this->X_new;
-	}
-
 private:
 	MatrixXd X_new;
 	// norm of the progress on the mesh

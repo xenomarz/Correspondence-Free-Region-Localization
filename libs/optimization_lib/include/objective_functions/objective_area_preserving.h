@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Utils.h"
 #include <functional>
 #include <Eigen/Core>
 #include <Eigen/Sparse>
-#include <objective_functions/objective_function.h>
+#include <libs/optimization_lib/include/objective_functions/objective_function.h>
+#include <libs/optimization_lib/include/utils.h>
+
 
 using namespace Eigen;
 typedef Triplet<double> T;
@@ -46,6 +47,7 @@ public:
 	VectorXd c;
 	VectorXd d;
 	VectorXd detJ;		//Jacobian determinant (ad-bc)
+	MatrixXd grad;
 	// cones alpha and beta
 	MatrixX2d alpha;
 	MatrixX2d beta;

@@ -565,8 +565,6 @@ namespace rds
 			//Finally, we update the handles in the constraints positional object
 			(*HandlesInd) = CurrHandlesInd;
 			(*HandlesPosDeformed) = CurrHandlesPosDeformed;
-
-			cout << "v = " << HandlesInd->size() << " , " << HandlesPosDeformed->size() << endl;
 		}
 
 		void BasicMenu::Update_view() {
@@ -927,31 +925,31 @@ namespace rds
 		void BasicMenu::checkGradients()
 		{
 			stop_solver_thread();
-			for (auto const &objective : totalObjective->objectiveList)
+			for (auto const &objective : totalObjective->objectiveList) {
 				objective->checkGradient(solver->ext_x);
+			}
 			start_solver_thread();
 		}
 
 		void BasicMenu::checkHessians()
 		{
 			stop_solver_thread();
-			for (auto const &objective : totalObjective->objectiveList)
+			for (auto const &objective : totalObjective->objectiveList) {
 				objective->checkHessian(solver->ext_x);
+			}
 			start_solver_thread();
 		}
 
 		void BasicMenu::start_solver_thread() {
-			cout << "start new solver" << endl;
+			cout << ">> start new solver" << endl;
 			solver_on = true;
 			solver_thread = thread(&Solver::run, solver.get());
 			solver_thread.detach();
 		}
 
 		void BasicMenu::stop_solver_thread() {
-			cout << "stopping solver..." << endl;
 			solver_on = false;
 			solver->stop();
-			cout << "solver stopped!" << endl;
 		}
 
 		void BasicMenu::update_mesh()
@@ -987,6 +985,10 @@ namespace rds
 			symDirichlet->V = V.leftCols(2);
 			symDirichlet->F = F;
 			symDirichlet->init();
+			auto areaPreserving = make_unique<ObjectiveAreaPreserving>();
+			areaPreserving->V = V.leftCols(2);
+			areaPreserving->F = F;
+			areaPreserving->init();
 			auto constraintsPositional = make_unique<PenaltyPositionalConstraints>();
 			constraintsPositional->numV = V.rows();
 			constraintsPositional->init();
@@ -994,6 +996,7 @@ namespace rds
 			HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
 
 			totalObjective->objectiveList.clear();
+			//totalObjective->objectiveList.push_back(std::move(areaPreserving));
 			totalObjective->objectiveList.push_back(std::move(symDirichlet));
 			totalObjective->objectiveList.push_back(std::move(constraintsPositional));
 

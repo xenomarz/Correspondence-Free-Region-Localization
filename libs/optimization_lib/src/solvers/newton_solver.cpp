@@ -7,7 +7,7 @@ double Newton::step()
 {
 	objective->updateX(X);
 	f = objective->value();
-	cout << "f = " << f << " , ";
+	//cout << "f = " << f << " , ";
 	objective->gradient(g);
 	objective->hessian();
 
@@ -27,8 +27,13 @@ double Newton::step()
 #else
 	eigen_solver->factorize(objective->II, objective->JJ, objective->SS);
 	VectorXd rhs = -g;
-	cout << "g.norm() = " << g.norm() << " , ";
+	//cout << "g.norm() = " << g.norm() << " , ";
 	p = eigen_solver->solve(rhs);
+
+	//////////////////////
+	//Gradient Descent
+	p = rhs;
+	//////////////////////
 #endif
 	return f;
 }
@@ -62,7 +67,7 @@ void Newton::internal_init()
 
 #ifdef USE_PARDISO
 	if (needs_init)
-	{ 
+	{
 		pardiso->set_pattern(objective->II, objective->JJ, objective->SS);
 		pardiso->analyze_pattern();
 	}

@@ -1,19 +1,25 @@
 #include <iostream>
+#include <Eigen/Dense>
 
-int Help(int n, int min, int max) {
-	if (n <= 0) return 0;
-	if (n == 1) return (max - min + 1);
-	if (max == min) return 1;
-
-	return Help(n - 1, min, max) + Help(n, min + 1, max);
-
-}
+using namespace Eigen;
+using namespace std;
 
 int main(int argc, char * argv[])
 {
-	std::cout << Help(3, 1, 3) << std::endl;
-	std::cout << "Hello";
-	int x;
-	std::cin >> x;
+		
+	double detj_1 = 10;
+	
+	Vector3d left = Vector3d(1, 2, 3);
+	left *= detj_1;
+	
+	Vector3d right = Vector3d(4, 5, 6);
+	right *= detj_1;
+
+	VectorXd grad;
+	grad.resize(6);
+	grad << left, right;
+
+	cout << grad << endl;
+
 	return EXIT_SUCCESS;
 }

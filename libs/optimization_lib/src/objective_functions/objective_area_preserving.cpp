@@ -8,12 +8,12 @@ using namespace Eigen;
 
 ObjectiveAreaPreserving::ObjectiveAreaPreserving()
 {
-	name = "Objective: Symmetric Dirichlet";
+	name = "Objective: Area Preserving";
 }
 void ObjectiveAreaPreserving::init()
 {
 	if (V.size() == 0 || F.size() == 0)
-		throw "DistortionSymmetricDirichlet must define members V,F before init()!";
+		throw "DistortionAreaPreserving must define members V,F before init()!";
 
 	numF = F.rows();
 	numV = V.rows();
@@ -38,6 +38,7 @@ void ObjectiveAreaPreserving::init()
 
 	//Parameterization J mats resize
 	detJ.resize(numF);
+	grad.resize(numF, 6);
 
 	// compute init energy matrices
 	igl::doublearea(V, F, Area);
@@ -75,6 +76,7 @@ void ObjectiveAreaPreserving::init()
 	prepare_hessian();
 	w = 1;
 }
+
 void ObjectiveAreaPreserving::updateX(const VectorXd& X)
 {
 	bool inversions_exist = updateJ(X);
@@ -82,63 +84,26 @@ void ObjectiveAreaPreserving::updateX(const VectorXd& X)
 
 double ObjectiveAreaPreserving::value()
 {
-	// E = ||J||^2+||J^-1||^2 = ||J||^2+||J||^2/det(J)^2
 	// E = (det(J) - 1)^2
-	// E = (ad - bc - 1)^2
-
-	Eigen::VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
-	//Eigen::VectorXd dirichlet = 2*(alpha.cwiseAbs2().rowwise().sum() + beta.cwiseAbs2().rowwise().sum());
-	Eigen::VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
-	//Eigen::VectorXd invDirichlet = dirichlet2.cwiseQuotient((alpha.cwiseAbs2().rowwise().sum() + beta.cwiseAbs2().rowwise().sum()).cwiseAbs2());
-	Efi = dirichlet + invDirichlet;
+	MatrixXd ones(detJ.rows(), 1);
+	ones.setConstant(1);
+	Efi = (detJ - ones).cwiseAbs2();
 
 	double f = 0.5*(Area.asDiagonal()*Efi).sum();
 	return f;
 }
+
 void ObjectiveAreaPreserving::gradient(VectorXd& g)
 {
-	//     VectorXd gold(g);
-	//     gradient_old(g);
-	//     return;
-		//energy is h(S(x),s(x)), then grad_x h = grad_(S,s) h * [grad(S); grad(s)]
-	MatrixX2d S(alpha);
-	S.col(0) = alpha.rowwise().norm() + beta.rowwise().norm();
-	S.col(1) = alpha.rowwise().norm() - beta.rowwise().norm();
-
-	Eigen::MatrixX2d invs = s.cwiseInverse();
-
-	g.conservativeResize(numV * 2);
-	g.setZero();
-
-	for (int fi = 0; fi < numF; ++fi) {
-		Vector2d dhdS(s(fi, 0) - pow(invs(fi, 0), 3), s(fi, 1) - pow(invs(fi, 1), 3));
-		Vector6d dnormAlphadx = (a1d.col(fi)*alpha(fi, 0) + a2d.col(fi)*alpha(fi, 1)) / alpha.row(fi).norm();
-		Vector6d dnormBetadx = (b1d.col(fi)*beta(fi, 0) + b2d.col(fi)*beta(fi, 1)) / (beta.row(fi).norm() + 1e-6);
-		Vector6d dSdx = dnormAlphadx + dnormBetadx;
-		Vector6d dsdx = dnormAlphadx - dnormBetadx;
-		Vector6d gi = Area(fi)*(dSdx * dhdS(0) + dsdx * dhdS(1));
-		for (int vi = 0; vi < 6; ++vi) {
-			g(Fuv(vi, fi)) += gi(vi);
-		}
-	}
-}
-
-void ObjectiveAreaPreserving::gradient_old(VectorXd& g)
-{
 	UpdateSSVDFunction();
-
-	Eigen::MatrixX2d invs = s.cwiseInverse();
-
 	g.conservativeResize(numV * 2);
 	g.setZero();
 	ComputeDenseSSVDDerivatives();
 
 	for (int fi = 0; fi < numF; ++fi) {
-		double gS = s(fi, 0) - pow(invs(fi, 0), 3);
-		double gs = s(fi, 1) - pow(invs(fi, 1), 3);
-		Vector6d Dsdi0 = Dsd[0].col(fi);
-		Vector6d Dsdi1 = Dsd[1].col(fi);
-		Vector6d gi = Area(fi)*(Dsdi0*gS + Dsdi1 * gs);
+		VectorXd gi;
+		gi.resize(6);
+		gi = Area(fi)*(grad.row(fi));
 		for (int vi = 0; vi < 6; ++vi) {
 			g(Fuv(vi, fi)) += gi(vi);
 		}
@@ -212,20 +177,40 @@ bool ObjectiveAreaPreserving::updateJ(const VectorXd& X)
 	// 	d = D2*V;
 	for (int i = 0; i < F.rows(); i++)
 	{
+		// For each face Fi = (p0,p1,p2)
+		//		X1i = [ p0.x , p1.x , p2.x ]
+		//		X2i = [ p0.y , p1.y , p2.y ]
 		Vector3d X1i, X2i;
 		X1i << x(F(i, 0), 0), x(F(i, 1), 0), x(F(i, 2), 0);
 		X2i << x(F(i, 0), 1), x(F(i, 1), 1), x(F(i, 2), 1);
+
+		// a = Dx.trans * X
 		a(i) = D1d.col(i).transpose()*X1i;
+		// b = Dy.trans * X
 		b(i) = D2d.col(i).transpose()*X1i;
+		// c = Dx.trans * Y
 		c(i) = D1d.col(i).transpose()*X2i;
+		// d = DY.trans * Y
 		d(i) = D2d.col(i).transpose()*X2i;
+
+		// detj_1 = det(J) - 1
+		double detj_1 = (a(i) * d(i) - b(i) * c(i)) - 1;
+		// left = Dx * Y.trans * Dy - Dy * Y.trans * Dx
+		Vector3d left = (D1d.col(i) * X2i.transpose() * D2d.col(i)) - (D2d.col(i) * X2i.transpose() * D1d.col(i));
+		left *= detj_1;
+		// right = Dy * X.trans * Dx - Dx * X.trans * Dy
+		Vector3d right = (D2d.col(i) * X1i.transpose() * D1d.col(i)) - (D1d.col(i) * X1i.transpose() * D2d.col(i));
+		right *= detj_1;
+
+		grad.row(i) << left(0), left(1), left(2), right(0), right(1), right(2);
 	}
 	detJ = a.cwiseProduct(d) - b.cwiseProduct(c);
 	alpha.col(0) = 0.5*(a + d);   alpha.col(1) = 0.5*(c - b);
 	beta.col(0) = 0.5*(a - d);    beta.col(1) = 0.5*(c + b);
 
 	return ((detJ.array() < 0).any());
-};
+}
+
 void ObjectiveAreaPreserving::UpdateSSVDFunction()
 {
 
@@ -241,6 +226,7 @@ void ObjectiveAreaPreserving::UpdateSSVDFunction()
 		s.row(i) << S(0), S(3);
 	}
 }
+
 void ObjectiveAreaPreserving::ComputeDenseSSVDDerivatives()
 {
 	//different columns belong to diferent faces
@@ -275,6 +261,7 @@ inline Matrix6d ObjectiveAreaPreserving::ComputeFaceConeHessian(const Vector6d& 
 
 	return  (invf - invf3 * a2) * A1A1t + (invf - invf3 * b2) * A2A2t - invf3 * ab*(A1A2t + A2A1t);
 }
+
 inline Matrix6d ObjectiveAreaPreserving::ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs)
 {
 	//no multiplying by area in this function
