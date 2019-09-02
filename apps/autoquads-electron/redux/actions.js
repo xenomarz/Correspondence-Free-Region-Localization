@@ -1,12 +1,12 @@
 import nanoid from '../web_modules/nano-id.js';
 export const CHANGE_SPLIT_ORIENTATION = 'CHANGE_SPLIT_ORIENTATION';
 export const CHANGE_MODEL_VIEWPORT_COLOR = 'CHANGE_MODEL_VIEWPORT_COLOR';
-export const CHANGE_SUOP_VIEWPORT_COLOR = 'CHANGE_SUOP_VIEWPORT_COLOR';
+export const CHANGE_SOUP_VIEWPORT_COLOR = 'CHANGE_SOUP_VIEWPORT_COLOR';
 export const CHANGE_MODEL_COLOR = 'CHANGE_MODEL_COLOR';
-export const CHANGE_SUOP_COLOR = 'CHANGE_SUOP_COLOR';
+export const CHANGE_SOUP_COLOR = 'CHANGE_SOUP_COLOR';
 export const CHANGE_WIREFRAME_VISIBILITY = 'CHANGE_WIREFRAME_VISIBILITY';
 export const CHANGE_MODEL_VIEW_VISIBILITY = 'CHANGE_MODEL_VIEW_VISIBILITY';
-export const CHANGE_SUOP_VIEW_VISIBILITY = 'CHANGE_SUOP_VIEW_VISIBILITY';
+export const CHANGE_SOUP_VIEW_VISIBILITY = 'CHANGE_SOUP_VIEW_VISIBILITY';
 export const CHANGE_DELTA = 'CHANGE_DELTA';
 export const CHANGE_LAMBDA = 'CHANGE_LAMBDA';
 export const CHANGE_SEAMLESS_WEIGHT = 'CHANGE_SEAMLESS_WEIGHT';
@@ -24,7 +24,7 @@ export const CHANGE_GRID_SIZE = 'CHANGE_GRID_SIZE';
 export const CHANGE_GRID_TEXTURE_SIZE = 'CHANGE_GRID_TEXTURE_SIZE';
 export const CHANGE_GRID_LINE_WIDTH = 'CHANGE_GRID_LINE_WIDTH';
 export const CHANGE_UNIT_GRID_VISIBILITY = 'CHANGE_UNIT_GRID_VISIBILITY';
-export const CHANGE_SUOP_VIEW_GRID_TEXTURE_VISIBILITY = 'CHANGE_SUOP_VIEW_GRID_TEXTURE_VISIBILITY';
+export const CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY = 'CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY';
 export const CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY = 'CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY';
 export const CHANGE_SOLVER_STATE = 'CHANGE_SOLVER_STATE';
 export const CHANGE_MODEL_FILENAME = 'CHANGE_MODEL_FILENAME';
@@ -43,9 +43,9 @@ export const changeModelViewportColor = color => {
     };
 };
 
-export const changeSuopViewportColor = color => {
+export const changeSoupViewportColor = color => {
     return {
-        type: CHANGE_SUOP_VIEWPORT_COLOR,
+        type: CHANGE_SOUP_VIEWPORT_COLOR,
         color: color
     };
 };
@@ -57,9 +57,9 @@ export const changeModelColor = color => {
     };
 };
 
-export const changeSuopColor = color => {
+export const changeSoupColor = color => {
     return {
-        type: CHANGE_SUOP_COLOR,
+        type: CHANGE_SOUP_COLOR,
         color: color
     };
 };
@@ -78,9 +78,9 @@ export const changeModelViewVisibility = visibility => {
     };
 };
 
-export const changeSuopViewVisibility = visibility => {
+export const changeSoupViewVisibility = visibility => {
     return {
-        type: CHANGE_SUOP_VIEW_VISIBILITY,
+        type: CHANGE_SOUP_VIEW_VISIBILITY,
         visibility: visibility
     };
 };
@@ -204,9 +204,9 @@ export const changeUnitGridVisibility = visibility => {
     };
 };
 
-export const changeSuopViewGridTextureVisibility = visibility => {
+export const changeSoupViewGridTextureVisibility = visibility => {
     return {
-        type: CHANGE_SUOP_VIEW_GRID_TEXTURE_VISIBILITY,
+        type: CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY,
         visibility: visibility
     };
 };

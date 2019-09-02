@@ -190,9 +190,9 @@ export class AutoquadsSideBar extends SideBar {
                     @color-changed="${this._modelViewportColorChanged}">
                 </side-bar-color-picker>
                 <side-bar-color-picker
-                    caption="Suop Viewport Color"
-                    color="${this._suopViewportColor}"
-                    @color-changed="${this._suopViewportColorChanged}">
+                    caption="Soup Viewport Color"
+                    color="${this._soupViewportColor}"
+                    @color-changed="${this._soupViewportColorChanged}">
                 </side-bar-color-picker>
                 <side-bar-color-picker
                     caption="Model Color"
@@ -200,9 +200,9 @@ export class AutoquadsSideBar extends SideBar {
                     @color-changed="${this._modelColorChanged}">
                 </side-bar-color-picker>
                 <side-bar-color-picker
-                    caption="Suop Color"
-                    color="${this._suopColor}"
-                    @color-changed="${this._suopColorChanged}">
+                    caption="Soup Color"
+                    color="${this._soupColor}"
+                    @color-changed="${this._soupColorChanged}">
                 </side-bar-color-picker>
                 <vaadin-checkbox
                     ?checked=${ReducerExports.isVisible(this._modelViewVisibility)}
@@ -210,9 +210,9 @@ export class AutoquadsSideBar extends SideBar {
                     <span>Show Model View</span>
                 </vaadin-checkbox>
                 <vaadin-checkbox
-                    ?checked=${ReducerExports.isVisible(this._suopViewVisibility)}
-                    @change="${this._suopViewVisibilityChanged}">
-                    <span>Show Suop View</span>
+                    ?checked=${ReducerExports.isVisible(this._soupViewVisibility)}
+                    @change="${this._soupViewVisibilityChanged}">
+                    <span>Show Soup View</span>
                 </vaadin-checkbox>
                 <vaadin-checkbox
                     ?checked=${ReducerExports.isVisible(this._unitGridVisibility)}
@@ -338,12 +338,12 @@ export class AutoquadsSideBar extends SideBar {
     stateChanged(state) {
         this._splitOrientation = state.splitOrientation;
         this._modelViewportColor = state.modelViewportColor;
-        this._suopViewportColor = state.suopViewportColor;
+        this._soupViewportColor = state.soupViewportColor;
         this._modelColor = state.modelColor;
-        this._suopColor = state.suopColor;
+        this._soupColor = state.soupColor;
         this._wireframeVisibility = state.wireframeVisibility;
         this._modelViewVisibility = state.modelViewVisibility;
-        this._suopViewVisibility = state.suopViewVisibility;
+        this._soupViewVisibility = state.soupViewVisibility;
         this._delta = state.delta;
         this._lambda = state.lambda;
         this._seamlessWeight = state.seamlessWeight;
@@ -361,7 +361,7 @@ export class AutoquadsSideBar extends SideBar {
         this._gridTextureSize = state.gridTextureSize;
         this._gridLineWidth = state.gridLineWidth;
         this._unitGridVisibility = state.unitGridVisibility;
-        this._suopViewGridTextureVisibility = state.suopViewGridTextureVisibility;
+        this._soupViewGridTextureVisibility = state.soupViewGridTextureVisibility;
         this._optimizationDataMonitorVisibility = state.optimizationDataMonitorVisibility;
         this._solverState = state.solverState;
         this._modelFilename = state.modelFilename;
@@ -460,16 +460,16 @@ export class AutoquadsSideBar extends SideBar {
         store.dispatch(ActionsExports.changeModelViewportColor(e.detail.color));
     }
 
-    _suopViewportColorChanged(e) {
-        store.dispatch(ActionsExports.changeSuopViewportColor(e.detail.color));
+    _soupViewportColorChanged(e) {
+        store.dispatch(ActionsExports.changeSoupViewportColor(e.detail.color));
     }
 
     _modelColorChanged(e) {
         store.dispatch(ActionsExports.changeModelColor(e.detail.color));
     }
 
-    _suopColorChanged(e) {
-        store.dispatch(ActionsExports.changeSuopColor(e.detail.color));
+    _soupColorChanged(e) {
+        store.dispatch(ActionsExports.changeSoupColor(e.detail.color));
     }
 
     _highlightedFaceColorChanged(e) {
@@ -500,8 +500,8 @@ export class AutoquadsSideBar extends SideBar {
         store.dispatch(ActionsExports.changeModelViewVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked)));        
     }
 
-    _suopViewVisiblityChanged(e) {
-        store.dispatch(ActionsExports.changeSuopViewVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked))); 
+    _soupViewVisiblityChanged(e) {
+        store.dispatch(ActionsExports.changeSoupViewVisiblity(ReducerExports.visibilityFromBool(e.srcElement.checked))); 
     }
 
     _unitGridVisiblityChanged(e) {

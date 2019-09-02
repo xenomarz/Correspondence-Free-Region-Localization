@@ -1,12 +1,12 @@
 import {
     CHANGE_SPLIT_ORIENTATION,
     CHANGE_MODEL_VIEWPORT_COLOR,
-    CHANGE_SUOP_VIEWPORT_COLOR,
+    CHANGE_SOUP_VIEWPORT_COLOR,
     CHANGE_MODEL_COLOR,
-    CHANGE_SUOP_COLOR,
+    CHANGE_SOUP_COLOR,
     CHANGE_WIREFRAME_VISIBILITY,
     CHANGE_MODEL_VIEW_VISIBILITY,
-    CHANGE_SUOP_VIEW_VISIBILITY,
+    CHANGE_SOUP_VIEW_VISIBILITY,
     CHANGE_DELTA,
     CHANGE_LAMBDA,
     CHANGE_SEAMLESS_WEIGHT,
@@ -24,7 +24,7 @@ import {
     CHANGE_GRID_TEXTURE_SIZE,
     CHANGE_GRID_LINE_WIDTH,
     CHANGE_UNIT_GRID_VISIBILITY,
-    CHANGE_SUOP_VIEW_GRID_TEXTURE_VISIBILITY,
+    CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY,
     CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY,
     CHANGE_SOLVER_STATE,
     CHANGE_MODEL_FILENAME
@@ -81,12 +81,12 @@ export const splitOrientationText = (splitOrientation) => {
 const INITIAL_STATE = {
     splitOrientation: SplitOrientation.HORIZONTAL,
     modelViewportColor: 'rgb(200,200,200)',
-    suopViewportColor: 'rgb(200,200,200)',
+    soupViewportColor: 'rgb(200,200,200)',
     modelColor: 'rgb(255, 255, 255)',
-    suopColor: 'rgb(255, 255, 255)',
+    soupColor: 'rgb(255, 255, 255)',
     wireframeVisibility: Visibility.VISIBLE,
     modelViewVisibility: Visibility.VISIBLE,
-    suopViewVisibility: Visibility.VISIBLE,
+    soupViewVisibility: Visibility.VISIBLE,
     delta: 0.9,
     lambda: 0.1,
     seamlessWeight: 0,
@@ -104,7 +104,7 @@ const INITIAL_STATE = {
     gridTextureSize: 8,
     gridLineWidth: 0,
     unitGridVisibility: Visibility.HIDDEN,
-    suopViewGridTextureVisibility: Visibility.HIDDEN,
+    soupViewGridTextureVisibility: Visibility.HIDDEN,
     optimizationDataMonitorVisibility: Visibility.VISIBLE,
     solverState: SolverState.OFF,
     modelFilename: ''
@@ -122,20 +122,20 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 modelViewportColor: action.color
             };
-        case CHANGE_SUOP_VIEWPORT_COLOR:
+        case CHANGE_SOUP_VIEWPORT_COLOR:
             return {
                 ...state,
-                suopViewportColor: action.color
+                soupViewportColor: action.color
             };
         case CHANGE_MODEL_COLOR:
             return {
                 ...state,
                 modelColor: action.color
             };
-        case CHANGE_SUOP_COLOR:
+        case CHANGE_SOUP_COLOR:
             return {
                 ...state,
-                suopColor: action.color
+                soupColor: action.color
             };
         case CHANGE_WIREFRAME_VISIBILITY:
             return {
@@ -147,10 +147,10 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 modelViewVisibility: action.visibility
             };
-        case CHANGE_SUOP_VIEW_VISIBILITY:
+        case CHANGE_SOUP_VIEW_VISIBILITY:
             return {
                 ...state,
-                suopViewVisibility: action.visibility
+                soupViewVisibility: action.visibility
             };
         case CHANGE_DELTA:
             return {
@@ -238,10 +238,10 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 unitGridVisibility: action.visibility
             };    
-        case CHANGE_SUOP_VIEW_GRID_TEXTURE_VISIBILITY:
+        case CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY:
             return {
                 ...state,
-                suopViewGridTextureVisibility: action.visibility
+                soupViewGridTextureVisibility: action.visibility
             }; 
         case CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY:
             return {

@@ -11,7 +11,7 @@ import '../mesh-view/mesh-view.js';
 import '../autoquads-side-bar/autoquads-side-bar.js';
 import { MeshProvider } from '../mesh-provider/mesh-provider.js';
 import { AutoquadsModelMeshProvider } from '../autoquads-model-mesh-provider/autoquads-model-mesh-provider.js';
-import { AutoquadsSuopMeshProvider } from '../autoquads-suop-mesh-provider/autoquads-suop-mesh-provider.js';
+import { AutoquadsSoupMeshProvider } from '../autoquads-soup-mesh-provider/autoquads-soup-mesh-provider.js';
 import * as ReducerExports from '../../redux/reducer.js';
 import * as ActionsExports from '../../redux/actions.js';
 import { store } from '../../redux/store.js';
@@ -70,8 +70,8 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         show-grid-texture>
                     </mesh-view>
                     <mesh-view 
-                        id="suop-mesh-view"
-                        enable-face-dragging caption="Suop View"
+                        id="soup-mesh-view"
+                        enable-face-dragging caption="Soup View"
                         show-grid="${this.showUnitGrid}"
                         grid-horizontal-color="${this.gridHorizontalColor}"
                         grid-vertical-color="${this.gridVerticalColor}"
@@ -81,15 +81,15 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         grid-texture-size="${this.gridTextureSize}"
                         grid-line-width="${this.gridLineWidth}"
                         show-wireframe="${this.showWireframe}"
-                        background-color="${this.suopViewportColor}"
-                        mesh-color="${this.suopColor}"
-                        .meshProvider="${this.suopMeshProvider}"
+                        background-color="${this.soupViewportColor}"
+                        mesh-color="${this.soupColor}"
+                        .meshProvider="${this.soupMeshProvider}"
                         mesh-interaction="${this.meshInteraction}"
                         highlighted-face-color="${this.highlightedFaceColor}"
                         dragged-face-color="${this.draggedFaceColor}"
                         selected-face-color="${this.fixedFaceColor}"
                         show-debug-data="${this.showOptimizationDataMonitor}"
-                        show-grid-texture="${this.showGridTextureInSuopView}">
+                        show-grid-texture="${this.showGridTextureInSoupView}">
                     </mesh-view>
                 </vaadin-split-layout>
             </vaadin-split-layout>
@@ -102,29 +102,29 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: Object,
                 attribute: 'model-mesh-provider'
             },
-            suopMeshProvider: {
+            soupMeshProvider: {
                 type: Object,
-                attribute: 'suop-mesh-provider'
+                attribute: 'soup-mesh-provider'
             },            
-            suopViewportColor: {
+            soupViewportColor: {
                 type: String,
-                attribute: 'suop-viewport-color'
+                attribute: 'soup-viewport-color'
             },            
             modelViewportColor: {
                 type: String,
                 attribute: 'model-viewport-color'
             },
-            suopViewportColor: {
+            soupViewportColor: {
                 type: String,
-                attribute: 'suop-viewport-color'
+                attribute: 'soup-viewport-color'
             },
             modelColor: {
                 type: String,
                 attribute: 'model-color'
             },
-            suopColor: {
+            soupColor: {
                 type: String,
-                attribute: 'suop-color'
+                attribute: 'soup-color'
             },
             showWireframe: {
                 type: Boolean,
@@ -134,13 +134,13 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: Boolean,
                 attribute: 'show-mesh-view'
             },
-            showSuopView: {
+            showSoupView: {
                 type: Boolean,
-                attribute: 'show-suop-view'
+                attribute: 'show-soup-view'
             },
-            showSuopGrid: {
+            showSoupGrid: {
                 type: Boolean,
-                attribute: 'show-suop-grid'
+                attribute: 'show-soup-grid'
             },
             delta: {
                 type: Number,
@@ -230,9 +230,9 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: Boolean,
                 attribute: 'show-unit-grid'
             },
-            showGridTextureInSuopView: {
+            showGridTextureInSoupView: {
                 type: Boolean,
-                attribute: 'show-grid-texture-in-suop-view'
+                attribute: 'show-grid-texture-in-soup-view'
             },
             modelFilename: {
                 type: String,
@@ -244,12 +244,12 @@ export class AutoquadsView extends connect(store)(LitElement) {
     stateChanged(state) {
         this.splitOrientation = state.splitOrientation;
         this.modelViewportColor = state.modelViewportColor;
-        this.suopViewportColor = state.suopViewportColor;
+        this.soupViewportColor = state.soupViewportColor;
         this.modelColor = state.modelColor;
-        this.suopColor = state.suopColor;
+        this.soupColor = state.soupColor;
         this.showWireframe = ReducerExports.isVisible(state.wireframeVisibility);
         this.showMeshView = ReducerExports.isVisible(state.modelViewVisibility);
-        this.showSuopView = ReducerExports.isVisible(state.suopViewVisibility);
+        this.showSoupView = ReducerExports.isVisible(state.soupViewVisibility);
         this.gridHorizontalColor = state.gridHorizontalColor;
         this.gridVerticalColor = state.gridVerticalColor;
         this.gridBackgroundColor1 = state.gridBackgroundColor1;
@@ -266,7 +266,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
     constructor() {
         super();
         this.modelMeshProvider = new MeshProvider();
-        this.suopMeshProvider = new MeshProvider();           
+        this.soupMeshProvider = new MeshProvider();           
     }
 
     firstUpdated() {
@@ -294,8 +294,8 @@ export class AutoquadsView extends connect(store)(LitElement) {
             this.modelMeshProvider.vertexEnergyType = vertexEnergyType;
         }
 
-        if(this.suopMeshProvider) {
-            this.suopMeshProvider.vertexEnergyType = vertexEnergyType;
+        if(this.soupMeshProvider) {
+            this.soupMeshProvider.vertexEnergyType = vertexEnergyType;
         }
 
         this.requestUpdate('vertexEnergyType', oldValue);
@@ -313,8 +313,8 @@ export class AutoquadsView extends connect(store)(LitElement) {
             this.modelMeshProvider.vertexEnergyColor = vertexEnergyColor;
         }
 
-        if(this.suopMeshProvider) {
-            this.suopMeshProvider.vertexEnergyColor = vertexEnergyColor;
+        if(this.soupMeshProvider) {
+            this.soupMeshProvider.vertexEnergyColor = vertexEnergyColor;
         }
 
         this.requestUpdate('vertexEnergyColor', oldValue);
@@ -339,19 +339,19 @@ export class AutoquadsView extends connect(store)(LitElement) {
         return this._modelColor;
     }  
     
-    set suopColor(value) {
-        const oldValue = this._suopColor;
-        this._suopColor = value;
+    set soupColor(value) {
+        const oldValue = this._soupColor;
+        this._soupColor = value;
         
-        if(this.suopMeshProvider) {
-            this.suopMeshProvider.meshColor = this._suopColor;
+        if(this.soupMeshProvider) {
+            this.soupMeshProvider.meshColor = this._soupColor;
         }
 
-        this.requestUpdate('suopColor', oldValue);
+        this.requestUpdate('soupColor', oldValue);
     }
 
-    get suopColor() {
-        return this._suopColor;
+    get soupColor() {
+        return this._soupColor;
     }
 
     set modelFilename(value) {
@@ -375,7 +375,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(this._engine && this.modelFilename) {
             this._engine.loadModel(modelFilename);   
             this.modelMeshProvider = new AutoquadsModelMeshProvider(this._engine, this.vertexEnergyType, this.vertexEnergyColor, this.modelColor);
-            this.suopMeshProvider = new AutoquadsSuopMeshProvider(this._engine, this.vertexEnergyType, this.vertexEnergyColor, this.suopColor);     
+            this.soupMeshProvider = new AutoquadsSoupMeshProvider(this._engine, this.vertexEnergyType, this.vertexEnergyColor, this.soupColor);     
         }
     }
 
@@ -384,7 +384,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
         let RDSModule = require(join(appRoot, 'node-addon.node'));
         this._engine = new RDSModule.Engine();
         this.modelMeshProvider = new MeshProvider();
-        this.suopMeshProvider = new MeshProvider();      
+        this.soupMeshProvider = new MeshProvider();      
     }
 
     _reloadModule() {
@@ -435,12 +435,12 @@ export class AutoquadsView extends connect(store)(LitElement) {
     _vertexEnergyColorChanged(vertexEnergyColor) {
         this._vertexEnergyColor = new THREE.Color(vertexEnergyColor);
         this._modelMeshProvider.energyColor = this._vertexEnergyColor;
-        this._suopMeshProvider.energyColor = this._vertexEnergyColor;
+        this._soupMeshProvider.energyColor = this._vertexEnergyColor;
     }
 
     _vertexEnergyChanged(vertexEnergy) {
         this._modelMeshProvider.vertexEnergy = vertexEnergy;
-        this._suopMeshProvider.vertexEnergy = vertexEnergy;
+        this._soupMeshProvider.vertexEnergy = vertexEnergy;
     }
 
     _modelColorChanged(modelColor) {

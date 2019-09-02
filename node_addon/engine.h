@@ -34,21 +34,19 @@ private:
 	 */
 	Napi::Value LoadModel(const Napi::CallbackInfo& info);
 	Napi::Value GetModelVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetSuopVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetSoupVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetModelFaces(const Napi::CallbackInfo& info);
-	Napi::Value GetSuopFaces(const Napi::CallbackInfo& info);
+	Napi::Value GetSoupFaces(const Napi::CallbackInfo& info);
 	Napi::Value GetModelBufferedVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetSuopBufferedVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetSoupBufferedVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetModelBufferedMeshVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetSuopBufferedMeshVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetSoupBufferedMeshVertices(const Napi::CallbackInfo& info);
 
 	/**
 	 * Regular Instance Methods
 	 */
 	ModelFileType GetModelFileType(std::string filename);
 	Napi::Array CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F);
-	Napi::Array CreateBufferedVerticesArray(Napi::Env env, const Eigen::MatrixXd& V);
-	Napi::Array CreateBufferedMeshVerticesArray(Napi::Env env, const Eigen::MatrixXd& V, const Eigen::MatrixXi& F);
 
 	/**
 	 * Regular Instance Methods (templates)
@@ -88,16 +86,12 @@ private:
 		{
 			float x = V(vertex_index, 0);
 			float y = V(vertex_index, 1);
+			float z = entries_per_vertex == 2 ? 0 : V(vertex_index, 2);
 
-			int base_index = entries_per_vertex * vertex_index;
+			int base_index = 3 * vertex_index;
 			buffered_vertices_array[base_index] = x;
 			buffered_vertices_array[base_index + 1] = y;
-			
-			if (entries_per_vertex == 3)
-			{
-				float z = V(vertex_index, 2);
-				buffered_vertices_array[base_index + 2] = z;
-			}
+			buffered_vertices_array[base_index + 2] = z;
 		}
 
 		return buffered_vertices_array;
@@ -108,7 +102,7 @@ private:
 	{
 		Napi::Array buffered_mesh_vertices_array = Napi::Array::New(env);
 		auto entries_per_vertex = V.cols();
-		auto entries_per_face = 3 * entries_per_vertex;
+		auto entries_per_face = 9;
 		for (int face_index = 0; face_index < F.rows(); face_index++)
 		{
 			int base_index = entries_per_face * face_index;
@@ -117,16 +111,12 @@ private:
 				int vertex_index = F(face_index, i);
 				float x = V(vertex_index, 0);
 				float y = V(vertex_index, 1);
+				float z = entries_per_vertex == 2 ? 0 : V(vertex_index, 2);
 				
-				int base_vertex_index = base_index + entries_per_vertex * i;
+				int base_vertex_index = base_index + 3 * i;
 				buffered_mesh_vertices_array[base_vertex_index] = x;
 				buffered_mesh_vertices_array[base_vertex_index + 1] = y;
-				
-				if (entries_per_vertex == 3)
-				{
-					float z = V(vertex_index, 2);
-					buffered_mesh_vertices_array[base_vertex_index + 2] = z;
-				}
+				buffered_mesh_vertices_array[base_vertex_index + 2] = z;
 			}
 		}
 
