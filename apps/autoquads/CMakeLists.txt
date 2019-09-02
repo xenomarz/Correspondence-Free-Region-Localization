@@ -15,5 +15,5 @@ target_link_libraries(${PROJECT_NAME}
         igl::opengl
         igl::opengl_glfw
         igl::opengl_glfw_imgui
-        rds::optimization-lib
+        rds::optimization_lib
         rds::plugins)

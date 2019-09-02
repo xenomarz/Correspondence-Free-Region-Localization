@@ -1,8 +1,18 @@
+#pragma once
 #ifndef ENGINE_H
 #define ENGINE_H
 
+// Node API Includes
 #include <napi.h>
+
+// STL Includes
+#include <memory>
+
+// Eigen Includes
 #include <Eigen/Core>
+
+// Optimization Lib Includes
+#include <libs/optimization_lib/include/utils/mesh_wrapper.h>
 
 class Engine : public Napi::ObjectWrap<Engine> {
 public:
@@ -36,16 +46,97 @@ private:
 	 * Regular Instance Methods
 	 */
 	ModelFileType GetModelFileType(std::string filename);
-	Napi::Array CreateVertices(Napi::Env env, Eigen::MatrixXd& V);
-	Napi::Array CreateFaces(Napi::Env env, Eigen::MatrixXi& F);
-	Napi::Array CreateBufferedVerticesArray(Napi::Env env, Eigen::MatrixXd& V);
-	Napi::Array CreateBufferedMeshVerticesArray(Napi::Env env, Eigen::MatrixXd& V, Eigen::MatrixXi& F);
+	Napi::Array CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F);
+	Napi::Array CreateBufferedVerticesArray(Napi::Env env, const Eigen::MatrixXd& V);
+	Napi::Array CreateBufferedMeshVerticesArray(Napi::Env env, const Eigen::MatrixXd& V, const Eigen::MatrixXi& F);
+
+	/**
+	 * Regular Instance Methods (templates)
+	 */
+	template <typename Derived>
+	Napi::Array CreateVertices(Napi::Env env, const Eigen::MatrixBase<Derived>& V)
+	{
+		Napi::Array vertices_array = Napi::Array::New(env);
+		auto entries_per_vertex = V.cols();
+		for (int vertex_index = 0; vertex_index < V.rows(); vertex_index++)
+		{
+			Napi::Object vertex_object = Napi::Object::New(env);
+			float x = V(vertex_index, 0);
+			float y = V(vertex_index, 1);
+
+			vertex_object.Set("x", x);
+			vertex_object.Set("y", y);
+
+			if (entries_per_vertex == 3)
+			{
+				float z = V(vertex_index, 2);
+				vertex_object.Set("z", z);
+			}
+		
+			vertices_array[vertex_index] = vertex_object;
+		}
+
+		return vertices_array;
+	}
+
+	template <typename Derived>
+	Napi::Array CreateBufferedVerticesArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V)
+	{
+		Napi::Array buffered_vertices_array = Napi::Array::New(env);
+		auto entries_per_vertex = V.cols();
+		for (int vertex_index = 0; vertex_index < V.rows(); vertex_index++)
+		{
+			float x = V(vertex_index, 0);
+			float y = V(vertex_index, 1);
+
+			int base_index = entries_per_vertex * vertex_index;
+			buffered_vertices_array[base_index] = x;
+			buffered_vertices_array[base_index + 1] = y;
+			
+			if (entries_per_vertex == 3)
+			{
+				float z = V(vertex_index, 2);
+				buffered_vertices_array[base_index + 2] = z;
+			}
+		}
+
+		return buffered_vertices_array;
+	}
+
+	template <typename Derived>
+	Napi::Array CreateBufferedMeshVerticesArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V, const Eigen::MatrixXi& F)
+	{
+		Napi::Array buffered_mesh_vertices_array = Napi::Array::New(env);
+		auto entries_per_vertex = V.cols();
+		auto entries_per_face = 3 * entries_per_vertex;
+		for (int face_index = 0; face_index < F.rows(); face_index++)
+		{
+			int base_index = entries_per_face * face_index;
+			for (int i = 0; i < 3; i++)
+			{
+				int vertex_index = F(face_index, i);
+				float x = V(vertex_index, 0);
+				float y = V(vertex_index, 1);
+				
+				int base_vertex_index = base_index + entries_per_vertex * i;
+				buffered_mesh_vertices_array[base_vertex_index] = x;
+				buffered_mesh_vertices_array[base_vertex_index + 1] = y;
+				
+				if (entries_per_vertex == 3)
+				{
+					float z = V(vertex_index, 2);
+					buffered_mesh_vertices_array[base_vertex_index + 2] = z;
+				}
+			}
+		}
+
+		return buffered_mesh_vertices_array;
+	}
 
 	/**
 	 * Fields
 	 */
-	Eigen::MatrixXd V_;
-	Eigen::MatrixXi F_;
+	MeshWrapper mesh_wrapper_;
 };
 
 #endif

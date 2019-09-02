@@ -27,7 +27,8 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 	return exports;
 }
 
-Engine::Engine(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Engine>(info)
+Engine::Engine(const Napi::CallbackInfo& info) : 
+	Napi::ObjectWrap<Engine>(info)
 {
 
 }
@@ -36,12 +37,19 @@ Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
 	if (info.Length() <= 0 || !info[0].IsString()) 
 	{
 		Napi::TypeError::New(env, "String expected").ThrowAsJavaScriptException();
 		return env.Null();
 	}
 
+	/**
+	 * Get file type
+	 */
 	Napi::String value = info[0].As<Napi::String>();
 	std::string modelFilePath = std::string(value);
 	Engine::ModelFileType modelFileType = GetModelFileType(modelFilePath);
@@ -51,15 +59,41 @@ Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
 		return env.Null();
 	}
 
+	/**
+	 * Read file
+	 */
+	Eigen::MatrixXd V;
+	Eigen::MatrixXi F;
 	switch (modelFileType)
 	{
 	case Engine::ModelFileType::OFF:
-		igl::readOFF(modelFilePath, V_, F_);
+		igl::readOFF(modelFilePath, V, F);
 		break;
 	case Engine::ModelFileType::OBJ:
-		igl::readOBJ(modelFilePath, V_, F_);
+		igl::readOBJ(modelFilePath, V, F);
 		break;
 	}
+
+	/**
+	 * Triangulate (if faces were received as quads)
+	 */
+	if (F.cols() == 4)
+	{
+		auto F_triangulated = Eigen::MatrixXi(F.rows() * 2, 3);
+		for (auto i = 0; i < F.rows(); ++i)
+		{
+			auto face = F.row(i);
+			F_triangulated.row(2 * i) << face[0], face[1], face[3];
+			F_triangulated.row(2 * i + 1) << face[1], face[2], face[3];
+		}
+
+		F = F_triangulated;
+	}
+
+	/**
+	 * Initialize MeshWrapper with loaded mesh model (faces and vertices)
+	 */
+	mesh_wrapper_ = MeshWrapper(V, F);
 
 	return env.Null();
 }
@@ -69,7 +103,7 @@ Napi::Value Engine::GetModelVertices(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateVertices(env, V_);
+	return CreateVertices(env, mesh_wrapper_.GetV());
 }
 
 Napi::Value Engine::GetSuopVertices(const Napi::CallbackInfo& info)
@@ -77,7 +111,7 @@ Napi::Value Engine::GetSuopVertices(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateVertices(env, V_);
+	return CreateVertices(env, mesh_wrapper_.GetVs());
 }
 
 Napi::Value Engine::GetModelFaces(const Napi::CallbackInfo& info)
@@ -85,7 +119,7 @@ Napi::Value Engine::GetModelFaces(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateFaces(env, F_);
+	return CreateFaces(env, mesh_wrapper_.GetF());
 }
 
 Napi::Value Engine::GetSuopFaces(const Napi::CallbackInfo& info)
@@ -93,7 +127,7 @@ Napi::Value Engine::GetSuopFaces(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateFaces(env, F_);
+	return CreateFaces(env, mesh_wrapper_.GetFs());
 }
 
 Napi::Value Engine::GetModelBufferedVertices(const Napi::CallbackInfo& info)
@@ -101,7 +135,7 @@ Napi::Value Engine::GetModelBufferedVertices(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateBufferedVerticesArray(env, V_);
+	return CreateBufferedVerticesArray(env, mesh_wrapper_.GetV());
 }
 
 Napi::Value Engine::GetSuopBufferedVertices(const Napi::CallbackInfo& info)
@@ -109,7 +143,7 @@ Napi::Value Engine::GetSuopBufferedVertices(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateBufferedVerticesArray(env, V_);
+	return CreateBufferedVerticesArray(env, mesh_wrapper_.GetVs());
 }
 
 Napi::Value Engine::GetModelBufferedMeshVertices(const Napi::CallbackInfo& info)
@@ -117,7 +151,7 @@ Napi::Value Engine::GetModelBufferedMeshVertices(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateBufferedMeshVerticesArray(env, V_, F_);
+	return CreateBufferedMeshVerticesArray(env, mesh_wrapper_.GetV(), mesh_wrapper_.GetF());
 }
 
 Napi::Value Engine::GetSuopBufferedMeshVertices(const Napi::CallbackInfo& info)
@@ -125,7 +159,7 @@ Napi::Value Engine::GetSuopBufferedMeshVertices(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateBufferedMeshVerticesArray(env, V_, F_);
+	return CreateBufferedMeshVerticesArray(env, mesh_wrapper_.GetVs(), mesh_wrapper_.GetFs());
 }
 
 Engine::ModelFileType Engine::GetModelFileType(std::string modelFilePath)
@@ -144,26 +178,7 @@ Engine::ModelFileType Engine::GetModelFileType(std::string modelFilePath)
 	return Engine::ModelFileType::UNKNOWN;
 }
 
-Napi::Array Engine::CreateVertices(Napi::Env env, Eigen::MatrixXd& V)
-{
-	Napi::Array verticesArray = Napi::Array::New(env);
-	for (int vertexIndex = 0; vertexIndex < V.rows(); vertexIndex++)
-	{
-		Napi::Object vertexObject = Napi::Object::New(env);
-		float x = V(vertexIndex, 0);
-		float y = V(vertexIndex, 1);
-		float z = 0;
-
-		vertexObject.Set("x", x);
-		vertexObject.Set("y", y);
-		vertexObject.Set("z", z);
-		verticesArray[vertexIndex] = vertexObject;
-	}
-
-	return verticesArray;
-}
-
-Napi::Array Engine::CreateFaces(Napi::Env env, Eigen::MatrixXi& F)
+Napi::Array Engine::CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F)
 {
 	Napi::Array facesArray = Napi::Array::New(env);
 	for (int faceIndex = 0; faceIndex < F.rows(); faceIndex++)
@@ -180,45 +195,4 @@ Napi::Array Engine::CreateFaces(Napi::Env env, Eigen::MatrixXi& F)
 	}
 
 	return facesArray;
-}
-
-Napi::Array Engine::CreateBufferedVerticesArray(Napi::Env env, Eigen::MatrixXd& V)
-{
-	Napi::Array bufferedVerticesArray = Napi::Array::New(env);
-	for (int vertexIndex = 0; vertexIndex < V.rows(); vertexIndex++)
-	{
-		float x = V(vertexIndex, 0);
-		float y = V(vertexIndex, 1);
-		float z = V(vertexIndex, 2);
-
-		int baseIndex = 3 * vertexIndex;
-		bufferedVerticesArray[baseIndex] = x;
-		bufferedVerticesArray[baseIndex + 1] = y;
-		bufferedVerticesArray[baseIndex + 2] = z;
-	}
-
-	return bufferedVerticesArray;
-}
-
-Napi::Array Engine::CreateBufferedMeshVerticesArray(Napi::Env env, Eigen::MatrixXd& V, Eigen::MatrixXi& F)
-{
-	Napi::Array bufferedMeshVerticesArray = Napi::Array::New(env);
-	for (int faceIndex = 0; faceIndex < F.rows(); faceIndex++)
-	{
-		int baseIndex = 9 * faceIndex;
-		for (int i = 0; i < 3; i++)
-		{
-			int vertexIndex = F(faceIndex, i);
-			float x = V(vertexIndex, 0);
-			float y = V(vertexIndex, 1);
-			float z = V(vertexIndex, 2);
-
-			int baseVertexIndex = baseIndex + 3 * i;
-			bufferedMeshVerticesArray[baseVertexIndex] = x;
-			bufferedMeshVerticesArray[baseVertexIndex + 1] = y;
-			bufferedMeshVerticesArray[baseVertexIndex + 2] = z;
-		}
-	}
-
-	return bufferedMeshVerticesArray;
 }

@@ -1,7 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path')
 let files = [];
-let latestBuildsFolderPath = '../../build/node-addon/latest-builds/';
+let latestBuildsFolderPath = '../../build/node_addon/latest_builds/';
 let electronComponentsFolderPath = '../components-electron/';
 
 fs.readdirSync(latestBuildsFolderPath).forEach(file => {

@@ -12,14 +12,19 @@ execute_process(COMMAND node -p "require('node-addon-api').include"
 
 string(REPLACE "\n" "" NODE_ADDON_API_DIR ${NODE_ADDON_API_DIR})
 string(REPLACE "\"" "" NODE_ADDON_API_DIR ${NODE_ADDON_API_DIR})
-target_include_directories(${PROJECT_NAME} PRIVATE ${NODE_ADDON_API_DIR})
+
+# Include Directories
+target_include_directories(${PROJECT_NAME} 
+	PRIVATE
+		${CMAKE_SOURCE_DIR}
+		${NODE_ADDON_API_DIR})
 
 # Libraries
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         igl::core
         igl::opengl
-        rds::optimization-lib
+        rds::optimization_lib
         ${CMAKE_JS_LIB})
 
 # Properties
@@ -30,5 +35,5 @@ set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
 # Custom Commands
 add_custom_command(TARGET ${PROJECT_NAME}
                    POST_BUILD
-                   COMMAND call $(ProjectDir)..\\..\\scripts\\post-build.bat ARGS "$(TargetDir)$(TargetFileName)" "$(ProjectDir)latest-builds\\"
-                   COMMENT "Copying .node file to latest-builds folder")
+                   COMMAND call $(ProjectDir)..\\..\\scripts\\post_build.bat ARGS "$(TargetDir)$(TargetFileName)" "$(ProjectDir)latest_builds\\"
+                   COMMENT "Copying .node file to latest_builds folder")

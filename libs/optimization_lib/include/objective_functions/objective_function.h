@@ -1,35 +1,35 @@
 #pragma once
+
 #include <Eigen/Core>
 #include <vector>
-#include <string>
-#include <utility>
-#include <iostream>
-#include <Eigen/SparseCore>
-
-using namespace Eigen;
 
 class ObjectiveFunction
 {
 public:
 	ObjectiveFunction();
 	virtual ~ObjectiveFunction();
-	virtual void init() = 0;
-	virtual void updateX(const VectorXd& X) = 0;
-	virtual double value() = 0;
-	virtual void gradient(VectorXd& g) = 0;
-	virtual void hessian() = 0;
 
-	virtual void prepare_hessian() = 0;
-	float w;
-    std::string name="Objective function";
-	
-    void FDGradient(const VectorXd& X,VectorXd& g);
-    void FDHessian(const VectorXd& X);
-    bool checkGradient(const VectorXd& X);
-    bool checkHessian(const VectorXd& X);
-    // Hessian sparse reprensentation
+	// Value, Gradient and Hessian getters
+	double GetValue() const;
+	const Eigen::VectorXd& GetGradient() const;
+	const std::vector<int>& GetII() const;
+	const std::vector<int>& GetJJ() const;
+	const std::vector<double>& GetSS() const;
+
+	// Update Value, Gradient and Hessian for the given x
+	virtual void Update(const Eigen::VectorXd& x) = 0;
+
+protected:
+	virtual void PrepareHessian() = 0;
+
+	// Value
+	double f;
+
+	// Gradient
+	Eigen::VectorXd g;
+
+	// Hessian (sparse reprensentation)
 	std::vector<int> II, JJ;
 	std::vector<double> SS;
-
 };
 
