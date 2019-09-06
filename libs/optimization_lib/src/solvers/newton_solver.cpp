@@ -32,7 +32,7 @@ double Newton::step()
 
 	//////////////////////
 	//Gradient Descent
-	p = rhs;
+	//p = rhs;
 	//////////////////////
 #endif
 	return f;

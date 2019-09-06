@@ -1,51 +1,38 @@
 #include <objective_functions/objective_symmetric_dirichlet.h>
-#include <limits>
-#include <igl/doublearea.h>
-//#include <chrono>
-
-using namespace std;
-using namespace Eigen;
 
 ObjectiveSymmetricDirichlet::ObjectiveSymmetricDirichlet()
 {
     name = "Objective: Symmetric Dirichlet";
 }
+
 void ObjectiveSymmetricDirichlet::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw "DistortionSymmetricDirichlet must define members V,F before init()!";
 		
-	numF = F.rows();
-	numV = V.rows();
+	a.resize(F.rows());
+	b.resize(F.rows());
+	c.resize(F.rows());
+	d.resize(F.rows());
+    alpha.resize(F.rows(), 2);
+    beta.resize(F.rows(), 2);
+	s.resize(F.rows(), 2);
+	v.resize(F.rows(), 4);
+	u.resize(F.rows(), 4);
 
-	Fuv.resize(6, numF);
-	Fuv.topRows(3) = F.transpose();
-	Fuv.bottomRows(3) = Fuv.topRows(3) + Eigen::MatrixXi::Constant(3, numF, numV);
+	Dsd[0].resize(6, F.rows());
+	Dsd[1].resize(6, F.rows());
 
+	// Parameterization J mats resize
+	detJ.resize(F.rows());
 
-	a.resize(numF);
-	b.resize(numF);
-	c.resize(numF);
-	d.resize(numF);
-    alpha.resize(numF, 2);
-    beta.resize(numF, 2);
-	s.resize(numF, 2);
-	v.resize(numF, 4);
-	u.resize(numF, 4);
-
-	Dsd[0].resize(6, numF);
-	Dsd[1].resize(6, numF);
-
-	//Parameterization J mats resize
-	detJ.resize(numF);
-
-	// compute init energy matrices
+	// Compute init energy matrices
 	igl::doublearea(V, F, Area);
 	Area /= 2;
 
-	Eigen::MatrixX3d D1cols, D2cols;
+	MatrixX3d D1cols, D2cols;
+	MatrixX3d V3d; 
 
-	Eigen::MatrixX3d V3d; 
 	V3d.resize(V.rows(), 3);
 	V3d.leftCols(2) = V;
 	V3d.col(2).setZero();
@@ -53,11 +40,11 @@ void ObjectiveSymmetricDirichlet::init()
 	D1d=D1cols.transpose();
 	D2d=D2cols.transpose();
 
-	//columns belong to different faces
-	a1d.resize(6, numF);
-	a2d.resize(6, numF);
-	b1d.resize(6, numF);
-	b2d.resize(6, numF);
+	// Columns belong to different faces
+	a1d.resize(6, F.rows());
+	a2d.resize(6, F.rows());
+	b1d.resize(6, F.rows());
+	b2d.resize(6, F.rows());
 
 	a1d.topRows(3) = 0.5*D1d;
 	a1d.bottomRows(3) = 0.5*D2d;
@@ -71,10 +58,10 @@ void ObjectiveSymmetricDirichlet::init()
 	b2d.topRows(3) = 0.5*D2d;
 	b2d.bottomRows(3) = 0.5*D1d;
 
-	Hi.resize(numF);
 	prepare_hessian();
 	w = 1;
 }
+
 void ObjectiveSymmetricDirichlet::updateX(const VectorXd& X)
 {
 	bool inversions_exist = updateJ(X);
@@ -83,63 +70,42 @@ void ObjectiveSymmetricDirichlet::updateX(const VectorXd& X)
 double ObjectiveSymmetricDirichlet::value()
 {
 	// E = ||J||^2+||J^-1||^2 = ||J||^2+||J||^2/det(J)^2
-	Eigen::VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
-    //Eigen::VectorXd dirichlet = 2*(alpha.cwiseAbs2().rowwise().sum() + beta.cwiseAbs2().rowwise().sum());
-	Eigen::VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
-    //Eigen::VectorXd invDirichlet = dirichlet2.cwiseQuotient((alpha.cwiseAbs2().rowwise().sum() + beta.cwiseAbs2().rowwise().sum()).cwiseAbs2());
+	VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
+	VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
 	Efi = dirichlet + invDirichlet;
 
-	double f = 0.5*(Area.asDiagonal()*Efi).sum();
-	return f;
+	return 0.5*(Area.asDiagonal()*Efi).sum();
 }
+
 void ObjectiveSymmetricDirichlet::gradient(VectorXd& g)
 {
-//     VectorXd gold(g);
-//     gradient_old(g);
-//     return;
-    //energy is h(S(x),s(x)), then grad_x h = grad_(S,s) h * [grad(S); grad(s)]
+    // Energy is h(S(x),s(x)), then grad_x h = grad_(S,s) h * [grad(S); grad(s)]
     MatrixX2d S(alpha);
     S.col(0) = alpha.rowwise().norm() + beta.rowwise().norm();
     S.col(1) = alpha.rowwise().norm() - beta.rowwise().norm();
 	
-	Eigen::MatrixX2d invs = s.cwiseInverse();
+	MatrixX2d invs = s.cwiseInverse();
 
-	g.conservativeResize(numV*2);
+	g.conservativeResize(V.rows() *2);
 	g.setZero();
 
-	for (int fi = 0; fi < numF; ++fi) {
+	for (int fi = 0; fi < F.rows(); ++fi) {
         Vector2d dhdS(s(fi, 0) - pow(invs(fi, 0), 3), s(fi, 1) - pow(invs(fi, 1), 3));
         Vector6d dnormAlphadx = (a1d.col(fi)*alpha(fi, 0) + a2d.col(fi)*alpha(fi, 1))/alpha.row(fi).norm();
         Vector6d dnormBetadx = (b1d.col(fi)*beta(fi, 0) + b2d.col(fi)*beta(fi, 1))/(beta.row(fi).norm()+1e-6);
         Vector6d dSdx = dnormAlphadx + dnormBetadx;
         Vector6d dsdx = dnormAlphadx - dnormBetadx;
         Vector6d gi = Area(fi)*(dSdx * dhdS(0) + dsdx * dhdS(1));
-		for (int vi = 0; vi < 6; ++vi) {
-			g(Fuv(vi, fi)) += gi(vi);
-		}
+		
+		//Update the gradient of the x-axis
+		g(F(fi,0)) += gi(0);
+		g(F(fi,1)) += gi(1);
+		g(F(fi,2)) += gi(2);
+		//Update the gradient of the y-axis
+		g(F(fi,0) + V.rows()) += gi(3);
+		g(F(fi,1) + V.rows()) += gi(4);
+		g(F(fi,2) + V.rows()) += gi(5);
 	}
-}
-
-void ObjectiveSymmetricDirichlet::gradient_old(VectorXd& g)
-{
-    UpdateSSVDFunction();
-
-    Eigen::MatrixX2d invs = s.cwiseInverse();
-
-    g.conservativeResize(numV * 2);
-    g.setZero();
-    ComputeDenseSSVDDerivatives();
-
-    for (int fi = 0; fi < numF; ++fi) {
-        double gS = s(fi, 0) - pow(invs(fi, 0), 3);
-        double gs = s(fi, 1) - pow(invs(fi, 1), 3);
-        Vector6d Dsdi0 = Dsd[0].col(fi);
-        Vector6d Dsdi1 = Dsd[1].col(fi);
-        Vector6d gi = Area(fi)*(Dsdi0*gS + Dsdi1 * gs);
-        for (int vi = 0; vi < 6; ++vi) {
-            g(Fuv(vi, fi)) += gi(vi);
-        }
-    }
 }
 
 void ObjectiveSymmetricDirichlet::hessian()
@@ -149,20 +115,20 @@ void ObjectiveSymmetricDirichlet::hessian()
 
 	auto lambda1 = [](double a) {return a - 1.0 / (a*a*a); };
 	//gradient of outer function in composition
-	Eigen::VectorXd gradfS = s.col(0).unaryExpr(lambda1);
-	Eigen::VectorXd gradfs = s.col(1).unaryExpr(lambda1);
+	VectorXd gradfS = s.col(0).unaryExpr(lambda1);
+	VectorXd gradfs = s.col(1).unaryExpr(lambda1);
 	auto lambda2 = [](double a) {return 1 + 3 / (a*a*a*a); };
 	//hessian of outer function in composition (diagonal)
-	Eigen::VectorXd HS = s.col(0).unaryExpr(lambda2);
-	Eigen::VectorXd Hs = s.col(1).unaryExpr(lambda2);
+	VectorXd HS = s.col(0).unaryExpr(lambda2);
+	VectorXd Hs = s.col(1).unaryExpr(lambda2);
 	//simliarity alpha
-	Eigen::VectorXd aY = 0.5*(a + d);
-	Eigen::VectorXd bY = 0.5*(c - b);
+	VectorXd aY = 0.5*(a + d);
+	VectorXd bY = 0.5*(c - b);
 	//anti similarity beta
-	Eigen::VectorXd cY = 0.5*(a - d);
-	Eigen::VectorXd dY = 0.5*(b + c);
+	VectorXd cY = 0.5*(a - d);
+	VectorXd dY = 0.5*(b + c);
 #pragma omp parallel for num_threads(24)
-	for (int i = 0; i < numF; ++i) {
+	for (int i = 0; i < F.rows(); ++i) {
 		//vectors of size 6
 		//svd derivatives
 		Vector6d dSi = Dsd[0].col(i);
@@ -172,19 +138,19 @@ void ObjectiveSymmetricDirichlet::hessian()
 		Vector6d a2i = a2d.col(i);
 		Vector6d b1i = b1d.col(i);
 		Vector6d b2i = b2d.col(i);
-		Hi[i] = Area(i)*ComputeConvexConcaveFaceHessian(
+		Matrix<double, 6, 6> Hi = Area(i)*ComputeConvexConcaveFaceHessian(
 			a1i, a2i, b1i, b2i,
 			aY(i), bY(i), cY(i), dY(i),
 			dSi, dsi,
 			gradfS(i), gradfs(i),
 			HS(i), Hs(i));
-// 		Hi[i].setIdentity();
+
 		int index2 = i * 21;
 		for (int a = 0; a < 6; ++a)
 		{
 			for (int b = 0; b <= a; ++b)
 			{
-				SS[index2++] = Hi[i](a, b);
+				SS[index2++] = Hi(a, b);
 			}
 		}
 	}
@@ -202,11 +168,11 @@ void ObjectiveSymmetricDirichlet::hessian()
 
 bool ObjectiveSymmetricDirichlet::updateJ(const VectorXd& X)
 {
-	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
-// 	a = D1*U;
-// 	b = D2*U;
-// 	c = D1*V;
-// 	d = D2*V;
+	Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
+	// 	a = D1*U;
+	// 	b = D2*U;
+	// 	c = D1*V;
+	// 	d = D2*V;
 	for (int i = 0; i < F.rows(); i++)
 	{
 		Vector3d X1i, X2i;
@@ -223,13 +189,13 @@ bool ObjectiveSymmetricDirichlet::updateJ(const VectorXd& X)
 	
 	return ((detJ.array() < 0).any());
 };
+
 void ObjectiveSymmetricDirichlet::UpdateSSVDFunction()
 {
-
-#pragma omp parallel for num_threads(24)
+	#pragma omp parallel for num_threads(24)
 	for (int i = 0; i < a.size(); i++)
 	{
-		Eigen::Matrix2d A;
+		Matrix2d A;
 		Matrix2d U, S, V;
 		A << a[i], b[i], c[i], d[i];
 		Utils::SSVD2x2(A, U, S, V);
@@ -238,14 +204,15 @@ void ObjectiveSymmetricDirichlet::UpdateSSVDFunction()
 		s.row(i) << S(0), S(3);
 	}
 }
+
 void ObjectiveSymmetricDirichlet::ComputeDenseSSVDDerivatives()
 {
-	//different columns belong to diferent faces
-	Eigen::MatrixXd B(D1d*v.col(0).asDiagonal() + D2d*v.col(1).asDiagonal());
-	Eigen::MatrixXd C(D1d*v.col(2).asDiagonal() + D2d*v.col(3).asDiagonal());
+	// Different columns belong to diferent faces
+	MatrixXd B(D1d*v.col(0).asDiagonal() + D2d*v.col(1).asDiagonal());
+	MatrixXd C(D1d*v.col(2).asDiagonal() + D2d*v.col(3).asDiagonal());
 
-	Eigen::MatrixXd t1 = B* u.col(0).asDiagonal();
-	Eigen::MatrixXd t2 = B* u.col(1).asDiagonal();
+	MatrixXd t1 = B* u.col(0).asDiagonal();
+	MatrixXd t2 = B* u.col(1).asDiagonal();
 	Dsd[0].topRows(t1.rows()) = t1;
 	Dsd[0].bottomRows(t1.rows()) = t2;
 	t1 = C*u.col(2).asDiagonal();
@@ -265,17 +232,16 @@ inline Matrix6d ObjectiveSymmetricDirichlet::ComputeFaceConeHessian(const Vector
 	Matrix6d A1A2t = A1*A2.transpose();
 	Matrix6d A2A1t = A1A2t.transpose();
 
-
 	double a2 = a1x*a1x; 
 	double b2 = a2x*a2x; 
 	double ab = a1x*a2x; 
 
 	return  (invf - invf3*a2) * A1A1t + (invf - invf3*b2) * A2A2t - invf3 * ab*(A1A2t + A2A1t);
 }
+
 inline Matrix6d ObjectiveSymmetricDirichlet::ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs)
 {
-	//no multiplying by area in this function
-
+	// No multiplying by area in this function
 	Matrix6d H = HS*dSi*dSi.transpose() + Hs*dsi*dsi.transpose(); //generalized gauss newton
 	double walpha = gradfS + gradfs;
 	if (walpha > 0)
@@ -289,58 +255,47 @@ inline Matrix6d ObjectiveSymmetricDirichlet::ComputeConvexConcaveFaceHessian(con
 
 void ObjectiveSymmetricDirichlet::prepare_hessian()
 {
-	int n = numV;
-
 	II.clear();
 	JJ.clear();
 	auto PushPair = [&](int i, int j) { if (i > j) swap(i, j); II.push_back(i); JJ.push_back(j); };
 	for (int i = 0; i < F.rows(); ++i)
 	{
-		// for every face there is a 6x6 local hessian
-		// we only need the 21 values contained in the upper
-		// triangle. they are access and also put into the
-		// big hessian in column order.
+		// For every face there is a 6x6 local hessian.
+		// We only need the 21 values contained in the upper triangle.
+		// They are access and also put into the big hessian in column order. 
 
+		// First column
+		PushPair(F(i, 0)			, F(i, 0));
 
-		// 		// base indices
-		// 		int uhbr = 3 * i; //upper_half_base_row
-		// 		int lhbr = 3 * i + n; // lower_half_base_row 
-		// 		int lhbc = 3 * i; // left_half_base_col 
-		// 		int rhbc = 3 * i + n; // right_half_base_col 
-		//uhbr== fi(0)
-		Vector3i Fi = F.row(i);
-		// first column
-		PushPair(Fi(0), Fi(0));
+		// Second column
+		PushPair(F(i, 0)			, F(i, 1));
+		PushPair(F(i, 1)			, F(i, 1));
 
-		// second column
-		PushPair(Fi(0), Fi(1));
-		PushPair(Fi(1), Fi(1));
+		// Third column
+		PushPair(F(i, 0)			, F(i, 2));
+		PushPair(F(i, 1)			, F(i, 2));
+		PushPair(F(i, 2)			, F(i, 2));
 
-		// third column
-		PushPair(Fi(0), Fi(2));
-		PushPair(Fi(1), Fi(2));
-		PushPair(Fi(2), Fi(2));
+		// Fourth column
+		PushPair(F(i, 0)			, F(i, 0) + V.rows());
+		PushPair(F(i, 1)			, F(i, 0) + V.rows());
+		PushPair(F(i, 2)			, F(i, 0) + V.rows());
+		PushPair(F(i, 0) + V.rows()	, F(i, 0) + V.rows());
 
-		// fourth column
-		PushPair(Fi(0), Fi(0) + n);
-		PushPair(Fi(1), Fi(0) + n);
-		PushPair(Fi(2), Fi(0) + n);
-		PushPair(Fi(0) + n, Fi(0) + n);
+		// Fifth column
+		PushPair(F(i, 0)			, F(i, 1) + V.rows());
+		PushPair(F(i, 1)			, F(i, 1) + V.rows());
+		PushPair(F(i, 2)			, F(i, 1) + V.rows());
+		PushPair(F(i, 0) + V.rows()	, F(i, 1) + V.rows());
+		PushPair(F(i, 1) + V.rows()	, F(i, 1) + V.rows());
 
-		// fifth column
-		PushPair(Fi(0), Fi(1) + n);
-		PushPair(Fi(1), Fi(1) + n);
-		PushPair(Fi(2), Fi(1) + n);
-		PushPair(Fi(0) + n, Fi(1) + n);
-		PushPair(Fi(1) + n, Fi(1) + n);
-
-		// sixth column
-		PushPair(Fi(0), Fi(2) + n);
-		PushPair(Fi(1), Fi(2) + n);
-		PushPair(Fi(2), Fi(2) + n);
-		PushPair(Fi(0) + n, Fi(2) + n);
-		PushPair(Fi(1) + n, Fi(2) + n);
-		PushPair(Fi(2) + n, Fi(2) + n);
+		// Sixth column
+		PushPair(F(i, 0)			, F(i, 2) + V.rows());
+		PushPair(F(i, 1)			, F(i, 2) + V.rows());
+		PushPair(F(i, 2)			, F(i, 2) + V.rows());
+		PushPair(F(i, 0) + V.rows()	, F(i, 2) + V.rows());
+		PushPair(F(i, 1) + V.rows()	, F(i, 2) + V.rows());
+		PushPair(F(i, 2) + V.rows()	, F(i, 2) + V.rows());
 	}
 	SS = vector<double>(II.size(), 0.);
 }

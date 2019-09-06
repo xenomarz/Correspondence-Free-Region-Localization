@@ -1,13 +1,24 @@
 #pragma once
+
 #include <Eigen/Core>
+#include <Eigen/Sparse>
+#include <Eigen/SparseCore>
+#include <functional>
 #include <vector>
 #include <string>
 #include <utility>
 #include <iostream>
-#include <Eigen/SparseCore>
+#include <libs/optimization_lib/include/utils.h>
+#include <limits>
+#include <igl/doublearea.h>
 
 using namespace Eigen;
 using namespace std;
+
+typedef Triplet<double> T;
+typedef SparseMatrix<double> SpMat;
+typedef Matrix<double, 6, 6> Matrix6d;
+typedef Matrix<double, 6, 1> Vector6d;
 
 class ObjectiveFunction
 {
