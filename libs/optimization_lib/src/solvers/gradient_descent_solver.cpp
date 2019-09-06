@@ -1,7 +1,4 @@
 #include <solvers/gradient_descent_solver.h>
-#include <chrono>
-
-GradientDescent::GradientDescent() {}
 
 double GradientDescent::step()
 {

@@ -1,12 +1,10 @@
 #pragma once
 
-//#include <objective_functions/total_objective.h>
-#include "../objective_functions/total_objective.h"
-
+#include <libs/optimization_lib/include/objective_functions/total_objective.h>
 #include <atomic>
-#include <functional>
 #include <shared_mutex>
-using namespace std;
+#include <igl/flip_avoiding_line_search.h>
+#include <Eigen/SparseCholesky>
 
 class Solver
 {
@@ -14,8 +12,8 @@ public:
 	Solver();
 	int run();
 	void stop();
-	void get_data(Eigen::VectorXd& X);
-	void init(shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0);
+	void get_data(VectorXd& X);
+	void init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0);
 	void setFlipAvoidingLineSearch(MatrixX3i& F);
 	// Pointer to the energy class
 	shared_ptr<ObjectiveFunction> objective;
@@ -34,7 +32,7 @@ public:
 	// External (interface) and internal working mesh
 	VectorXd ext_x, X;
 	MatrixX3i F;
-	int num_steps = 2147483647;
+	int num_steps;
 
 protected:
 	// Give the wrapper a chance to intersect gracefully

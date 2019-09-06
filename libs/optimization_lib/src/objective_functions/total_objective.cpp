@@ -1,10 +1,5 @@
 #include <objective_functions/total_objective.h>
 
-TotalObjective::TotalObjective()
-{
-
-}
-
 void TotalObjective::init()
 {
 	//assume that each objective's member have been set outside

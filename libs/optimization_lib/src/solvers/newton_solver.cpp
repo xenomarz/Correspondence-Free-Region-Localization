@@ -1,13 +1,9 @@
 #include <solvers/newton_solver.h>
 
-#include <chrono>
-Newton::Newton() {}
-
 double Newton::step()
 {
 	objective->updateX(X);
 	f = objective->value();
-	//cout << "f = " << f << " , ";
 	objective->gradient(g);
 	objective->hessian();
 
@@ -27,7 +23,6 @@ double Newton::step()
 #else
 	eigen_solver->factorize(objective->II, objective->JJ, objective->SS);
 	VectorXd rhs = -g;
-	//cout << "g.norm() = " << g.norm() << " , ";
 	p = eigen_solver->solve(rhs);
 
 	//////////////////////

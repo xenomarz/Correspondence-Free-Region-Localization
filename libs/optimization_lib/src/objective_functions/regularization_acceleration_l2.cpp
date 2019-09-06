@@ -1,18 +1,10 @@
 #include <objective_functions/regularization_acceleration_l2.h>
-#include <limits>
-
-
-#include <igl/doublearea.h>
-
-//#include <chrono>
-
-using namespace std;
-using namespace Eigen;
 
 RegularizationAccelerationL2::RegularizationAccelerationL2()
 {
     name = "Regularization: Acceleration L2";
 }
+
 void RegularizationAccelerationL2::init()
 {
     if (numV == 0 || timeSteps == 0)
@@ -22,6 +14,7 @@ void RegularizationAccelerationL2::init()
     prepare_hessian();
     w = 0.0001;
 }
+
 void RegularizationAccelerationL2::updateX(const VectorXd& X)
 {
     auto XX = Map<const MatrixXd>(X.data(), numV, timeSteps * 2); //XX = (x1,x2,x3,...,y1,y2,y3)
@@ -34,6 +27,7 @@ double RegularizationAccelerationL2::value()
 {
 	return 0.5*(AX.cwiseAbs2().sum() + AY.cwiseAbs2().sum());
 }
+
 void RegularizationAccelerationL2::gradient(VectorXd& g)
 {
     auto gx = Map<MatrixXd>(g.data(), numV, timeSteps);
@@ -58,7 +52,6 @@ void RegularizationAccelerationL2::hessian()
 {
      //nothing to do here. Hessian is constant
 }
-
 
 void RegularizationAccelerationL2::prepare_hessian()
 {

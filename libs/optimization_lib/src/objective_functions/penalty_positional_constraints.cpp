@@ -1,12 +1,10 @@
 #include <objective_functions/penalty_positional_constraints.h>
 
-using namespace std;
-using namespace Eigen;
-
 PenaltyPositionalConstraints::PenaltyPositionalConstraints()
 {
     name = "Penalty: Positional Constraints";
 }
+
 void PenaltyPositionalConstraints::init()
 {
 	if(numV==0)
@@ -15,7 +13,7 @@ void PenaltyPositionalConstraints::init()
 	w = 10000;
 }
 
-void PenaltyPositionalConstraints::updateX(const Eigen::VectorXd& X)
+void PenaltyPositionalConstraints::updateX(const VectorXd& X)
 {
 	CurrConstrainedVerticesPos.resizeLike(ConstrainedVerticesPos);
 	for (int i = 0; i < ConstrainedVerticesInd.size(); i++)
@@ -29,7 +27,7 @@ double PenaltyPositionalConstraints::value()
 	return (ConstrainedVerticesPos - CurrConstrainedVerticesPos).squaredNorm();
 }
 
-void PenaltyPositionalConstraints::gradient(Eigen::VectorXd& g)
+void PenaltyPositionalConstraints::gradient(VectorXd& g)
 {
 	MatrixXd diff = (CurrConstrainedVerticesPos - ConstrainedVerticesPos);
 	g.conservativeResize(numV * 2);
@@ -43,7 +41,7 @@ void PenaltyPositionalConstraints::gradient(Eigen::VectorXd& g)
 
 void PenaltyPositionalConstraints::hessian()
 {
-	std::fill(SS.begin(), SS.end(), 0);
+	fill(SS.begin(), SS.end(), 0);
 	for (int i = 0; i < ConstrainedVerticesInd.size(); i++)
 	{
 		SS[ConstrainedVerticesInd[i]] = 2; SS[ConstrainedVerticesInd[i] + numV] = 2;

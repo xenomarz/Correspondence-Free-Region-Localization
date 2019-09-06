@@ -1,23 +1,17 @@
 #pragma once
 
-
-//#include <objective_functions/objective_function.h>
-#include "objective_function.h"
-
-#include <memory>
-
-using namespace std;
+#include <libs/optimization_lib/include/objective_functions/objective_function.h>
 
 class TotalObjective : public ObjectiveFunction
 {
 public:
-	TotalObjective();
-	virtual void init();
-	virtual void updateX(const VectorXd& X);
-	virtual double value();
-	virtual void gradient(VectorXd& g);
-	virtual void hessian();
-	virtual void prepare_hessian();
+	TotalObjective(){}
+	virtual void init() override;
+	virtual void updateX(const VectorXd& X) override;
+	virtual double value() override;
+	virtual void gradient(VectorXd& g) override;
+	virtual void hessian() override;
+	virtual void prepare_hessian() override;
 
 	// sub objectives
 	vector<unique_ptr<ObjectiveFunction>> objectiveList;

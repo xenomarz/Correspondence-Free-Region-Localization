@@ -13,11 +13,8 @@ set(SOURCES
 	src/objective_functions/objective_area_preserving.cpp
 	src/objective_functions/total_objective.cpp
 	src/objective_functions/objective_symmetric_dirichlet.cpp
-	src/objective_functions/distortion_symmetric_dirichlet.cpp
-	src/objective_functions/penalty_dynamics.cpp
 	src/objective_functions/penalty_positional_constraints.cpp
 	src/objective_functions/regularization_acceleration_l2.cpp
-	src/objective_functions/constraints_positional.cpp
 
 
 	include/solvers/solver.h
@@ -31,11 +28,8 @@ set(SOURCES
 	include/objective_functions/objective_area_preserving.h
 	include/objective_functions/total_objective.h
 	include/objective_functions/objective_symmetric_dirichlet.h
-	include/objective_functions/distortion_symmetric_dirichlet.h
-	include/objective_functions/penalty_dynamics.h
 	include/objective_functions/penalty_positional_constraints.h
 	include/objective_functions/regularization_acceleration_l2.h
-	include/objective_functions/constraints_positional.h
 
 	
 	include/utils.h)

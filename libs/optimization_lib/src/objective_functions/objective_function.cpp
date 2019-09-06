@@ -1,14 +1,5 @@
 #include <objective_functions/objective_function.h>
 
-ObjectiveFunction::ObjectiveFunction()
-{
-}
-
-
-ObjectiveFunction::~ObjectiveFunction()
-{
-}
-
 void ObjectiveFunction::FDGradient(const VectorXd& X, VectorXd& g)
 {
     VectorXd Xd = X;
@@ -81,9 +72,9 @@ bool ObjectiveFunction::checkGradient(const VectorXd& X)
     gradient(Analytic_gradient);
     FDGradient(X, FD_gradient);
 
-    std::cout << name << ": g.norm() = " << Analytic_gradient.norm() << "(analytic) , " << FD_gradient.norm() << "(FD)" << std::endl;
+    cout << name << ": g.norm() = " << Analytic_gradient.norm() << "(analytic) , " << FD_gradient.norm() << "(FD)" << endl;
     for (int i = 0; i < Analytic_gradient.size(); i++) {
-        double absErr = std::abs(FD_gradient[i] - Analytic_gradient[i]);
+        double absErr = abs(FD_gradient[i] - Analytic_gradient[i]);
         double relError = 2 * absErr / (eps + Analytic_gradient[i] + FD_gradient[i]);
         if (relError > tol && absErr > 1e-6) {
             printf("Mismatch element %d: Analytic val: %lf, FD val: %lf. Error: %lf(%lf%%)\n", i, Analytic_gradient(i), FD_gradient(i), absErr, relError * 100);
@@ -102,11 +93,11 @@ bool ObjectiveFunction::checkHessian(const VectorXd& X)
 
     SparseMatrix<double> FDH(X.size(), X.size());
     SparseMatrix<double> H(X.size(), X.size());
-    std::vector<Eigen::Triplet<double>> Ht;
+    vector<Triplet<double>> Ht;
 
     FDHessian(X);
     for (int i = 0; i < II.size(); i++)
-        Ht.push_back(Eigen::Triplet<double>(II[i], JJ[i], SS[i]));
+        Ht.push_back(Triplet<double>(II[i], JJ[i], SS[i]));
     FDH.setFromTriplets(Ht.begin(), Ht.end());
     
     Ht.clear();
@@ -115,13 +106,13 @@ bool ObjectiveFunction::checkHessian(const VectorXd& X)
     prepare_hessian();
     hessian();
     for (int i = 0; i < II.size(); i++)
-        Ht.push_back(Eigen::Triplet<double>(II[i], JJ[i], SS[i]));
+        Ht.push_back(Triplet<double>(II[i], JJ[i], SS[i]));
     H.setFromTriplets(Ht.begin(), Ht.end());
 
-    std::cout << name << ": testing hessians...\n";
+    cout << name << ": testing hessians...\n";
     for (int i = 0; i < X.size(); i++) {
         for (int j = 0; j < X.size(); j++) {
-            double absErr = std::abs(FDH.coeff(i, j) - H.coeff(i, j));
+            double absErr = abs(FDH.coeff(i, j) - H.coeff(i, j));
             double relError = 2 * absErr / (eps + FDH.coeff(i, j) + H.coeff(i, j));
             if (relError > tol && absErr > 1e-6) {
                 printf("Mismatch element %d,%d: Analytic val: %lf, FD val: %lf. Error: %lf(%lf%%)\n", i, j, H.coeff(i, j), FDH.coeff(i, j), absErr, relError * 100);

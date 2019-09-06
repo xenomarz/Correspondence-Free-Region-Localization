@@ -8,9 +8,11 @@
 #include <string>
 #include <utility>
 #include <iostream>
+#include <memory>
 #include <libs/optimization_lib/include/utils.h>
 #include <limits>
 #include <igl/doublearea.h>
+#include <chrono>
 
 using namespace Eigen;
 using namespace std;
@@ -23,8 +25,8 @@ typedef Matrix<double, 6, 1> Vector6d;
 class ObjectiveFunction
 {
 public:
-	ObjectiveFunction();
-	virtual ~ObjectiveFunction();
+	ObjectiveFunction() {}
+	virtual ~ObjectiveFunction(){}
 	virtual void init() = 0;
 	virtual void updateX(const VectorXd& X) = 0;
 	virtual double value() = 0;

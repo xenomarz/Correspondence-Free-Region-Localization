@@ -1,9 +1,4 @@
 #include <solvers/solver.h>
-#include <utils.h>
-#include <objective_functions/total_objective.h>
-#include <iostream>
-#include <igl/flip_avoiding_line_search.h>
-
 
 Solver::Solver()
 	:
@@ -11,11 +6,9 @@ Solver::Solver()
 	data_mutex(make_unique<shared_timed_mutex>()),
 	param_cv(make_unique<condition_variable>()),
 	num_steps(2147483647)
-{
-}
+{}
 
-
-void Solver::init(shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0)
+void Solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
 {
 	this->objective = objective;
 	X = X0;
@@ -60,10 +53,10 @@ void Solver::linesearch()
 	};
 	if (FlipAvoidingLineSearch)
 	{
-		auto MatX = Eigen::Map<Eigen::MatrixX2d>(X.data(), X.rows() / 2, 2);
-		MatrixXd MatP = Eigen::Map<const Eigen::MatrixX2d>(p.data(), p.rows() / 2, 2);
+		auto MatX = Map<MatrixX2d>(X.data(), X.rows() / 2, 2);
+		MatrixXd MatP = Map<const MatrixX2d>(p.data(), p.rows() / 2, 2);
 		double min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(MatX, F, MatP);
-		step_size = std::min(1., min_step_to_singularity*0.8);
+		step_size = min(1., min_step_to_singularity*0.8);
 	}
 	else
 		step_size = 1;
@@ -74,7 +67,7 @@ void Solver::linesearch()
 
 	while (cur_iter < MAX_STEP_SIZE_ITER)
 	{
-		Eigen::MatrixXd curr_x = X + step_size * p;
+		MatrixXd curr_x = X + step_size * p;
 
 		objective->updateX(curr_x);
 		new_energy = objective->value();
@@ -107,7 +100,7 @@ void Solver::update_external_data()
 	progressed = true;
 }
 
-void Solver::get_data(Eigen::VectorXd& X)
+void Solver::get_data(VectorXd& X)
 {
 	unique_lock<shared_timed_mutex> lock(*data_mutex);
 	X = ext_x;
