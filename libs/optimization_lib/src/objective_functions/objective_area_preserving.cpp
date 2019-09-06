@@ -14,50 +14,24 @@ void ObjectiveAreaPreserving::init()
 	b.resize(F.rows());
 	c.resize(F.rows());
 	d.resize(F.rows());
-	alpha.resize(F.rows(), 2);
-	beta.resize(F.rows(), 2);
-	s.resize(F.rows(), 2);
-	v.resize(F.rows(), 4);
-	u.resize(F.rows(), 4);
-
-	Dsd[0].resize(6, F.rows());
-	Dsd[1].resize(6, F.rows());
-
+	
 	//Parameterization J mats resize
 	detJ.resize(F.rows());
 	grad.resize(F.rows(), 6);
+	Hessian.resize(F.rows());
 
 	// compute init energy matrices
 	igl::doublearea(V, F, Area);
 	Area /= 2;
 
-	Eigen::MatrixX3d D1cols, D2cols;
+	MatrixX3d D1cols, D2cols, V3d;
 
-	Eigen::MatrixX3d V3d;
 	V3d.resize(V.rows(), 3);
 	V3d.leftCols(2) = V;
 	V3d.col(2).setZero();
 	Utils::computeSurfaceGradientPerFace(V3d, F, D1cols, D2cols);
 	D1d = D1cols.transpose();
 	D2d = D2cols.transpose();
-
-	//columns belong to different faces
-	a1d.resize(6, F.rows());
-	a2d.resize(6, F.rows());
-	b1d.resize(6, F.rows());
-	b2d.resize(6, F.rows());
-
-	a1d.topRows(3) = 0.5*D1d;
-	a1d.bottomRows(3) = 0.5*D2d;
-
-	a2d.topRows(3) = -0.5*D2d;
-	a2d.bottomRows(3) = 0.5*D1d;
-
-	b1d.topRows(3) = 0.5*D1d;
-	b1d.bottomRows(3) = -0.5*D2d;
-
-	b2d.topRows(3) = 0.5*D2d;
-	b2d.bottomRows(3) = 0.5*D1d;
 
 	prepare_hessian();
 	w = 1;
@@ -66,6 +40,9 @@ void ObjectiveAreaPreserving::init()
 void ObjectiveAreaPreserving::updateX(const VectorXd& X)
 {
 	bool inversions_exist = updateJ(X);
+	if (inversions_exist) {
+		cout << name << " Error! inversion exists." << endl;
+	}
 }
 
 double ObjectiveAreaPreserving::value()
@@ -80,10 +57,8 @@ double ObjectiveAreaPreserving::value()
 
 void ObjectiveAreaPreserving::gradient(VectorXd& g)
 {
-	UpdateSSVDFunction();
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
-	ComputeDenseSSVDDerivatives();
 
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		VectorXd gi;
@@ -103,40 +78,10 @@ void ObjectiveAreaPreserving::gradient(VectorXd& g)
 
 void ObjectiveAreaPreserving::hessian()
 {
-	UpdateSSVDFunction();
-	ComputeDenseSSVDDerivatives();
-
-	auto lambda1 = [](double a) {return a - 1.0 / (a*a*a); };
-	//gradient of outer function in composition
-	VectorXd gradfS = s.col(0).unaryExpr(lambda1);
-	VectorXd gradfs = s.col(1).unaryExpr(lambda1);
-	auto lambda2 = [](double a) {return 1 + 3 / (a*a*a*a); };
-	//hessian of outer function in composition (diagonal)
-	VectorXd HS = s.col(0).unaryExpr(lambda2);
-	VectorXd Hs = s.col(1).unaryExpr(lambda2);
-	//simliarity alpha
-	VectorXd aY = 0.5*(a + d);
-	VectorXd bY = 0.5*(c - b);
-	//anti similarity beta
-	VectorXd cY = 0.5*(a - d);
-	VectorXd dY = 0.5*(b + c);
 #pragma omp parallel for num_threads(24)
 	for (int i = 0; i < F.rows(); ++i) {
-		//vectors of size 6
-		//svd derivatives
-		Vector6d dSi = Dsd[0].col(i);
-		Vector6d dsi = Dsd[1].col(i);
-		//cones constant coefficients (cone = |Ax|, A is a coefficient)
-		Vector6d a1i = a1d.col(i);
-		Vector6d a2i = a2d.col(i);
-		Vector6d b1i = b1d.col(i);
-		Vector6d b2i = b2d.col(i);
-		Matrix<double, 6, 6> Hi = Area(i)*ComputeConvexConcaveFaceHessian(
-			a1i, a2i, b1i, b2i,
-			aY(i), bY(i), cY(i), dY(i),
-			dSi, dsi,
-			gradfS(i), gradfs(i),
-			HS(i), Hs(i));
+		
+		Matrix<double, 6, 6> Hi = Area(i)*Hessian[i];
 
 		int index2 = i * 21;
 		for (int a = 0; a < 6; ++a)
@@ -149,6 +94,7 @@ void ObjectiveAreaPreserving::hessian()
 	}
 	for (int i = 0; i < F.rows(); i++)
 	{
+		//adding epsilon to the diagonal to prevent solver's errors
 		int base = 21 * i;
 		SS[base] += 1e-6;
 		SS[base + 2] += 1e-6;
@@ -169,102 +115,86 @@ bool ObjectiveAreaPreserving::updateJ(const VectorXd& X)
 	for (int i = 0; i < F.rows(); i++)
 	{
 		// For each face Fi = (p0,p1,p2)
-		//		X1i = [ p0.x , p1.x , p2.x ]
-		//		X2i = [ p0.y , p1.y , p2.y ]
-		Vector3d X1i, X2i;
-		X1i << x(F(i, 0), 0), x(F(i, 1), 0), x(F(i, 2), 0);
-		X2i << x(F(i, 0), 1), x(F(i, 1), 1), x(F(i, 2), 1);
+		//		Xi = [ p0.x , p1.x , p2.x ]
+		//		Yi = [ p0.y , p1.y , p2.y ]
+		Vector3d Xi, Yi;
+		Xi << x(F(i, 0), 0), x(F(i, 1), 0), x(F(i, 2), 0);
+		Yi << x(F(i, 0), 1), x(F(i, 1), 1), x(F(i, 2), 1);
+		Matrix<double, 1, 3> Xi_T = Xi.transpose();
+		Matrix<double, 1, 3> Yi_T = Yi.transpose();
+		Vector3d Dx = D1d.col(i);
+		Vector3d Dy = D2d.col(i);
+		Matrix<double, 1, 3> Dx_T = Dx.transpose();
+		Matrix<double, 1, 3> Dy_T = Dy.transpose();
 
-		// a = Dx.trans * X
-		a(i) = D1d.col(i).transpose()*X1i;
-		// b = Dy.trans * X
-		b(i) = D2d.col(i).transpose()*X1i;
-		// c = Dx.trans * Y
-		c(i) = D1d.col(i).transpose()*X2i;
-		// d = DY.trans * Y
-		d(i) = D2d.col(i).transpose()*X2i;
+		//prepare jacobian		
+		a(i) = Dx_T * Xi;
+		b(i) = Dy_T * Xi;
+		c(i) = Dx_T * Yi;
+		d(i) = Dy_T * Yi;
 
-		// detj_1 = det(J) - 1
+		//prepare gradient
 		double detj_1 = (a(i) * d(i) - b(i) * c(i)) - 1;
-		// left = Dx * Y.trans * Dy - Dy * Y.trans * Dx
-		Vector3d left = (D1d.col(i) * X2i.transpose() * D2d.col(i)) - (D2d.col(i) * X2i.transpose() * D1d.col(i));
-		left *= detj_1;
-		// right = Dy * X.trans * Dx - Dx * X.trans * Dy
-		Vector3d right = (D2d.col(i) * X1i.transpose() * D1d.col(i)) - (D1d.col(i) * X1i.transpose() * D2d.col(i));
-		right *= detj_1;
+		Vector3d dx = (Dx * Yi_T * Dy) - (Dy * Yi_T * Dx);
+		dx *= detj_1;
+		Vector3d dy = (Dy * Xi_T * Dx) - (Dx * Xi_T * Dy);
+		dy *= detj_1;
 
-		grad.row(i) << left(0), left(1), left(2), right(0), right(1), right(2);
+		grad.row(i) << dx(0), dx(1), dx(2), dy(0), dy(1), dy(2);
+
+
+
+		//prepare hessian
+		double DyT_Yi = Dy_T * Yi;
+		double YiT_Dy = Yi_T * Dy;
+		double YiT_Dx = Yi_T * Dx;
+		double DxT_Yi = Dx_T * Yi;
+		double DyT_Xi = Dy_T * Xi;
+		double DxT_Xi = Dx_T * Xi;
+		double XiT_Dy = Xi_T * Dy;
+		double XiT_Dx = Xi_T * Dx;
+
+		Matrix<double, 3, 3> dxx =
+			DyT_Yi * Dx * YiT_Dy*Dx_T
+			- DyT_Yi * Dy * YiT_Dx*Dx_T
+			- DxT_Yi * Dx * YiT_Dy*Dy_T
+			+ DxT_Yi * Dy * YiT_Dx*Dy_T;
+
+		Matrix<double, 3, 3> dyy =
+			DyT_Xi * Dx * XiT_Dy*Dx_T
+			- DyT_Xi * Dy * XiT_Dx*Dx_T
+			- DxT_Xi * Dx * XiT_Dy*Dy_T
+			+ DxT_Xi * Dy * XiT_Dx*Dy_T;
+
+		Matrix<double, 3, 3> dxy =	//not sure!
+			DyT_Yi * Dy * XiT_Dx*Dx_T
+			+ DxT_Xi * DyT_Yi *Dy*Dx_T
+			- DyT_Yi * Dx * XiT_Dy*Dx_T
+			- DxT_Xi * DyT_Yi *Dx*Dy_T
+			- DxT_Yi * Dy * XiT_Dx*Dy_T
+			- DyT_Xi * DxT_Yi *Dy*Dx_T
+			+ DxT_Yi * Dx * XiT_Dy*Dy_T
+			+ DyT_Xi * DxT_Yi *Dx*Dy_T
+			- Dy * Dx_T
+			+ Dx * Dy_T;
+		
+		Matrix<double, 3, 3> dyx = dxy.transpose();
+								
+		Hessian[i] << dxx(0, 0), dxx(0, 1), dxx(0, 2), dxy(0, 0), dxy(0, 1), dxy(0, 2),
+			dxx(1, 0), dxx(1, 1), dxx(1, 2), dxy(1, 0), dxy(1, 1), dxy(1, 2),
+			dxx(2, 0), dxx(2, 1), dxx(2, 2), dxy(2, 0), dxy(2, 1), dxy(2, 2),
+
+			dyx(0, 0), dyx(0, 1), dyx(0, 2), dyy(0, 0), dyy(0, 1), dyy(0, 2),
+			dyx(1, 0), dyx(1, 1), dyx(1, 2), dyy(1, 0), dyy(1, 1), dyy(1, 2),
+			dyx(2, 0), dyx(2, 1), dyx(2, 2), dyy(2, 0), dyy(2, 1), dyy(2, 2);
+
 	}
 	detJ = a.cwiseProduct(d) - b.cwiseProduct(c);
-	alpha.col(0) = 0.5*(a + d);   alpha.col(1) = 0.5*(c - b);
-	beta.col(0) = 0.5*(a - d);    beta.col(1) = 0.5*(c + b);
-
+	
 	return ((detJ.array() < 0).any());
 }
 
-void ObjectiveAreaPreserving::UpdateSSVDFunction()
-{
-#pragma omp parallel for num_threads(24)
-	for (int i = 0; i < a.size(); i++)
-	{
-		Matrix2d A;
-		Matrix2d U, S, V;
-		A << a[i], b[i], c[i], d[i];
-		Utils::SSVD2x2(A, U, S, V);
-		u.row(i) << U(0), U(1), U(2), U(3);
-		v.row(i) << V(0), V(1), V(2), V(3);
-		s.row(i) << S(0), S(3);
-	}
-}
-
-void ObjectiveAreaPreserving::ComputeDenseSSVDDerivatives()
-{
-	// Different columns belong to diferent faces
-	MatrixXd B(D1d*v.col(0).asDiagonal() + D2d * v.col(1).asDiagonal());
-	MatrixXd C(D1d*v.col(2).asDiagonal() + D2d * v.col(3).asDiagonal());
-
-	MatrixXd t1 = B * u.col(0).asDiagonal();
-	MatrixXd t2 = B * u.col(1).asDiagonal();
-	Dsd[0].topRows(t1.rows()) = t1;
-	Dsd[0].bottomRows(t1.rows()) = t2;
-	t1 = C * u.col(2).asDiagonal();
-	t2 = C * u.col(3).asDiagonal();
-	Dsd[1].topRows(t1.rows()) = t1;
-	Dsd[1].bottomRows(t1.rows()) = t2;
-}
-
-inline Matrix6d ObjectiveAreaPreserving::ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x)
-{
-	double f2 = a1x * a1x + a2x * a2x;
-	double invf = 1.0 / sqrt(f2);
-	double invf3 = invf * invf*invf;
-
-	Matrix6d A1A1t = A1 * A1.transpose();
-	Matrix6d A2A2t = A2 * A2.transpose();
-	Matrix6d A1A2t = A1 * A2.transpose();
-	Matrix6d A2A1t = A1A2t.transpose();
-
-	double a2 = a1x * a1x;
-	double b2 = a2x * a2x;
-	double ab = a1x * a2x;
-
-	return  (invf - invf3 * a2) * A1A1t + (invf - invf3 * b2) * A2A2t - invf3 * ab*(A1A2t + A2A1t);
-}
-
-inline Matrix6d ObjectiveAreaPreserving::ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs)
-{
-	// No multiplying by area in this function
-	Matrix6d H = HS * dSi*dSi.transpose() + Hs * dsi*dsi.transpose(); //generalized gauss newton
-	double walpha = gradfS + gradfs;
-	if (walpha > 0)
-		H += walpha * ComputeFaceConeHessian(a1, a2, aY, bY);
-
-	double wbeta = gradfS - gradfs;
-	if (wbeta > 1e-7)
-		H += wbeta * ComputeFaceConeHessian(b1, b2, cY, dY);
-	return H;
-}
-
+//Here we build our hessian matrix with zeros
 void ObjectiveAreaPreserving::prepare_hessian()
 {
 	II.clear();

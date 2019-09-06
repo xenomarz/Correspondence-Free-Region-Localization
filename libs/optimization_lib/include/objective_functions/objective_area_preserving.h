@@ -14,14 +14,9 @@ public:
 	virtual void hessian() override;
 	virtual void prepare_hessian() override;
 
-	//SVD methods
+	
 	bool updateJ(const VectorXd& X);
-	void UpdateSSVDFunction();
-	void ComputeDenseSSVDDerivatives();
-
-	inline Matrix6d ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x);
-	inline Matrix6d ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs);
-
+	
 	// mesh vertices and faces
 	MatrixX3i F;
 	MatrixX2d V;
@@ -35,16 +30,7 @@ public:
 	// Jacobian determinant (ad-bc)
 	VectorXd detJ;
 	MatrixXd grad;
-
-	// cones alpha and beta
-	MatrixX2d alpha;
-	MatrixX2d beta;
-
-	//singular values
-	MatrixX2d s; //Singular values s[0]>s[1]
-	MatrixX4d v; //Singular vectors 
-	MatrixX4d u; //Singular vectors 
-	MatrixXd Dsd[2]; //singular values dense derivatives s[0]>s[1]
+	vector<Matrix<double, 6, 6>> Hessian;
 
 	//Energy parts - distortion
 	VectorXd Efi;     //Efi=sum(Ef_dist.^2,2), for data->Efi history
@@ -52,6 +38,4 @@ public:
 	VectorXd Area;
 	Matrix3Xd D1d, D2d;		//dense mesh derivative matrices
 
-	SparseMatrix<double> a1, a1t, a2, a2t, b1, b1t, b2, b2t;     //constant matrices for cones calcualtion
-	MatrixXd a1d, a2d, b1d, b2d;					//dense constant matrices for cones calcualtion
 };
