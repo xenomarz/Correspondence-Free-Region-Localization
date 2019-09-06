@@ -996,8 +996,8 @@ namespace rds
 			HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
 
 			totalObjective->objectiveList.clear();
-			//totalObjective->objectiveList.push_back(std::move(areaPreserving));
-			totalObjective->objectiveList.push_back(std::move(symDirichlet));
+			totalObjective->objectiveList.push_back(std::move(areaPreserving));
+			//totalObjective->objectiveList.push_back(std::move(symDirichlet));
 			totalObjective->objectiveList.push_back(std::move(constraintsPositional));
 
 			totalObjective->init();
