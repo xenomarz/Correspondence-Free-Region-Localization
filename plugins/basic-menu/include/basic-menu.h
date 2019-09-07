@@ -145,7 +145,7 @@ public:
 	void compute_ARAP_param(const int model_index);
 	void compute_harmonic_param(const int model_index);
 	void compute_lscm_param(const int model_index);
-	void FixFlippedFaces(const MatrixX3i& Fs, MatrixXd& Vs);
+	void FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs);
 	void ComputeSoup2DRandom(const int model_index);
 	void update_param(const int model_index, MatrixXd& V_uv);
 

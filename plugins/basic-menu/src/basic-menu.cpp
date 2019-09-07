@@ -80,7 +80,12 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 					color_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
 				}
 			}
-					
+
+			///////////////////////////////////////
+			//For testing
+			initializeSolver();
+			///////////////////////////////////////
+
 		}
 		Update_view();
 	}
@@ -1079,25 +1084,22 @@ void BasicMenu::initializeSolver()
 	return true;
 }*/
 
-void BasicMenu::FixFlippedFaces(const MatrixX3i& Fs, MatrixXd& Vs)
+void BasicMenu::FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs)
 {
-	Eigen::Matrix<double, 3, 2> face_vertices;
-	for (Eigen::MatrixX3i::Index i = 0; i < Fs.rows(); ++i)
+	Matrix<double, 3, 2> face_vertices;
+	for (MatrixXi::Index i = 0; i < Fs.rows(); ++i)
 	{
-		igl::slice(Vs, Fs.row(i), 1, face_vertices);
-		Eigen::Vector2d v1_2d = face_vertices.row(1) - face_vertices.row(0);
-		Eigen::Vector2d v2_2d = face_vertices.row(2) - face_vertices.row(0);
-		Eigen::Vector3d v1_3d = Eigen::Vector3d(v1_2d.x(), v1_2d.y(), 0);
-		Eigen::Vector3d v2_3d = Eigen::Vector3d(v2_2d.x(), v2_2d.y(), 0);
-		Eigen::Vector3d face_normal = v1_3d.cross(v2_3d);
+		slice(Vs, Fs.row(i), 1, face_vertices);
+		Vector2d v1_2d = face_vertices.row(1) - face_vertices.row(0);
+		Vector2d v2_2d = face_vertices.row(2) - face_vertices.row(0);
+		Vector3d v1_3d = Vector3d(v1_2d.x(), v1_2d.y(), 0);
+		Vector3d v2_3d = Vector3d(v2_2d.x(), v2_2d.y(), 0);
+		Vector3d face_normal = v1_3d.cross(v2_3d);
 
 		// If face is flipped (that is, cross-product do not obey the right-hand rule)
 		if (face_normal(2) < 0)
-		{
-			// Reflect the face over the X-axis (so its vertices will be CCW oriented)
-			Vs(Fs(i, 0), 1) = -Vs(Fs(i, 0), 1);
-			Vs(Fs(i, 1), 1) = -Vs(Fs(i, 1), 1);
-			Vs(Fs(i, 2), 1) = -Vs(Fs(i, 2), 1);
+		{	
+			Fs.row(i) << Fs(i, 0), Fs(i, 2), Fs(i, 1);
 		}
 	}
 }
