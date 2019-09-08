@@ -69,7 +69,7 @@ private:
 	enum Parametrization { RANDOM = 0, HARMONIC, LSCM, ARAP, None };
 
 	//Basic (necessary) parameteres
-	int input_view_id, output_view_id, ShowModelIndex;
+	int input_view_id, output_view_id;
 	View view;
 	MouseMode mouse_mode;
 	Parametrization param_type;
@@ -142,12 +142,12 @@ public:
 	void update_mesh();
 
 	//Parametrizations
-	void compute_ARAP_param(const int model_index);
-	void compute_harmonic_param(const int model_index);
-	void compute_lscm_param(const int model_index);
+	void compute_ARAP_param();
+	void compute_harmonic_param();
+	void compute_lscm_param();
 	void FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs);
-	void ComputeSoup2DRandom(const int model_index);
-	void update_param(const int model_index, MatrixXd& V_uv);
+	void ComputeSoup2DRandom();
+	void update_texture(MatrixXd& V_uv);
 
 	//Start/Stop the solver Thread
 	void start_solver_thread();

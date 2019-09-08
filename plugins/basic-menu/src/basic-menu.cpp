@@ -27,14 +27,12 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		view = Horizontal;
 		IsTranslate = false;
 		down_mouse_x = down_mouse_y = -1;
-		ShowModelIndex = 0;
 
 		//Solver Parameters
 		solver_on = false;
 
 		//Parametrization Parameters
 		Position_Weight = Seamless_Weight = Integer_Spacing = Integer_Weight = Delta = Lambda = 0.5;
-
 
 		//Load two views
 		viewer->core().viewport = Vector4f(0, 0, 640, 800);
@@ -61,29 +59,38 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 		string fname = file_dialog_open();
 		if (fname.length() != 0)
 		{
-			bool update = false;
-			if (viewer->data_list.size() == 1) {
-				//this means that this is the first loaded model
-				update = true;
-			}
 
-			set_name_mapping(viewer->data_list.size() == 1 ? 0 : viewer->data_list.size(), filename(fname));
+			if (solver_on) {
+				if (solver->is_running)
+					stop_solver_thread();
+
+				while (solver->is_running);
+			}
+			/*if (viewer->data_list.size() == 2) {
+				cout << "s = " << viewer->data_list.size() << endl;
+				auto iter = viewer->data_list.begin();
+				iter += 1;
+				viewer->data_list.erase(iter);
+				
+				cout << "s = " << viewer->data_list.size() << endl;
+				viewer->data(OutputModelID()).clear();
+				cout << "s = " << viewer->data_list.size() << endl;
+			}*/
+			
+			set_name_mapping(0, filename(fname));
 			viewer->load_mesh_from_file(fname.c_str());
 			viewer->load_mesh_from_file(fname.c_str());
-
-
-			if (update) {
-				//Mark the faces
-				color_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
-				for (int i = 0; i < color_per_face.rows(); i++)
-				{
-					color_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
-				}
+			
+			//Mark the faces
+			color_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
+			for (int i = 0; i < color_per_face.rows(); i++)
+			{
+				color_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
 			}
-
+			
 			///////////////////////////////////////
-			//For testing
-			initializeSolver();
+			//For testing - 2D case
+			//initializeSolver();
 			///////////////////////////////////////
 
 		}
@@ -132,30 +139,20 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 
 	if (ImGui::Combo("Parametrization type", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
 		if (param_type == HARMONIC) {
-			compute_harmonic_param(OutputModelID());
+			compute_harmonic_param();
 			initializeSolver();
 		}
 		else if (param_type == LSCM) {
-			compute_lscm_param(OutputModelID());
+			compute_lscm_param();
 			initializeSolver();
 		}
 		else if (param_type == ARAP) {
-			compute_ARAP_param(OutputModelID());
+			compute_ARAP_param();
 			initializeSolver();
 		}
 		else if (param_type == RANDOM) {
-			ComputeSoup2DRandom(OutputModelID());
+			ComputeSoup2DRandom();
 			initializeSolver();
-		}
-	}
-
-	if (ImGui::Combo("Choose model", (int *)(&ShowModelIndex), getModelNames(), IM_ARRAYSIZE(getModelNames()))) {
-		Update_view();
-		//Mark the faces
-		color_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
-		for (int i = 0; i < color_per_face.rows(); i++)
-		{
-			color_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
 		}
 	}
 
@@ -211,7 +208,6 @@ IGL_INLINE bool BasicMenu::mouse_move(int mouse_x, int mouse_y)
 			viewer->data(Model_Translate_ID).set_mesh(viewer->data(Model_Translate_ID).V, viewer->data(Model_Translate_ID).F);
 			down_mouse_x = mouse_x;
 			down_mouse_y = mouse_y;
-			return true;
 		}
 	}
 	else if (mouse_mode == VERTEX_SELECT)
@@ -225,10 +221,9 @@ IGL_INLINE bool BasicMenu::mouse_move(int mouse_x, int mouse_y)
 			viewer->data(Model_Translate_ID).set_mesh(viewer->data(Model_Translate_ID).V, viewer->data(Model_Translate_ID).F);
 			down_mouse_x = mouse_x;
 			down_mouse_y = mouse_y;
-			return true;
 		}
 	}
-
+	UpdateHandles();
 	return ImGuiMenu::mouse_move(mouse_x, mouse_y);
 }
 
@@ -363,7 +358,7 @@ IGL_INLINE bool BasicMenu::pre_draw() {
 			
 	if (solver->progressed)
 		update_mesh();
-
+	
 	//Update the model's faces colors in the two screens
 	if (color_per_face.size()) {
 		viewer->data(InputModelID()).set_colors(color_per_face);
@@ -378,7 +373,7 @@ IGL_INLINE bool BasicMenu::pre_draw() {
 }
 
 void BasicMenu::Draw_menu_for_Parametrization() {
-	if (ImGui::CollapsingHeader("Energy Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
+	if (!ImGui::CollapsingHeader("Energy Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
 		float prev_Lambda = Lambda;
 		float prev_Delta = Delta;
 		float prev_Integer_Weight = Integer_Weight;
@@ -424,7 +419,7 @@ void BasicMenu::Draw_menu_for_Parametrization() {
 }
 
 void BasicMenu::Draw_menu_for_Solver() {
-	if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
+	if (!ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		if (ImGui::Checkbox(solver_on ? "On" : "Off", &solver_on)) {
 			if (solver_on) {
@@ -450,11 +445,12 @@ void BasicMenu::Draw_menu_for_cores() {
 	{
 		ImGui::PushID(core.id);
 		stringstream ss;
-		ss << "Core " << core.id;
-		if (ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+		string name = (core.id == input_view_id) ? "Input Core" : "Output Core";
+		ss << name;
+		if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			int data_id = OutputModelID();
-			if (core.id == 1) {
+			if (core.id == input_view_id) {
 				data_id = InputModelID();
 			}
 
@@ -531,7 +527,7 @@ void BasicMenu::Draw_menu_for_models() {
 			ss << "Data " << data.id;
 		}
 
-		if (ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+		if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			if (ImGui::Checkbox("Face-based", &(data.face_based)))
 			{
@@ -596,6 +592,9 @@ void BasicMenu::UpdateHandles() {
 	for (auto hi : CurrHandlesInd) {
 		CurrHandlesPosDeformed.row(idx++) << viewer->data(OutputModelID()).V(hi, 0), viewer->data(OutputModelID()).V(hi, 1);
 	}
+	
+	//Update texture
+	update_texture(viewer->data(OutputModelID()).V);
 
 	//Finally, we update the handles in the constraints positional object
 	(*HandlesInd) = CurrHandlesInd;
@@ -644,16 +643,7 @@ void BasicMenu::follow_and_mark_selected_faces() {
 		if (IsTranslate && (mouse_mode == FACE_SELECT)) {
 			color_per_face.row(Translate_Index) << double(Dragged_face_color[0]), double(Dragged_face_color[1]), double(Dragged_face_color[2]);
 		}
-				
-		//TODO:
-		//Mark Energy faces (incomplete)!!!
-				
-
-		////Update the model's faces colors in the two screens
-		//viewer->data(InputModelID()).set_colors(color_per_face);
-		//viewer->data(OutputModelID()).set_colors(color_per_face);
-
-
+		
 		////////////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////
 		//Mark the vertices
@@ -693,11 +683,11 @@ void BasicMenu::set_name_mapping(unsigned int data_id, string name)
 }
 
 int BasicMenu::InputModelID() {
-	return 2 * ShowModelIndex;
+	return 0;
 }
 
 int BasicMenu::OutputModelID() {
-	return (2 * ShowModelIndex) + 1;
+	return 1;
 }
 
 char* BasicMenu::getModelNames()
@@ -857,16 +847,16 @@ int BasicMenu::pick_vertex(MatrixXd& V, MatrixXi& F,View LR) {
 	return vi;
 }
 	
-void BasicMenu::compute_ARAP_param(const int model_index) {
+void BasicMenu::compute_ARAP_param() {
 	// Compute the initial solution for ARAP (harmonic parametrization)
 	VectorXi bnd;
 	MatrixXd V_uv, initial_guess;
 
-	boundary_loop(viewer->data(model_index).F, bnd);
+	boundary_loop(viewer->data(OutputModelID()).F, bnd);
 	MatrixXd bnd_uv;
-	map_vertices_to_circle(viewer->data(model_index).V, bnd, bnd_uv);
+	map_vertices_to_circle(viewer->data(OutputModelID()).V, bnd, bnd_uv);
 
-	harmonic(viewer->data(model_index).V, viewer->data(model_index).F, bnd, bnd_uv, 1, initial_guess);
+	harmonic(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, bnd, bnd_uv, 1, initial_guess);
 
 	// Add dynamic regularization to avoid to specify boundary conditions
 	ARAPData arap_data;
@@ -877,65 +867,78 @@ void BasicMenu::compute_ARAP_param(const int model_index) {
 	// Initialize ARAP
 	arap_data.max_iter = 100;
 	// 2 means that we're going to *solve* in 2d
-	arap_precomputation(viewer->data(model_index).V, viewer->data(model_index).F, 2, b, arap_data);
+	arap_precomputation(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, 2, b, arap_data);
 
 	// Solve arap using the harmonic map as initial guess
 	V_uv = initial_guess;
 
 	arap_solve(bc, arap_data, V_uv);
-	update_param(model_index, V_uv);
+	// Scale UV to make the texture more clear
+	V_uv *= 5;
+	update_texture(V_uv);
 }
 
-void BasicMenu::compute_harmonic_param(const int model_index) {
+void BasicMenu::compute_harmonic_param() {
 	// Find the open boundary
 	VectorXi bnd;
 	MatrixXd V_uv;
-	boundary_loop(viewer->data(model_index).F, bnd);
+	boundary_loop(viewer->data(OutputModelID()).F, bnd);
 
 	// Map the boundary to a circle, preserving edge proportions
 	MatrixXd bnd_uv;
-	map_vertices_to_circle(viewer->data(model_index).V, bnd, bnd_uv);
+	map_vertices_to_circle(viewer->data(OutputModelID()).V, bnd, bnd_uv);
 
-	harmonic(viewer->data(model_index).V, viewer->data(model_index).F, bnd, bnd_uv, 1, V_uv);
-	update_param(model_index, V_uv);
+	harmonic(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, bnd, bnd_uv, 1, V_uv);
+	// Scale UV to make the texture more clear
+	V_uv *= 5;
+	update_texture(V_uv);
 }
 
-void BasicMenu::compute_lscm_param(const int model_index)
+void BasicMenu::compute_lscm_param()
 {
 	// Fix two points on the boundary
 	VectorXi bnd, b(2, 1);
 	MatrixXd V_uv;
-	boundary_loop(viewer->data(model_index).F, bnd);
+	boundary_loop(viewer->data(OutputModelID()).F, bnd);
 	b(0) = bnd(0);
 	b(1) = bnd(round(bnd.size() / 2));
 	MatrixXd bc(2, 2);
 	bc << 0, 0, 1, 0;
 
-	lscm(viewer->data(model_index).V, viewer->data(model_index).F, b, bc, V_uv);
-	update_param(model_index, V_uv);
-}
-
-void BasicMenu::ComputeSoup2DRandom(const int model_index)
-{
-	MatrixXd V_uv;
-	auto nvs = viewer->data(model_index).V.rows();
-	V_uv = MatrixX2d::Random(nvs, 2) * 2.0;
-	FixFlippedFaces(viewer->data(model_index).F, V_uv);
-	update_param(model_index, V_uv);
-}
-
-void BasicMenu::update_param(const int model_index, MatrixXd& V_uv) {
+	lscm(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, b, bc, V_uv);
 	// Scale UV to make the texture more clear
 	V_uv *= 5;
+	update_texture(V_uv);
+}
+
+void BasicMenu::ComputeSoup2DRandom()
+{
+	MatrixXd V_uv;
+	auto nvs = viewer->data(OutputModelID()).V.rows();
+	V_uv = MatrixX2d::Random(nvs, 2) * 2.0;
+	FixFlippedFaces(viewer->data(OutputModelID()).F, V_uv);
+
+	update_texture(V_uv);
+}
+
+void BasicMenu::update_texture(MatrixXd& V_uv) {
+	MatrixXd V_uv_2D(V_uv.rows(),2);
+	MatrixXd V_uv_3D(V_uv.rows(),3);
+	if (V_uv.cols() == 2) {
+		V_uv_2D = V_uv;
+		V_uv_3D.leftCols(2) = V_uv.leftCols(2);
+		V_uv_3D.rightCols(1).setZero();
+	}
+	else if (V_uv.cols() == 3) {
+		V_uv_3D = V_uv;
+		V_uv_2D = V_uv.leftCols(2);
+	}
 
 	// Plot the mesh
-	viewer->data(model_index).set_mesh(viewer->data(model_index).V, viewer->data(model_index).F);
-	viewer->data(model_index).set_uv(V_uv);
-
-	viewer->data(model_index).set_mesh(viewer->data(model_index).V_uv, viewer->data(model_index).F);
-
-	viewer->data(model_index).compute_normals();
-	viewer->core(output_view_id).align_camera_center(viewer->data(model_index).V_uv, viewer->data(model_index).F);
+	viewer->data(InputModelID()).set_uv(V_uv_2D);
+	viewer->data(OutputModelID()).set_vertices(V_uv_3D);
+	viewer->data(OutputModelID()).set_uv(V_uv_2D);
+	viewer->data(OutputModelID()).compute_normals();
 	Update_view();
 }
 	
@@ -973,15 +976,10 @@ void BasicMenu::update_mesh()
 {
 	VectorXd X;
 	solver->get_data(X);
-	MatrixX3d V(X.rows() / 2, 3);
-	V.leftCols(2) = Map<MatrixX2d>(X.data(), X.rows() / 2, 2);
-	V.rightCols(1).setZero();
-
-	viewer->data(OutputModelID()).set_vertices(V);
-
-	// set UV of 3d mesh with newX vertices
-	// prepare first for 3d mesh soup
-	viewer->data(InputModelID()).set_uv(texture_size * V.leftCols(2));
+	MatrixXd V(X.rows() / 2, 2);
+	V = Map<MatrixXd>(X.data(), X.rows() / 2, 2);
+	
+	update_texture(V);
 }
 
 void BasicMenu::initializeSolver()
@@ -990,7 +988,7 @@ void BasicMenu::initializeSolver()
 	MatrixX3i F = viewer->data(OutputModelID()).F;
 	solver_on = false;
 	if (solver->is_running)
-		solver->stop();
+		stop_solver_thread();
 
 	while (solver->is_running);
 
@@ -1025,64 +1023,6 @@ void BasicMenu::initializeSolver()
 	
 	cout << "Solver is initialized!" << endl;
 }
-
-/*bool BasicMenu::load(string filename)
-{
-	if (solver->is_running)
-		stop_solver_thread();
-
-	bool read_obj = false;
-	bool read_off = false;
-
-	string file_format = filename.substr(filename.length() - 3, 3);
-	if (file_format.compare("obj") == 0)
-	{
-		if (!readOBJ(filename, V, F))
-		{
-			cerr << "Failed to load mesh: " << filename << endl;
-			return false;
-		}
-	}
-	else if (file_format.compare("off") == 0)
-	{
-		if (!readOFF(filename, V, F))
-		{
-			cerr << "Failed to load mesh: " << filename << endl;
-			return false;
-		}
-	}
-	else
-	{
-		cerr << "Unknown file format " << filename << endl;
-		return false;
-	}
-
-	initializeSolver();
-
-	if (processed_mesh_id != 0) {
-		viewer->data_list[processed_mesh_id].clear();
-		viewer->data_list[source_mesh_id].clear();
-	}
-	else
-	{
-		processed_mesh_id = viewer->append_mesh();
-	}
-	viewer->data(source_mesh_id).set_mesh(V, F);
-	viewer->data(source_mesh_id).set_uv(V);
-	viewer->data(source_mesh_id).set_colors(MatrixX3d::Ones(F.rows(), 3));
-
-	viewer->data(processed_mesh_id).set_mesh(V, F);
-	viewer->data(processed_mesh_id).set_colors(MatrixX3d::Ones(F.rows(), 3));
-	viewer->data(source_mesh_id).set_visible(false, leftView);
-	viewer->data(source_mesh_id).point_size = 10;
-
-	viewer->data(processed_mesh_id).set_visible(false, rightView);
-	viewer->data(processed_mesh_id).point_size = 10;
-
-	mesh_filename = filename;
-
-	return true;
-}*/
 
 void BasicMenu::FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs)
 {
