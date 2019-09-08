@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.15)
 project(optimization_lib)
 
+# Sources
 file(GLOB SOURCES
 	src/objective_functions/objective_function.cpp
 	src/objective_functions/symmetric_dirichlet.cpp
@@ -23,15 +24,36 @@ file(GLOB SOURCES
 	include/utils/utils.h
 	include/utils/mesh_wrapper.h)
 
+# Add Library Target
 add_library(${PROJECT_NAME} ${SOURCES})
 add_library(rds::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
+# Include Directories
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
 		${PROJECT_SOURCE_DIR}/include)
 
+# Link Libraries
 target_link_libraries(${PROJECT_NAME}
 	PRIVATE
 		igl::core)
 
+find_package(OpenMP)
+	if(OpenMP_CXX_FOUND)
+		target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
+# Properties
+set_target_properties(${PROJECT_NAME} PROPERTIES
+	CXX_STANDARD 20
+	VS_GLOBAL_UseIntelMKL "Parallel")
+
+if (MSVC)
+	# Turn on the __cplusplus flag in MSVC, so the __cplusplus macro will report the correct C++ version
+	# https://docs.microsoft.com/en-us/cpp/build/reference/zc-cplusplus?view=vs-2019
+	# http://eigen.tuxfamily.org/bz/show_bug.cgi?id=1309
+	target_compile_options(${PROJECT_NAME} PRIVATE /Zc:__cplusplus)
+endif()
+
+# Source Tree
 source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${SOURCES})

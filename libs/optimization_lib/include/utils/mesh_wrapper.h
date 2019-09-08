@@ -33,6 +33,8 @@ public:
 	const Eigen::MatrixX3i& GetFs() const;
 	const Eigen::MatrixX2d& GetVs() const;
 	const Eigen::MatrixX2i& GetEs() const;
+	const Eigen::MatrixX3d& GetD1() const;
+	const Eigen::MatrixX3d& GetD2() const;
 	const Eigen::SparseMatrix<int>& GetV2V() const;
 	const Eigen::SparseMatrix<int>& GetE2E() const;
 	const Eigen::SparseMatrix<int>& GetV2E() const;
@@ -81,6 +83,7 @@ private:
 	void ComputeVI2VIMaps(const Eigen::MatrixX3i& F, VI2VIsMap& vi2vis, VIs2VIMap& vis2vi);
 	void ComputeEI2EIMaps(const Eigen::MatrixX2i& Es, const VIs2VIMap& vis2vi, const ED2EIMap& ed2ei, EI2EIsMap& ei2eis, EIs2EIMap& eis2ei);
 	void ComputeCC(const Eigen::MatrixX2i& E, const Eigen::MatrixX2i& Es, const EI2EIsMap& ei2eis, const VIs2VIMap& vis2vi, Eigen::SparseMatrix<double>& CC);
+	void ComputeSurfaceGradientPerFace(const Eigen::MatrixX3d& V, const Eigen::MatrixX3i& F, Eigen::MatrixX3d& D1, Eigen::MatrixX3d& D2);
 	void NormalizeMesh(Eigen::MatrixX3d& V);
 
 	unsigned int nv_;
@@ -96,6 +99,8 @@ private:
 	Eigen::MatrixX3i Fs_;
 	Eigen::MatrixX2i E_;
 	Eigen::MatrixX2i Es_;
+	Eigen::MatrixX3d D1_;
+	Eigen::MatrixX3d D2_;
 	Eigen::SparseMatrix<int> V2V_;
 	Eigen::SparseMatrix<int> E2E_;
 	Eigen::SparseMatrix<int> V2E_;

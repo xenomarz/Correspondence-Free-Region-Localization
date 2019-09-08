@@ -12,13 +12,16 @@
 
 class SymmetricDirichlet : public ObjectiveFunction
 {
-public:
-	virtual void Update(const Eigen::VectorXd& x);
-
-protected:
-	virtual void PrepareHessian();
-
 private:
+	SymmetricDirichlet(const std::shared_ptr<MeshWrapper>& mesh_wrapper);
+	virtual ~SymmetricDirichlet();
+
+	void InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrapper, std::vector<int>& II, std::vector<int>& JJ, std::vector<double>& SS);
+
+	void CalculateValue(const Eigen::MatrixX2d& X, double& f);
+	void CalculateGradient(const Eigen::MatrixX2d& X, Eigen::VectorXd& g);
+	void CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>& SS);
+
 	double bound=0;
 	Eigen::MatrixX3i F;
 	Eigen::MatrixX2d V;
@@ -35,17 +38,17 @@ private:
 	Eigen::VectorXd b;
 	Eigen::VectorXd c;
 	Eigen::VectorXd d;
-	Eigen::VectorXd detJuv;		//(ad-bc)
-	Eigen::VectorXd invdetJuv;	//1/(ad-bc)
-	Eigen::SparseMatrix<double> DdetJuv_DUV; //jacobian of the function (detJuv) by UV
+	Eigen::VectorXd detJuv;						// (ad - bc)
+	Eigen::VectorXd invdetJuv;					// 1 / (ad - bc)
+	Eigen::SparseMatrix<double> DdetJuv_DUV;	// Jacobian of the function (detJuv) by UV
 
 	/**
 	 * Singular values
 	 */
-	Eigen::MatrixX2d s; //Singular values s[0]>s[1]
-	Eigen::MatrixX4d v; //Singular vectors 
-	Eigen::MatrixX4d u; //Singular vectors 
-	Eigen::MatrixXd Dsd[2]; //singular values dense derivatives s[0]>s[1]
+	Eigen::MatrixX2d s;							// Singular values s[0]>s[1]
+	Eigen::MatrixX4d v;							// Singular vectors 
+	Eigen::MatrixX4d u;							// Singular vectors 
+	Eigen::MatrixXd Dsd[2];						// Singular values dense derivatives s[0]>s[1]
 
 	/**
 	 * SVD methods
@@ -57,7 +60,12 @@ private:
 	/**
 	 * Loop implementation
 	 */
-	inline Eigen::Matrix<double, 6, 6> ComputeFaceConeHessian(const Eigen::Matrix<double,6,1> A1, const Eigen::Matrix<double, 6, 1>& A2, double a1x, double a2x);
+	inline Eigen::Matrix<double, 6, 6> ComputeFaceConeHessian(
+		const Eigen::Matrix<double, 6, 1>& A1,
+		const Eigen::Matrix<double, 6, 1>& A2,
+		double a1x,
+		double a2x);
+
 	inline Eigen::Matrix<double, 6, 6> ComputeConvexConcaveFaceHessian(
 		const Eigen::Matrix<double, 6, 1>& a1,
 		const Eigen::Matrix<double, 6, 1> & a2,
@@ -77,26 +85,23 @@ private:
 	/**
 	 * Energy
 	 */
-	//Efi=sum(Ef_dist.^2,2), for data->Efi history
+
+	// Efi = sum(Ef_dist.^2, 2), for data->Efi history
 	Eigen::VectorXd Efi;
 
-	//F of cut mesh for u and v indices 6XnumF
+	// F of cut mesh for u and v indices 6XnumF
 	Eigen::MatrixXi Fuv;
 	Eigen::VectorXd Area;
 
-	// dense mesh derivative matrices
+	// Dense mesh derivative matrices
 	Eigen::Matrix3Xd D1d, D2d;										
 
-	// constant matrices for cones calculation
+	// Constant matrices for cones calculation
 	Eigen::SparseMatrix<double> a1, a1t, a2, a2t, b1, b1t, b2, b2t;	
 
-	//dense constant matrices for cones calculation
+	// Dense constant matrices for cones calculation
 	Eigen::MatrixXd a1d, a2d, b1d, b2d;
 
-	// per face hessians vector
+	// Per face Hessians vector
 	std::vector<Eigen::Matrix<double,6,6>> Hi;
-
-	// pardiso variables
-	std::vector<int> II, JJ;
-	std::vector<double> SS;
 };

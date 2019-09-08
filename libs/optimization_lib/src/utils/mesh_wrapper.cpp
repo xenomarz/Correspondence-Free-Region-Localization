@@ -2,23 +2,11 @@
 #include "utils/mesh_wrapper.h"
 
 // LIBIGL Includes
-#include <igl/sum.h>
-#include <igl/diag.h>
-#include <igl/arap.h>
-#include <igl/lscm.h>
-#include <igl/grad.h>
 #include <igl/slice.h>
-#include <igl/unique.h>
-#include <igl/sparse.h>
-#include <igl/harmonic.h>
-#include <igl/sortrows.h>
-#include <igl/slice_into.h>
 #include <igl/local_basis.h>
-#include <igl/boundary_loop.h>
+#include <igl/doublearea.h>
 #include <igl/per_face_normals.h>
 #include <igl/adjacency_matrix.h>
-#include <igl/map_vertices_to_circle.h>
-#include <igl/project_isometrically_to_plane.h>
 
 MeshWrapper::MeshWrapper()
 {
@@ -41,6 +29,7 @@ MeshWrapper::MeshWrapper(const Eigen::MatrixX3d& V, const Eigen::MatrixX3i& F) :
 	ComputeVI2VIMaps(F_, vi2vis_, vis2vi_);
 	ComputeEI2EIMaps(Es_, vis2vi_, ed2ei_, ei2eis_, eis2ei_);
 	ComputeCC(E_, Es_, ei2eis_, vis2vi_, CC_);
+	ComputeSurfaceGradientPerFace(V_, F_, D1_, D2_);
 }
 
 MeshWrapper::~MeshWrapper()
@@ -76,6 +65,16 @@ const Eigen::MatrixX2i& MeshWrapper::GetE() const
 const Eigen::MatrixX2i& MeshWrapper::GetEs() const
 {
 	return Es_;
+}
+
+const Eigen::MatrixX3d& MeshWrapper::GetD1() const
+{
+	return D1_;
+}
+
+const Eigen::MatrixX3d& MeshWrapper::GetD2() const
+{
+	return D2_;
 }
 
 const Eigen::SparseMatrix<int>& MeshWrapper::GetV2V() const
@@ -243,6 +242,58 @@ void MeshWrapper::ComputeCC(const Eigen::MatrixX2i& E, const Eigen::MatrixX2i& E
 
 	CC.resize(triplets.size() >> 1, vis2vi.size());
 	CC.setFromTriplets(triplets.begin(), triplets.end());
+}
+
+void MeshWrapper::ComputeSurfaceGradientPerFace(const Eigen::MatrixX3d& V, const Eigen::MatrixX3i& F, Eigen::MatrixX3d& D1, Eigen::MatrixX3d& D2)
+{
+	Eigen::MatrixX3d F1, F2, F3;
+	igl::local_basis(V, F, F1, F2, F3);
+
+	const int Fn = F.rows();
+	const int vn = V.rows();
+
+	Eigen::MatrixXd Dx(Fn, 3);
+	Eigen::MatrixXd Dy(Fn, 3);
+	Eigen::MatrixXd Dz(Fn, 3);
+	Eigen::MatrixXd fN;
+	Eigen::VectorXd Ar;
+
+	igl::per_face_normals(V, F, fN);
+	igl::doublearea(V, F, Ar);
+
+	Eigen::Vector3i Pi;
+	Pi << 1, 2, 0;
+	Eigen::PermutationMatrix<3> P = Eigen::PermutationMatrix<3>(Pi);
+
+	for (int i = 0; i < Fn; i++)
+	{
+		// renaming indices of vertices of triangles for convenience
+		int i1 = F(i, 0);
+		int i2 = F(i, 1);
+		int i3 = F(i, 2);
+
+		// #F x 3 matrices of triangle edge vectors, named after opposite vertices
+		Eigen::Matrix3d e;
+		e.col(0) = V.row(i2) - V.row(i1);
+		e.col(1) = V.row(i3) - V.row(i2);
+		e.col(2) = V.row(i1) - V.row(i3);;
+
+		Eigen::Vector3d Fni = fN.row(i);
+		double Ari = Ar(i);
+
+		Eigen::Matrix3d n_M;
+		n_M << 0, -Fni(2), Fni(1), Fni(2), 0, -Fni(0), -Fni(1), Fni(0), 0;
+		Eigen::VectorXi R(3); R << 0, 1, 2;
+		Eigen::VectorXi C(3); C << 3 * i + 2, 3 * i, 3 * i + 1;
+		Eigen::Matrix3d res = ((1. / Ari) * (n_M * e)) * P;
+
+		Dx.row(i) = res.row(0);
+		Dy.row(i) = res.row(1);
+		Dz.row(i) = res.row(2);
+	}
+
+	D1 = F1.col(0).asDiagonal() * Dx + F1.col(1).asDiagonal() * Dy + F1.col(2).asDiagonal() * Dz;
+	D2 = F2.col(0).asDiagonal() * Dx + F2.col(1).asDiagonal() * Dy + F2.col(2).asDiagonal() * Dz;
 }
 
 void MeshWrapper::NormalizeMesh(Eigen::MatrixX3d& V)

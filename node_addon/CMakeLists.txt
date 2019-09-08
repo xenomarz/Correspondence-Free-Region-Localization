@@ -1,25 +1,28 @@
 cmake_minimum_required(VERSION 3.15)
 project(node_addon)
-include_directories(${CMAKE_JS_INC})
+
+# Sources
 file(GLOB SOURCE_FILES "addon.cpp" "engine.cpp" "engine.h" ${CMAKE_SOURCE_DIR}/natvis/eigen.natvis)
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${CMAKE_JS_SRC})
 
 # Include N-API wrappers
 execute_process(COMMAND node -p "require('node-addon-api').include"
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE NODE_ADDON_API_DIR
-  )
+  OUTPUT_VARIABLE NODE_ADDON_API_DIR)
 
 string(REPLACE "\n" "" NODE_ADDON_API_DIR ${NODE_ADDON_API_DIR})
 string(REPLACE "\"" "" NODE_ADDON_API_DIR ${NODE_ADDON_API_DIR})
 
+# Add Library Target
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${CMAKE_JS_SRC})
+
 # Include Directories
 target_include_directories(${PROJECT_NAME} 
 	PRIVATE
+		${CMAKE_JS_INC}
 		${CMAKE_SOURCE_DIR}
 		${NODE_ADDON_API_DIR})
 
-# Libraries
+# Link Libraries
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         igl::core
@@ -28,8 +31,6 @@ target_link_libraries(${PROJECT_NAME}
         ${CMAKE_JS_LIB})
 
 # Properties
-set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_UseIntelMKL "Parallel")
-set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_OpenMPSupport "Yes")
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
 
 # Custom Commands
