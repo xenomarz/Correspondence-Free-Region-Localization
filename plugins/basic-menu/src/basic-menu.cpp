@@ -1069,3 +1069,35 @@ void BasicMenu::FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs)
 	}
 }
 
+
+void BasicMenu::color() {
+	int numF = viewer->data(OutputModelID()).F.rows();
+	double Max_Distortion = 10;
+
+	VectorXd ones(numF);
+	VectorXd triangles_distortion(viewer->data(OutputModelID()).F.rows());
+	triangles_distortion.setZero();
+	ones.setOnes();
+
+	// calculate the distortion over all the energies
+	for (auto& obj : totalObjective->objectiveList) {
+		if ((obj->Efi.size() != 0) && (obj->w != 0)) {
+			triangles_distortion += obj->Efi * obj->w;
+		}
+	}
+
+	VectorXd alpha = triangles_distortion / Max_Distortion;
+	VectorXd beta = ones - alpha;
+
+	MatrixXd D_low,D_high;
+
+
+	VectorXd M = VectorXd(double(model_color[0]), double(model_color[1]), double(model_color[2]));
+	VectorXd E = VectorXd(double(Vertex_Energy_color[0]), double(Vertex_Energy_color[1]), double(Vertex_Energy_color[2]));
+	B = M.replicate(1, numF).transpose();
+
+	//color_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
+	//color_per_face.row(i) << double(Vertex_Energy_color[0]), double(Vertex_Energy_color[1]), double(Vertex_Energy_color[2]);
+
+	
+}
