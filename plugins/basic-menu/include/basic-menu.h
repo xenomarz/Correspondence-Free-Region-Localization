@@ -74,6 +74,7 @@ private:
 	MouseMode mouse_mode;
 	Parametrization param_type;
 	Vector3f Highlighted_face_color, Fixed_face_color, Fixed_vertex_color;
+	int Highlighted_face_index;
 	Vector3f model_color, Dragged_face_color, Dragged_vertex_color, Vertex_Energy_color;
 	MatrixXd color_per_face, Vertices_Input, Vertices_output, color_per_vertex;
 	set<int> selected_faces, selected_vertices;
@@ -86,7 +87,7 @@ private:
 	MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
 
 	//Solver Button Parameters
-	bool solver_on;
+	bool solver_on, init_solver;
 
 	//Parametrization Parameters
 	float Lambda, Delta, Integer_Weight, Integer_Spacing, Seamless_Weight, Position_Weight;
@@ -129,6 +130,7 @@ public:
 	RowVector3d get_face_avg();
 	Vector3f computeTranslation(int mouse_x,int from_x,int mouse_y,int from_y,RowVector3d pt3D);
 	void UpdateHandles();
+	void color();
 
 	//Name's methods
 	void set_name_mapping(unsigned int data_id, string name);
@@ -142,11 +144,11 @@ public:
 	void update_mesh();
 
 	//Parametrizations
-	void compute_ARAP_param();
-	void compute_harmonic_param();
-	void compute_lscm_param();
+	MatrixXd compute_ARAP_param();
+	MatrixXd compute_harmonic_param();
+	MatrixXd compute_lscm_param();
+	MatrixXd ComputeSoup2DRandom();
 	void FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs);
-	void ComputeSoup2DRandom();
 	void update_texture(MatrixXd& V_uv);
 
 	//Start/Stop the solver Thread

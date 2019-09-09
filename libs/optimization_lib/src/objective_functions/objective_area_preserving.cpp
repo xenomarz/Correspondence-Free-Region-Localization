@@ -2,7 +2,7 @@
 
 ObjectiveAreaPreserving::ObjectiveAreaPreserving()
 {
-	name = "Objective: Area Preserving";
+	name = "Area Preserving";
 }
 
 void ObjectiveAreaPreserving::init()
@@ -24,12 +24,9 @@ void ObjectiveAreaPreserving::init()
 	igl::doublearea(V, F, Area);
 	Area /= 2;
 
-	MatrixX3d D1cols, D2cols, V3d;
+	MatrixX3d D1cols, D2cols;
 
-	V3d.resize(V.rows(), 3);
-	V3d.leftCols(2) = V;
-	V3d.col(2).setZero();
-	Utils::computeSurfaceGradientPerFace(V3d, F, D1cols, D2cols);
+	Utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
 	D1d = D1cols.transpose();
 	D2d = D2cols.transpose();
 
@@ -43,6 +40,19 @@ void ObjectiveAreaPreserving::updateX(const VectorXd& X)
 	if (inversions_exist) {
 		cout << name << " Error! inversion exists." << endl;
 	}
+}
+
+void ObjectiveAreaPreserving::setVF(MatrixXd& V, MatrixX3i& F) {
+	MatrixX3d V3d(V.rows(), 3);
+	if (V.cols() == 2) {
+		V3d.leftCols(2) = V;
+		V3d.col(2).setZero();
+	}
+	else if (V.cols() == 3) {
+		V3d = V;
+	}
+	this->V = V3d;
+	this->F = F;
 }
 
 double ObjectiveAreaPreserving::value()

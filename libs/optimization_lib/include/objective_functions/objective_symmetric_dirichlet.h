@@ -4,6 +4,11 @@
 
 class ObjectiveSymmetricDirichlet : public ObjectiveFunction
 {
+private:
+	// mesh vertices and faces
+	MatrixX3i F;
+	MatrixXd V;
+
 public:
 	ObjectiveSymmetricDirichlet();
 
@@ -21,10 +26,7 @@ public:
 
 	inline Matrix6d ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x);
 	inline Matrix6d ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs);
-
-	// mesh vertices and faces
-	MatrixX3i F;
-	MatrixX2d V;
+	void setVF(MatrixXd& V, MatrixX3i& F);
 
 	// Jacobian of the parameterization per face
 	VectorXd a;
@@ -46,8 +48,6 @@ public:
 	MatrixXd Dsd[2]; //singular values dense derivatives s[0]>s[1]
 
 	//Energy parts - distortion
-	VectorXd Efi;     //Efi=sum(Ef_dist.^2,2), for data->Efi history
-
 	VectorXd Area;
 	Matrix3Xd D1d, D2d;		//dense mesh derivative matrices
 

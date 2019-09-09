@@ -26,10 +26,12 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		mouse_mode = NONE;
 		view = Horizontal;
 		IsTranslate = false;
+		Highlighted_face_index = 0;
 		down_mouse_x = down_mouse_y = -1;
 
 		//Solver Parameters
 		solver_on = false;
+		init_solver = false;
 
 		//Parametrization Parameters
 		Position_Weight = Seamless_Weight = Integer_Spacing = Integer_Weight = Delta = Lambda = 0.5;
@@ -40,6 +42,11 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		output_view_id = viewer->append_core(Vector4f(640, 0, 640, 800));
 		viewer->core(output_view_id).background_color += Vector4f(0.1,0,0,0);
 
+		//set rotarion type to 2D mode
+		viewer->core(output_view_id).trackball_angle = Quaternionf::Identity();
+		viewer->core(output_view_id).orthographic = true;
+		viewer->core(output_view_id).set_rotation_type(ViewerCore::RotationType(2));
+		
 		//Update scene
 		Update_view();
 
@@ -88,13 +95,9 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 				color_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
 			}
 			
-			///////////////////////////////////////
-			//For testing - 2D case
 			//initializeSolver();
-			///////////////////////////////////////
-
+			Update_view();
 		}
-		Update_view();
 	}
 	ImGui::SameLine(0, p);
 	if (ImGui::Button("Save##Mesh", ImVec2((w - p) / 2.f, 0)))
@@ -144,15 +147,12 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 		}
 		else if (param_type == LSCM) {
 			compute_lscm_param();
-			initializeSolver();
 		}
 		else if (param_type == ARAP) {
 			compute_ARAP_param();
-			initializeSolver();
 		}
 		else if (param_type == RANDOM) {
 			ComputeSoup2DRandom();
-			initializeSolver();
 		}
 	}
 
@@ -191,7 +191,7 @@ IGL_INLINE bool BasicMenu::mouse_move(int mouse_x, int mouse_y)
 
 	if (!IsTranslate)
 	{
-		return ImGuiMenu::mouse_move(mouse_x, mouse_y);;
+		return ImGuiMenu::mouse_move(mouse_x, mouse_y);
 	}
 	if (mouse_mode == FACE_SELECT)
 	{
@@ -236,7 +236,7 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 	down_mouse_x = viewer->current_mouse_x;
 	down_mouse_y = viewer->current_mouse_y;
 			
-	if (mouse_mode == FACE_SELECT && button == GLFW_MOUSE_BUTTON_LEFT)
+	if (mouse_mode == FACE_SELECT && button == GLFW_MOUSE_BUTTON_LEFT && modifier == 2)
 	{
 		//check if there faces which is selected on the left screen
 		int f = pick_face(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, InputOnly);
@@ -259,7 +259,7 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 		}
 
 	}
-	else if (mouse_mode == VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_LEFT)
+	else if (mouse_mode == VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_LEFT && modifier == 2)
 	{
 		//check if there faces which is selected on the left screen
 		int v = pick_vertex(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, InputOnly);
@@ -282,7 +282,7 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 					
 		}
 	}
-	else if (mouse_mode == FACE_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
+	else if (mouse_mode == FACE_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE && modifier == 2)
 	{
 		if (!selected_faces.empty())
 		{
@@ -304,7 +304,7 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 			}
 		}
 	}
-	else if (mouse_mode == VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
+	else if (mouse_mode == VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE && modifier == 2)
 	{
 		if (!selected_vertices.empty())
 		{
@@ -331,6 +331,7 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 }
 
 IGL_INLINE bool BasicMenu::key_pressed(unsigned int key, int modifiers) {
+	
 	if (key == 'F' || key == 'f') {
 		mouse_mode = FACE_SELECT;
 	}
@@ -437,6 +438,15 @@ void BasicMenu::Draw_menu_for_Solver() {
 		if (ImGui::Button("Check Hessians")) {
 			checkHessians();
 		}
+
+		// Zoom
+		int id = 0;
+		for (auto& obj : totalObjective->objectiveList) {
+			ImGui::PushID(id++);
+			ImGui::PushItemWidth(80 * menu_scaling());
+			ImGui::DragFloat(obj->name, &(obj->w) , 0.05f, 0.1f, 20.0f);
+			ImGui::PopID();
+		}
 	}
 }
 
@@ -498,7 +508,6 @@ void BasicMenu::Draw_menu_for_cores() {
 			ImGui::PopItemWidth();
 			ImGui::ColorEdit4("Background", core.background_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 		}
-		Update_view();
 		ImGui::PopID();
 	}
 }
@@ -529,6 +538,17 @@ void BasicMenu::Draw_menu_for_models() {
 
 		if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			float w = ImGui::GetContentRegionAvailWidth();
+			float p = ImGui::GetStyle().FramePadding.x;
+
+			if (ImGui::Button("texture x2", ImVec2((w - p) / 2.f, 0))) {
+				data.set_uv(data.V_uv * 2);
+			}
+			ImGui::SameLine(0, p);
+			if (ImGui::Button("texture /2", ImVec2((w - p) / 2.f, 0))) {
+				data.set_uv(data.V_uv / 2);
+			}
+
 			if (ImGui::Checkbox("Face-based", &(data.face_based)))
 			{
 				data.dirty = MeshGL::DIRTY_ALL;
@@ -551,7 +571,6 @@ void BasicMenu::Draw_menu_for_models() {
 			ImGui::Checkbox("Show vertex labels", &(data.show_vertid));
 			ImGui::Checkbox("Show faces labels", &(data.show_faceid));
 		}
-		Update_view();
 		ImGui::PopID();
 	}
 }
@@ -625,11 +644,12 @@ void BasicMenu::follow_and_mark_selected_faces() {
 		//check if there faces which is selected on the right screen
 		f = pick_face(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, OutputOnly);
 	}
-
+	if (color_per_face.size()) {
+		color_per_face.row(Highlighted_face_index) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
+	}
 	if (f != -1)
 	{
-		////////////////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////
+		Highlighted_face_index = f;
 		//Mark the faces
 		color_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
 		for (int i = 0; i < color_per_face.rows(); i++)
@@ -644,11 +664,8 @@ void BasicMenu::follow_and_mark_selected_faces() {
 			color_per_face.row(Translate_Index) << double(Dragged_face_color[0]), double(Dragged_face_color[1]), double(Dragged_face_color[2]);
 		}
 		
-		////////////////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////
 		//Mark the vertices
 		int idx = 0;
-
 		Vertices_Input.resize(selected_vertices.size(), 3);
 		Vertices_output.resize(selected_vertices.size(), 3);
 		color_per_vertex.resize(selected_vertices.size(), 3);
@@ -670,9 +687,6 @@ void BasicMenu::follow_and_mark_selected_faces() {
 			Vertices_output.row(idx) = viewer->data(OutputModelID()).V.row(vi);
 			color_per_vertex.row(idx++) << double(Fixed_vertex_color[0]), double(Fixed_vertex_color[1]), double(Fixed_vertex_color[2]);
 		}
-		////Update the model's vertex colors in the two screens
-		//viewer->data(InputModelID()).set_points(Vertices_Input, color_per_vertex);
-		//viewer->data(OutputModelID()).set_points(Vertices_output, color_per_vertex);
 	}
 }
 	
@@ -847,7 +861,7 @@ int BasicMenu::pick_vertex(MatrixXd& V, MatrixXi& F,View LR) {
 	return vi;
 }
 	
-void BasicMenu::compute_ARAP_param() {
+MatrixXd BasicMenu::compute_ARAP_param() {
 	// Compute the initial solution for ARAP (harmonic parametrization)
 	VectorXi bnd;
 	MatrixXd V_uv, initial_guess;
@@ -876,9 +890,11 @@ void BasicMenu::compute_ARAP_param() {
 	// Scale UV to make the texture more clear
 	V_uv *= 5;
 	update_texture(V_uv);
+	Update_view();
+	return V_uv;
 }
 
-void BasicMenu::compute_harmonic_param() {
+MatrixXd BasicMenu::compute_harmonic_param() {
 	// Find the open boundary
 	VectorXi bnd;
 	MatrixXd V_uv;
@@ -892,9 +908,11 @@ void BasicMenu::compute_harmonic_param() {
 	// Scale UV to make the texture more clear
 	V_uv *= 5;
 	update_texture(V_uv);
+	Update_view();
+	return V_uv;
 }
 
-void BasicMenu::compute_lscm_param()
+MatrixXd BasicMenu::compute_lscm_param()
 {
 	// Fix two points on the boundary
 	VectorXi bnd, b(2, 1);
@@ -909,9 +927,11 @@ void BasicMenu::compute_lscm_param()
 	// Scale UV to make the texture more clear
 	V_uv *= 5;
 	update_texture(V_uv);
+	Update_view();
+	return V_uv;
 }
 
-void BasicMenu::ComputeSoup2DRandom()
+MatrixXd BasicMenu::ComputeSoup2DRandom()
 {
 	MatrixXd V_uv;
 	auto nvs = viewer->data(OutputModelID()).V.rows();
@@ -919,6 +939,8 @@ void BasicMenu::ComputeSoup2DRandom()
 	FixFlippedFaces(viewer->data(OutputModelID()).F, V_uv);
 
 	update_texture(V_uv);
+	Update_view();
+	return V_uv;
 }
 
 void BasicMenu::update_texture(MatrixXd& V_uv) {
@@ -939,7 +961,6 @@ void BasicMenu::update_texture(MatrixXd& V_uv) {
 	viewer->data(OutputModelID()).set_vertices(V_uv_3D);
 	viewer->data(OutputModelID()).set_uv(V_uv_2D);
 	viewer->data(OutputModelID()).compute_normals();
-	Update_view();
 }
 	
 void BasicMenu::checkGradients()
@@ -984,7 +1005,10 @@ void BasicMenu::update_mesh()
 
 void BasicMenu::initializeSolver()
 {
-	MatrixX3d V = viewer->data(OutputModelID()).V;
+	if (init_solver)
+		return;
+
+	MatrixXd V = viewer->data(OutputModelID()).V;
 	MatrixX3i F = viewer->data(OutputModelID()).F;
 	solver_on = false;
 	if (solver->is_running)
@@ -997,12 +1021,10 @@ void BasicMenu::initializeSolver()
 
 	// initialize the energy
 	auto symDirichlet = make_unique<ObjectiveSymmetricDirichlet>();
-	symDirichlet->V = V.leftCols(2);
-	symDirichlet->F = F;
+	symDirichlet->setVF(V, F);
 	symDirichlet->init();
 	auto areaPreserving = make_unique<ObjectiveAreaPreserving>();
-	areaPreserving->V = V.leftCols(2);
-	areaPreserving->F = F;
+	areaPreserving->setVF(V, F);
 	areaPreserving->init();
 	auto constraintsPositional = make_unique<PenaltyPositionalConstraints>();
 	constraintsPositional->numV = V.rows();
@@ -1011,17 +1033,20 @@ void BasicMenu::initializeSolver()
 	HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
 
 	totalObjective->objectiveList.clear();
-	//totalObjective->objectiveList.push_back(move(areaPreserving));
+	totalObjective->objectiveList.push_back(move(areaPreserving));
 	totalObjective->objectiveList.push_back(move(symDirichlet));
 	totalObjective->objectiveList.push_back(move(constraintsPositional));
 
 	totalObjective->init();
 	// initialize the solver
-	VectorXd XX = Map<const VectorXd>(V.data(), V.rows() * 2);
-	solver->init(totalObjective, XX);
+	
+	//MatrixXd initialguess = compute_harmonic_param();
+	VectorXd initialguessXX = Map<const VectorXd>(V.data(), V.rows() * 2);
+	solver->init(totalObjective, initialguessXX);
 	solver->setFlipAvoidingLineSearch(F);
 	
 	cout << "Solver is initialized!" << endl;
+	init_solver = true;
 }
 
 void BasicMenu::FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs)
@@ -1043,6 +1068,4 @@ void BasicMenu::FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs)
 		}
 	}
 }
-
-
 

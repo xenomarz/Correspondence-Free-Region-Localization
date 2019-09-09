@@ -15,6 +15,7 @@ public:
 	void get_data(VectorXd& X);
 	void init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0);
 	void setFlipAvoidingLineSearch(MatrixX3i& F);
+
 	// Pointer to the energy class
 	shared_ptr<ObjectiveFunction> objective;
 

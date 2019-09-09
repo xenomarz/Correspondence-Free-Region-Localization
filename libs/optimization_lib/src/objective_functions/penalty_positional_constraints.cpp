@@ -2,7 +2,7 @@
 
 PenaltyPositionalConstraints::PenaltyPositionalConstraints()
 {
-    name = "Penalty: Positional Constraints";
+    name = "Positional Constraints";
 }
 
 void PenaltyPositionalConstraints::init()

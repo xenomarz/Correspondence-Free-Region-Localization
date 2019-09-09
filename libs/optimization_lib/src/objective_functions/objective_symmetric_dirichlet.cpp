@@ -2,7 +2,7 @@
 
 ObjectiveSymmetricDirichlet::ObjectiveSymmetricDirichlet()
 {
-    name = "Objective: Symmetric Dirichlet";
+    name = "Symmetric Dirichlet";
 }
 
 void ObjectiveSymmetricDirichlet::init()
@@ -26,17 +26,14 @@ void ObjectiveSymmetricDirichlet::init()
 	// Parameterization J mats resize
 	detJ.resize(F.rows());
 
+	MatrixX3d D1cols, D2cols;
+	
+
 	// Compute init energy matrices
 	igl::doublearea(V, F, Area);
 	Area /= 2;
-
-	MatrixX3d D1cols, D2cols;
-	MatrixX3d V3d; 
-
-	V3d.resize(V.rows(), 3);
-	V3d.leftCols(2) = V;
-	V3d.col(2).setZero();
-	Utils::computeSurfaceGradientPerFace(V3d, F, D1cols, D2cols);
+	
+	Utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
 	D1d=D1cols.transpose();
 	D2d=D2cols.transpose();
 
@@ -59,12 +56,28 @@ void ObjectiveSymmetricDirichlet::init()
 	b2d.bottomRows(3) = 0.5*D1d;
 
 	prepare_hessian();
-	w = 1;
+	w = 0.01;
 }
 
 void ObjectiveSymmetricDirichlet::updateX(const VectorXd& X)
 {
 	bool inversions_exist = updateJ(X);
+	if (inversions_exist) {
+		cout << name << " Error! inversion exists." << endl;
+	}
+}
+
+void ObjectiveSymmetricDirichlet::setVF(MatrixXd& V, MatrixX3i& F) {
+	MatrixXd V3d(V.rows(), 3);
+	if (V.cols() == 2) {
+		V3d.leftCols(2) = V;
+		V3d.col(2).setZero();
+	}
+	else if (V.cols() == 3) {
+		V3d = V;
+	}
+	this->V = V3d;
+	this->F = F;
 }
 
 double ObjectiveSymmetricDirichlet::value()
