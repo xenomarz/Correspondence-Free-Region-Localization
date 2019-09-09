@@ -51,7 +51,10 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 
 		// Initialize solver thread
 		solver = make_unique<Newton>();
-		totalObjective = make_shared<TotalObjective>();						
+		totalObjective = make_shared<TotalObjective>();	
+
+		//maximise window
+		glfwMaximizeWindow(viewer->window);
 	}
 }
 
