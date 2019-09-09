@@ -26,7 +26,6 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		mouse_mode = NONE;
 		view = Horizontal;
 		IsTranslate = false;
-		Highlighted_face_index = 0;
 		down_mouse_x = down_mouse_y = -1;
 
 		//Solver Parameters
@@ -160,6 +159,7 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 	Draw_menu_for_Solver();
 	Draw_menu_for_cores();
 	Draw_menu_for_models();
+	follow_and_mark_selected_faces();
 }
 
 IGL_INLINE void BasicMenu::post_resize(int w, int h)
@@ -187,8 +187,6 @@ IGL_INLINE void BasicMenu::post_resize(int w, int h)
 
 IGL_INLINE bool BasicMenu::mouse_move(int mouse_x, int mouse_y)
 {
-	follow_and_mark_selected_faces();
-
 	if (!IsTranslate)
 	{
 		return ImGuiMenu::mouse_move(mouse_x, mouse_y);
@@ -646,17 +644,16 @@ void BasicMenu::follow_and_mark_selected_faces() {
 		//check if there faces which is selected on the right screen
 		f = pick_face(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, OutputOnly);
 	}
-	if (color_per_face.size()) {
-		color_per_face.row(Highlighted_face_index) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
-	}
-	if (f != -1)
-	{
-		Highlighted_face_index = f;
+	
+	if(viewer->data(InputModelID()).F.size()){
 		//Mark the faces
 		color_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
 		UpdateEnergyColors();
 		//Mark the fixed faces
-		color_per_face.row(f) << double(Highlighted_face_color[0]) , double(Highlighted_face_color[1]) , double(Highlighted_face_color[2]);
+		if (f != -1)
+		{
+			color_per_face.row(f) << double(Highlighted_face_color[0]), double(Highlighted_face_color[1]), double(Highlighted_face_color[2]);
+		}
 		for (auto fi : selected_faces) { color_per_face.row(fi) << double(Fixed_face_color[0]), double(Fixed_face_color[1]), double(Fixed_face_color[2]); }
 		//Mark the Dragged face
 		if (IsTranslate && (mouse_mode == FACE_SELECT)) {
@@ -1086,7 +1083,6 @@ void BasicMenu::UpdateEnergyColors() {
 
 	VectorXd alpha_vec = triangles_distortion / Max_Distortion;
 	VectorXd beta_vec = ones - alpha_vec;
-
 
 	VectorXd M_vec; M_vec.resize(3);
 	M_vec << double(model_color[0]), double(model_color[1]), double(model_color[2]);
