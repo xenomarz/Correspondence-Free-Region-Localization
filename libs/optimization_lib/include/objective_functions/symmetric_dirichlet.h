@@ -16,8 +16,8 @@ private:
 	SymmetricDirichlet(const std::shared_ptr<MeshWrapper>& mesh_wrapper);
 	virtual ~SymmetricDirichlet();
 
+	// Overrides
 	void InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrapper, std::vector<int>& II, std::vector<int>& JJ, std::vector<double>& SS);
-
 	void CalculateValue(const Eigen::MatrixX2d& X, double& f);
 	void CalculateGradient(const Eigen::MatrixX2d& X, Eigen::VectorXd& g);
 	void CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>& SS);
