@@ -15,7 +15,7 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 				
 		core_percentage_size = 0.5;
 		param_type = None;
-				
+		Max_Distortion = 5;
 		Highlighted_face_color = RED_COLOR;
 		Fixed_face_color = BLUE_COLOR;
 		Dragged_face_color = GREEN_COLOR;
@@ -438,8 +438,10 @@ void BasicMenu::Draw_menu_for_Solver() {
 		if (ImGui::Button("Check Hessians")) {
 			checkHessians();
 		}
+		ImGui::DragFloat("Max Distortion", &(Max_Distortion), 0.05f, 0.1f, 20.0f);
+		
 
-		// Zoom
+		// objective functions wieghts
 		int id = 0;
 		for (auto& obj : totalObjective->objectiveList) {
 			ImGui::PushID(id++);
@@ -652,10 +654,7 @@ void BasicMenu::follow_and_mark_selected_faces() {
 		Highlighted_face_index = f;
 		//Mark the faces
 		color_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
-		for (int i = 0; i < color_per_face.rows(); i++)
-		{
-			color_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
-		}
+		UpdateEnergyColors();
 		//Mark the fixed faces
 		color_per_face.row(f) << double(Highlighted_face_color[0]) , double(Highlighted_face_color[1]) , double(Highlighted_face_color[2]);
 		for (auto fi : selected_faces) { color_per_face.row(fi) << double(Fixed_face_color[0]), double(Fixed_face_color[1]), double(Fixed_face_color[2]); }
@@ -1070,9 +1069,8 @@ void BasicMenu::FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs)
 }
 
 
-void BasicMenu::color() {
+void BasicMenu::UpdateEnergyColors() {
 	int numF = viewer->data(OutputModelID()).F.rows();
-	double Max_Distortion = 10;
 
 	VectorXd ones(numF);
 	VectorXd triangles_distortion(viewer->data(OutputModelID()).F.rows());
@@ -1086,18 +1084,23 @@ void BasicMenu::color() {
 		}
 	}
 
-	VectorXd alpha = triangles_distortion / Max_Distortion;
-	VectorXd beta = ones - alpha;
-
-	MatrixXd D_low,D_high;
+	VectorXd alpha_vec = triangles_distortion / Max_Distortion;
+	VectorXd beta_vec = ones - alpha_vec;
 
 
-	VectorXd M = VectorXd(double(model_color[0]), double(model_color[1]), double(model_color[2]));
-	VectorXd E = VectorXd(double(Vertex_Energy_color[0]), double(Vertex_Energy_color[1]), double(Vertex_Energy_color[2]));
-	B = M.replicate(1, numF).transpose();
+	VectorXd M_vec; M_vec.resize(3);
+	M_vec << double(model_color[0]), double(model_color[1]), double(model_color[2]);
+	VectorXd E_vec; E_vec.resize(3);
+	E_vec << double(Vertex_Energy_color[0]), double(Vertex_Energy_color[1]), double(Vertex_Energy_color[2]);
+	MatrixXd M = M_vec.replicate(1, numF).transpose();
+	MatrixXd E = E_vec.replicate(1, numF).transpose();
+	MatrixXd alpha(numF, 3), beta(numF, 3);
+	alpha.col(0) = alpha_vec;
+	alpha.col(1) = alpha_vec;
+	alpha.col(2) = alpha_vec;
+	beta.col(0) = beta_vec;
+	beta.col(1) = beta_vec;
+	beta.col(2) = beta_vec;
 
-	//color_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
-	//color_per_face.row(i) << double(Vertex_Energy_color[0]), double(Vertex_Energy_color[1]), double(Vertex_Energy_color[2]);
-
-	
+	color_per_face = beta.cwiseProduct(M) + alpha.cwiseProduct(E);
 }

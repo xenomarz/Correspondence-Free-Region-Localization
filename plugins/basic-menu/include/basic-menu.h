@@ -91,6 +91,7 @@ private:
 
 	//Parametrization Parameters
 	float Lambda, Delta, Integer_Weight, Integer_Spacing, Seamless_Weight, Position_Weight;
+	float Max_Distortion;
 
 	// Solver thread
 	thread solver_thread;
@@ -130,7 +131,7 @@ public:
 	RowVector3d get_face_avg();
 	Vector3f computeTranslation(int mouse_x,int from_x,int mouse_y,int from_y,RowVector3d pt3D);
 	void UpdateHandles();
-	void color();
+	void UpdateEnergyColors();
 
 	//Name's methods
 	void set_name_mapping(unsigned int data_id, string name);
