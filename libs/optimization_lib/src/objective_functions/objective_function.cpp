@@ -15,7 +15,7 @@ ObjectiveFunction::~ObjectiveFunction()
 
 void ObjectiveFunction::InitializeGradient(const std::shared_ptr<MeshWrapper>& mesh_wrapper, Eigen::VectorXd& g)
 {
-	g.conservativeResize(mesh_wrapper->GetVs().rows());
+	g.conservativeResize(mesh_wrapper->GetImageVertices().rows());
 }
 
 void ObjectiveFunction::Update(const Eigen::MatrixX2d& X)

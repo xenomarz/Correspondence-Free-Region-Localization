@@ -24,21 +24,17 @@ public:
 	};
 
 	MeshWrapper();
-	MeshWrapper(const Eigen::MatrixX3d& V, const Eigen::MatrixX3i& F);
+	MeshWrapper(const Eigen::MatrixX3d& v_dom, const Eigen::MatrixX3i& f_dom);
 	virtual ~MeshWrapper();
 
-	const Eigen::MatrixX3i& GetF() const;
-	const Eigen::MatrixX3d& GetV() const;
-	const Eigen::MatrixX2i& GetE() const;
-	const Eigen::MatrixX3i& GetFs() const;
-	const Eigen::MatrixX2d& GetVs() const;
-	const Eigen::MatrixX2i& GetEs() const;
+	const Eigen::MatrixX3i& GetDomainFaces() const;
+	const Eigen::MatrixX3d& GetDomainVertices() const;
+	const Eigen::MatrixX2i& GetDomainEdges() const;
+	const Eigen::MatrixX3i& GetImageFaces() const;
+	const Eigen::MatrixX2d& GetImageVertices() const;
+	const Eigen::MatrixX2i& GetImageEdges() const;
 	const Eigen::MatrixX3d& GetD1() const;
 	const Eigen::MatrixX3d& GetD2() const;
-	const Eigen::SparseMatrix<int>& GetV2V() const;
-	const Eigen::SparseMatrix<int>& GetE2E() const;
-	const Eigen::SparseMatrix<int>& GetV2E() const;
-	const Eigen::SparseMatrix<int>& GetV2Es() const;
 
 private:
 
@@ -71,51 +67,42 @@ private:
 	using EdgeDescriptor = std::pair<EdgeIndex, EdgeIndex>;
 	using ED2EIMap = std::unordered_map<EdgeDescriptor, EdgeIndex, pair_hash, pair_equals>;
 	using VI2VIsMap = std::unordered_map<VertexIndex, std::vector<VertexIndex>>;
-	using VIs2VIMap = std::unordered_map<VertexIndex, VertexIndex>;
+	using VI2VIMap = std::unordered_map<VertexIndex, VertexIndex>;
 	using EI2EIsMap = std::unordered_map<EdgeIndex, std::vector<EdgeIndex>>;
-	using EIs2EIMap = std::unordered_map<EdgeIndex, EdgeIndex>;
+	using EI2EIMap = std::unordered_map<EdgeIndex, EdgeIndex>;
 
-	void ComputeSoup2DRandom(const Eigen::MatrixX3i& Fs, Eigen::MatrixX2d& Vs);
-	void FixFlippedFaces(const Eigen::MatrixX3i& Fs, Eigen::MatrixX2d& Vs);
-	void ComputeFs(const Eigen::MatrixX3i& F, Eigen::MatrixX3i& Fs);
-	void ComputeE(const Eigen::MatrixX3i& F, Eigen::MatrixX2i& E);
-	void ComputeED2EIMap(const Eigen::MatrixX2i& E, ED2EIMap& ed2ei);
-	void ComputeVI2VIMaps(const Eigen::MatrixX3i& F, VI2VIsMap& vi2vis, VIs2VIMap& vis2vi);
-	void ComputeEI2EIMaps(const Eigen::MatrixX2i& Es, const VIs2VIMap& vis2vi, const ED2EIMap& ed2ei, EI2EIsMap& ei2eis, EIs2EIMap& eis2ei);
-	void ComputeCC(const Eigen::MatrixX2i& E, const Eigen::MatrixX2i& Es, const EI2EIsMap& ei2eis, const VIs2VIMap& vis2vi, Eigen::SparseMatrix<double>& CC);
-	void ComputeSurfaceGradientPerFace(const Eigen::MatrixX3d& V, const Eigen::MatrixX3i& F, Eigen::MatrixX3d& D1, Eigen::MatrixX3d& D2);
-	void NormalizeMesh(Eigen::MatrixX3d& V);
+	void GenerateRandom2DSoup(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out, Eigen::MatrixX2d& v_out);
+	void GenerateSoupFaces(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out);
 
-	unsigned int nv_;
-	unsigned int nf_;
-	unsigned int ne_;
-	unsigned int nvs_;
-	unsigned int nfs_;
-	unsigned int nes_;
+	void FixFlippedFaces(const Eigen::MatrixX3i& f_im, Eigen::MatrixX2d& v_im);
+	void ComputeDomainEdges(const Eigen::MatrixX3i& f_dom, Eigen::MatrixX2i& e_dom);
+	void ComputeED2EIMap(const Eigen::MatrixX2i& e_dom, ED2EIMap& ed_dom2ei_dom);
+	void ComputeVI2VIMaps(const Eigen::MatrixX3i& f_dom, VI2VIsMap& v_dom2v_im, VI2VIMap& v_im2v_dom);
+	void ComputeEI2EIMaps(const Eigen::MatrixX2i& e_im, const VI2VIMap& v_im2v_dom, const ED2EIMap& ed_dom2ei_dom, EI2EIsMap& e_dom2e_im, EI2EIMap& e_im2e_dom);
+	void ComputeCornerCorrespondences(const Eigen::MatrixX2i& e_dom, const Eigen::MatrixX2i& e_im, const EI2EIsMap& e_dom2e_im, const VI2VIMap& v_im2v_dom, Eigen::SparseMatrix<double>& cc);
+	void ComputeSurfaceGradientPerFace(const Eigen::MatrixX3d& v_dom, const Eigen::MatrixX3i& f_dom, Eigen::MatrixX3d& d1, Eigen::MatrixX3d& d2);
+	void NormalizeVertices(Eigen::MatrixX3d& v);
 
-	Eigen::MatrixX3d V_;
-	Eigen::MatrixX2d Vs_;
-	Eigen::MatrixX3i F_;
-	Eigen::MatrixX3i Fs_;
-	Eigen::MatrixX2i E_;
-	Eigen::MatrixX2i Es_;
-	Eigen::MatrixX3d D1_;
-	Eigen::MatrixX3d D2_;
-	Eigen::SparseMatrix<int> V2V_;
-	Eigen::SparseMatrix<int> E2E_;
-	Eigen::SparseMatrix<int> V2E_;
-	Eigen::SparseMatrix<int> V2Es_;
+	Eigen::MatrixX3d v_dom_;
+	Eigen::MatrixX2d v_im_;
+	Eigen::MatrixX3i f_dom_;
+	Eigen::MatrixX3i f_im_;
+	Eigen::MatrixX2i e_dom_;
+	Eigen::MatrixX2i e_im_;
+	Eigen::MatrixX3d d1_;
+	Eigen::MatrixX3d d2_;
 
 	// Corners correspondence matrix
-	Eigen::SparseMatrix<double> CC_;
+	Eigen::SparseMatrix<double> cc_;
 
-	ED2EIMap ed2ei_;
-	VI2VIsMap vi2vis_;
-	VIs2VIMap vis2vi_;
-	EI2EIsMap ei2eis_;
-	EIs2EIMap eis2ei_;
+	ED2EIMap	ed_dom2ei_dom_;
+	VI2VIsMap	v_dom2v_im_;
+	VI2VIMap	v_im2v_dom_;
+	EI2EIsMap	e_dom2e_im_;
+	EI2EIMap	e_im2e_dom_;
 };
 
+// https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values/35991300#35991300
 template <class T>
 inline void hash_combine(std::size_t& seed, const T& v)
 {

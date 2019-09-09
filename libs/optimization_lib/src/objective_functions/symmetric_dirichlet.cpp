@@ -6,8 +6,8 @@
 SymmetricDirichlet::SymmetricDirichlet(const std::shared_ptr<MeshWrapper>& mesh_wrapper)
 	: ObjectiveFunction(mesh_wrapper)
 {
-	auto Fs = GetMeshWrapper().GetFs();
-	auto Vs = GetMeshWrapper().GetVs();
+	auto Fs = GetMeshWrapper().GetImageFaces();
+	auto Vs = GetMeshWrapper().GetImageVertices();
 
 	numF = Fs.rows();
 	numV = Vs.rows();
@@ -75,8 +75,8 @@ void SymmetricDirichlet::InitializeHessian(const std::shared_ptr<MeshWrapper>& m
 		JJ.push_back(j);
 	};
 
-	int nfs = GetMeshWrapper().GetFs().rows();
-	int nvs = GetMeshWrapper().GetVs().rows();
+	int nfs = GetMeshWrapper().GetImageFaces().rows();
+	int nvs = GetMeshWrapper().GetImageVertices().rows();
 	for (int i = 0; i < nfs; ++i)
 	{
 		// for every face there is a 6x6 local hessian

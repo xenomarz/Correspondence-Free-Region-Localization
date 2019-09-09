@@ -13,23 +13,19 @@ MeshWrapper::MeshWrapper()
 
 }
 
-MeshWrapper::MeshWrapper(const Eigen::MatrixX3d& V, const Eigen::MatrixX3i& F) :
-	V_(V),
-	F_(F),
-	nv_(V.rows()),
-	nf_(F.rows()),
-	nfs_(3 * nf_)
+MeshWrapper::MeshWrapper(const Eigen::MatrixX3d& v_dom, const Eigen::MatrixX3i& f_dom) :
+	v_dom_(v_dom),
+	f_dom_(f_dom)
 {
-	NormalizeMesh(V_);
-	ComputeFs(F_, Fs_);
-	ComputeSoup2DRandom(Fs_, Vs_);
-	ComputeE(F_, E_);
-	ComputeE(Fs_, Es_);
-	ComputeED2EIMap(E_, ed2ei_);
-	ComputeVI2VIMaps(F_, vi2vis_, vis2vi_);
-	ComputeEI2EIMaps(Es_, vis2vi_, ed2ei_, ei2eis_, eis2ei_);
-	ComputeCC(E_, Es_, ei2eis_, vis2vi_, CC_);
-	ComputeSurfaceGradientPerFace(V_, F_, D1_, D2_);
+	NormalizeVertices(v_dom_);
+	GenerateRandom2DSoup(f_dom, f_im_, v_im_);
+	ComputeDomainEdges(f_dom_, e_dom_);
+	ComputeDomainEdges(f_im_, e_im_);
+	ComputeED2EIMap(e_dom_, EDdom2EIdom);
+	ComputeVI2VIMaps(f_dom_, Vdom2Vim, Vim2Vdom);
+	ComputeEI2EIMaps(e_im_, Vim2Vdom, EDdom2EIdom, Edom2Eim, Eim2Edom);
+	ComputeCornerCorrespondences(e_dom_, e_im_, Edom2Eim, Vim2Vdom, cc_);
+	ComputeSurfaceGradientPerFace(v_dom_, f_dom_, d1_, d2_);
 }
 
 MeshWrapper::~MeshWrapper()
@@ -37,72 +33,55 @@ MeshWrapper::~MeshWrapper()
 
 }
 
-const Eigen::MatrixX3d& MeshWrapper::GetV() const
+const Eigen::MatrixX3d& MeshWrapper::GetDomainVertices() const
 {
-	return V_;
+	return v_dom_;
 }
 
-const Eigen::MatrixX3i& MeshWrapper::GetF() const
+const Eigen::MatrixX3i& MeshWrapper::GetDomainFaces() const
 {
-	return F_;
+	return f_dom_;
 }
 
-const Eigen::MatrixX2d& MeshWrapper::GetVs() const
+const Eigen::MatrixX2d& MeshWrapper::GetImageVertices() const
 {
-	return Vs_;
+	return v_im;
 }
 
-const Eigen::MatrixX3i& MeshWrapper::GetFs() const
+const Eigen::MatrixX3i& MeshWrapper::GetImageFaces() const
 {
-	return Fs_;
+	return f_im_;
 }
 
-const Eigen::MatrixX2i& MeshWrapper::GetE() const
+const Eigen::MatrixX2i& MeshWrapper::GetDomainEdges() const
 {
-	return E_;
+	return e_dom_;
 }
 
-const Eigen::MatrixX2i& MeshWrapper::GetEs() const
+const Eigen::MatrixX2i& MeshWrapper::GetImageEdges() const
 {
-	return Es_;
+	return e_im_;
 }
 
 const Eigen::MatrixX3d& MeshWrapper::GetD1() const
 {
-	return D1_;
+	return d1_;
 }
 
 const Eigen::MatrixX3d& MeshWrapper::GetD2() const
 {
-	return D2_;
+	return d2_;
 }
 
-const Eigen::SparseMatrix<int>& MeshWrapper::GetV2V() const
-{
-	return V2V_;
-}
+//void ComputeSoup2DRandom(const Eigen::MatrixX3i& Fin, const Eigen::MatrixX2d& Vin, Eigen::MatrixX3i& Fout, Eigen::MatrixX2d& Vout);
+//void FixFlippedFaces(const Eigen::MatrixX3i& Fim, Eigen::MatrixX2d& Vim);
 
-const Eigen::SparseMatrix<int>& MeshWrapper::GetE2E() const
-{
-	return E2E_;
-}
-
-const Eigen::SparseMatrix<int>& MeshWrapper::GetV2E() const
-{
-	return V2E_;
-}
-
-const Eigen::SparseMatrix<int>& MeshWrapper::GetV2Es() const
-{
-	return V2Es_;
-}
-
-void MeshWrapper::FixFlippedFaces(const Eigen::MatrixX3i& Fs, Eigen::MatrixX2d& Vs)
+void MeshWrapper::FixFlippedFaces(const Eigen::MatrixX3i& Fim, Eigen::MatrixX2d& Vim)
 {
 	Eigen::Matrix<double, 3, 2> face_vertices;
-	for (Eigen::MatrixX3i::Index i = 0; i < Fs.rows(); ++i)
+	for (Eigen::MatrixX3i::Index i = 0; i < Fim.rows(); ++i)
 	{
-		igl::slice(Vs, Fs.row(i), 1, face_vertices);
+		igl::slice(Vim, Fim.row(i), 1, face_vertices);
 		Eigen::Vector2d v1_2d = face_vertices.row(1) - face_vertices.row(0);
 		Eigen::Vector2d v2_2d = face_vertices.row(2) - face_vertices.row(0);
 		Eigen::Vector3d v1_3d = Eigen::Vector3d(v1_2d.x(), v1_2d.y(), 0);
@@ -113,29 +92,29 @@ void MeshWrapper::FixFlippedFaces(const Eigen::MatrixX3i& Fs, Eigen::MatrixX2d& 
 		if (face_normal(2) < 0)
 		{
 			// Reflect the face over the X-axis (so its vertices will be CCW oriented)
-			Vs(Fs(i, 0), 1) = -Vs(Fs(i, 0), 1);
-			Vs(Fs(i, 1), 1) = -Vs(Fs(i, 1), 1);
-			Vs(Fs(i, 2), 1) = -Vs(Fs(i, 2), 1);
+			Vim(Fim(i, 0), 1) = -Vim(Fim(i, 0), 1);
+			Vim(Fim(i, 1), 1) = -Vim(Fim(i, 1), 1);
+			Vim(Fim(i, 2), 1) = -Vim(Fim(i, 2), 1);
 		}
 	}
 }
 
-void MeshWrapper::ComputeSoup2DRandom(const Eigen::MatrixX3i& Fs, Eigen::MatrixX2d& Vs)
+void MeshWrapper::GenerateRandom2DSoup(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out, Eigen::MatrixX2d& v_out)
 {
-	auto nvs = Fs.rows() * 3;
-	Vs = Eigen::MatrixX2d::Random(nvs, 2) * 2.0;
-	FixFlippedFaces(Fs, Vs);
+	GenerateSoupFaces(f_in, f_out);
+	v_out = Eigen::MatrixX2d::Random(3 * f_out.rows(), 2) * 2.0;
+	FixFlippedFaces(f_out, v_out);
 }
 
-void MeshWrapper::ComputeFs(const Eigen::MatrixX3i& F, Eigen::MatrixX3i& Fs)
+void MeshWrapper::GenerateSoupFaces(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out)
 {
-	auto nf = F.rows();
-	auto nfs = 3 * nf;
-	Eigen::VectorXi lin = Eigen::VectorXi::LinSpaced(nfs, 0, nfs - 1);
-	Fs = Eigen::Map<Eigen::Matrix3Xi>(lin.data(), 3, nf).transpose();
+	auto f_in_count = f_in.rows();
+	auto f_out_count = 3 * f_in_count;
+	Eigen::VectorXi lin = Eigen::VectorXi::LinSpaced(f_out_count, 0, f_out_count - 1);
+	f_out = Eigen::Map<Eigen::Matrix3Xi>(lin.data(), 3, f_in_count).transpose();
 }
 
-void MeshWrapper::ComputeE(const Eigen::MatrixX3i& F, Eigen::MatrixX2i& E)
+void MeshWrapper::ComputeDomainEdges(const Eigen::MatrixX3i& F, Eigen::MatrixX2i& E)
 {
 	Eigen::SparseMatrix<int> adjacency_matrix;
 	igl::adjacency_matrix(F, adjacency_matrix);
@@ -165,7 +144,7 @@ void MeshWrapper::ComputeED2EIMap(const Eigen::MatrixX2i& E, ED2EIMap& ed2ei)
 	}
 }
 
-void MeshWrapper::ComputeVI2VIMaps(const Eigen::MatrixX3i& F, VI2VIsMap& vi2vis, VIs2VIMap& vis2vi)
+void MeshWrapper::ComputeVI2VIMaps(const Eigen::MatrixX3i& F, VI2VIsMap& vi2vis, VI2VIMap& vis2vi)
 {
 	for (Eigen::MatrixX3i::Index face_index = 0; face_index < F.rows(); ++face_index)
 	{
@@ -183,7 +162,7 @@ void MeshWrapper::ComputeVI2VIMaps(const Eigen::MatrixX3i& F, VI2VIsMap& vi2vis,
 	}
 }
 
-void MeshWrapper::ComputeEI2EIMaps(const Eigen::MatrixX2i& Es, const VIs2VIMap& vis2vi, const ED2EIMap& ed2ei, EI2EIsMap& ei2eis, EIs2EIMap& eis2ei)
+void MeshWrapper::ComputeEI2EIMaps(const Eigen::MatrixX2i& Es, const VI2VIMap& vis2vi, const ED2EIMap& ed2ei, EI2EIsMap& ei2eis, EI2EIMap& eis2ei)
 {
 	for (Eigen::MatrixX2i::Index edge_index_s = 0; edge_index_s < Es.rows(); ++edge_index_s)
 	{
@@ -197,7 +176,7 @@ void MeshWrapper::ComputeEI2EIMaps(const Eigen::MatrixX2i& Es, const VIs2VIMap& 
 	}
 }
 
-void MeshWrapper::ComputeCC(const Eigen::MatrixX2i& E, const Eigen::MatrixX2i& Es, const EI2EIsMap& ei2eis, const VIs2VIMap& vis2vi, Eigen::SparseMatrix<double>& CC)
+void MeshWrapper::ComputeCornerCorrespondences(const Eigen::MatrixX2i& E, const Eigen::MatrixX2i& Es, const EI2EIsMap& ei2eis, const VI2VIMap& vis2vi, Eigen::SparseMatrix<double>& CC)
 {
 	IndexType current_triplet_index = 0;
 	std::vector<Eigen::Triplet<double>> triplets;
@@ -296,7 +275,7 @@ void MeshWrapper::ComputeSurfaceGradientPerFace(const Eigen::MatrixX3d& V, const
 	D2 = F2.col(0).asDiagonal() * Dx + F2.col(1).asDiagonal() * Dy + F2.col(2).asDiagonal() * Dz;
 }
 
-void MeshWrapper::NormalizeMesh(Eigen::MatrixX3d& V)
+void MeshWrapper::NormalizeVertices(Eigen::MatrixX3d& V)
 {
 	Eigen::RowVector3d barycenter = (V.colwise().minCoeff() + V.colwise().maxCoeff()) / 2.0;
 	V = V.rowwise() - barycenter;
