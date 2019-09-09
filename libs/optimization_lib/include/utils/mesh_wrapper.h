@@ -1,6 +1,6 @@
 #pragma once
-#ifndef MESH_WRAPPER_H
-#define MESH_WRAPPER_H
+#ifndef OPTIMIZATION_LIB_MESH_WRAPPER_H
+#define OPTIMIZATION_LIB_MESH_WRAPPER_H
 
 // STL Includes
 #include <vector>
@@ -18,14 +18,27 @@
 class MeshWrapper
 {
 public:
+
+	/**
+	 * Public type definitions
+	 */
+
 	enum class SoupInitType {
 		RANDOM,
 		ISOMETRIC
 	};
 
+	/**
+	 * Constructors and destructor
+	 */
+
 	MeshWrapper();
-	MeshWrapper(const Eigen::MatrixX3d& v_dom, const Eigen::MatrixX3i& f_dom);
+	MeshWrapper(const Eigen::MatrixX3d& v, const Eigen::MatrixX3i& f);
 	virtual ~MeshWrapper();
+
+	/**
+	 * Getters
+	 */
 
 	const Eigen::MatrixX3i& GetDomainFaces() const;
 	const Eigen::MatrixX3d& GetDomainVertices() const;
@@ -38,6 +51,11 @@ public:
 
 private:
 
+	/**
+	 * Function objects
+	 */
+
+	// Custom hash and equals functions for unordered_map
 	// https://stackoverflow.com/questions/32685540/why-cant-i-compile-an-unordered-map-with-a-pair-as-key
 	struct pair_hash {
 		template <class T1, class T2>
@@ -61,6 +79,10 @@ private:
 		}
 	};
 
+	/**
+	 * Private type definitions
+	 */
+
 	using IndexType = Eigen::DenseIndex;
 	using VertexIndex = IndexType;
 	using EdgeIndex = IndexType;
@@ -71,35 +93,73 @@ private:
 	using EI2EIsMap = std::unordered_map<EdgeIndex, std::vector<EdgeIndex>>;
 	using EI2EIMap = std::unordered_map<EdgeIndex, EdgeIndex>;
 
-	void GenerateRandom2DSoup(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out, Eigen::MatrixX2d& v_out);
-	void GenerateSoupFaces(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out);
+	/**
+	 * General use mesh methods
+	 */
 
-	void FixFlippedFaces(const Eigen::MatrixX3i& f_im, Eigen::MatrixX2d& v_im);
-	void ComputeDomainEdges(const Eigen::MatrixX3i& f_dom, Eigen::MatrixX2i& e_dom);
-	void ComputeED2EIMap(const Eigen::MatrixX2i& e_dom, ED2EIMap& ed_dom2ei_dom);
-	void ComputeVI2VIMaps(const Eigen::MatrixX3i& f_dom, VI2VIsMap& v_dom2v_im, VI2VIMap& v_im2v_dom);
-	void ComputeEI2EIMaps(const Eigen::MatrixX2i& e_im, const VI2VIMap& v_im2v_dom, const ED2EIMap& ed_dom2ei_dom, EI2EIsMap& e_dom2e_im, EI2EIMap& e_im2e_dom);
-	void ComputeCornerCorrespondences(const Eigen::MatrixX2i& e_dom, const Eigen::MatrixX2i& e_im, const EI2EIsMap& e_dom2e_im, const VI2VIMap& v_im2v_dom, Eigen::SparseMatrix<double>& cc);
-	void ComputeSurfaceGradientPerFace(const Eigen::MatrixX3d& v_dom, const Eigen::MatrixX3i& f_dom, Eigen::MatrixX3d& d1, Eigen::MatrixX3d& d2);
+	void ComputeEdges(const Eigen::MatrixX3i& f, Eigen::MatrixX2i& e);
 	void NormalizeVertices(Eigen::MatrixX3d& v);
 
+	/**
+	 * Discrete operators
+	 */
+
+	void ComputeSurfaceGradientPerFace(const Eigen::MatrixX3d& v, const Eigen::MatrixX3i& f, Eigen::MatrixX3d& d1, Eigen::MatrixX3d& d2);
+
+	/**
+	 * Mesh soup methods
+	 */
+
+	// Soup generation
+	void GenerateSoupFaces(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out);
+	void FixFlippedFaces(const Eigen::MatrixX3i& f_im, Eigen::MatrixX2d& v_im);
+	void GenerateRandom2DSoup(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out, Eigen::MatrixX2d& v_out);
+
+	// Vertex and edge iteration helper functions
+	static void IterateSoupFaces(const Eigen::MatrixX3i& f_dom, std::function<void(Eigen::MatrixX3i::Index, IndexType)> callback);
+	static void IterateSoupEdges(const Eigen::MatrixX2i& e_im, const VI2VIMap& v_im_2_v_dom, const ED2EIMap& ed_dom_2_ei_dom, std::function<void(IndexType, IndexType)> callback);
+
+	// Edge descriptor -> Edge index map
+	void ComputeED2EIMap(const Eigen::MatrixX2i& e, ED2EIMap& ed_2_ei);
+
+	// Soup vertex index <-> Domain vertex index maps
+	void ComputeSoupVI2VIMap(const Eigen::MatrixX3i& f_dom, VI2VIMap& v_im_2_v_dom);
+	void ComputeVI2SoupVIsMap(const Eigen::MatrixX3i& f_dom, VI2VIsMap& v_dom_2_v_im);
+
+	// Soup edge index <-> Domain edge index maps
+	void ComputeSoupEI2EIMap(const Eigen::MatrixX2i& e_im, const VI2VIMap& v_im_2_v_dom, const ED2EIMap& ed_dom_2_ei_dom, EI2EIMap& e_im_2_e_dom);
+	void ComputeEI2SoupEIsMap(const Eigen::MatrixX2i& e_im, const VI2VIMap& v_im_2_v_dom, const ED2EIMap& ed_dom_2_ei_dom, EI2EIsMap& e_dom_2_e_im);
+
+	// Corner correspondences
+	void ComputeCornerCorrespondences(const Eigen::MatrixX2i& e_dom, const Eigen::MatrixX2i& e_im, const EI2EIsMap& e_dom_2_e_im, const VI2VIMap& v_im_2_v_dom, Eigen::SparseMatrix<double>& cc);
+
+	/**
+	 * Fields
+	 */
+
+	// Domain matrices
 	Eigen::MatrixX3d v_dom_;
-	Eigen::MatrixX2d v_im_;
 	Eigen::MatrixX3i f_dom_;
-	Eigen::MatrixX3i f_im_;
 	Eigen::MatrixX2i e_dom_;
+
+	// Image matrices
+	Eigen::MatrixX2d v_im_;
+	Eigen::MatrixX3i f_im_;
 	Eigen::MatrixX2i e_im_;
+
+	// Discrete partial-derivatives matrices
 	Eigen::MatrixX3d d1_;
 	Eigen::MatrixX3d d2_;
 
-	// Corners correspondence matrix
+	// Corner correspondences matrix
 	Eigen::SparseMatrix<double> cc_;
 
-	ED2EIMap	ed_dom2ei_dom_;
-	VI2VIsMap	v_dom2v_im_;
-	VI2VIMap	v_im2v_dom_;
-	EI2EIsMap	e_dom2e_im_;
-	EI2EIMap	e_im2e_dom_;
+	// Maps
+	ED2EIMap	ed_dom_2_ei_dom_;
+	VI2VIsMap	v_dom_2_v_im_;
+	VI2VIMap	v_im_2_v_dom_;
+	EI2EIsMap	e_dom_2_e_im_;
+	EI2EIMap	e_im_2_e_dom_;
 };
 
 // https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values/35991300#35991300

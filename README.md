@@ -11,7 +11,7 @@
 - Additional prerequisites for electron applications:
   - Install [NodeJS](https://nodejs.org).
   - Install [Visual Studio Code](https://code.visualstudio.com/).
-  - Open command prompt, and run the following commands:
+  - Open command prompt, and navigate to the project's root folder. Run the following commands:
       1. `npm install -g cmake-js`
       2. `npm install -g polymer-cli`
       3. `npm install -g @pika/cli`
@@ -21,7 +21,7 @@
  1. Clone repository recursively - `git clone --recursive https://github.com/HaifaGraphics/RDS.git`
  2. Generate Visual Studio project:
     - For native applications:
-       1. Generate Visual Studio project using CMake GUI (Need to be done after a modification to a CMakeLists.txt file).
+       1. Generate Visual Studio project using CMake GUI.
     - For electron applications:
-      1. Open command prompt:
-         1. Run `cmake-js` from the repository's root folder (Need to be done after a modification to a CMakeLists.txt file).
+      1. Open command prompt, and navigate to the project's root folder.:
+         1. `cmake-js configure`

@@ -10,14 +10,14 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 
 	Napi::Function func = DefineClass(env, "Engine", {
 	  InstanceMethod("loadModel", &Engine::LoadModel),
-	  InstanceAccessor("modelBufferedVertices", &Engine::GetModelBufferedVertices, nullptr),
-	  InstanceAccessor("soupBufferedVertices", &Engine::GetSoupBufferedVertices, nullptr),
-	  InstanceAccessor("modelBufferedMeshVertices", &Engine::GetModelBufferedMeshVertices, nullptr),
-	  InstanceAccessor("soupBufferedMeshVertices", &Engine::GetSoupBufferedMeshVertices, nullptr),
-	  InstanceAccessor("modelVertices", &Engine::GetModelVertices, nullptr),
-	  InstanceAccessor("soupVertices", &Engine::GetSoupVertices, nullptr),
-	  InstanceAccessor("modelFaces", &Engine::GetModelFaces, nullptr),
-	  InstanceAccessor("soupFaces", &Engine::GetSoupFaces, nullptr)
+	  InstanceAccessor("domainBufferedVertices", &Engine::GetDomainBufferedVertices, nullptr),
+	  InstanceAccessor("imageBufferedVertices", &Engine::GetImageBufferedVertices, nullptr),
+	  InstanceAccessor("domainBufferedMeshVertices", &Engine::GetDomainBufferedMeshVertices, nullptr),
+	  InstanceAccessor("imageBufferedMeshVertices", &Engine::GetImageBufferedMeshVertices, nullptr),
+	  InstanceAccessor("domainVertices", &Engine::GetDomainVertices, nullptr),
+	  InstanceAccessor("imageVertices", &Engine::GetImageVertices, nullptr),
+	  InstanceAccessor("domainFaces", &Engine::GetDomainFaces, nullptr),
+	  InstanceAccessor("imageFaces", &Engine::GetImageFaces, nullptr)
 	});
 
 	constructor = Napi::Persistent(func);
@@ -28,7 +28,8 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 }
 
 Engine::Engine(const Napi::CallbackInfo& info) : 
-	Napi::ObjectWrap<Engine>(info)
+	Napi::ObjectWrap<Engine>(info),
+	mesh_wrapper_(std::make_shared<MeshWrapper>())
 {
 
 }
@@ -93,73 +94,73 @@ Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
 	/**
 	 * Initialize MeshWrapper with loaded mesh model (faces and vertices)
 	 */
-	mesh_wrapper_ = MeshWrapper(V, F);
+	mesh_wrapper_ = std::make_shared<MeshWrapper>(V, F);
 
 	return env.Null();
 }
 
-Napi::Value Engine::GetModelVertices(const Napi::CallbackInfo& info)
+Napi::Value Engine::GetDomainVertices(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateVertices(env, mesh_wrapper_.GetV());
+	return CreateVertices(env, mesh_wrapper_->GetDomainVertices());
 }
 
-Napi::Value Engine::GetSoupVertices(const Napi::CallbackInfo& info)
+Napi::Value Engine::GetImageVertices(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateVertices(env, mesh_wrapper_.GetVs());
+	return CreateVertices(env, mesh_wrapper_->GetImageVertices());
 }
 
-Napi::Value Engine::GetModelFaces(const Napi::CallbackInfo& info)
+Napi::Value Engine::GetDomainFaces(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateFaces(env, mesh_wrapper_.GetF());
+	return CreateFaces(env, mesh_wrapper_->GetDomainFaces());
 }
 
-Napi::Value Engine::GetSoupFaces(const Napi::CallbackInfo& info)
+Napi::Value Engine::GetImageFaces(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateFaces(env, mesh_wrapper_.GetFs());
+	return CreateFaces(env, mesh_wrapper_->GetImageFaces());
 }
 
-Napi::Value Engine::GetModelBufferedVertices(const Napi::CallbackInfo& info)
+Napi::Value Engine::GetDomainBufferedVertices(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateBufferedVerticesArray(env, mesh_wrapper_.GetV());
+	return CreateBufferedVerticesArray(env, mesh_wrapper_->GetDomainVertices());
 }
 
-Napi::Value Engine::GetSoupBufferedVertices(const Napi::CallbackInfo& info)
+Napi::Value Engine::GetImageBufferedVertices(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateBufferedVerticesArray(env, mesh_wrapper_.GetVs());
+	return CreateBufferedVerticesArray(env, mesh_wrapper_->GetImageVertices());
 }
 
-Napi::Value Engine::GetModelBufferedMeshVertices(const Napi::CallbackInfo& info)
+Napi::Value Engine::GetDomainBufferedMeshVertices(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateBufferedMeshVerticesArray(env, mesh_wrapper_.GetV(), mesh_wrapper_.GetF());
+	return CreateBufferedMeshVerticesArray(env, mesh_wrapper_->GetDomainVertices(), mesh_wrapper_->GetDomainFaces());
 }
 
-Napi::Value Engine::GetSoupBufferedMeshVertices(const Napi::CallbackInfo& info)
+Napi::Value Engine::GetImageBufferedMeshVertices(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateBufferedMeshVerticesArray(env, mesh_wrapper_.GetVs(), mesh_wrapper_.GetFs());
+	return CreateBufferedMeshVerticesArray(env, mesh_wrapper_->GetImageVertices(), mesh_wrapper_->GetImageFaces());
 }
 
 Engine::ModelFileType Engine::GetModelFileType(std::string modelFilePath)

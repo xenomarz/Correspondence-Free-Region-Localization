@@ -33,14 +33,14 @@ private:
 	 * NAPI Instance Methods
 	 */
 	Napi::Value LoadModel(const Napi::CallbackInfo& info);
-	Napi::Value GetModelVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetSoupVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetModelFaces(const Napi::CallbackInfo& info);
-	Napi::Value GetSoupFaces(const Napi::CallbackInfo& info);
-	Napi::Value GetModelBufferedVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetSoupBufferedVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetModelBufferedMeshVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetSoupBufferedMeshVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetImageVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainFaces(const Napi::CallbackInfo& info);
+	Napi::Value GetImageFaces(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainBufferedVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetImageBufferedVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainBufferedMeshVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetImageBufferedMeshVertices(const Napi::CallbackInfo& info);
 
 	/**
 	 * Regular Instance Methods
@@ -126,7 +126,7 @@ private:
 	/**
 	 * Fields
 	 */
-	MeshWrapper mesh_wrapper_;
+	std::shared_ptr<MeshWrapper> mesh_wrapper_;
 };
 
 #endif

@@ -5,19 +5,19 @@ export class AutoquadsSoupMeshProvider extends AutoquadsMeshProvider {
   }
 
   get vertices() {
-    return this._engine.soupVertices;
+    return this._engine.imageVertices;
   }
 
   get faces() {
-    return this._engine.soupFaces;
+    return this._engine.imageFaces;
   }
 
   get bufferedVertices() {
-    return this._engine.soupBufferedVertices;
+    return this._engine.imageBufferedVertices;
   }
 
   get bufferedMeshVertices() {
-    return this._engine.soupBufferedMeshVertices;
+    return this._engine.imageBufferedMeshVertices;
   }
 
   get debugData() {
