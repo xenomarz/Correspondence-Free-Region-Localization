@@ -26,12 +26,12 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		mouse_mode = NONE;
 		view = Horizontal;
 		IsTranslate = false;
+		solverInitialized = false;
 		down_mouse_x = down_mouse_y = -1;
 
 		//Solver Parameters
 		solver_on = false;
-		init_solver = false;
-
+		
 		//Parametrization Parameters
 		Position_Weight = Seamless_Weight = Integer_Spacing = Integer_Weight = Delta = Lambda = 0.5;
 
@@ -53,7 +53,7 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		solver = make_unique<Newton>();
 		totalObjective = make_shared<TotalObjective>();	
 
-		//maximise window
+		//maximize window
 		glfwMaximizeWindow(viewer->window);
 	}
 }
@@ -68,13 +68,8 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 		string fname = file_dialog_open();
 		if (fname.length() != 0)
 		{
-
-			if (solver_on) {
-				if (solver->is_running)
-					stop_solver_thread();
-
-				while (solver->is_running);
-			}
+			stop_solver_thread();
+			
 			/*if (viewer->data_list.size() == 2) {
 				cout << "s = " << viewer->data_list.size() << endl;
 				auto iter = viewer->data_list.begin();
@@ -90,14 +85,7 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 			viewer->load_mesh_from_file(fname.c_str());
 			viewer->load_mesh_from_file(fname.c_str());
 			
-			//Mark the faces
-			color_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
-			for (int i = 0; i < color_per_face.rows(); i++)
-			{
-				color_per_face.row(i) << double(model_color[0]), double(model_color[1]), double(model_color[2]);
-			}
-			
-			//initializeSolver();
+			initializeSolver();
 			Update_view();
 		}
 	}
@@ -143,18 +131,24 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 	}
 
 	if (ImGui::Combo("Parametrization type", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
-		if (param_type == HARMONIC) {
-			compute_harmonic_param();
-			initializeSolver();
-		}
-		else if (param_type == LSCM) {
-			compute_lscm_param();
-		}
-		else if (param_type == ARAP) {
-			compute_ARAP_param();
-		}
-		else if (param_type == RANDOM) {
-			ComputeSoup2DRandom();
+		MatrixXd initialguess;
+		if (param_type != None) {
+			if (param_type == HARMONIC) {
+				initialguess = compute_harmonic_param();
+			}
+			else if (param_type == LSCM) {
+				initialguess = compute_lscm_param();
+			}
+			else if (param_type == ARAP) {
+				initialguess = compute_ARAP_param();
+			}
+			else if (param_type == RANDOM) {
+				initialguess = ComputeSoup2DRandom();
+			}
+			VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
+			solver->init(totalObjective, initialguessXX);
+			MatrixX3i F = viewer->data(OutputModelID()).F;
+			solver->setFlipAvoidingLineSearch(F);
 		}
 	}
 
@@ -619,8 +613,10 @@ void BasicMenu::UpdateHandles() {
 	update_texture(viewer->data(OutputModelID()).V);
 
 	//Finally, we update the handles in the constraints positional object
-	(*HandlesInd) = CurrHandlesInd;
-	(*HandlesPosDeformed) = CurrHandlesPosDeformed;
+	if (solverInitialized) {
+		(*HandlesInd) = CurrHandlesInd;
+		(*HandlesPosDeformed) = CurrHandlesPosDeformed;
+	}
 }
 
 void BasicMenu::Update_view() {
@@ -861,15 +857,16 @@ int BasicMenu::pick_vertex(MatrixXd& V, MatrixXi& F,View LR) {
 }
 	
 MatrixXd BasicMenu::compute_ARAP_param() {
+	param_type = ARAP;
 	// Compute the initial solution for ARAP (harmonic parametrization)
 	VectorXi bnd;
 	MatrixXd V_uv, initial_guess;
 
-	boundary_loop(viewer->data(OutputModelID()).F, bnd);
+	boundary_loop(viewer->data(InputModelID()).F, bnd);
 	MatrixXd bnd_uv;
-	map_vertices_to_circle(viewer->data(OutputModelID()).V, bnd, bnd_uv);
+	map_vertices_to_circle(viewer->data(InputModelID()).V, bnd, bnd_uv);
 
-	harmonic(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, bnd, bnd_uv, 1, initial_guess);
+	harmonic(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, bnd, bnd_uv, 1, initial_guess);
 
 	// Add dynamic regularization to avoid to specify boundary conditions
 	ARAPData arap_data;
@@ -880,7 +877,7 @@ MatrixXd BasicMenu::compute_ARAP_param() {
 	// Initialize ARAP
 	arap_data.max_iter = 100;
 	// 2 means that we're going to *solve* in 2d
-	arap_precomputation(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, 2, b, arap_data);
+	arap_precomputation(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, 2, b, arap_data);
 
 	// Solve arap using the harmonic map as initial guess
 	V_uv = initial_guess;
@@ -894,16 +891,17 @@ MatrixXd BasicMenu::compute_ARAP_param() {
 }
 
 MatrixXd BasicMenu::compute_harmonic_param() {
+	param_type = HARMONIC;
 	// Find the open boundary
 	VectorXi bnd;
 	MatrixXd V_uv;
-	boundary_loop(viewer->data(OutputModelID()).F, bnd);
+	boundary_loop(viewer->data(InputModelID()).F, bnd);
 
 	// Map the boundary to a circle, preserving edge proportions
 	MatrixXd bnd_uv;
-	map_vertices_to_circle(viewer->data(OutputModelID()).V, bnd, bnd_uv);
+	map_vertices_to_circle(viewer->data(InputModelID()).V, bnd, bnd_uv);
 
-	harmonic(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, bnd, bnd_uv, 1, V_uv);
+	harmonic(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, bnd, bnd_uv, 1, V_uv);
 	// Scale UV to make the texture more clear
 	V_uv *= 5;
 	update_texture(V_uv);
@@ -913,16 +911,17 @@ MatrixXd BasicMenu::compute_harmonic_param() {
 
 MatrixXd BasicMenu::compute_lscm_param()
 {
+	param_type = LSCM;
 	// Fix two points on the boundary
 	VectorXi bnd, b(2, 1);
 	MatrixXd V_uv;
-	boundary_loop(viewer->data(OutputModelID()).F, bnd);
+	boundary_loop(viewer->data(InputModelID()).F, bnd);
 	b(0) = bnd(0);
 	b(1) = bnd(round(bnd.size() / 2));
 	MatrixXd bc(2, 2);
 	bc << 0, 0, 1, 0;
 
-	lscm(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, b, bc, V_uv);
+	lscm(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, b, bc, V_uv);
 	// Scale UV to make the texture more clear
 	V_uv *= 5;
 	update_texture(V_uv);
@@ -932,10 +931,11 @@ MatrixXd BasicMenu::compute_lscm_param()
 
 MatrixXd BasicMenu::ComputeSoup2DRandom()
 {
+	param_type = RANDOM;
 	MatrixXd V_uv;
-	auto nvs = viewer->data(OutputModelID()).V.rows();
+	auto nvs = viewer->data(InputModelID()).V.rows();
 	V_uv = MatrixX2d::Random(nvs, 2) * 2.0;
-	FixFlippedFaces(viewer->data(OutputModelID()).F, V_uv);
+	//FixFlippedFaces(viewer->data(InputModelID()).F, V_uv);
 
 	update_texture(V_uv);
 	Update_view();
@@ -989,7 +989,10 @@ void BasicMenu::start_solver_thread() {
 
 void BasicMenu::stop_solver_thread() {
 	solver_on = false;
-	solver->stop();
+	if (solver->is_running) {
+		solver->stop();
+	}
+	while (solver->is_running);
 }
 
 void BasicMenu::update_mesh()
@@ -1004,16 +1007,13 @@ void BasicMenu::update_mesh()
 
 void BasicMenu::initializeSolver()
 {
-	if (init_solver)
-		return;
+	//Check point for 2D mesh
+	//compute_harmonic_param();
 
 	MatrixXd V = viewer->data(OutputModelID()).V;
 	MatrixX3i F = viewer->data(OutputModelID()).F;
-	solver_on = false;
-	if (solver->is_running)
-		stop_solver_thread();
-
-	while (solver->is_running);
+	
+	stop_solver_thread();
 
 	if (V.rows() == 0 || F.rows() == 0)
 		return;
@@ -1037,15 +1037,15 @@ void BasicMenu::initializeSolver()
 	totalObjective->objectiveList.push_back(move(constraintsPositional));
 
 	totalObjective->init();
+
 	// initialize the solver
-	
-	//MatrixXd initialguess = compute_harmonic_param();
-	VectorXd initialguessXX = Map<const VectorXd>(V.data(), V.rows() * 2);
+	MatrixXd initialguess = compute_harmonic_param();
+	VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
 	solver->init(totalObjective, initialguessXX);
 	solver->setFlipAvoidingLineSearch(F);
 	
 	cout << "Solver is initialized!" << endl;
-	init_solver = true;
+	solverInitialized = true;
 }
 
 void BasicMenu::FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs)

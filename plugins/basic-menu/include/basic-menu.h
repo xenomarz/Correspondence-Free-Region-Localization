@@ -86,7 +86,7 @@ private:
 	MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
 
 	//Solver Button Parameters
-	bool solver_on, init_solver;
+	bool solver_on, solverInitialized;
 
 	//Parametrization Parameters
 	float Lambda, Delta, Integer_Weight, Integer_Spacing, Seamless_Weight, Position_Weight;
