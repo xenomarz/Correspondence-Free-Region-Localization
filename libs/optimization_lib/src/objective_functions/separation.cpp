@@ -3,6 +3,7 @@
 #include <thread>
 #include <iostream>
 #include <memory>
+#include <limits>
 
 // LIBIGL includes
 #include <igl/cat.h>
@@ -358,7 +359,7 @@ inline int Separation::sign(double val)
 
 inline double Separation::dirac(double val)
 {
-	return val == 0 ? INF : 0;
+	return val == 0 ? numeric_limits<double>::infinity() : 0;
 }
 
 void Separation::make_spd(Mat4& h)

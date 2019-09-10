@@ -1,17 +1,12 @@
 #pragma once
 
-#include "objective_functions/objective_function.h"
-
-//#include "EigenTypes.h"
-//#include "MeshWrapper.h"
-
+// STL includes
+#include <vector>
+#include <map>
 #include <list>
 
-using namespace std;
-
-#ifndef INF
-#define INF numeric_limits<double>::infinity()
-#endif
+// Optimization lib includes
+#include "objective_functions/objective_function.h"
 
 class Separation : public ObjectiveFunction
 {
@@ -41,7 +36,7 @@ public:
 	void hessian(const Eigen::MatrixX2d& X);
 
 	void find_single_hessian(const Eigen::Vector2d& xi, const Eigen::Vector2d& xj, Eigen::Matrix4d& h);
-	void update_alphas(const Mat& weights, double max_possible);
+	void update_alphas(const Eigen::MatrixXd& weights, double max_possible);
 
 	Eigen::VectorXd GetVertexEnergy();
 
@@ -55,10 +50,11 @@ public:
 	Eigen::VectorXd f_per_pair, f_sep_per_pair;
 
 	// force these uv vertices to be connected more closely, used for gradient
-	vector<int> gradient_force_connects;
+	std::vector<int> gradient_force_connects;
+
 	// same for function value, to affect the correct index in f_per_row
 	// since here its already sorted according to pairs
-	vector<int> value_force_connects;
+	std::vector<int> value_force_connects;
 
 	double force_factor = 10.;
 
@@ -66,22 +62,23 @@ public:
 	// alphas gathered by summing up the factors
 	// for each corner force
 	Eigen::VectorXd connect_alphas;
+
 	// same vars for disconnect
 	Eigen::VectorXd disconnect_alphas;
 
 	Eigen::VectorXd edge_lenghts_per_pair;
 	Eigen::VectorXd no_seam_constraints_per_pair;
-	vector<std::pair<int, int>> pair2ind;
-	map<std::pair<int, int>,int> ind2pair;
+	std::vector<std::pair<int, int>> pair2ind;
+	std::map<std::pair<int, int>,int> ind2pair;
 
 private:
 	Eigen::VectorXd EsepP_squared_rowwise_sum;
 	Eigen::VectorXd EsepP_squared_rowwise_sum_plus_delta;
 	
 
-	void flat_log_single_hessian(const Vec2& xi, const Vec2& xj, Eigen::Matrix4d& h);
+	void flat_log_single_hessian(const Eigen::Vector2d& xi, const Eigen::Vector2d& xj, Eigen::Matrix4d& h);
 	void make_spd(Eigen::Matrix4d& h);
-	void add_to_global_hessian(const Mat4& sh, int idx_xi, int idx_xj, int n, list<Tripletd>& htriplets);
+	void add_to_global_hessian(const Eigen::Matrix4d& sh, int idx_xi, int idx_xj, int n, std::list<Eigen::Triplet<double>>& htriplets);
 	inline int sign(double val);
 	inline double dirac(double val);
 
