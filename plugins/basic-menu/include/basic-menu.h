@@ -136,6 +136,7 @@ public:
 	void set_name_mapping(unsigned int data_id, string name);
 	char* getModelNames();
 	string filename(const string& str);
+	bool IsMesh2D();
 
 	//Basic Methods
 	int InputModelID();

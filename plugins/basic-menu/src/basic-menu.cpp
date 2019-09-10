@@ -48,6 +48,8 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		
 		//Update scene
 		Update_view();
+		viewer->core(input_view_id).align_camera_center(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F);
+		viewer->core(output_view_id).align_camera_center(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F);
 
 		// Initialize solver thread
 		solver = make_unique<Newton>();
@@ -87,6 +89,8 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 			
 			initializeSolver();
 			Update_view();
+			viewer->core(input_view_id).align_camera_center(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F);
+			viewer->core(output_view_id).align_camera_center(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F);
 		}
 	}
 	ImGui::SameLine(0, p);
@@ -129,27 +133,37 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 			UpdateHandles();
 		}
 	}
-
+	Parametrization prev_type = param_type;
 	if (ImGui::Combo("Parametrization type", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
 		MatrixXd initialguess;
-		if (param_type != None) {
-			if (param_type == HARMONIC) {
-				initialguess = compute_harmonic_param();
-			}
-			else if (param_type == LSCM) {
-				initialguess = compute_lscm_param();
-			}
-			else if (param_type == ARAP) {
-				initialguess = compute_ARAP_param();
-			}
-			else if (param_type == RANDOM) {
-				initialguess = ComputeSoup2DRandom();
-			}
+		MatrixX3i F = viewer->data(OutputModelID()).F;
+		Parametrization temp = param_type;
+		param_type = prev_type;
+		if (temp == HARMONIC && !IsMesh2D()) {
+			initialguess = compute_harmonic_param();
 			VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
 			solver->init(totalObjective, initialguessXX);
-			MatrixX3i F = viewer->data(OutputModelID()).F;
 			solver->setFlipAvoidingLineSearch(F);
 		}
+		else if (temp == LSCM && !IsMesh2D()) {
+			initialguess = compute_lscm_param();
+			VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
+			solver->init(totalObjective, initialguessXX);
+			solver->setFlipAvoidingLineSearch(F);
+		}
+		else if (temp == ARAP && !IsMesh2D()) {
+			initialguess = compute_ARAP_param();
+			VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
+			solver->init(totalObjective, initialguessXX);
+			solver->setFlipAvoidingLineSearch(F);
+		}
+		else if (temp == RANDOM) {
+			initialguess = ComputeSoup2DRandom();
+			VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
+			solver->init(totalObjective, initialguessXX);
+			solver->setFlipAvoidingLineSearch(F);
+		}
+		
 	}
 
 	Draw_menu_for_Parametrization();
@@ -157,6 +171,7 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 	Draw_menu_for_cores();
 	Draw_menu_for_models();
 	follow_and_mark_selected_faces();
+	Update_view();
 }
 
 IGL_INLINE void BasicMenu::post_resize(int w, int h)
@@ -628,12 +643,8 @@ void BasicMenu::Update_view() {
 			viewer->data(data.id).set_visible(false, core.id);
 		}
 	}
-			
 	viewer->data(InputModelID()).set_visible(true, input_view_id);
-	viewer->core(input_view_id).align_camera_center(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F);
-
 	viewer->data(OutputModelID()).set_visible(true, output_view_id);
-	viewer->core(output_view_id).align_camera_center(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F);
 }
 
 void BasicMenu::follow_and_mark_selected_faces() {
@@ -697,6 +708,11 @@ int BasicMenu::InputModelID() {
 
 int BasicMenu::OutputModelID() {
 	return 1;
+}
+
+bool BasicMenu::IsMesh2D() {
+	MatrixXd V = viewer->data(InputModelID()).V;
+	return (V.col(2).array() == 0).all();
 }
 
 char* BasicMenu::getModelNames()
@@ -1039,7 +1055,15 @@ void BasicMenu::initializeSolver()
 	totalObjective->init();
 
 	// initialize the solver
-	MatrixXd initialguess = compute_harmonic_param();
+	MatrixXd initialguess;
+	if (IsMesh2D()) {
+		//the mesh is 2D
+		initialguess = V;
+	}
+	else {
+		//the mesh is 3D
+		initialguess = compute_harmonic_param();
+	}
 	VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
 	solver->init(totalObjective, initialguessXX);
 	solver->setFlipAvoidingLineSearch(F);
