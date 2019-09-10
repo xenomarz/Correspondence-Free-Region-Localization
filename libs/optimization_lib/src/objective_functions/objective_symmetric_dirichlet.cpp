@@ -170,12 +170,12 @@ void ObjectiveSymmetricDirichlet::hessian()
 	for (int i = 0; i < F.rows(); i++)
 	{
 		int base = 21 * i;
-		SS[base] += 1e-6;
-		SS[base + 2] += 1e-6;
-		SS[base + 5] += 1e-6;
-		SS[base + 9] += 1e-6;
-		SS[base + 14] += 1e-6;
-		SS[base + 20] += 1e-6;
+		SS[base] += Shift_eigen_values;
+		SS[base + 2] += Shift_eigen_values;
+		SS[base + 5] += Shift_eigen_values;
+		SS[base + 9] += Shift_eigen_values;
+		SS[base + 14] += Shift_eigen_values;
+		SS[base + 20] += Shift_eigen_values;
 	}
 }
 

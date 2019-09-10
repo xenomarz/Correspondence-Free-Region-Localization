@@ -14,5 +14,5 @@ public:
 	virtual void prepare_hessian() override;
 
 	// sub objectives
-	vector<unique_ptr<ObjectiveFunction>> objectiveList;
+	vector<shared_ptr<ObjectiveFunction>> objectiveList;
 };

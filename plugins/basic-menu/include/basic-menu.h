@@ -74,6 +74,7 @@ private:
 	MouseMode mouse_mode;
 	Parametrization param_type;
 	Vector3f Highlighted_face_color, Fixed_face_color, Fixed_vertex_color;
+	bool Highlighted_face;
 	Vector3f model_color, Dragged_face_color, Dragged_vertex_color, Vertex_Energy_color;
 	MatrixXd color_per_face, Vertices_Input, Vertices_output, color_per_vertex;
 	set<int> selected_faces, selected_vertices;
@@ -93,6 +94,7 @@ private:
 	thread solver_thread;
 	unique_ptr<Newton> solver;
 	shared_ptr<TotalObjective> totalObjective;
+	shared_ptr<PenaltyPositionalConstraints> constraintsPositional;
 
 protected:
 	//Basic (necessary) parameteres
@@ -117,7 +119,6 @@ public:
 	//Draw menu methods
 	void Draw_menu_for_cores();
 	void Draw_menu_for_models();
-	void Draw_menu_for_Parametrization();
 	void Draw_menu_for_Solver();
 
 	//Pick faces & vertices and highlight them

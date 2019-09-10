@@ -26,6 +26,7 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		mouse_mode = NONE;
 		view = Horizontal;
 		IsTranslate = false;
+		Highlighted_face = true;
 		solverInitialized = false;
 		down_mouse_x = down_mouse_y = -1;
 
@@ -51,6 +52,7 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		// Initialize solver thread
 		solver = make_unique<Newton>();
 		totalObjective = make_shared<TotalObjective>();	
+		constraintsPositional = make_shared<PenaltyPositionalConstraints>();
 
 		//maximize window
 		glfwMaximizeWindow(viewer->window);
@@ -97,6 +99,7 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 	}
 			
 	ImGui::ColorEdit3("Highlighted face color", Highlighted_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+	ImGui::Checkbox("Highlight faces", &Highlighted_face);
 	ImGui::ColorEdit3("Fixed face color", Fixed_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 	ImGui::ColorEdit3("Dragged face color", Dragged_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 	ImGui::ColorEdit3("Fixed vertex color", Fixed_vertex_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
@@ -165,7 +168,7 @@ IGL_INLINE bool BasicMenu::mouse_move(int mouse_x, int mouse_y)
 {
 	if (!IsTranslate)
 	{
-		return ImGuiMenu::mouse_move(mouse_x, mouse_y);
+		return false;
 	}
 	if (mouse_mode == FACE_SELECT)
 	{
@@ -174,7 +177,7 @@ IGL_INLINE bool BasicMenu::mouse_move(int mouse_x, int mouse_y)
 			RowVector3d face_avg_pt = get_face_avg();
 			RowVector3i face = viewer->data(Model_Translate_ID).F.row(Translate_Index);
 
-			Vector3f translation = computeTranslation(mouse_x,down_mouse_x,mouse_y,down_mouse_y,face_avg_pt);
+			Vector3f translation = computeTranslation(mouse_x, down_mouse_x, mouse_y, down_mouse_y, face_avg_pt);
 			viewer->data(Model_Translate_ID).V.row(face[0]) += translation.cast<double>();
 			viewer->data(Model_Translate_ID).V.row(face[1]) += translation.cast<double>();
 			viewer->data(Model_Translate_ID).V.row(face[2]) += translation.cast<double>();
@@ -182,6 +185,8 @@ IGL_INLINE bool BasicMenu::mouse_move(int mouse_x, int mouse_y)
 			viewer->data(Model_Translate_ID).set_mesh(viewer->data(Model_Translate_ID).V, viewer->data(Model_Translate_ID).F);
 			down_mouse_x = mouse_x;
 			down_mouse_y = mouse_y;
+			UpdateHandles();
+			return true;
 		}
 	}
 	else if (mouse_mode == VERTEX_SELECT)
@@ -191,14 +196,16 @@ IGL_INLINE bool BasicMenu::mouse_move(int mouse_x, int mouse_y)
 			RowVector3d vertex_pos = viewer->data(Model_Translate_ID).V.row(Translate_Index);
 			Vector3f translation = computeTranslation(mouse_x, down_mouse_x, mouse_y, down_mouse_y, vertex_pos);
 			viewer->data(Model_Translate_ID).V.row(Translate_Index) += translation.cast<double>();
-					
+
 			viewer->data(Model_Translate_ID).set_mesh(viewer->data(Model_Translate_ID).V, viewer->data(Model_Translate_ID).F);
 			down_mouse_x = mouse_x;
 			down_mouse_y = mouse_y;
+			UpdateHandles();
+			return true;
 		}
 	}
 	UpdateHandles();
-	return ImGuiMenu::mouse_move(mouse_x, mouse_y);
+	return false;
 }
 
 IGL_INLINE bool BasicMenu::mouse_up(int button, int modifier) {
@@ -411,8 +418,11 @@ void BasicMenu::Draw_menu_for_Solver() {
 		int id = 0;
 		for (auto& obj : totalObjective->objectiveList) {
 			ImGui::PushID(id++);
+			ImGui::Text(obj->name);
 			ImGui::PushItemWidth(80 * menu_scaling());
-			ImGui::DragFloat(obj->name, &(obj->w) , 0.05f, 0.1f, 20.0f);
+			ImGui::DragFloat("weight", &(obj->w) , 0.05f, 0.1f, 20.0f);
+			ImGui::PushItemWidth(80 * menu_scaling());
+			ImGui::DragFloat("shift eigen values", &(obj->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
 			ImGui::PopID();
 		}
 	}
@@ -616,7 +626,7 @@ void BasicMenu::follow_and_mark_selected_faces() {
 		color_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
 		UpdateEnergyColors();
 		//Mark the fixed faces
-		if (f != -1)
+		if (f != -1 && Highlighted_face)
 		{
 			color_per_face.row(f) << double(Highlighted_face_color[0]), double(Highlighted_face_color[1]), double(Highlighted_face_color[2]);
 		}
@@ -1006,7 +1016,7 @@ void BasicMenu::initializeSolver()
 	auto areaPreserving = make_unique<ObjectiveAreaPreserving>();
 	areaPreserving->setVF(V, F);
 	areaPreserving->init();
-	auto constraintsPositional = make_unique<PenaltyPositionalConstraints>();
+	
 	constraintsPositional->numV = V.rows();
 	constraintsPositional->init();
 	HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
