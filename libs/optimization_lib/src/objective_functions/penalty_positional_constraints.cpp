@@ -24,18 +24,24 @@ void PenaltyPositionalConstraints::updateX(const VectorXd& X)
 
 double PenaltyPositionalConstraints::value()
 {
+	if (CurrConstrainedVerticesPos.rows() != ConstrainedVerticesPos.rows()) {
+		return 0;
+	}
 	return (ConstrainedVerticesPos - CurrConstrainedVerticesPos).squaredNorm();
 }
 
 void PenaltyPositionalConstraints::gradient(VectorXd& g)
 {
-	MatrixXd diff = (CurrConstrainedVerticesPos - ConstrainedVerticesPos);
 	g.conservativeResize(numV * 2);
 	g.setZero();
-	for (int i = 0; i < ConstrainedVerticesInd.size(); i++)
-	{
-		g(ConstrainedVerticesInd[i]) = 2*diff(i, 0);
-		g(ConstrainedVerticesInd[i] + numV) = 2*diff(i, 1);
+
+	if (CurrConstrainedVerticesPos.rows() == ConstrainedVerticesPos.rows()) {
+		MatrixXd diff = (CurrConstrainedVerticesPos - ConstrainedVerticesPos);
+		for (int i = 0; i < ConstrainedVerticesInd.size(); i++)
+		{
+			g(ConstrainedVerticesInd[i]) = 2 * diff(i, 0);
+			g(ConstrainedVerticesInd[i] + numV) = 2 * diff(i, 1);
+		}
 	}
 }
 
