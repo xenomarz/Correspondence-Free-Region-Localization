@@ -32,9 +32,6 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		//Solver Parameters
 		solver_on = false;
 		
-		//Parametrization Parameters
-		Position_Weight = Seamless_Weight = Integer_Spacing = Integer_Weight = Delta = Lambda = 0.5;
-
 		//Load two views
 		viewer->core().viewport = Vector4f(0, 0, 640, 800);
 		input_view_id = viewer->core(0).id;
@@ -133,40 +130,7 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 			UpdateHandles();
 		}
 	}
-	Parametrization prev_type = param_type;
-	if (ImGui::Combo("Parametrization type", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
-		MatrixXd initialguess;
-		MatrixX3i F = viewer->data(OutputModelID()).F;
-		Parametrization temp = param_type;
-		param_type = prev_type;
-		if (temp == HARMONIC && !IsMesh2D()) {
-			initialguess = compute_harmonic_param();
-			VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-			solver->init(totalObjective, initialguessXX);
-			solver->setFlipAvoidingLineSearch(F);
-		}
-		else if (temp == LSCM && !IsMesh2D()) {
-			initialguess = compute_lscm_param();
-			VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-			solver->init(totalObjective, initialguessXX);
-			solver->setFlipAvoidingLineSearch(F);
-		}
-		else if (temp == ARAP && !IsMesh2D()) {
-			initialguess = compute_ARAP_param();
-			VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-			solver->init(totalObjective, initialguessXX);
-			solver->setFlipAvoidingLineSearch(F);
-		}
-		else if (temp == RANDOM) {
-			initialguess = ComputeSoup2DRandom();
-			VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-			solver->init(totalObjective, initialguessXX);
-			solver->setFlipAvoidingLineSearch(F);
-		}
-		
-	}
 
-	Draw_menu_for_Parametrization();
 	Draw_menu_for_Solver();
 	Draw_menu_for_cores();
 	Draw_menu_for_models();
@@ -377,56 +341,13 @@ IGL_INLINE bool BasicMenu::pre_draw() {
 	}
 			
 	//Update the model's vertex colors in the two screens
+	viewer->data(InputModelID()).point_size = 10;
+	viewer->data(OutputModelID()).point_size = 10;
+		
 	viewer->data(InputModelID()).set_points(Vertices_Input, color_per_vertex);
 	viewer->data(OutputModelID()).set_points(Vertices_output, color_per_vertex);
 
 	return false;
-}
-
-void BasicMenu::Draw_menu_for_Parametrization() {
-	if (!ImGui::CollapsingHeader("Energy Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
-		float prev_Lambda = Lambda;
-		float prev_Delta = Delta;
-		float prev_Integer_Weight = Integer_Weight;
-		float prev_Integer_Spacing = Integer_Spacing;
-		float prev_Seamless_Weight = Seamless_Weight;
-		float prev_Position_Weight = Position_Weight;
-
-
-		ImGui::SliderFloat("Lambda", &Lambda, 0, 1, to_string(Lambda).c_str(), 1);
-		ImGui::SliderFloat("Delta", &Delta, 0, 1, to_string(Delta).c_str(), 1);
-		ImGui::SliderFloat("Integer Weight", &Integer_Weight, 0, 1, to_string(Integer_Weight).c_str(), 1);
-		ImGui::SliderFloat("Integer Spacing", &Integer_Spacing, 0, 1, to_string(Integer_Spacing).c_str(), 1);
-		ImGui::SliderFloat("Seamless Weight", &Seamless_Weight, 0, 1, to_string(Seamless_Weight).c_str(), 1);
-		ImGui::SliderFloat("Position Weight", &Position_Weight, 0, 1, to_string(Position_Weight).c_str(), 1);
-
-
-		//when a change occured on Lambda
-		if (prev_Lambda != Lambda) {
-
-		}
-		//when a change occured on Delta
-		if (prev_Delta != Delta) {
-
-		}
-		//when a change occured on Integer_Weight
-		if (prev_Integer_Weight != Integer_Weight) {
-
-		}
-		//when a change occured on Integer_Spacing
-		if (prev_Integer_Spacing != Integer_Spacing) {
-
-		}
-		//when a change occured on Seamless_Weight
-		if (prev_Seamless_Weight != Seamless_Weight) {
-
-		}
-		//when a change occured on Position_Weight
-		if (prev_Position_Weight != Position_Weight) {
-
-		}
-
-	}
 }
 
 void BasicMenu::Draw_menu_for_Solver() {
@@ -438,6 +359,41 @@ void BasicMenu::Draw_menu_for_Solver() {
 			}
 			else {
 				stop_solver_thread();
+			}
+		}
+
+		Parametrization prev_type = param_type;
+		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
+			MatrixXd initialguess;
+			MatrixX3i F = viewer->data(OutputModelID()).F;
+			Parametrization temp = param_type;
+			param_type = prev_type;
+			if (temp == None) {
+				param_type = None;
+			}
+			else if (temp == HARMONIC && !IsMesh2D() && F.size()) {
+				initialguess = compute_harmonic_param();
+				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
+				solver->init(totalObjective, initialguessXX);
+				solver->setFlipAvoidingLineSearch(F);
+			}
+			else if (temp == LSCM && !IsMesh2D() && F.size()) {
+				initialguess = compute_lscm_param();
+				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
+				solver->init(totalObjective, initialguessXX);
+				solver->setFlipAvoidingLineSearch(F);
+			}
+			else if (temp == ARAP && !IsMesh2D() && F.size()) {
+				initialguess = compute_ARAP_param();
+				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
+				solver->init(totalObjective, initialguessXX);
+				solver->setFlipAvoidingLineSearch(F);
+			}
+			else if (temp == RANDOM && F.size()) {
+				initialguess = ComputeSoup2DRandom();
+				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
+				solver->init(totalObjective, initialguessXX);
+				solver->setFlipAvoidingLineSearch(F);
 			}
 		}
 
@@ -899,8 +855,7 @@ MatrixXd BasicMenu::compute_ARAP_param() {
 	V_uv = initial_guess;
 
 	arap_solve(bc, arap_data, V_uv);
-	// Scale UV to make the texture more clear
-	V_uv *= 5;
+	
 	update_texture(V_uv);
 	Update_view();
 	return V_uv;
@@ -918,8 +873,7 @@ MatrixXd BasicMenu::compute_harmonic_param() {
 	map_vertices_to_circle(viewer->data(InputModelID()).V, bnd, bnd_uv);
 
 	harmonic(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, bnd, bnd_uv, 1, V_uv);
-	// Scale UV to make the texture more clear
-	V_uv *= 5;
+	
 	update_texture(V_uv);
 	Update_view();
 	return V_uv;
@@ -938,8 +892,7 @@ MatrixXd BasicMenu::compute_lscm_param()
 	bc << 0, 0, 1, 0;
 
 	lscm(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, b, bc, V_uv);
-	// Scale UV to make the texture more clear
-	V_uv *= 5;
+	
 	update_texture(V_uv);
 	Update_view();
 	return V_uv;
@@ -980,6 +933,10 @@ void BasicMenu::update_texture(MatrixXd& V_uv) {
 	
 void BasicMenu::checkGradients()
 {
+	if (!solverInitialized) {
+		solver_on = false;
+		return;
+	}
 	stop_solver_thread();
 	for (auto const &objective : totalObjective->objectiveList) {
 		objective->checkGradient(solver->ext_x);
@@ -989,6 +946,10 @@ void BasicMenu::checkGradients()
 
 void BasicMenu::checkHessians()
 {
+	if (!solverInitialized) {
+		solver_on = false;
+		return;
+	}
 	stop_solver_thread();
 	for (auto const &objective : totalObjective->objectiveList) {
 		objective->checkHessian(solver->ext_x);
@@ -997,6 +958,10 @@ void BasicMenu::checkHessians()
 }
 
 void BasicMenu::start_solver_thread() {
+	if(!solverInitialized){
+		solver_on = false;
+		return;
+	}
 	cout << ">> start new solver" << endl;
 	solver_on = true;
 	solver_thread = thread(&Solver::run, solver.get());

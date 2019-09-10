@@ -87,11 +87,8 @@ private:
 
 	//Solver Button Parameters
 	bool solver_on, solverInitialized;
-
-	//Parametrization Parameters
-	float Lambda, Delta, Integer_Weight, Integer_Spacing, Seamless_Weight, Position_Weight;
 	float Max_Distortion;
-
+	
 	// Solver thread
 	thread solver_thread;
 	unique_ptr<Newton> solver;
