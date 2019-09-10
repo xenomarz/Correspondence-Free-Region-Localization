@@ -48,6 +48,8 @@ public:
 	float w;
 	float Shift_eigen_values = 1e-6;
 	VectorXd Efi;     //Efi=sum(Ef_dist.^2,2), for data->Efi history
+	double energy_value = 0;
+	double gradient_norm = 0;
 	char* name = "Objective function";
 };
 

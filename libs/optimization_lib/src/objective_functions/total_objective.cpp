@@ -22,6 +22,7 @@ double TotalObjective::value()
         if (objective->w != 0)
 		    f+= objective->w*objective->value();
 
+	energy_value = f;
 	return f;
 }
 
@@ -36,6 +37,7 @@ void TotalObjective::gradient(VectorXd& g)
 			g += objective->w*gi;
 		}
 	}
+	gradient_norm = g.norm();
 }
 
 void TotalObjective::hessian()

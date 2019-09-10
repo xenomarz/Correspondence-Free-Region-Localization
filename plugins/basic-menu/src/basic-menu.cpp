@@ -23,10 +23,12 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		Dragged_vertex_color = GREEN_COLOR;
 		Fixed_vertex_color = BLUE_COLOR;
 		model_color = GREY_COLOR;
+		text_color = WHITE_COLOR;
 		mouse_mode = NONE;
 		view = Horizontal;
 		IsTranslate = false;
 		Highlighted_face = true;
+		show_text = true;
 		solverInitialized = false;
 		down_mouse_x = down_mouse_y = -1;
 
@@ -48,6 +50,9 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		Update_view();
 		viewer->core(input_view_id).align_camera_center(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F);
 		viewer->core(output_view_id).align_camera_center(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F);
+
+		viewer->core(input_view_id).is_animating = true;
+		viewer->core(output_view_id).is_animating = true;
 
 		// Initialize solver thread
 		solver = make_unique<Newton>();
@@ -139,6 +144,60 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 	Draw_menu_for_models();
 	follow_and_mark_selected_faces();
 	Update_view();
+	draw_text_results();
+}
+
+void BasicMenu::draw_text_results() {
+	if (!show_text) {
+		return;
+	}
+
+	int frameBufferWidth, frameBufferHeight;
+	int shift = 15;
+	glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
+
+	int w, h;
+	if (view == Horizontal) {
+		w = frameBufferWidth * core_percentage_size;
+		h = shift;
+	}
+	if (view == Vertical) {
+		w = shift;
+		h = frameBufferHeight - frameBufferHeight * core_percentage_size;
+	}
+	if (view == InputOnly) {
+		w = frameBufferWidth * core_percentage_size;
+		h = shift;
+	}
+	if (view == OutputOnly) {
+		w = frameBufferWidth * core_percentage_size;
+		h = shift;
+	}
+
+
+	bool bOpened(true);
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
+	ImGui::Begin("BCKGND", &bOpened, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
+	ImGui::SetWindowPos(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+	ImGui::SetWindowSize(ImGui::GetIO().DisplaySize);
+	ImGui::SetWindowCollapsed(false);
+	ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
+	
+	//add text...
+	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string("energy value") + std::to_string(totalObjective->energy_value)).c_str());
+	h += shift;
+	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string("gradient norm") + std::to_string(totalObjective->gradient_norm)).c_str());
+	h += shift;
+
+	for (auto& obj : totalObjective->objectiveList) {
+		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string("energy value") + std::to_string(obj->energy_value)).c_str());
+		h += shift;
+		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string("gradient norm") + std::to_string(obj->gradient_norm)).c_str());
+		h += shift;
+	}
+	
+	ImGui::End();
+	ImGui::PopStyleColor();
 }
 
 IGL_INLINE void BasicMenu::post_resize(int w, int h)
@@ -150,8 +209,8 @@ IGL_INLINE void BasicMenu::post_resize(int w, int h)
 			viewer->core(output_view_id).viewport = Vector4f(w * core_percentage_size, 0, w - (w * core_percentage_size), h);
 		}
 		if (view == Vertical) {
-			viewer->core(input_view_id).viewport = Vector4f(0, 0, w, h * core_percentage_size);
-			viewer->core(output_view_id).viewport = Vector4f(0, h* core_percentage_size, w, h - (h * core_percentage_size));
+			viewer->core(input_view_id).viewport = Vector4f(0, h * core_percentage_size, w, h - (h * core_percentage_size));
+			viewer->core(output_view_id).viewport = Vector4f(0, 0, w, h * core_percentage_size);
 		}
 		if (view == InputOnly) {
 			viewer->core(input_view_id).viewport = Vector4f(0, 0, w, h);
@@ -368,6 +427,9 @@ void BasicMenu::Draw_menu_for_Solver() {
 				stop_solver_thread();
 			}
 		}
+
+		ImGui::Checkbox("Show text", &show_text);
+		ImGui::ColorEdit4("text color", text_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 
 		Parametrization prev_type = param_type;
 		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {

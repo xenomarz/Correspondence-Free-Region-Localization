@@ -61,8 +61,8 @@ double ObjectiveAreaPreserving::value()
 	MatrixXd ones(detJ.rows(), 1);
 	ones.setConstant(1);
 	Efi = (detJ - ones).cwiseAbs2();
-
-	return 0.5*(Area.asDiagonal()*Efi).sum();
+	energy_value = 0.5 * (Area.asDiagonal() * Efi).sum();
+	return energy_value;
 }
 
 void ObjectiveAreaPreserving::gradient(VectorXd& g)
@@ -84,6 +84,7 @@ void ObjectiveAreaPreserving::gradient(VectorXd& g)
 		g(F(fi, 1) + V.rows()) += gi(4);
 		g(F(fi, 2) + V.rows()) += gi(5);
 	}
+	gradient_norm = g.norm();
 }
 
 void ObjectiveAreaPreserving::hessian()

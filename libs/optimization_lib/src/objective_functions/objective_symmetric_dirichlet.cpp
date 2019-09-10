@@ -86,8 +86,8 @@ double ObjectiveSymmetricDirichlet::value()
 	VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
 	VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
 	Efi = dirichlet + invDirichlet;
-
-	return 0.5*(Area.asDiagonal()*Efi).sum();
+	energy_value = 0.5 * (Area.asDiagonal() * Efi).sum();
+	return energy_value;
 }
 
 void ObjectiveSymmetricDirichlet::gradient(VectorXd& g)
@@ -119,6 +119,7 @@ void ObjectiveSymmetricDirichlet::gradient(VectorXd& g)
 		g(F(fi,1) + V.rows()) += gi(4);
 		g(F(fi,2) + V.rows()) += gi(5);
 	}
+	gradient_norm = g.norm();
 }
 
 void ObjectiveSymmetricDirichlet::hessian()

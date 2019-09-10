@@ -38,19 +38,12 @@
 #include "../../libs/optimization_lib/include/objective_functions/penalty_positional_constraints.h"
 #include <atomic>
 
-
 #define RED_COLOR Vector3f(1, 0, 0)
 #define BLUE_COLOR Vector3f(0, 0, 1)
 #define GREEN_COLOR Vector3f(0, 1, 0)
 #define GOLD_COLOR Vector3f(1, 215.0f / 255.0f, 0)
 #define GREY_COLOR Vector3f(0.75, 0.75, 0.75)
-//#define MODEL1_PATH "..\\..\\..\\models\\cactus.off"
-//#define MODEL1_PATH "..\\..\\..\\models\\camel_head.off"
-#define MODEL1_PATH "..\\..\\..\\models\\cube.off"
-//#define MODEL1_PATH "..\\..\\..\\models\\woody-hi.off"
-
-
-
+#define WHITE_COLOR Vector3f(1, 1, 1)
 
 using namespace std;
 using namespace Eigen;
@@ -58,7 +51,6 @@ using namespace igl;
 using namespace opengl;
 using namespace glfw;
 using namespace imgui;
-
 
 class BasicMenu : public ImGuiMenu
 {
@@ -75,7 +67,7 @@ private:
 	Parametrization param_type;
 	Vector3f Highlighted_face_color, Fixed_face_color, Fixed_vertex_color;
 	bool Highlighted_face;
-	Vector3f model_color, Dragged_face_color, Dragged_vertex_color, Vertex_Energy_color;
+	Vector3f model_color, Dragged_face_color, Dragged_vertex_color, Vertex_Energy_color, text_color;
 	MatrixXd color_per_face, Vertices_Input, Vertices_output, color_per_vertex;
 	set<int> selected_faces, selected_vertices;
 	float core_percentage_size, texture_size;
@@ -87,7 +79,7 @@ private:
 	MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
 
 	//Solver Button Parameters
-	bool solver_on, solverInitialized;
+	bool solver_on, solverInitialized, show_text;
 	float Max_Distortion;
 	
 	// Solver thread
@@ -120,6 +112,7 @@ public:
 	void Draw_menu_for_cores();
 	void Draw_menu_for_models();
 	void Draw_menu_for_Solver();
+	void draw_text_results();
 
 	//Pick faces & vertices and highlight them
 	int pick_face(MatrixXd& V, MatrixXi& F, View LR);

@@ -27,7 +27,8 @@ double PenaltyPositionalConstraints::value()
 	if (CurrConstrainedVerticesPos.rows() != ConstrainedVerticesPos.rows()) {
 		return 0;
 	}
-	return (ConstrainedVerticesPos - CurrConstrainedVerticesPos).squaredNorm();
+	energy_value = (ConstrainedVerticesPos - CurrConstrainedVerticesPos).squaredNorm();
+	return energy_value;
 }
 
 void PenaltyPositionalConstraints::gradient(VectorXd& g)
@@ -43,6 +44,7 @@ void PenaltyPositionalConstraints::gradient(VectorXd& g)
 			g(ConstrainedVerticesInd[i] + numV) = 2 * diff(i, 1);
 		}
 	}
+	gradient_norm = g.norm();
 }
 
 void PenaltyPositionalConstraints::hessian()
