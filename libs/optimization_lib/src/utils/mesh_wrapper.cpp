@@ -306,3 +306,50 @@ void MeshWrapper::ComputeCornerCorrespondences(const Eigen::MatrixX2i& e_dom, co
 	cc.resize(triplets.size() >> 1, v_im_2_v_dom.size());
 	cc.setFromTriplets(triplets.begin(), triplets.end());
 }
+
+void AutocutsEngine::FindEdgeLenghtsForSeparation()
+{
+	SpMat Esept = solverWrapper->solver->energy->separation->Esept;
+	Vec edge_lengths = Vec::Ones(Esept.cols());
+	int v1, v2, num_edges, pair1, pair2;
+	double edge_len;
+	Vec3 v1pos, v2pos;
+	double total = 0.;
+	int cnt = 0;
+	for (int i = 0; i < modelFacesMatrix.rows(); ++i)
+	{
+		Vec3i face = modelFacesMatrix.row(i);
+		for (int j = 0; j < 3; ++j)
+		{ // loop over all 3 triangle edges
+			v1 = face(j);
+			v2 = face((j + 1) % 3);
+			num_edges = FindCorrespondingUvEdges(v1, v2);
+			if (num_edges == 2)
+			{ // this is an actual separation energy pair
+				v1pos = modelVerticesMatrix.row(v1);
+				v2pos = modelVerticesMatrix.row(v2);
+				edge_len = 0.5 * (v1pos - v2pos).squaredNorm();
+				total += (v1pos - v2pos).norm();
+				cnt++;
+				pair1 = FindCorrespondingPairIndex(uvEdges[0].first, uvEdges[1].first);
+				pair2 = FindCorrespondingPairIndex(uvEdges[0].second, uvEdges[1].second);
+				if (pair1 == -1 || pair2 == -1)
+				{
+					pair1 = FindCorrespondingPairIndex(uvEdges[0].first, uvEdges[1].second);
+					pair2 = FindCorrespondingPairIndex(uvEdges[0].second, uvEdges[1].first);
+				}
+				edge_lengths(pair1) = edge_len;
+				edge_lengths(pair2) = edge_len;
+			}
+		}
+	}
+
+	if (setEdgeLenghtsToAverage)
+	{
+		edge_lengths = Vec::Constant(Esept.cols(), total / (double)cnt);
+	}
+
+	solverWrapper->get_slot();
+	solverWrapper->solver->energy->separation->edge_lenghts_per_pair = edge_lengths;
+	solverWrapper->release_slot();
+}
