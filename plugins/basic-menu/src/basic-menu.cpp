@@ -1,6 +1,5 @@
 #include <basic-menu/include/basic-menu.h>
 
-
 BasicMenu::BasicMenu() :
 	opengl::glfw::imgui::ImGuiMenu(){}
 
@@ -29,6 +28,7 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		IsTranslate = false;
 		Highlighted_face = true;
 		show_text = true;
+		distortion_type = TOTAL_DISTORTION;
 		solverInitialized = false;
 		down_mouse_x = down_mouse_y = -1;
 
@@ -76,17 +76,6 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 		{
 			stop_solver_thread();
 			
-			/*if (viewer->data_list.size() == 2) {
-				cout << "s = " << viewer->data_list.size() << endl;
-				auto iter = viewer->data_list.begin();
-				iter += 1;
-				viewer->data_list.erase(iter);
-				
-				cout << "s = " << viewer->data_list.size() << endl;
-				viewer->data(OutputModelID()).clear();
-				cout << "s = " << viewer->data_list.size() << endl;
-			}*/
-			
 			set_name_mapping(0, filename(fname));
 			viewer->load_mesh_from_file(fname.c_str());
 			viewer->load_mesh_from_file(fname.c_str());
@@ -103,21 +92,11 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 		viewer->open_dialog_save_mesh();
 	}
 			
-	ImGui::ColorEdit3("Highlighted face color", Highlighted_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 	ImGui::Checkbox("Highlight faces", &Highlighted_face);
-	ImGui::ColorEdit3("Fixed face color", Fixed_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-	ImGui::ColorEdit3("Dragged face color", Dragged_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-	ImGui::ColorEdit3("Fixed vertex color", Fixed_vertex_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-	ImGui::ColorEdit3("Dragged vertex color", Dragged_vertex_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-	ImGui::ColorEdit3("Model color", model_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-	ImGui::ColorEdit3("Vertex Energy color", Vertex_Energy_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+	ImGui::Checkbox("Show text", &show_text);
 
 	if ((view == Horizontal) || (view == Vertical)) {
-		float prev_size = core_percentage_size;
-		ImGui::SliderFloat("Core Size", &core_percentage_size, 0, 1, to_string(core_percentage_size).c_str(), 1);
-		//when a change occured on core percentage size
-		if (prev_size != core_percentage_size) {
-			// That's how you get the current width/height of the frame buffer (for example, after the window was resized)
+		if(ImGui::SliderFloat("Core Size", &core_percentage_size, 0, 1, to_string(core_percentage_size).c_str(), 1)){
 			int frameBufferWidth, frameBufferHeight;
 			glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
 			post_resize(frameBufferWidth, frameBufferHeight);
@@ -142,62 +121,11 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 	Draw_menu_for_Solver();
 	Draw_menu_for_cores();
 	Draw_menu_for_models();
+	Draw_menu_for_colors();
+	Draw_menu_for_text_results();
+
 	follow_and_mark_selected_faces();
 	Update_view();
-	draw_text_results();
-}
-
-void BasicMenu::draw_text_results() {
-	if (!show_text) {
-		return;
-	}
-
-	int frameBufferWidth, frameBufferHeight;
-	int shift = 15;
-	glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
-
-	int w, h;
-	if (view == Horizontal) {
-		w = frameBufferWidth * core_percentage_size;
-		h = shift;
-	}
-	if (view == Vertical) {
-		w = shift;
-		h = frameBufferHeight - frameBufferHeight * core_percentage_size;
-	}
-	if (view == InputOnly) {
-		w = frameBufferWidth * core_percentage_size;
-		h = shift;
-	}
-	if (view == OutputOnly) {
-		w = frameBufferWidth * core_percentage_size;
-		h = shift;
-	}
-
-
-	bool bOpened(true);
-	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
-	ImGui::Begin("BCKGND", &bOpened, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
-	ImGui::SetWindowPos(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
-	ImGui::SetWindowSize(ImGui::GetIO().DisplaySize);
-	ImGui::SetWindowCollapsed(false);
-	ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
-	
-	//add text...
-	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string("energy value") + std::to_string(totalObjective->energy_value)).c_str());
-	h += shift;
-	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string("gradient norm") + std::to_string(totalObjective->gradient_norm)).c_str());
-	h += shift;
-
-	for (auto& obj : totalObjective->objectiveList) {
-		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string("energy value") + std::to_string(obj->energy_value)).c_str());
-		h += shift;
-		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string("gradient norm") + std::to_string(obj->gradient_norm)).c_str());
-		h += shift;
-	}
-	
-	ImGui::End();
-	ImGui::PopStyleColor();
 }
 
 IGL_INLINE void BasicMenu::post_resize(int w, int h)
@@ -416,6 +344,20 @@ IGL_INLINE bool BasicMenu::pre_draw() {
 	return false;
 }
 
+void BasicMenu::Draw_menu_for_colors() {
+	if (!ImGui::CollapsingHeader("colors", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::ColorEdit3("Highlighted face color", Highlighted_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Fixed face color", Fixed_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Dragged face color", Dragged_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Fixed vertex color", Fixed_vertex_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Dragged vertex color", Dragged_vertex_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Model color", model_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Vertex Energy color", Vertex_Energy_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit4("text color", text_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+	}
+}
+
 void BasicMenu::Draw_menu_for_Solver() {
 	if (!ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -428,9 +370,8 @@ void BasicMenu::Draw_menu_for_Solver() {
 			}
 		}
 
-		ImGui::Checkbox("Show text", &show_text);
-		ImGui::ColorEdit4("text color", text_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-
+		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0TOTAL_DISTORTION\0\0");
+		
 		Parametrization prev_type = param_type;
 		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
 			MatrixXd initialguess;
@@ -465,14 +406,17 @@ void BasicMenu::Draw_menu_for_Solver() {
 				solver->setFlipAvoidingLineSearch(F);
 			}
 		}
-
-		if (ImGui::Button("Check gradients")) {
+		float w = ImGui::GetContentRegionAvailWidth(), p = ImGui::GetStyle().FramePadding.x;
+		if (ImGui::Button("Check gradients", ImVec2((w - p) / 2.f, 0)))
+		{
 			checkGradients();
 		}
-
-		if (ImGui::Button("Check Hessians")) {
+		ImGui::SameLine(0, p);
+		if (ImGui::Button("Check Hessians", ImVec2((w - p) / 2.f, 0)))
+		{
 			checkHessians();
 		}
+		
 		ImGui::DragFloat("Max Distortion", &(Max_Distortion), 0.05f, 0.1f, 20.0f);
 		
 
@@ -615,6 +559,59 @@ void BasicMenu::Draw_menu_for_models() {
 	}
 }
 
+void BasicMenu::Draw_menu_for_text_results() {
+	if (!show_text) {
+		return;
+	}
+
+	int frameBufferWidth, frameBufferHeight;
+	float shift = ImGui::GetTextLineHeightWithSpacing();
+	glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
+
+	int w, h;
+	if (view == Horizontal) {
+		w = frameBufferWidth * core_percentage_size + shift;
+		h = shift;
+	}
+	if (view == Vertical) {
+		w = shift;
+		h = frameBufferHeight - frameBufferHeight * core_percentage_size + shift;
+	}
+	if (view == InputOnly) {
+		w = frameBufferWidth * core_percentage_size + shift;
+		h = shift;
+	}
+	if (view == OutputOnly) {
+		w = frameBufferWidth * core_percentage_size + shift;
+		h = shift;
+	}
+
+
+	bool bOpened(true);
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
+	ImGui::Begin("BCKGND", &bOpened, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
+	ImGui::SetWindowPos(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+	ImGui::SetWindowSize(ImGui::GetIO().DisplaySize);
+	ImGui::SetWindowCollapsed(false);
+	ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
+
+	//add text...
+	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string(" energy ") + std::to_string(totalObjective->energy_value)).c_str());
+	h += shift;
+	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string(" gradient ") + std::to_string(totalObjective->gradient_norm)).c_str());
+	h += shift;
+
+	for (auto& obj : totalObjective->objectiveList) {
+		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
+		h += shift;
+		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
+		h += shift;
+	}
+
+	ImGui::End();
+	ImGui::PopStyleColor();
+}
+
 void BasicMenu::UpdateHandles() {
 	vector<int> CurrHandlesInd;
 	MatrixX2d CurrHandlesPosDeformed;
@@ -690,12 +687,12 @@ void BasicMenu::follow_and_mark_selected_faces() {
 		//Mark the fixed faces
 		if (f != -1 && Highlighted_face)
 		{
-			color_per_face.row(f) << double(Highlighted_face_color[0]), double(Highlighted_face_color[1]), double(Highlighted_face_color[2]);
+			color_per_face.row(f) = Highlighted_face_color.cast<double>();
 		}
-		for (auto fi : selected_faces) { color_per_face.row(fi) << double(Fixed_face_color[0]), double(Fixed_face_color[1]), double(Fixed_face_color[2]); }
+		for (auto fi : selected_faces) { color_per_face.row(fi) = Fixed_face_color.cast<double>(); }
 		//Mark the Dragged face
 		if (IsTranslate && (mouse_mode == FACE_SELECT)) {
-			color_per_face.row(Translate_Index) << double(Dragged_face_color[0]), double(Dragged_face_color[1]), double(Dragged_face_color[2]);
+			color_per_face.row(Translate_Index) = Dragged_face_color.cast<double>();
 		}
 		
 		//Mark the vertices
@@ -710,7 +707,7 @@ void BasicMenu::follow_and_mark_selected_faces() {
 			color_per_vertex.resize(selected_vertices.size()+1, 3);
 
 			Vertices_Input.row(idx) = viewer->data(InputModelID()).V.row(Translate_Index);
-			color_per_vertex.row(idx) << double(Dragged_vertex_color[0]), double(Dragged_vertex_color[1]), double(Dragged_vertex_color[2]);
+			color_per_vertex.row(idx) = Dragged_vertex_color.cast<double>();
 			Vertices_output.row(idx) = viewer->data(OutputModelID()).V.row(Translate_Index);
 			idx++;
 		}
@@ -719,7 +716,7 @@ void BasicMenu::follow_and_mark_selected_faces() {
 		for (auto vi : selected_vertices) {
 			Vertices_Input.row(idx) = viewer->data(InputModelID()).V.row(vi);
 			Vertices_output.row(idx) = viewer->data(OutputModelID()).V.row(vi);
-			color_per_vertex.row(idx++) << double(Fixed_vertex_color[0]), double(Fixed_vertex_color[1]), double(Fixed_vertex_color[2]);
+			color_per_vertex.row(idx++) = Fixed_vertex_color.cast<double>();
 		}
 	}
 }
@@ -795,7 +792,6 @@ RowVector3d BasicMenu::get_face_avg() {
 	return avg;
 }
 
-//computes translation for the vertices of the moving handle based on the mouse motion
 Vector3f BasicMenu::computeTranslation(int mouse_x, int from_x, int mouse_y, int from_y, RowVector3d pt3D) {
 	Matrix4f modelview = viewer->core(Core_Translate_ID).view;
 	//project the given point (typically the handle centroid) to get a screen space depth
@@ -1129,38 +1125,40 @@ void BasicMenu::FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs)
 	}
 }
 
-
 void BasicMenu::UpdateEnergyColors() {
 	int numF = viewer->data(OutputModelID()).F.rows();
-
+	VectorXd DistortionPerFace(numF);
+	DistortionPerFace.setZero();
 	VectorXd ones(numF);
-	VectorXd triangles_distortion(viewer->data(OutputModelID()).F.rows());
-	triangles_distortion.setZero();
 	ones.setOnes();
 
-	// calculate the distortion over all the energies
-	for (auto& obj : totalObjective->objectiveList) {
-		if ((obj->Efi.size() != 0) && (obj->w != 0)) {
-			triangles_distortion += obj->Efi * obj->w;
-		}
+	if (distortion_type == AREA_DISTORTION) {	//distortion according to area preserving
+		VectorXd Area_output, Area_input;
+		igl::doublearea(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, Area_output);
+		igl::doublearea(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, Area_input);
+		// DistortionPerFace = Area_output / Area_input
+		DistortionPerFace = Area_input.cwiseInverse().cwiseProduct(Area_output);
+		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
+		DistortionPerFace = DistortionPerFace - ones;
+	}
+	else if(distortion_type == TOTAL_DISTORTION) {
+		// calculate the distortion over all the energies
+		for (auto& obj : totalObjective->objectiveList) 
+			if ((obj->Efi.size() != 0) && (obj->w != 0)) 
+				DistortionPerFace += obj->Efi * obj->w;
 	}
 
-	VectorXd alpha_vec = triangles_distortion / Max_Distortion;
+	
+	VectorXd alpha_vec = DistortionPerFace / Max_Distortion;
 	VectorXd beta_vec = ones - alpha_vec;
-
-	VectorXd M_vec; M_vec.resize(3);
-	M_vec << double(model_color[0]), double(model_color[1]), double(model_color[2]);
-	VectorXd E_vec; E_vec.resize(3);
-	E_vec << double(Vertex_Energy_color[0]), double(Vertex_Energy_color[1]), double(Vertex_Energy_color[2]);
-	MatrixXd M = M_vec.replicate(1, numF).transpose();
-	MatrixXd E = E_vec.replicate(1, numF).transpose();
 	MatrixXd alpha(numF, 3), beta(numF, 3);
-	alpha.col(0) = alpha_vec;
-	alpha.col(1) = alpha_vec;
-	alpha.col(2) = alpha_vec;
-	beta.col(0) = beta_vec;
-	beta.col(1) = beta_vec;
-	beta.col(2) = beta_vec;
+	alpha = alpha_vec.replicate(1, 3);
+	beta = beta_vec.replicate(1, 3);
 
-	color_per_face = beta.cwiseProduct(M) + alpha.cwiseProduct(E);
+	//calculate low distortion color matrix
+	MatrixXd LowDistCol = model_color.cast <double>().replicate(1, numF).transpose();
+	//calculate high distortion color matrix
+	MatrixXd HighDistCol = Vertex_Energy_color.cast <double>().replicate(1, numF).transpose();
+	
+	color_per_face = beta.cwiseProduct(LowDistCol) + alpha.cwiseProduct(HighDistCol);
 }

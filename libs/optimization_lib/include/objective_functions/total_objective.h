@@ -5,7 +5,7 @@
 class TotalObjective : public ObjectiveFunction
 {
 public:
-	TotalObjective(){}
+	TotalObjective();
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
 	virtual double value() override;

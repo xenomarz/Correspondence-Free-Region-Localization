@@ -59,6 +59,7 @@ private:
 	enum View { Horizontal = 0, Vertical, InputOnly, OutputOnly };
 	enum MouseMode { NONE = 0, FACE_SELECT, VERTEX_SELECT, CLEAR };
 	enum Parametrization { RANDOM = 0, HARMONIC, LSCM, ARAP, None };
+	enum Distortion { NO_DISTORTION, AREA_DISTORTION, TOTAL_DISTORTION };
 
 	//Basic (necessary) parameteres
 	int input_view_id, output_view_id;
@@ -80,6 +81,7 @@ private:
 
 	//Solver Button Parameters
 	bool solver_on, solverInitialized, show_text;
+	Distortion distortion_type;
 	float Max_Distortion;
 	
 	// Solver thread
@@ -112,7 +114,8 @@ public:
 	void Draw_menu_for_cores();
 	void Draw_menu_for_models();
 	void Draw_menu_for_Solver();
-	void draw_text_results();
+	void Draw_menu_for_colors();
+	void Draw_menu_for_text_results();
 
 	//Pick faces & vertices and highlight them
 	int pick_face(MatrixXd& V, MatrixXi& F, View LR);

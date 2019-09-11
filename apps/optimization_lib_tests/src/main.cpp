@@ -6,12 +6,12 @@ using namespace std;
 
 int main(int argc, char * argv[])
 {
-	MatrixXd a(3,3);
-	a << 1, 2, -5,
-		4, 5, 0,
-		7, 8, 0;
+	VectorXd a(4),b(4);
+
+	a << 1, 2, -5, 7;
+	b << 1, 3, 10, 17;
 	cout << a << endl;
-	cout << (a.col(2).array() == 0).all() << endl;
+	cout << a.cwiseInverse().cwiseProduct(b) << endl;
 	
 	return 0;
 
