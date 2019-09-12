@@ -58,9 +58,7 @@ void ObjectiveAreaPreserving::setVF(MatrixXd& V, MatrixX3i& F) {
 double ObjectiveAreaPreserving::value()
 {
 	// E = (det(J) - 1)^2
-	VectorXd ones;
-	ones.setOnes(detJ.rows());
-	Efi = (detJ - ones).cwiseAbs2();
+	Efi = (detJ - VectorXd::Ones(detJ.rows())).cwiseAbs2();
 	energy_value = 0.5 * (Area.asDiagonal() * Efi).sum();
 	return energy_value;
 }

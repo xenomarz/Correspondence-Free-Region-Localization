@@ -372,7 +372,7 @@ void BasicMenu::Draw_menu_for_Solver() {
 			}
 		}
 
-		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0TOTAL_DISTORTION\0\0");
+		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");
 		
 		Parametrization prev_type = param_type;
 		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
@@ -1131,14 +1131,71 @@ void BasicMenu::FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs)
 	}
 }
 
+void angle_degree(MatrixXd& V, MatrixXi& F, MatrixXd& angle) {
+	int numF = F.rows();
+	VectorXd Area;
+	MatrixXd Length, alfa, sum;
+	ArrayXXd sin_alfa(numF, 3);
+
+	igl::doublearea(V, F, Area);
+	igl::edge_lengths(V, F, Length);
+
+	// double_area = a*b*sin(alfa)
+	// sin(alfa) = (double_area / a) / b
+	sin_alfa.col(0) = Length.col(1).cwiseInverse().cwiseProduct(Length.col(2).cwiseInverse().cwiseProduct(Area));
+	sin_alfa.col(1) = Length.col(0).cwiseInverse().cwiseProduct(Length.col(2).cwiseInverse().cwiseProduct(Area));
+	sin_alfa.col(2) = Length.col(0).cwiseInverse().cwiseProduct(Length.col(1).cwiseInverse().cwiseProduct(Area));
+
+	// alfa = arcsin ((double_area / a) / b)
+	alfa = ((sin_alfa - ArrayXXd::Constant(numF, 3, 1e-10)).asin())*(180 / M_PI);
+	
+	
+	//here we deal with errors with sin function
+	//especially when the sum of the angles isn't equal to 180!
+	sum = alfa.rowwise().sum();
+	for (int i = 0; i < alfa.rows(); i++) {
+		double diff = 180 - sum(i, 0);
+		double c0 = 2 * (90 - alfa(i, 0));
+		double c1 = 2 * (90 - alfa(i, 1));
+		double c2 = 2 * (90 - alfa(i, 2));
+
+		if ((c0 > (diff - 1)) && (c0 < (diff + 1)))
+			alfa(i, 0) += c0;
+		else if ((c1 > (diff - 1)) && (c1 < (diff + 1)))
+			alfa(i, 1) += c1;
+		else if ((c2 > (diff - 1)) && (c2 < (diff + 1)))
+			alfa(i, 2) += c2;
+	}
+	angle = alfa;
+
+	////Checkpoint
+	//sum = alfa.rowwise().sum();
+	//for (int i = 0; i < alfa.rows(); i++) {
+	//	cout << i << ": " << alfa(i, 0) << " " << alfa(i, 1) << " " << alfa(i, 2) << " " << sum.row(i) << endl;
+	//}
+}
+
+
+
 void BasicMenu::UpdateEnergyColors() {
 	int numF = viewer->data(OutputModelID()).F.rows();
 	VectorXd DistortionPerFace(numF);
 	DistortionPerFace.setZero();
-	VectorXd ones(numF);
-	ones.setOnes();
 	
-	if (distortion_type == LENGTH_DISTORTION) {	//distortion according to area preserving
+	if (distortion_type == ANGLE_DISTORTION) {	//distortion according to area preserving
+		MatrixXd angle_input, angle_output, angle_ratio;
+		angle_degree(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, angle_output);
+		angle_degree(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, angle_input);
+
+		// DistortionPerFace = angle_output / angle_input
+		angle_ratio = angle_input.cwiseInverse().cwiseProduct(angle_output);
+		//average over the vertices on each face
+		DistortionPerFace = angle_ratio.rowwise().sum() / 3;
+		DistortionPerFace = DistortionPerFace.cwiseAbs2().cwiseAbs2();
+		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
+		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
+	}
+	else if (distortion_type == LENGTH_DISTORTION) {	//distortion according to area preserving
 		MatrixXd Length_output, Length_input, Length_ratio;
 		igl::edge_lengths(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, Length_output);
 		igl::edge_lengths(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, Length_input);
@@ -1147,16 +1204,16 @@ void BasicMenu::UpdateEnergyColors() {
 		//average over the vertices on each face
 		DistortionPerFace = Length_ratio.rowwise().sum() / 3;
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
-		DistortionPerFace = DistortionPerFace - ones;
+		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
 	}
-	if (distortion_type == AREA_DISTORTION) {	//distortion according to area preserving
+	else if (distortion_type == AREA_DISTORTION) {	//distortion according to area preserving
 		VectorXd Area_output, Area_input;
 		igl::doublearea(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, Area_output);
 		igl::doublearea(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, Area_input);
 		// DistortionPerFace = Area_output / Area_input
 		DistortionPerFace = Area_input.cwiseInverse().cwiseProduct(Area_output);
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
-		DistortionPerFace = DistortionPerFace - ones;
+		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
 	}
 	else if(distortion_type == TOTAL_DISTORTION) {
 		// calculate the distortion over all the energies
@@ -1167,7 +1224,7 @@ void BasicMenu::UpdateEnergyColors() {
 	//cout << DistortionPerFace.maxCoeff() << " , " << DistortionPerFace.minCoeff() << endl;
 
 	VectorXd alpha_vec = DistortionPerFace / (Max_Distortion+1e-8);
-	VectorXd beta_vec = ones - alpha_vec;
+	VectorXd beta_vec = VectorXd::Ones(numF) - alpha_vec;
 	MatrixXd alpha(numF, 3), beta(numF, 3);
 	alpha = alpha_vec.replicate(1, 3);
 	beta = beta_vec.replicate(1, 3);

@@ -59,7 +59,7 @@ private:
 	enum View { Horizontal = 0, Vertical, InputOnly, OutputOnly };
 	enum MouseMode { NONE = 0, FACE_SELECT, VERTEX_SELECT, CLEAR };
 	enum Parametrization { RANDOM = 0, HARMONIC, LSCM, ARAP, None };
-	enum Distortion { NO_DISTORTION, AREA_DISTORTION, LENGTH_DISTORTION, TOTAL_DISTORTION };
+	enum Distortion { NO_DISTORTION, AREA_DISTORTION, LENGTH_DISTORTION, ANGLE_DISTORTION, TOTAL_DISTORTION };
 
 	//Basic (necessary) parameteres
 	int input_view_id, output_view_id;
