@@ -370,7 +370,7 @@ void BasicMenu::Draw_menu_for_Solver() {
 			}
 		}
 
-		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0TOTAL_DISTORTION\0\0");
+		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0TOTAL_DISTORTION\0\0");
 		
 		Parametrization prev_type = param_type;
 		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
@@ -1132,6 +1132,19 @@ void BasicMenu::UpdateEnergyColors() {
 	VectorXd ones(numF);
 	ones.setOnes();
 
+
+	
+	if (distortion_type == LENGTH_DISTORTION) {	//distortion according to area preserving
+		MatrixXd Length_output, Length_input, Length_ratio;
+		igl::edge_lengths(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, Length_output);
+		igl::edge_lengths(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, Length_input);
+		// DistortionPerFace = Length_output / Length_input
+		Length_ratio = Length_input.cwiseInverse().cwiseProduct(Length_output);
+		//average over the vertices on each face
+		DistortionPerFace = Length_ratio.rowwise().sum() / 3;
+		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
+		DistortionPerFace = DistortionPerFace - ones;
+	}
 	if (distortion_type == AREA_DISTORTION) {	//distortion according to area preserving
 		VectorXd Area_output, Area_input;
 		igl::doublearea(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, Area_output);
