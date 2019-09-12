@@ -57,7 +57,6 @@ void ObjectiveFunction::FDHessian(const VectorXd& X)
             }
         }
     }
-    init();
 }
 
 bool ObjectiveFunction::checkGradient(const VectorXd& X)
@@ -87,39 +86,39 @@ bool ObjectiveFunction::checkGradient(const VectorXd& X)
 
 bool ObjectiveFunction::checkHessian(const VectorXd& X)
 {
-    double tol = 1e-4;
-    double eps = 1e-10;
+	double tol = 1e-4;
+	double eps = 1e-10;
 
+	SparseMatrix<double>  FDH(X.size(), X.size());
+	SparseMatrix<double> H(X.size(), X.size());
+	std::vector<Eigen::Triplet<double>> Ht;
 
-    SparseMatrix<double> FDH(X.size(), X.size());
-    SparseMatrix<double> H(X.size(), X.size());
-    vector<Triplet<double>> Ht;
-
-    FDHessian(X);
-    for (int i = 0; i < II.size(); i++)
-        Ht.push_back(Triplet<double>(II[i], JJ[i], SS[i]));
-    FDH.setFromTriplets(Ht.begin(), Ht.end());
-    
-    Ht.clear();
-    
-    updateX(X);
-    prepare_hessian();
-    hessian();
-    for (int i = 0; i < II.size(); i++)
-        Ht.push_back(Triplet<double>(II[i], JJ[i], SS[i]));
-    H.setFromTriplets(Ht.begin(), Ht.end());
-
-    cout << name << ": testing hessians...\n";
-    for (int i = 0; i < X.size(); i++) {
-        for (int j = 0; j < X.size(); j++) {
-            double absErr = abs(FDH.coeff(i, j) - H.coeff(i, j));
-            double relError = 2 * absErr / (eps + FDH.coeff(i, j) + H.coeff(i, j));
-            if (relError > tol && absErr > 1e-6) {
-                printf("Mismatch element %d,%d: Analytic val: %lf, FD val: %lf. Error: %lf(%lf%%)\n", i, j, H.coeff(i, j), FDH.coeff(i, j), absErr, relError * 100);
-                return false;
-            }
-        }
-    }
-
-    return true;
+	FDHessian(X);
+	for (int i = 0; i < II.size(); i++)
+		Ht.push_back(Eigen::Triplet<double>(II[i], JJ[i], SS[i]));
+	FDH.setFromTriplets(Ht.begin(), Ht.end());
+	//std::cout << FDH.selfadjointView<Upper>();
+	Ht.clear();
+	init();
+	updateX(X);
+	//bool temp = hackHessian; //need to disable Hessian hacking before
+	//hackHessian = false;
+	hessian();
+	//hackHessian = temp;
+	for (int i = 0; i < II.size(); i++)
+		Ht.push_back(Eigen::Triplet<double>(II[i], JJ[i], SS[i]));
+	H.setFromTriplets(Ht.begin(), Ht.end());
+	//std::cout << H.selfadjointView<Upper>();
+	std::cout << name << ": testing hessians...\n";
+	for (int i = 0; i < X.size(); i++) {
+		for (int j = 0; j < X.size(); j++) {
+			double absErr = std::abs(FDH.coeff(i, j) - H.coeff(i, j));
+			double relError = 2 * absErr / (eps + FDH.coeff(i, j) + H.coeff(i, j));
+			if (relError > tol && absErr > 1e-6) {
+				printf("Mismatch element %d,%d: Analytic val: %lf, FD val: %lf. Error: %lf(%lf%%)\n", i, j, H.coeff(i, j), FDH.coeff(i, j), absErr, relError * 100);
+				return false;
+			}
+		}
+	}
+	return true;
 }

@@ -11,7 +11,6 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 	{
 		//Basic (necessary) parameteres
 		texture_size = 0.5;
-				
 		core_percentage_size = 0.5;
 		param_type = None;
 		Max_Distortion = 5;
@@ -23,10 +22,10 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		Fixed_vertex_color = BLUE_COLOR;
 		model_color = GREY_COLOR;
 		text_color = WHITE_COLOR;
-		mouse_mode = NONE;
+		mouse_mode = VERTEX_SELECT;
 		view = Horizontal;
 		IsTranslate = false;
-		Highlighted_face = true;
+		Highlighted_face = false;
 		show_text = true;
 		distortion_type = TOTAL_DISTORTION;
 		solverInitialized = false;
@@ -54,6 +53,9 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		viewer->core(input_view_id).is_animating = true;
 		viewer->core(output_view_id).is_animating = true;
 
+		viewer->core(input_view_id).lighting_factor = 0.2;
+		viewer->core(output_view_id).lighting_factor = 0;
+		
 		// Initialize solver thread
 		solver = make_unique<Newton>();
 		totalObjective = make_shared<TotalObjective>();	
@@ -250,7 +252,7 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 					
 		}
 	}
-	else if (mouse_mode == FACE_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE && modifier == 2)
+	else if (mouse_mode == FACE_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
 	{
 		if (!selected_faces.empty())
 		{
@@ -272,7 +274,7 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 			}
 		}
 	}
-	else if (mouse_mode == VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE && modifier == 2)
+	else if (mouse_mode == VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
 	{
 		if (!selected_vertices.empty())
 		{
@@ -460,6 +462,10 @@ void BasicMenu::Draw_menu_for_cores() {
 			// Zoom
 			ImGui::PushItemWidth(80 * menu_scaling());
 			ImGui::DragFloat("Zoom", &(core.camera_zoom), 0.05f, 0.1f, 20.0f);
+
+			// Lightining factor
+			ImGui::PushItemWidth(80 * menu_scaling());
+			ImGui::DragFloat("Lighting factor", &(core.lighting_factor), 0.05f, 0.1f, 20.0f);
 
 			// Select rotation type
 			int rotation_type = static_cast<int>(core.rotation_type);
@@ -1131,8 +1137,6 @@ void BasicMenu::UpdateEnergyColors() {
 	DistortionPerFace.setZero();
 	VectorXd ones(numF);
 	ones.setOnes();
-
-
 	
 	if (distortion_type == LENGTH_DISTORTION) {	//distortion according to area preserving
 		MatrixXd Length_output, Length_input, Length_ratio;
@@ -1160,9 +1164,9 @@ void BasicMenu::UpdateEnergyColors() {
 			if ((obj->Efi.size() != 0) && (obj->w != 0)) 
 				DistortionPerFace += obj->Efi * obj->w;
 	}
+	//cout << DistortionPerFace.maxCoeff() << " , " << DistortionPerFace.minCoeff() << endl;
 
-	
-	VectorXd alpha_vec = DistortionPerFace / Max_Distortion;
+	VectorXd alpha_vec = DistortionPerFace / (Max_Distortion+1e-8);
 	VectorXd beta_vec = ones - alpha_vec;
 	MatrixXd alpha(numF, 3), beta(numF, 3);
 	alpha = alpha_vec.replicate(1, 3);
