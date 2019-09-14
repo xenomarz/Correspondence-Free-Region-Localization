@@ -73,6 +73,7 @@ private:
 	set<int> selected_faces, selected_vertices;
 	float core_percentage_size, texture_size;
 	bool IsTranslate;
+	unsigned int ShowModelIndex;
 	int Translate_Index, Model_Translate_ID, Core_Translate_ID, down_mouse_x, down_mouse_y;
 	ImGuiMenu menu;
 

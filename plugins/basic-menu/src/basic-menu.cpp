@@ -1,7 +1,6 @@
 #include <basic-menu/include/basic-menu.h>
 
-BasicMenu::BasicMenu() :
-	opengl::glfw::imgui::ImGuiMenu(){}
+BasicMenu::BasicMenu() : opengl::glfw::imgui::ImGuiMenu(){}
 
 IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 {
@@ -30,6 +29,7 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		distortion_type = TOTAL_DISTORTION;
 		solverInitialized = false;
 		down_mouse_x = down_mouse_y = -1;
+		this->ShowModelIndex = 0;
 
 		//Solver Parameters
 		solver_on = false;
@@ -76,16 +76,10 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 		string fname = file_dialog_open();
 		if (fname.length() != 0)
 		{
-			stop_solver_thread();
-			
-			set_name_mapping(0, filename(fname));
+			set_name_mapping(viewer->data_list.size(), filename(fname));
 			viewer->load_mesh_from_file(fname.c_str());
 			viewer->load_mesh_from_file(fname.c_str());
-			
-			initializeSolver();
 			Update_view();
-			viewer->core(input_view_id).align_camera_center(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F);
-			viewer->core(output_view_id).align_camera_center(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F);
 		}
 	}
 	ImGui::SameLine(0, p);
@@ -118,6 +112,11 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 			selected_vertices.clear();
 			UpdateHandles();
 		}
+	}
+
+	char* modelNames = getModelNames();
+	if (ImGui::Combo("Choose Model", (int*)(&ShowModelIndex), modelNames, IM_ARRAYSIZE(modelNames))) {
+		Update_view();
 	}
 
 	Draw_menu_for_Solver();
@@ -666,16 +665,19 @@ void BasicMenu::UpdateHandles() {
 }
 
 void BasicMenu::Update_view() {
-	viewer->data().copy_options(viewer->core_list[0], viewer->core_list[1]);
 	for (auto& core : viewer->core_list)
 	{
 		for (auto& data : viewer->data_list)
 		{
+			viewer->data(data.id).copy_options(viewer->core_list[0], viewer->core_list[1]);
 			viewer->data(data.id).set_visible(false, core.id);
 		}
 	}
 	viewer->data(InputModelID()).set_visible(true, input_view_id);
+	viewer->core(input_view_id).align_camera_center(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F);
+	
 	viewer->data(OutputModelID()).set_visible(true, output_view_id);
+	viewer->core(output_view_id).align_camera_center(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F);
 }
 
 void BasicMenu::follow_and_mark_selected_faces() {
@@ -730,15 +732,15 @@ void BasicMenu::follow_and_mark_selected_faces() {
 void BasicMenu::set_name_mapping(unsigned int data_id, string name)
 {
 	data_id_to_name[data_id] = name;
-	data_id_to_name[data_id+1] = name + " (Param.)";
+	data_id_to_name[data_id + 1] = name + " (Param.)";
 }
 
 int BasicMenu::InputModelID() {
-	return 0;
+	return 2 * ShowModelIndex;
 }
 
 int BasicMenu::OutputModelID() {
-	return 1;
+	return (2 * ShowModelIndex) + 1;
 }
 
 bool BasicMenu::IsMesh2D() {
@@ -746,35 +748,30 @@ bool BasicMenu::IsMesh2D() {
 	return (V.col(2).array() == 0).all();
 }
 
-char* BasicMenu::getModelNames()
-{
-	string cStr = "";
-	for (auto& data : viewer->data_list)
-	{
-		stringstream ss;
+char* BasicMenu::getModelNames() {
+	std::string cStr("");
+	for (auto& data : viewer->data_list) {
+		std::stringstream sts;
 		if (data.id % 2 == 0) {
-			if (data_id_to_name.count(data.id) > 0)
-			{
-				ss << data_id_to_name[data.id];
-			}
-			else
-			{
-				ss << "Model " << data.id;
-			}
-			cStr += ss.str().c_str();
+			if (data_id_to_name.count(data.id) > 0) sts << data_id_to_name[data.id];
+			else									sts << "Model " << data.id;
+
+			cStr += sts.str().c_str();
 			cStr += " ";
 			cStr += '\0';
 		}
-				
 	}
 	cStr += '\0';
 
 	int listLength = cStr.length();
 	char* comboList = new char[listLength];
-	if (listLength == 1) { comboList[0] = cStr.at(0); }
-	for (size_t i = 0; i < listLength; i++) {
+
+	if (listLength == 1)
+		comboList[0] = cStr.at(0);
+
+	for (size_t i = 0; i < listLength; i++)
 		comboList[i] = cStr.at(i);
-	}
+
 	return comboList;
 }
 
