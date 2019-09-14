@@ -31,7 +31,7 @@ void ObjectiveFunction::FDHessian(const VectorXd& X)
     VectorXd Xd = X;
     updateX(Xd);
     VectorXd g(X.size()), gp(X.size()), gm(X.size()), Hi(X.size());
-    double dX = 10e-6; //10e-6;
+    double dX = 10e-6;
     II.clear(); JJ.clear(); SS.clear();
     for (int i = 0; i < X.size(); i++) {
         double tmpVal = X(i);

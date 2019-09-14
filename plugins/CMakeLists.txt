@@ -3,7 +3,8 @@ project(plugins)
 
 set(SOURCES
 	basic_menu/src/basic_menu.cpp
-	basic_menu/include/basic_menu.h)
+	basic_menu/include/basic_menu.h
+	basic_menu/include/menu_utils.h)
 
 add_library(${PROJECT_NAME} ${SOURCES})
 add_library(rds::${PROJECT_NAME} ALIAS ${PROJECT_NAME})

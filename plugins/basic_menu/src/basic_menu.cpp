@@ -12,7 +12,7 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		//Basic (necessary) parameteres
 		texture_size = 0.5;
 		core_percentage_size = 0.5;
-		param_type = None;
+		param_type = MenuUtils::None;
 		Max_Distortion = 5;
 		Highlighted_face_color = RED_COLOR;
 		Fixed_face_color = BLUE_COLOR;
@@ -22,12 +22,12 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		Fixed_vertex_color = BLUE_COLOR;
 		model_color = GREY_COLOR;
 		text_color = WHITE_COLOR;
-		mouse_mode = VERTEX_SELECT;
-		view = Horizontal;
+		mouse_mode = MenuUtils::VERTEX_SELECT;
+		view = MenuUtils::Horizontal;
 		IsTranslate = false;
 		Highlighted_face = false;
 		show_text = true;
-		distortion_type = TOTAL_DISTORTION;
+		distortion_type = MenuUtils::TOTAL_DISTORTION;
 		solverInitialized = false;
 		down_mouse_x = down_mouse_y = -1;
 
@@ -47,8 +47,8 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		
 		//Update scene
 		Update_view();
-		viewer->core(input_view_id).align_camera_center(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F);
-		viewer->core(output_view_id).align_camera_center(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F);
+		viewer->core(input_view_id).align_camera_center(InputModel().V, InputModel().F);
+		viewer->core(output_view_id).align_camera_center(OutputModel().V, OutputModel().F);
 
 		viewer->core(input_view_id).is_animating = true;
 		viewer->core(output_view_id).is_animating = true;
@@ -77,14 +77,14 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 		{
 			stop_solver_thread();
 			
-			set_name_mapping(0, filename(fname));
+			set_name_mapping(0, MenuUtils::filename(fname));
 			viewer->load_mesh_from_file(fname.c_str());
 			viewer->load_mesh_from_file(fname.c_str());
 			
 			initializeSolver();
 			Update_view();
-			viewer->core(input_view_id).align_camera_center(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F);
-			viewer->core(output_view_id).align_camera_center(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F);
+			viewer->core(input_view_id).align_camera_center(InputModel().V, InputModel().F);
+			viewer->core(output_view_id).align_camera_center(OutputModel().V, OutputModel().F);
 		}
 	}
 	ImGui::SameLine(0, p);
@@ -112,7 +112,7 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 	}
 
 	if(ImGui::Combo("Mouse Mode", (int *)(&mouse_mode), "NONE\0FACE_SELECT\0VERTEX_SELECT\0CLEAR\0\0")) {
-		if (mouse_mode == CLEAR) {
+		if (mouse_mode == MenuUtils::CLEAR) {
 			selected_faces.clear();
 			selected_vertices.clear();
 			UpdateHandles();
@@ -133,19 +133,19 @@ IGL_INLINE void BasicMenu::post_resize(int w, int h)
 {
 	if (viewer)
 	{
-		if (view == Horizontal) {
+		if (view == MenuUtils::Horizontal) {
 			viewer->core(input_view_id).viewport = Vector4f(0, 0, w * core_percentage_size, h);
 			viewer->core(output_view_id).viewport = Vector4f(w * core_percentage_size, 0, w - (w * core_percentage_size), h);
 		}
-		if (view == Vertical) {
+		if (view == MenuUtils::Vertical) {
 			viewer->core(input_view_id).viewport = Vector4f(0, h * core_percentage_size, w, h - (h * core_percentage_size));
 			viewer->core(output_view_id).viewport = Vector4f(0, 0, w, h * core_percentage_size);
 		}
-		if (view == InputOnly) {
+		if (view == MenuUtils::InputOnly) {
 			viewer->core(input_view_id).viewport = Vector4f(0, 0, w, h);
 			viewer->core(output_view_id).viewport = Vector4f(w + 1, h + 1, w + 2, h + 2);
 		}
-		if (view == OutputOnly) {
+		if (view == MenuUtils::OutputOnly) {
 			viewer->core(input_view_id).viewport = Vector4f(w + 1, h + 1, w + 2, h + 2);
 			viewer->core(output_view_id).viewport = Vector4f(0, 0, w, h);
 		}
@@ -158,14 +158,14 @@ IGL_INLINE bool BasicMenu::mouse_move(int mouse_x, int mouse_y)
 	{
 		return false;
 	}
-	if (mouse_mode == FACE_SELECT)
+	if (mouse_mode == MenuUtils::FACE_SELECT)
 	{
 		if (!selected_faces.empty())
 		{
 			RowVector3d face_avg_pt = get_face_avg();
 			RowVector3i face = viewer->data(Model_Translate_ID).F.row(Translate_Index);
-
-			Vector3f translation = computeTranslation(mouse_x, down_mouse_x, mouse_y, down_mouse_y, face_avg_pt);
+			
+			Vector3f translation = MenuUtils::computeTranslation(mouse_x, down_mouse_x, mouse_y, down_mouse_y, face_avg_pt, viewer->core(Core_Translate_ID));
 			viewer->data(Model_Translate_ID).V.row(face[0]) += translation.cast<double>();
 			viewer->data(Model_Translate_ID).V.row(face[1]) += translation.cast<double>();
 			viewer->data(Model_Translate_ID).V.row(face[2]) += translation.cast<double>();
@@ -177,12 +177,12 @@ IGL_INLINE bool BasicMenu::mouse_move(int mouse_x, int mouse_y)
 			return true;
 		}
 	}
-	else if (mouse_mode == VERTEX_SELECT)
+	else if (mouse_mode == MenuUtils::VERTEX_SELECT)
 	{
 		if (!selected_vertices.empty())
 		{
 			RowVector3d vertex_pos = viewer->data(Model_Translate_ID).V.row(Translate_Index);
-			Vector3f translation = computeTranslation(mouse_x, down_mouse_x, mouse_y, down_mouse_y, vertex_pos);
+			Vector3f translation = MenuUtils::computeTranslation(mouse_x, down_mouse_x, mouse_y, down_mouse_y, vertex_pos, viewer->core(Core_Translate_ID));
 			viewer->data(Model_Translate_ID).V.row(Translate_Index) += translation.cast<double>();
 
 			viewer->data(Model_Translate_ID).set_mesh(viewer->data(Model_Translate_ID).V, viewer->data(Model_Translate_ID).F);
@@ -205,13 +205,13 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 	down_mouse_x = viewer->current_mouse_x;
 	down_mouse_y = viewer->current_mouse_y;
 			
-	if (mouse_mode == FACE_SELECT && button == GLFW_MOUSE_BUTTON_LEFT && modifier == 2)
+	if (mouse_mode == MenuUtils::FACE_SELECT && button == GLFW_MOUSE_BUTTON_LEFT && modifier == 2)
 	{
 		//check if there faces which is selected on the left screen
-		int f = pick_face(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, InputOnly);
+		int f = pick_face(InputModel().V, InputModel().F, MenuUtils::InputOnly);
 		if (f == -1) {
 			//check if there faces which is selected on the right screen
-			f = pick_face(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, OutputOnly);
+			f = pick_face(OutputModel().V, OutputModel().F, MenuUtils::OutputOnly);
 		}
 
 		if (f != -1)
@@ -228,13 +228,13 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 		}
 
 	}
-	else if (mouse_mode == VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_LEFT && modifier == 2)
+	else if (mouse_mode == MenuUtils::VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_LEFT && modifier == 2)
 	{
 		//check if there faces which is selected on the left screen
-		int v = pick_vertex(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, InputOnly);
+		int v = pick_vertex(InputModel().V, InputModel().F, MenuUtils::InputOnly);
 		if (v == -1) {
 			//check if there faces which is selected on the right screen
-			v = pick_vertex(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, OutputOnly);
+			v = pick_vertex(OutputModel().V, OutputModel().F, MenuUtils::OutputOnly);
 		}
 
 		if (v != -1)
@@ -251,17 +251,17 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 					
 		}
 	}
-	else if (mouse_mode == FACE_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
+	else if (mouse_mode == MenuUtils::FACE_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
 	{
 		if (!selected_faces.empty())
 		{
 			//check if there faces which is selected on the left screen
-			int f = pick_face(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, InputOnly);
+			int f = pick_face(InputModel().V, InputModel().F, MenuUtils::InputOnly);
 			Model_Translate_ID = InputModelID();
 			Core_Translate_ID = input_view_id;
 			if (f == -1) {
 				//check if there faces which is selected on the right screen
-				f = pick_face(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, OutputOnly);
+				f = pick_face(OutputModel().V, OutputModel().F, MenuUtils::OutputOnly);
 				Model_Translate_ID = OutputModelID();
 				Core_Translate_ID = output_view_id;
 			}
@@ -273,17 +273,17 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 			}
 		}
 	}
-	else if (mouse_mode == VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
+	else if (mouse_mode == MenuUtils::VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
 	{
 		if (!selected_vertices.empty())
 		{
 			//check if there faces which is selected on the left screen
-			int v = pick_vertex(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, InputOnly);
+			int v = pick_vertex(InputModel().V, InputModel().F, MenuUtils::InputOnly);
 			Model_Translate_ID = InputModelID();
 			Core_Translate_ID = input_view_id;
 			if (v == -1) {
 				//check if there faces which is selected on the right screen
-				v = pick_vertex(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, OutputOnly);
+				v = pick_vertex(OutputModel().V, OutputModel().F, MenuUtils::OutputOnly);
 				Model_Translate_ID = OutputModelID();
 				Core_Translate_ID = output_view_id;
 			}
@@ -302,13 +302,13 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 IGL_INLINE bool BasicMenu::key_pressed(unsigned int key, int modifiers) {
 	
 	if (key == 'F' || key == 'f') {
-		mouse_mode = FACE_SELECT;
+		mouse_mode = MenuUtils::FACE_SELECT;
 	}
 	if (key == 'V' || key == 'v') {
-		mouse_mode = VERTEX_SELECT;
+		mouse_mode = MenuUtils::VERTEX_SELECT;
 	}
 	if (key == 'C' || key == 'c') {
-		mouse_mode = CLEAR;
+		mouse_mode = MenuUtils::CLEAR;
 		selected_faces.clear();
 		selected_vertices.clear();
 		UpdateHandles();
@@ -331,16 +331,16 @@ IGL_INLINE bool BasicMenu::pre_draw() {
 	
 	//Update the model's faces colors in the two screens
 	if (color_per_face.size()) {
-		viewer->data(InputModelID()).set_colors(color_per_face);
-		viewer->data(OutputModelID()).set_colors(color_per_face);
+		InputModel().set_colors(color_per_face);
+		OutputModel().set_colors(color_per_face);
 	}
 			
 	//Update the model's vertex colors in the two screens
-	viewer->data(InputModelID()).point_size = 10;
-	viewer->data(OutputModelID()).point_size = 10;
+	InputModel().point_size = 10;
+	OutputModel().point_size = 10;
 		
-	viewer->data(InputModelID()).set_points(Vertices_Input, color_per_vertex);
-	viewer->data(OutputModelID()).set_points(Vertices_output, color_per_vertex);
+	InputModel().set_points(Vertices_Input, color_per_vertex);
+	OutputModel().set_points(Vertices_output, color_per_vertex);
 
 	return false;
 }
@@ -374,39 +374,48 @@ void BasicMenu::Draw_menu_for_Solver() {
 
 		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");
 		
-		Parametrization prev_type = param_type;
+		MenuUtils::Parametrization prev_type = param_type;
 		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
 			MatrixXd initialguess;
-			MatrixX3i F = viewer->data(OutputModelID()).F;
-			Parametrization temp = param_type;
+			MatrixX3i F = OutputModel().F;
+			MenuUtils::Parametrization temp = param_type;
 			param_type = prev_type;
-			if (temp == None) {
-				param_type = None;
+			if (temp == MenuUtils::None || !F.size()) {
+				param_type = MenuUtils::None;
 			}
-			else if (temp == HARMONIC && !IsMesh2D() && F.size()) {
-				initialguess = compute_harmonic_param();
+			else if (MenuUtils::IsMesh2D(InputModel().V)) {
+				if (temp == MenuUtils::RANDOM) {
+					MenuUtils::random_param(InputModel().V, initialguess);
+					param_type = temp;
+					update_texture(initialguess);
+					Update_view();
+					VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
+					solver->init(totalObjective, initialguessXX);
+					solver->setFlipAvoidingLineSearch(F);
+				}
+			}
+			else {
+				//The mesh is 3D
+				if (temp == MenuUtils::HARMONIC) {
+					MenuUtils::harmonic_param(InputModel().V, InputModel().F, initialguess);
+				}
+				if (temp == MenuUtils::LSCM) {
+					MenuUtils::lscm_param(InputModel().V, InputModel().F, initialguess);
+				}
+				if (temp == MenuUtils::ARAP) {
+					MenuUtils::ARAP_param(InputModel().V, InputModel().F, initialguess);
+				}
+				if (temp == MenuUtils::RANDOM) {
+					MenuUtils::random_param(InputModel().V, initialguess);
+				}
+				param_type = temp;
+				update_texture(initialguess);
+				Update_view();
 				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
 				solver->init(totalObjective, initialguessXX);
 				solver->setFlipAvoidingLineSearch(F);
 			}
-			else if (temp == LSCM && !IsMesh2D() && F.size()) {
-				initialguess = compute_lscm_param();
-				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-				solver->init(totalObjective, initialguessXX);
-				solver->setFlipAvoidingLineSearch(F);
-			}
-			else if (temp == ARAP && !IsMesh2D() && F.size()) {
-				initialguess = compute_ARAP_param();
-				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-				solver->init(totalObjective, initialguessXX);
-				solver->setFlipAvoidingLineSearch(F);
-			}
-			else if (temp == RANDOM && F.size()) {
-				initialguess = ComputeSoup2DRandom();
-				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-				solver->init(totalObjective, initialguessXX);
-				solver->setFlipAvoidingLineSearch(F);
-			}
+			
 		}
 		float w = ImGui::GetContentRegionAvailWidth(), p = ImGui::GetStyle().FramePadding.x;
 		if (ImGui::Button("Check gradients", ImVec2((w - p) / 2.f, 0)))
@@ -576,19 +585,19 @@ void BasicMenu::Draw_menu_for_text_results() {
 	glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
 
 	int w, h;
-	if (view == Horizontal) {
+	if (view == MenuUtils::Horizontal) {
 		w = frameBufferWidth * core_percentage_size + shift;
 		h = shift;
 	}
-	if (view == Vertical) {
+	if (view == MenuUtils::Vertical) {
 		w = shift;
 		h = frameBufferHeight - frameBufferHeight * core_percentage_size + shift;
 	}
-	if (view == InputOnly) {
+	if (view == MenuUtils::InputOnly) {
 		w = frameBufferWidth * core_percentage_size + shift;
 		h = shift;
 	}
-	if (view == OutputOnly) {
+	if (view == MenuUtils::OutputOnly) {
 		w = frameBufferWidth * core_percentage_size + shift;
 		h = shift;
 	}
@@ -631,9 +640,9 @@ void BasicMenu::UpdateHandles() {
 	//Then, we push each face vertices index to the handle (3 vertices)
 	for (auto fi : selected_faces) {
 		//Here we get the 3 vertice's index that build each face
-		int v0 = viewer->data(OutputModelID()).F(fi,0);
-		int v1 = viewer->data(OutputModelID()).F(fi,1);
-		int v2 = viewer->data(OutputModelID()).F(fi,2);
+		int v0 = OutputModel().F(fi,0);
+		int v1 = OutputModel().F(fi,1);
+		int v2 = OutputModel().F(fi,2);
 
 		//check whether the handle already exist
 		if (!(find(CurrHandlesInd.begin(), CurrHandlesInd.end(), v0) != CurrHandlesInd.end())){
@@ -653,11 +662,11 @@ void BasicMenu::UpdateHandles() {
 	CurrHandlesPosDeformed.resize(CurrHandlesInd.size(),2);
 	int idx = 0;
 	for (auto hi : CurrHandlesInd) {
-		CurrHandlesPosDeformed.row(idx++) << viewer->data(OutputModelID()).V(hi, 0), viewer->data(OutputModelID()).V(hi, 1);
+		CurrHandlesPosDeformed.row(idx++) << OutputModel().V(hi, 0), OutputModel().V(hi, 1);
 	}
 	
 	//Update texture
-	update_texture(viewer->data(OutputModelID()).V);
+	update_texture(OutputModel().V);
 
 	//Finally, we update the handles in the constraints positional object
 	if (solverInitialized) {
@@ -675,21 +684,21 @@ void BasicMenu::Update_view() {
 			viewer->data(data.id).set_visible(false, core.id);
 		}
 	}
-	viewer->data(InputModelID()).set_visible(true, input_view_id);
-	viewer->data(OutputModelID()).set_visible(true, output_view_id);
+	InputModel().set_visible(true, input_view_id);
+	OutputModel().set_visible(true, output_view_id);
 }
 
 void BasicMenu::follow_and_mark_selected_faces() {
 	//check if there faces which is selected on the left screen
-	int f = pick_face(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, InputOnly);
+	int f = pick_face(InputModel().V, InputModel().F, MenuUtils::InputOnly);
 	if (f == -1) {
 		//check if there faces which is selected on the right screen
-		f = pick_face(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, OutputOnly);
+		f = pick_face(OutputModel().V, OutputModel().F, MenuUtils::OutputOnly);
 	}
 	
-	if(viewer->data(InputModelID()).F.size()){
+	if(InputModel().F.size()){
 		//Mark the faces
-		color_per_face.resize(viewer->data(InputModelID()).F.rows(), 3);
+		color_per_face.resize(InputModel().F.rows(), 3);
 		UpdateEnergyColors();
 		//Mark the fixed faces
 		if (f != -1 && Highlighted_face)
@@ -698,7 +707,7 @@ void BasicMenu::follow_and_mark_selected_faces() {
 		}
 		for (auto fi : selected_faces) { color_per_face.row(fi) = Fixed_face_color.cast<double>(); }
 		//Mark the Dragged face
-		if (IsTranslate && (mouse_mode == FACE_SELECT)) {
+		if (IsTranslate && (mouse_mode == MenuUtils::FACE_SELECT)) {
 			color_per_face.row(Translate_Index) = Dragged_face_color.cast<double>();
 		}
 		
@@ -708,21 +717,21 @@ void BasicMenu::follow_and_mark_selected_faces() {
 		Vertices_output.resize(selected_vertices.size(), 3);
 		color_per_vertex.resize(selected_vertices.size(), 3);
 		//Mark the dragged vertex
-		if (IsTranslate && (mouse_mode == VERTEX_SELECT)) {
+		if (IsTranslate && (mouse_mode == MenuUtils::VERTEX_SELECT)) {
 			Vertices_Input.resize(selected_vertices.size()+1, 3);
 			Vertices_output.resize(selected_vertices.size()+1, 3);
 			color_per_vertex.resize(selected_vertices.size()+1, 3);
 
-			Vertices_Input.row(idx) = viewer->data(InputModelID()).V.row(Translate_Index);
+			Vertices_Input.row(idx) = InputModel().V.row(Translate_Index);
 			color_per_vertex.row(idx) = Dragged_vertex_color.cast<double>();
-			Vertices_output.row(idx) = viewer->data(OutputModelID()).V.row(Translate_Index);
+			Vertices_output.row(idx) = OutputModel().V.row(Translate_Index);
 			idx++;
 		}
 				
 		//Mark the fixed vertices
 		for (auto vi : selected_vertices) {
-			Vertices_Input.row(idx) = viewer->data(InputModelID()).V.row(vi);
-			Vertices_output.row(idx) = viewer->data(OutputModelID()).V.row(vi);
+			Vertices_Input.row(idx) = InputModel().V.row(vi);
+			Vertices_output.row(idx) = OutputModel().V.row(vi);
 			color_per_vertex.row(idx++) = Fixed_vertex_color.cast<double>();
 		}
 	}
@@ -734,57 +743,20 @@ void BasicMenu::set_name_mapping(unsigned int data_id, string name)
 	data_id_to_name[data_id+1] = name + " (Param.)";
 }
 
+ViewerData& BasicMenu::InputModel() {
+	return viewer->data(InputModelID());
+}
+
+ViewerData& BasicMenu::OutputModel() {
+	return viewer->data(OutputModelID());
+}
+
 int BasicMenu::InputModelID() {
 	return 0;
 }
 
 int BasicMenu::OutputModelID() {
 	return 1;
-}
-
-bool BasicMenu::IsMesh2D() {
-	MatrixXd V = viewer->data(InputModelID()).V;
-	return (V.col(2).array() == 0).all();
-}
-
-char* BasicMenu::getModelNames()
-{
-	string cStr = "";
-	for (auto& data : viewer->data_list)
-	{
-		stringstream ss;
-		if (data.id % 2 == 0) {
-			if (data_id_to_name.count(data.id) > 0)
-			{
-				ss << data_id_to_name[data.id];
-			}
-			else
-			{
-				ss << "Model " << data.id;
-			}
-			cStr += ss.str().c_str();
-			cStr += " ";
-			cStr += '\0';
-		}
-				
-	}
-	cStr += '\0';
-
-	int listLength = cStr.length();
-	char* comboList = new char[listLength];
-	if (listLength == 1) { comboList[0] = cStr.at(0); }
-	for (size_t i = 0; i < listLength; i++) {
-		comboList[i] = cStr.at(i);
-	}
-	return comboList;
-}
-
-string BasicMenu::filename(const string& str)
-{
-	size_t head,tail;
-	head = str.find_last_of("/\\");
-	tail = str.find_last_of("/.");
-	return (str.substr((head + 1),(tail-head-1)));
 }
 
 RowVector3d BasicMenu::get_face_avg() {
@@ -799,65 +771,30 @@ RowVector3d BasicMenu::get_face_avg() {
 	return avg;
 }
 
-Vector3f BasicMenu::computeTranslation(int mouse_x, int from_x, int mouse_y, int from_y, RowVector3d pt3D) {
-	Matrix4f modelview = viewer->core(Core_Translate_ID).view;
-	//project the given point (typically the handle centroid) to get a screen space depth
-	Vector3f proj = project(pt3D.transpose().cast<float>().eval(),
-		modelview,
-		viewer->core(Core_Translate_ID).proj,
-		viewer->core(Core_Translate_ID).viewport);
-	float depth = proj[2];
-
-	double x, y;
-	Vector3f pos1, pos0;
-
-	//unproject from- and to- points
-	x = mouse_x;
-	y = viewer->core(Core_Translate_ID).viewport(3) - mouse_y;
-	pos1 = unproject(Vector3f(x, y, depth),
-		modelview,
-		viewer->core(Core_Translate_ID).proj,
-		viewer->core(Core_Translate_ID).viewport);
-
-
-	x = from_x;
-	y = viewer->core(Core_Translate_ID).viewport(3) - from_y;
-	pos0 = unproject(Vector3f(x, y, depth),
-		modelview,
-		viewer->core(Core_Translate_ID).proj,
-		viewer->core(Core_Translate_ID).viewport);
-
-	//translation is the vector connecting the two
-	Vector3f translation;
-	translation = pos1 - pos0;
-
-	return translation;
-}
-
-int BasicMenu::pick_face(MatrixXd& V,MatrixXi& F, View LR) {
+int BasicMenu::pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, MenuUtils::View LR) {
 	// Cast a ray in the view direction starting from the mouse position
 	int core_index;
-	if (LR == OutputOnly) {
+	if (LR == MenuUtils::OutputOnly) {
 		core_index = output_view_id;
 	}
-	else if (LR == InputOnly) {
+	else if (LR == MenuUtils::InputOnly) {
 		core_index = input_view_id;
 	}
 	double x = viewer->current_mouse_x;
 	double y = viewer->core(core_index).viewport(3) - viewer->current_mouse_y;
-	if (view == Vertical) {
+	if (view == MenuUtils::Vertical) {
 		y = (viewer->core(input_view_id).viewport(3) / core_percentage_size) - viewer->current_mouse_y;
 	}
 
 
-	RowVector3d pt;
+	Eigen::RowVector3d pt;
 
-	Matrix4f modelview = viewer->core(core_index).view;
+	Eigen::Matrix4f modelview = viewer->core(core_index).view;
 	int vi = -1;
 
-	vector<Hit> hits;
+	std::vector<igl::Hit> hits;
 
-	unproject_in_mesh(Vector2f(x, y), viewer->core(core_index).view,
+	igl::unproject_in_mesh(Eigen::Vector2f(x, y), viewer->core(core_index).view,
 		viewer->core(core_index).proj, viewer->core(core_index).viewport, V, F, pt, hits);
 
 	int fi = -1;
@@ -867,19 +804,19 @@ int BasicMenu::pick_face(MatrixXd& V,MatrixXi& F, View LR) {
 	return fi;
 }
 
-int BasicMenu::pick_vertex(MatrixXd& V, MatrixXi& F,View LR) {
+int BasicMenu::pick_vertex(MatrixXd& V, MatrixXi& F, MenuUtils::View LR) {
 	// Cast a ray in the view direction starting from the mouse position
 	int core_index;
-	if (LR == OutputOnly) {
+	if (LR == MenuUtils::OutputOnly) {
 		core_index = output_view_id;
 	}
-	else if (LR == InputOnly) {
+	else if (LR == MenuUtils::InputOnly) {
 		core_index = input_view_id;
 	}
 
 	double x = viewer->current_mouse_x;
 	double y = viewer->core(core_index).viewport(3) - viewer->current_mouse_y;
-	if (view == Vertical) {
+	if (view == MenuUtils::Vertical) {
 		y = (viewer->core(input_view_id).viewport(3) / core_percentage_size) - viewer->current_mouse_y;
 	}
 
@@ -902,89 +839,6 @@ int BasicMenu::pick_vertex(MatrixXd& V, MatrixXi& F,View LR) {
 	}
 	return vi;
 }
-	
-MatrixXd BasicMenu::compute_ARAP_param() {
-	param_type = ARAP;
-	// Compute the initial solution for ARAP (harmonic parametrization)
-	VectorXi bnd;
-	MatrixXd V_uv, initial_guess;
-
-	boundary_loop(viewer->data(InputModelID()).F, bnd);
-	MatrixXd bnd_uv;
-	map_vertices_to_circle(viewer->data(InputModelID()).V, bnd, bnd_uv);
-
-	harmonic(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, bnd, bnd_uv, 1, initial_guess);
-
-	// Add dynamic regularization to avoid to specify boundary conditions
-	ARAPData arap_data;
-	arap_data.with_dynamics = true;
-	VectorXi b = VectorXi::Zero(0);
-	MatrixXd bc = MatrixXd::Zero(0, 0);
-
-	// Initialize ARAP
-	arap_data.max_iter = 100;
-	// 2 means that we're going to *solve* in 2d
-	arap_precomputation(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, 2, b, arap_data);
-
-	// Solve arap using the harmonic map as initial guess
-	V_uv = initial_guess;
-
-	arap_solve(bc, arap_data, V_uv);
-	
-	update_texture(V_uv);
-	Update_view();
-	return V_uv;
-}
-
-MatrixXd BasicMenu::compute_harmonic_param() {
-	param_type = HARMONIC;
-	// Find the open boundary
-	VectorXi bnd;
-	MatrixXd V_uv;
-	boundary_loop(viewer->data(InputModelID()).F, bnd);
-
-	// Map the boundary to a circle, preserving edge proportions
-	MatrixXd bnd_uv;
-	map_vertices_to_circle(viewer->data(InputModelID()).V, bnd, bnd_uv);
-
-	harmonic(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, bnd, bnd_uv, 1, V_uv);
-	
-	update_texture(V_uv);
-	Update_view();
-	return V_uv;
-}
-
-MatrixXd BasicMenu::compute_lscm_param()
-{
-	param_type = LSCM;
-	// Fix two points on the boundary
-	VectorXi bnd, b(2, 1);
-	MatrixXd V_uv;
-	boundary_loop(viewer->data(InputModelID()).F, bnd);
-	b(0) = bnd(0);
-	b(1) = bnd(round(bnd.size() / 2));
-	MatrixXd bc(2, 2);
-	bc << 0, 0, 1, 0;
-
-	lscm(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, b, bc, V_uv);
-	
-	update_texture(V_uv);
-	Update_view();
-	return V_uv;
-}
-
-MatrixXd BasicMenu::ComputeSoup2DRandom()
-{
-	param_type = RANDOM;
-	MatrixXd V_uv;
-	auto nvs = viewer->data(InputModelID()).V.rows();
-	V_uv = MatrixX2d::Random(nvs, 2) * 2.0;
-	//FixFlippedFaces(viewer->data(InputModelID()).F, V_uv);
-
-	update_texture(V_uv);
-	Update_view();
-	return V_uv;
-}
 
 void BasicMenu::update_texture(MatrixXd& V_uv) {
 	MatrixXd V_uv_2D(V_uv.rows(),2);
@@ -1000,10 +854,10 @@ void BasicMenu::update_texture(MatrixXd& V_uv) {
 	}
 
 	// Plot the mesh
-	viewer->data(InputModelID()).set_uv(V_uv_2D);
-	viewer->data(OutputModelID()).set_vertices(V_uv_3D);
-	viewer->data(OutputModelID()).set_uv(V_uv_2D);
-	viewer->data(OutputModelID()).compute_normals();
+	InputModel().set_uv(V_uv_2D);
+	OutputModel().set_vertices(V_uv_3D);
+	OutputModel().set_uv(V_uv_2D);
+	OutputModel().compute_normals();
 }
 	
 void BasicMenu::checkGradients()
@@ -1059,7 +913,7 @@ void BasicMenu::update_mesh()
 	V = Map<MatrixXd>(X.data(), X.rows() / 2, 2);
 	
 	if (IsTranslate) {
-		Vector2d temp = viewer->data(OutputModelID()).V.row(Translate_Index);
+		Vector2d temp = OutputModel().V.row(Translate_Index);
 		V.row(Translate_Index) = temp;
 	}
 	update_texture(V);
@@ -1067,11 +921,8 @@ void BasicMenu::update_mesh()
 
 void BasicMenu::initializeSolver()
 {
-	//Check point for 2D mesh
-	//compute_harmonic_param();
-
-	MatrixXd V = viewer->data(OutputModelID()).V;
-	MatrixX3i F = viewer->data(OutputModelID()).F;
+	MatrixXd V = OutputModel().V;
+	MatrixX3i F = OutputModel().F;
 	
 	stop_solver_thread();
 
@@ -1088,7 +939,6 @@ void BasicMenu::initializeSolver()
 	auto anglePreserving = make_unique<AnglePreserving>();
 	anglePreserving->setVF(V, F);
 	anglePreserving->init();
-
 	auto constraintsPositional = make_shared<PenaltyPositionalConstraints>();
 	constraintsPositional->numV = V.rows();
 	constraintsPositional->init();
@@ -1105,13 +955,16 @@ void BasicMenu::initializeSolver()
 
 	// initialize the solver
 	MatrixXd initialguess;
-	if (IsMesh2D()) {
+	if (MenuUtils::IsMesh2D(InputModel().V)) {
 		//the mesh is 2D
 		initialguess = V;
 	}
 	else {
 		//the mesh is 3D
-		initialguess = compute_harmonic_param();
+		MenuUtils::harmonic_param(InputModel().V, InputModel().F, initialguess);
+		param_type = MenuUtils::HARMONIC;
+		update_texture(initialguess);
+		Update_view();
 	}
 	VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
 	solver->init(totalObjective, initialguessXX);
@@ -1121,99 +974,15 @@ void BasicMenu::initializeSolver()
 	solverInitialized = true;
 }
 
-void BasicMenu::FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs)
-{
-	Matrix<double, 3, 2> face_vertices;
-	for (MatrixXi::Index i = 0; i < Fs.rows(); ++i)
-	{
-		slice(Vs, Fs.row(i), 1, face_vertices);
-		Vector2d v1_2d = face_vertices.row(1) - face_vertices.row(0);
-		Vector2d v2_2d = face_vertices.row(2) - face_vertices.row(0);
-		Vector3d v1_3d = Vector3d(v1_2d.x(), v1_2d.y(), 0);
-		Vector3d v2_3d = Vector3d(v2_2d.x(), v2_2d.y(), 0);
-		Vector3d face_normal = v1_3d.cross(v2_3d);
-
-		// If face is flipped (that is, cross-product do not obey the right-hand rule)
-		if (face_normal(2) < 0)
-		{	
-			Fs.row(i) << Fs(i, 0), Fs(i, 2), Fs(i, 1);
-		}
-	}
-}
-
-void angle_degree(MatrixXd& V, MatrixXi& F, MatrixXd& angle) {
-	int numF = F.rows();
-	VectorXd Area;
-	MatrixXd Length, alfa, sum;
-	ArrayXXd sin_alfa(numF, 3);
-
-	igl::doublearea(V, F, Area);
-	igl::edge_lengths(V, F, Length);
-
-	// double_area = a*b*sin(alfa)
-	// sin(alfa) = (double_area / a) / b
-	sin_alfa.col(0) = Length.col(1).cwiseInverse().cwiseProduct(Length.col(2).cwiseInverse().cwiseProduct(Area));
-	sin_alfa.col(1) = Length.col(0).cwiseInverse().cwiseProduct(Length.col(2).cwiseInverse().cwiseProduct(Area));
-	sin_alfa.col(2) = Length.col(0).cwiseInverse().cwiseProduct(Length.col(1).cwiseInverse().cwiseProduct(Area));
-
-	// alfa = arcsin ((double_area / a) / b)
-	alfa = ((sin_alfa - ArrayXXd::Constant(numF, 3, 1e-10)).asin())*(180 / M_PI);
-	
-	
-	//here we deal with errors with sin function
-	//especially when the sum of the angles isn't equal to 180!
-	sum = alfa.rowwise().sum();
-	for (int i = 0; i < alfa.rows(); i++) {
-		double diff = 180 - sum(i, 0);
-		double c0 = 2 * (90 - alfa(i, 0));
-		double c1 = 2 * (90 - alfa(i, 1));
-		double c2 = 2 * (90 - alfa(i, 2));
-
-		if ((c0 > (diff - 1)) && (c0 < (diff + 1)))
-			alfa(i, 0) += c0;
-		else if ((c1 > (diff - 1)) && (c1 < (diff + 1)))
-			alfa(i, 1) += c1;
-		else if ((c2 > (diff - 1)) && (c2 < (diff + 1)))
-			alfa(i, 2) += c2;
-
-		/////////////////////////////////
-		//sorting - you can remove this part if the order of angles is important!
-		if (alfa(i, 0) > alfa(i, 1)) {
-			double temp = alfa(i, 0);
-			alfa(i, 0) = alfa(i, 1);
-			alfa(i, 1) = temp;
-		}
-		if (alfa(i, 0) > alfa(i, 2)) {
-			double temp = alfa(i, 0);
-			alfa(i, 0) = alfa(i, 2);
-			alfa(i, 2) = alfa(i, 1);
-			alfa(i, 1) = temp;
-		}
-		else if(alfa(i, 1) > alfa(i, 2)) {
-			double temp = alfa(i, 1);
-			alfa(i, 1) = alfa(i, 2);
-			alfa(i, 2) = temp;
-		}
-		/////////////////////////////////
-	}
-	angle = alfa;
-
-	////Checkpoint
-	//sum = alfa.rowwise().sum();
-	//for (int i = 0; i < alfa.rows(); i++) {
-	//	cout << i << ": " << alfa(i, 0) << " " << alfa(i, 1) << " " << alfa(i, 2) << " " << sum.row(i) << endl;
-	//}
-}
-
 void BasicMenu::UpdateEnergyColors() {
-	int numF = viewer->data(OutputModelID()).F.rows();
+	int numF = OutputModel().F.rows();
 	VectorXd DistortionPerFace(numF);
 	DistortionPerFace.setZero();
 	
-	if (distortion_type == ANGLE_DISTORTION) {	//distortion according to area preserving
+	if (distortion_type == MenuUtils::ANGLE_DISTORTION) {	//distortion according to area preserving
 		MatrixXd angle_input, angle_output, angle_ratio;
-		angle_degree(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, angle_output);
-		angle_degree(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, angle_input);
+		MenuUtils::angle_degree(OutputModel().V, OutputModel().F, angle_output);
+		MenuUtils::angle_degree(InputModel().V, InputModel().F, angle_input);
 
 		// DistortionPerFace = angle_output / angle_input
 		angle_ratio = angle_input.cwiseInverse().cwiseProduct(angle_output);
@@ -1223,10 +992,10 @@ void BasicMenu::UpdateEnergyColors() {
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
 		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
 	}
-	else if (distortion_type == LENGTH_DISTORTION) {	//distortion according to area preserving
+	else if (distortion_type == MenuUtils::LENGTH_DISTORTION) {	//distortion according to area preserving
 		MatrixXd Length_output, Length_input, Length_ratio;
-		igl::edge_lengths(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, Length_output);
-		igl::edge_lengths(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, Length_input);
+		igl::edge_lengths(OutputModel().V, OutputModel().F, Length_output);
+		igl::edge_lengths(InputModel().V, InputModel().F, Length_input);
 		// DistortionPerFace = Length_output / Length_input
 		Length_ratio = Length_input.cwiseInverse().cwiseProduct(Length_output);
 		//average over the vertices on each face
@@ -1234,23 +1003,22 @@ void BasicMenu::UpdateEnergyColors() {
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
 		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
 	}
-	else if (distortion_type == AREA_DISTORTION) {
+	else if (distortion_type == MenuUtils::AREA_DISTORTION) {
 		//distortion according to area preserving
 		VectorXd Area_output, Area_input;
-		igl::doublearea(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, Area_output);
-		igl::doublearea(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, Area_input);
+		igl::doublearea(OutputModel().V, OutputModel().F, Area_output);
+		igl::doublearea(InputModel().V, InputModel().F, Area_input);
 		// DistortionPerFace = Area_output / Area_input
 		DistortionPerFace = Area_input.cwiseInverse().cwiseProduct(Area_output);
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
 		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
 	}
-	else if (distortion_type == TOTAL_DISTORTION) {
+	else if (distortion_type == MenuUtils::TOTAL_DISTORTION) {
 		// calculate the distortion over all the energies
 		for (auto& obj : totalObjective->objectiveList) 
 			if ((obj->Efi.size() != 0) && (obj->w != 0)) 
 				DistortionPerFace += obj->Efi * obj->w;
 	}
-	//cout << DistortionPerFace.maxCoeff() << " , " << DistortionPerFace.minCoeff() << endl;
 
 	VectorXd alpha_vec = DistortionPerFace / (Max_Distortion+1e-8);
 	VectorXd beta_vec = VectorXd::Ones(numF) - alpha_vec;
