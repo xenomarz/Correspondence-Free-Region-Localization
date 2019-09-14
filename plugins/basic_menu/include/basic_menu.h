@@ -32,8 +32,8 @@
 #include <igl/file_dialog_open.h>
 #include <igl/unproject.h>
 #include "../../libs/optimization_lib/include/solvers/newton_solver.h"
-#include "../../libs/optimization_lib/include/objective_functions/objective_symmetric_dirichlet.h"
-#include "../../libs/optimization_lib/include/objective_functions/objective_area_preserving.h"
+#include "../../libs/optimization_lib/include/objective_functions/symmetric_dirichlet.h"
+#include "../../libs/optimization_lib/include/objective_functions/area_preserving.h"
 #include "../../libs/optimization_lib/include/objective_functions/penalty_positional_constraints.h"
 #include <atomic>
 

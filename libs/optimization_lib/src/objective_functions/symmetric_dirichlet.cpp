@@ -1,11 +1,11 @@
-#include <objective_functions/objective_symmetric_dirichlet.h>
+#include <objective_functions/symmetric_dirichlet.h>
 
-ObjectiveSymmetricDirichlet::ObjectiveSymmetricDirichlet()
+SymmetricDirichlet::SymmetricDirichlet()
 {
     name = "Symmetric Dirichlet";
 }
 
-void ObjectiveSymmetricDirichlet::init()
+void SymmetricDirichlet::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw "DistortionSymmetricDirichlet must define members V,F before init()!";
@@ -59,7 +59,7 @@ void ObjectiveSymmetricDirichlet::init()
 	w = 0.01;
 }
 
-void ObjectiveSymmetricDirichlet::updateX(const VectorXd& X)
+void SymmetricDirichlet::updateX(const VectorXd& X)
 {
 	bool inversions_exist = updateJ(X);
 	if (inversions_exist) {
@@ -67,7 +67,7 @@ void ObjectiveSymmetricDirichlet::updateX(const VectorXd& X)
 	}
 }
 
-void ObjectiveSymmetricDirichlet::setVF(MatrixXd& V, MatrixX3i& F) {
+void SymmetricDirichlet::setVF(MatrixXd& V, MatrixX3i& F) {
 	MatrixXd V3d(V.rows(), 3);
 	if (V.cols() == 2) {
 		V3d.leftCols(2) = V;
@@ -80,7 +80,7 @@ void ObjectiveSymmetricDirichlet::setVF(MatrixXd& V, MatrixX3i& F) {
 	this->F = F;
 }
 
-double ObjectiveSymmetricDirichlet::value(bool update)
+double SymmetricDirichlet::value(bool update)
 {
 	// E = ||J||^2+||J^-1||^2 = ||J||^2+||J||^2/det(J)^2
 	VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
@@ -96,7 +96,7 @@ double ObjectiveSymmetricDirichlet::value(bool update)
 	return value;
 }
 
-void ObjectiveSymmetricDirichlet::gradient(VectorXd& g)
+void SymmetricDirichlet::gradient(VectorXd& g)
 {
     // Energy is h(S(x),s(x)), then grad_x h = grad_(S,s) h * [grad(S); grad(s)]
     MatrixX2d S(alpha);
@@ -128,7 +128,7 @@ void ObjectiveSymmetricDirichlet::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void ObjectiveSymmetricDirichlet::hessian()
+void SymmetricDirichlet::hessian()
 {
     UpdateSSVDFunction();
     ComputeDenseSSVDDerivatives();
@@ -176,7 +176,7 @@ void ObjectiveSymmetricDirichlet::hessian()
 	}
 }
 
-bool ObjectiveSymmetricDirichlet::updateJ(const VectorXd& X)
+bool SymmetricDirichlet::updateJ(const VectorXd& X)
 {
 	Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	// 	a = D1*U;
@@ -200,7 +200,7 @@ bool ObjectiveSymmetricDirichlet::updateJ(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 };
 
-void ObjectiveSymmetricDirichlet::UpdateSSVDFunction()
+void SymmetricDirichlet::UpdateSSVDFunction()
 {
 	#pragma omp parallel for num_threads(24)
 	for (int i = 0; i < a.size(); i++)
@@ -215,7 +215,7 @@ void ObjectiveSymmetricDirichlet::UpdateSSVDFunction()
 	}
 }
 
-void ObjectiveSymmetricDirichlet::ComputeDenseSSVDDerivatives()
+void SymmetricDirichlet::ComputeDenseSSVDDerivatives()
 {
 	// Different columns belong to diferent faces
 	MatrixXd B(D1d*v.col(0).asDiagonal() + D2d*v.col(1).asDiagonal());
@@ -231,7 +231,7 @@ void ObjectiveSymmetricDirichlet::ComputeDenseSSVDDerivatives()
 	Dsd[1].bottomRows(t1.rows()) = t2;
 }
 
-inline Matrix6d ObjectiveSymmetricDirichlet::ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x)
+inline Matrix6d SymmetricDirichlet::ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x)
 {
 	double f2 = a1x*a1x + a2x*a2x;
 	double invf = 1.0/sqrt(f2);
@@ -249,7 +249,7 @@ inline Matrix6d ObjectiveSymmetricDirichlet::ComputeFaceConeHessian(const Vector
 	return  (invf - invf3*a2) * A1A1t + (invf - invf3*b2) * A2A2t - invf3 * ab*(A1A2t + A2A1t);
 }
 
-inline Matrix6d ObjectiveSymmetricDirichlet::ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs)
+inline Matrix6d SymmetricDirichlet::ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs)
 {
 	// No multiplying by area in this function
 	Matrix6d H = HS*dSi*dSi.transpose() + Hs*dsi*dsi.transpose(); //generalized gauss newton
@@ -263,7 +263,7 @@ inline Matrix6d ObjectiveSymmetricDirichlet::ComputeConvexConcaveFaceHessian(con
 	return H;
 }
 
-void ObjectiveSymmetricDirichlet::prepare_hessian()
+void SymmetricDirichlet::prepare_hessian()
 {
 	II.clear();
 	JJ.clear();

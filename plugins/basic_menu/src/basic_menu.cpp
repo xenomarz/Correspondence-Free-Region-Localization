@@ -1080,10 +1080,10 @@ void BasicMenu::initializeSolver()
 		return;
 
 	// initialize the energy
-	auto symDirichlet = make_unique<ObjectiveSymmetricDirichlet>();
+	auto symDirichlet = make_unique<SymmetricDirichlet>();
 	symDirichlet->setVF(V, F);
 	symDirichlet->init();
-	auto areaPreserving = make_unique<ObjectiveAreaPreserving>();
+	auto areaPreserving = make_unique<AreaPreserving>();
 	areaPreserving->setVF(V, F);
 	areaPreserving->init();
 	

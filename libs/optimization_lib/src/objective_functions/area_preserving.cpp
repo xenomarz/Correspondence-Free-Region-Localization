@@ -1,11 +1,11 @@
-#include <objective_functions/objective_area_preserving.h>
+#include <objective_functions/area_preserving.h>
 
-ObjectiveAreaPreserving::ObjectiveAreaPreserving()
+AreaPreserving::AreaPreserving()
 {
 	name = "Area Preserving";
 }
 
-void ObjectiveAreaPreserving::init()
+void AreaPreserving::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw "DistortionAreaPreserving must define members V,F before init()!";
@@ -47,7 +47,7 @@ void ObjectiveAreaPreserving::init()
 	w = 1;
 }
 
-void ObjectiveAreaPreserving::updateX(const VectorXd& X)
+void AreaPreserving::updateX(const VectorXd& X)
 {
 	bool inversions_exist = updateJ(X);
 	if (inversions_exist) {
@@ -55,7 +55,7 @@ void ObjectiveAreaPreserving::updateX(const VectorXd& X)
 	}
 }
 
-void ObjectiveAreaPreserving::setVF(MatrixXd& V, MatrixX3i& F) {
+void AreaPreserving::setVF(MatrixXd& V, MatrixX3i& F) {
 	MatrixX3d V3d(V.rows(), 3);
 	if (V.cols() == 2) {
 		V3d.leftCols(2) = V;
@@ -68,7 +68,7 @@ void ObjectiveAreaPreserving::setVF(MatrixXd& V, MatrixX3i& F) {
 	this->F = F;
 }
 
-double ObjectiveAreaPreserving::value(bool update)
+double AreaPreserving::value(bool update)
 {
 	// E = 0.5(det(J) - 1)^2
 	VectorXd E = (detJ - VectorXd::Ones(detJ.rows())).cwiseAbs2();
@@ -82,7 +82,7 @@ double ObjectiveAreaPreserving::value(bool update)
 	return value;
 }
 
-void ObjectiveAreaPreserving::gradient(VectorXd& g)
+void AreaPreserving::gradient(VectorXd& g)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
@@ -104,7 +104,7 @@ void ObjectiveAreaPreserving::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void ObjectiveAreaPreserving::hessian()
+void AreaPreserving::hessian()
 {
 #pragma omp parallel for num_threads(24)
 	for (int i = 0; i < F.rows(); ++i) {
@@ -122,7 +122,7 @@ void ObjectiveAreaPreserving::hessian()
 	}
 }
 
-bool ObjectiveAreaPreserving::updateJ(const VectorXd& X)
+bool AreaPreserving::updateJ(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
@@ -161,7 +161,7 @@ bool ObjectiveAreaPreserving::updateJ(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 }
 
-void ObjectiveAreaPreserving::prepare_hessian()
+void AreaPreserving::prepare_hessian()
 {
 	II.clear();
 	JJ.clear();

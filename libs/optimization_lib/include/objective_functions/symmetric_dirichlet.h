@@ -2,7 +2,7 @@
 
 #include <libs/optimization_lib/include/objective_functions/objective_function.h>
 
-class ObjectiveSymmetricDirichlet : public ObjectiveFunction
+class SymmetricDirichlet : public ObjectiveFunction
 {
 private:
 	// mesh vertices and faces
@@ -10,7 +10,7 @@ private:
 	MatrixXd V;
 
 public:
-	ObjectiveSymmetricDirichlet();
+	SymmetricDirichlet();
 
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
