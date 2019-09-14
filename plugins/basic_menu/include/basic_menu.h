@@ -29,11 +29,14 @@ private:
 	//Solver Button Parameters
 	bool solver_on, solverInitialized, show_text;
 	MenuUtils::Distortion distortion_type;
+	MenuUtils::SolverType solver_type;
 	float Max_Distortion;
 	
 	// Solver thread
 	thread solver_thread;
-	unique_ptr<Newton> solver;
+	shared_ptr<Newton> newton;
+	shared_ptr<GradientDescent> gradient_descent;
+	shared_ptr<Solver> solver;
 	shared_ptr<TotalObjective> totalObjective;
 
 protected:

@@ -28,6 +28,7 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		Highlighted_face = false;
 		show_text = true;
 		distortion_type = MenuUtils::TOTAL_DISTORTION;
+		solver_type = MenuUtils::NEWTON;
 		solverInitialized = false;
 		down_mouse_x = down_mouse_y = -1;
 
@@ -57,7 +58,9 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		viewer->core(output_view_id).lighting_factor = 0;
 		
 		// Initialize solver thread
-		solver = make_unique<Newton>();
+		newton = make_shared<Newton>();
+		gradient_descent = make_shared<GradientDescent>();
+		solver = newton;
 		totalObjective = make_shared<TotalObjective>();	
 
 		//maximize window
@@ -275,32 +278,32 @@ IGL_INLINE bool BasicMenu::mouse_down(int button, int modifier) {
 	}
 	else if (mouse_mode == MenuUtils::VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
 	{
-		if (!selected_vertices.empty())
-		{
-			//check if there faces which is selected on the left screen
-			int v = pick_vertex(InputModel().V, InputModel().F, MenuUtils::InputOnly);
-			Model_Translate_ID = InputModelID();
-			Core_Translate_ID = input_view_id;
-			if (v == -1) {
-				//check if there faces which is selected on the right screen
-				v = pick_vertex(OutputModel().V, OutputModel().F, MenuUtils::OutputOnly);
-				Model_Translate_ID = OutputModelID();
-				Core_Translate_ID = output_view_id;
-			}
-
-			if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
-			{
-				IsTranslate = true;
-				Translate_Index = v;
-			}
+	if (!selected_vertices.empty())
+	{
+		//check if there faces which is selected on the left screen
+		int v = pick_vertex(InputModel().V, InputModel().F, MenuUtils::InputOnly);
+		Model_Translate_ID = InputModelID();
+		Core_Translate_ID = input_view_id;
+		if (v == -1) {
+			//check if there faces which is selected on the right screen
+			v = pick_vertex(OutputModel().V, OutputModel().F, MenuUtils::OutputOnly);
+			Model_Translate_ID = OutputModelID();
+			Core_Translate_ID = output_view_id;
 		}
+
+		if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
+		{
+			IsTranslate = true;
+			Translate_Index = v;
+		}
+	}
 	}
 
 	return false;
 }
 
 IGL_INLINE bool BasicMenu::key_pressed(unsigned int key, int modifiers) {
-	
+
 	if (key == 'F' || key == 'f') {
 		mouse_mode = MenuUtils::FACE_SELECT;
 	}
@@ -325,20 +328,20 @@ IGL_INLINE void BasicMenu::shutdown()
 IGL_INLINE bool BasicMenu::pre_draw() {
 	//call parent function
 	ImGuiMenu::pre_draw();
-			
+
 	if (solver->progressed)
 		update_mesh();
-	
+
 	//Update the model's faces colors in the two screens
 	if (color_per_face.size()) {
 		InputModel().set_colors(color_per_face);
 		OutputModel().set_colors(color_per_face);
 	}
-			
+
 	//Update the model's vertex colors in the two screens
 	InputModel().point_size = 10;
 	OutputModel().point_size = 10;
-		
+
 	InputModel().set_points(Vertices_Input, color_per_vertex);
 	OutputModel().set_points(Vertices_output, color_per_vertex);
 
@@ -370,7 +373,21 @@ void BasicMenu::Draw_menu_for_Solver() {
 				stop_solver_thread();
 			}
 		}
-		ImGui::Combo("step", (int *)(&solver->is_graient_descent_step), "Newton\0Gradient Descent\0\0");
+		if (ImGui::Combo("step", (int *)(&solver_type), "Newton\0Gradient Descent\0\0")) {
+			stop_solver_thread();
+			if (solver_type == MenuUtils::NEWTON) {
+				solver = newton;
+			}
+			else {
+				solver = gradient_descent;
+			}
+			
+			VectorXd initialguessXX = Map<const VectorXd>(OutputModel().V.leftCols(2).data(), OutputModel().V.leftCols(2).rows() * 2);
+			solver->init(totalObjective, initialguessXX);
+			MatrixX3i F = OutputModel().F;
+			solver->setFlipAvoidingLineSearch(F);
+			start_solver_thread();
+		}
 
 		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");
 		
@@ -893,6 +910,7 @@ void BasicMenu::start_solver_thread() {
 	}
 	cout << ">> start new solver" << endl;
 	solver_on = true;
+	
 	solver_thread = thread(&Solver::run, solver.get());
 	solver_thread.detach();
 }
@@ -967,8 +985,10 @@ void BasicMenu::initializeSolver()
 		Update_view();
 	}
 	VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-	solver->init(totalObjective, initialguessXX);
-	solver->setFlipAvoidingLineSearch(F);
+	newton->init(totalObjective, initialguessXX);
+	newton->setFlipAvoidingLineSearch(F);
+	gradient_descent->init(totalObjective, initialguessXX);
+	gradient_descent->setFlipAvoidingLineSearch(F);
 	
 	cout << "Solver is initialized!" << endl;
 	solverInitialized = true;

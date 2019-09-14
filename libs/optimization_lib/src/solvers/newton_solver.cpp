@@ -24,12 +24,6 @@ double Newton::step()
 	eigen_solver->factorize(objective->II, objective->JJ, objective->SS);
 	VectorXd rhs = -g;
 	p = eigen_solver->solve(rhs);
-
-	if (is_graient_descent_step) {
-		cout << is_graient_descent_step << endl;
-		p = rhs;
-	}
-	
 #endif
 	return f;
 }
