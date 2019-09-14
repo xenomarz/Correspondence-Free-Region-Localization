@@ -59,7 +59,6 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		// Initialize solver thread
 		solver = make_unique<Newton>();
 		totalObjective = make_shared<TotalObjective>();	
-		constraintsPositional = make_shared<PenaltyPositionalConstraints>();
 
 		//maximize window
 		glfwMaximizeWindow(viewer->window);
@@ -1086,7 +1085,11 @@ void BasicMenu::initializeSolver()
 	auto areaPreserving = make_unique<AreaPreserving>();
 	areaPreserving->setVF(V, F);
 	areaPreserving->init();
-	
+	auto anglePreserving = make_unique<AnglePreserving>();
+	anglePreserving->setVF(V, F);
+	anglePreserving->init();
+
+	auto constraintsPositional = make_shared<PenaltyPositionalConstraints>();
 	constraintsPositional->numV = V.rows();
 	constraintsPositional->init();
 	HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
@@ -1094,6 +1097,7 @@ void BasicMenu::initializeSolver()
 
 	totalObjective->objectiveList.clear();
 	totalObjective->objectiveList.push_back(move(areaPreserving));
+	totalObjective->objectiveList.push_back(move(anglePreserving));
 	totalObjective->objectiveList.push_back(move(symDirichlet));
 	totalObjective->objectiveList.push_back(move(constraintsPositional));
 

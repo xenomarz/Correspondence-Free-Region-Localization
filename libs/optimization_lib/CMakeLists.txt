@@ -10,6 +10,7 @@ set(SOURCES
 
 	src/objective_functions/objective_function.cpp
 	src/objective_functions/area_preserving.cpp
+	src/objective_functions/angle_preserving.cpp
 	src/objective_functions/total_objective.cpp
 	src/objective_functions/symmetric_dirichlet.cpp
 	src/objective_functions/penalty_positional_constraints.cpp
@@ -23,6 +24,7 @@ set(SOURCES
 
 	include/objective_functions/objective_function.h
 	include/objective_functions/area_preserving.h
+	include/objective_functions/angle_preserving.h
 	include/objective_functions/total_objective.h
 	include/objective_functions/symmetric_dirichlet.h
 	include/objective_functions/penalty_positional_constraints.h
