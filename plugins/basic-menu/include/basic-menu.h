@@ -93,7 +93,7 @@ private:
 
 protected:
 	//Basic (necessary) parameteres
-	map<unsigned int, string> data_id_to_name;
+	std::map<unsigned int, std::string> id_to_name;
 
 public:
 	//Constructor & initialization
@@ -128,9 +128,9 @@ public:
 	void UpdateEnergyColors();
 
 	//Name's methods
-	void set_name_mapping(unsigned int data_id, string name);
-	char* getModelNames();
-	string filename(const string& str);
+	void insert_model_names_map(unsigned int data_id, string name);
+	char* build_model_names_list();
+	string extract_filename(const string& str);
 	bool IsMesh2D();
 
 	//Basic Methods

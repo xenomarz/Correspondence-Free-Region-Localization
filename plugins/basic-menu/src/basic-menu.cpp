@@ -29,7 +29,7 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		distortion_type = TOTAL_DISTORTION;
 		solverInitialized = false;
 		down_mouse_x = down_mouse_y = -1;
-		this->ShowModelIndex = 0;
+		this->ShowModelIndex = -1;
 
 		//Solver Parameters
 		solver_on = false;
@@ -70,21 +70,19 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 {
 	float w = ImGui::GetContentRegionAvailWidth();
 	float p = ImGui::GetStyle().FramePadding.x;
-	if (ImGui::Button("Load##Mesh", ImVec2((w - p) / 2.f, 0)))
-	{
+	if (ImGui::Button("Load##Mesh", ImVec2((w - p) / 2.f, 0))) {
 		//Load new model that has two copies
-		string fname = file_dialog_open();
-		if (fname.length() != 0)
-		{
-			set_name_mapping(viewer->data_list.size(), filename(fname));
-			viewer->load_mesh_from_file(fname.c_str());
-			viewer->load_mesh_from_file(fname.c_str());
+		string filepath = file_dialog_open();
+		if (!filepath.empty()) {
+			insert_model_names_map(viewer->data_list.size(), extract_filename(filepath));
+			viewer->load_mesh_from_file(filepath.c_str());
+			viewer->load_mesh_from_file(filepath.c_str());
 			Update_view();
 		}
 	}
+
 	ImGui::SameLine(0, p);
-	if (ImGui::Button("Save##Mesh", ImVec2((w - p) / 2.f, 0)))
-	{
+	if (ImGui::Button("Save##Mesh", ImVec2((w - p) / 2.f, 0))) {
 		viewer->open_dialog_save_mesh();
 	}
 			
@@ -92,7 +90,7 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 	ImGui::Checkbox("Show text", &show_text);
 
 	if ((view == Horizontal) || (view == Vertical)) {
-		if(ImGui::SliderFloat("Core Size", &core_percentage_size, 0, 1, to_string(core_percentage_size).c_str(), 1)){
+		if(ImGui::SliderFloat("Core Size", &core_percentage_size, 0, 1, to_string(core_percentage_size).c_str(), 1)) {
 			int frameBufferWidth, frameBufferHeight;
 			glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
 			post_resize(frameBufferWidth, frameBufferHeight);
@@ -114,8 +112,8 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 		}
 	}
 
-	char* modelNames = getModelNames();
-	if (ImGui::Combo("Choose Model", (int*)(&ShowModelIndex), modelNames, IM_ARRAYSIZE(modelNames))) {
+	char* modelNamesList = build_model_names_list();
+	if (ImGui::Combo("Choose Model", (int*)(&ShowModelIndex), modelNamesList, IM_ARRAYSIZE(modelNamesList))) {
 		Update_view();
 	}
 
@@ -502,8 +500,7 @@ void BasicMenu::Draw_menu_for_cores() {
 }
 
 void BasicMenu::Draw_menu_for_models() {
-	for (auto& data : viewer->data_list)
-	{
+	for (auto& data : viewer->data_list) {
 		// Helper for setting viewport specific mesh options
 		auto make_checkbox = [&](const char *label, unsigned int &option)
 		{
@@ -514,42 +511,35 @@ void BasicMenu::Draw_menu_for_models() {
 		};
 
 		ImGui::PushID(data.id);
-		stringstream ss;
+		stringstream sts;
+		if (id_to_name.count(data.id) > 0)	sts << id_to_name[data.id];
+		else								sts << "Data " << data.id;
 
-		if (data_id_to_name.count(data.id) > 0)
-		{
-			ss << data_id_to_name[data.id];
-		}
-		else
-		{
-			ss << "Data " << data.id;
-		}
-
-		if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-		{
+		if (!ImGui::CollapsingHeader(sts.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
 			float w = ImGui::GetContentRegionAvailWidth();
 			float p = ImGui::GetStyle().FramePadding.x;
 
 			if (ImGui::Button("texture x2", ImVec2((w - p) / 2.f, 0))) {
 				data.set_uv(data.V_uv * 2);
 			}
+
 			ImGui::SameLine(0, p);
 			if (ImGui::Button("texture /2", ImVec2((w - p) / 2.f, 0))) {
 				data.set_uv(data.V_uv / 2);
 			}
 
-			if (ImGui::Checkbox("Face-based", &(data.face_based)))
-			{
+			if (ImGui::Checkbox("Face-based", &(data.face_based))) {
 				data.dirty = MeshGL::DIRTY_ALL;
 			}
 
 			make_checkbox("Show texture", data.show_texture);
-			if (ImGui::Checkbox("Invert normals", &(data.invert_normals)))
-			{
+			if (ImGui::Checkbox("Invert normals", &(data.invert_normals))) {
 				data.dirty |= MeshGL::DIRTY_NORMAL;
 			}
+
 			make_checkbox("Show overlay", data.show_overlay);
 			make_checkbox("Show overlay depth", data.show_overlay_depth);
+
 			ImGui::ColorEdit4("Line color", data.line_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 			ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.3f);
 			ImGui::DragFloat("Shininess", &(data.shininess), 0.05f, 0.0f, 100.0f);
@@ -557,6 +547,7 @@ void BasicMenu::Draw_menu_for_models() {
 
 			make_checkbox("Wireframe", data.show_lines);
 			make_checkbox("Fill", data.show_faces);
+
 			ImGui::Checkbox("Show vertex labels", &(data.show_vertid));
 			ImGui::Checkbox("Show faces labels", &(data.show_faceid));
 		}
@@ -729,10 +720,9 @@ void BasicMenu::follow_and_mark_selected_faces() {
 	}
 }
 	
-void BasicMenu::set_name_mapping(unsigned int data_id, string name)
-{
-	data_id_to_name[data_id] = name;
-	data_id_to_name[data_id + 1] = name + " (Param.)";
+void BasicMenu::insert_model_names_map(unsigned int data_id, string name) {
+	id_to_name[data_id] = name;
+	id_to_name[data_id + 1] = name + " (Param.)";
 }
 
 int BasicMenu::InputModelID() {
@@ -748,16 +738,15 @@ bool BasicMenu::IsMesh2D() {
 	return (V.col(2).array() == 0).all();
 }
 
-char* BasicMenu::getModelNames() {
+char* BasicMenu::build_model_names_list() {
 	std::string cStr("");
 	for (auto& data : viewer->data_list) {
 		std::stringstream sts;
 		if (data.id % 2 == 0) {
-			if (data_id_to_name.count(data.id) > 0) sts << data_id_to_name[data.id];
-			else									sts << "Model " << data.id;
+			if (id_to_name.count(data.id) > 0)	sts << id_to_name[data.id];
+			else								sts << "Model " << data.id;
 
 			cStr += sts.str().c_str();
-			cStr += " ";
 			cStr += '\0';
 		}
 	}
@@ -769,17 +758,15 @@ char* BasicMenu::getModelNames() {
 	if (listLength == 1)
 		comboList[0] = cStr.at(0);
 
-	for (size_t i = 0; i < listLength; i++)
+	for (unsigned int i = 0; i < listLength; i++)
 		comboList[i] = cStr.at(i);
 
 	return comboList;
 }
 
-string BasicMenu::filename(const string& str)
-{
-	size_t head,tail;
-	head = str.find_last_of("/\\");
-	tail = str.find_last_of("/.");
+string BasicMenu::extract_filename(const string& str) {
+	size_t head = str.find_last_of("/\\");
+	size_t tail = str.find_last_of("/.");
 	return (str.substr((head + 1),(tail-head-1)));
 }
 
