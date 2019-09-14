@@ -361,7 +361,7 @@ void BasicMenu::Draw_menu_for_colors() {
 }
 
 void BasicMenu::Draw_menu_for_Solver() {
-	if (!ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		if (ImGui::Checkbox(solver_on ? "On" : "Off", &solver_on)) {
 			if (solver_on) {

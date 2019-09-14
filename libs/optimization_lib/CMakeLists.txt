@@ -4,7 +4,6 @@ project(optimization_lib)
 set(SOURCES
 	src/solvers/solver.cpp
 	src/solvers/newton_solver.cpp
-	src/solvers/gradient_descent_solver.cpp
 	src/solvers/eigen_sparse_solver.cpp
 	src/solvers/pardiso_solver.cpp
 
@@ -18,7 +17,6 @@ set(SOURCES
 
 	include/solvers/solver.h
 	include/solvers/newton_solver.h
-	include/solvers/gradient_descent_solver.h
 	include/solvers/eigen_sparse_solver.h
 	include/solvers/pardiso_solver.h
 
