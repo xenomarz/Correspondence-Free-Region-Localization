@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.1)
 project(plugins)
 
 set(SOURCES
-	basic-menu/src/basic-menu.cpp
-	basic-menu/include/basic-menu.h)
+	basic_menu/src/basic_menu.cpp
+	basic_menu/include/basic_menu.h)
 
 add_library(${PROJECT_NAME} ${SOURCES})
 add_library(rds::${PROJECT_NAME} ALIAS ${PROJECT_NAME})

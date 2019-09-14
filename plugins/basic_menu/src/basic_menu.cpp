@@ -1,4 +1,4 @@
-#include <basic-menu/include/basic-menu.h>
+#include <basic_menu/include/basic_menu.h>
 
 BasicMenu::BasicMenu() :
 	opengl::glfw::imgui::ImGuiMenu(){}

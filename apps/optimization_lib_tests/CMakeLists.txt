@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(optimization-lib-tests)
+project(optimization_lib_tests)
 
 # Add your project files
 set(SOURCES src/main.cpp ${CMAKE_SOURCE_DIR}/natvis/eigen.natvis)

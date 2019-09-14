@@ -1,4 +1,4 @@
-#include <plugins/basic-menu/include/basic-menu.h>
+#include <plugins/basic-menu/include/basic_menu.h>
 
 int main(int argc, char * argv[])
 {
