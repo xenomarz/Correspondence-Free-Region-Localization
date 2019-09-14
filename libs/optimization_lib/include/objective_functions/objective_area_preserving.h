@@ -31,6 +31,7 @@ public:
 	VectorXd detJ;
 	MatrixXd grad;
 	vector<Matrix<double, 6, 6>> Hessian;
+	vector<Matrix<double, 4, 6>> dJ_dX;
 
 	//Energy parts - distortion
 	VectorXd Area;

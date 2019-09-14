@@ -19,6 +19,7 @@ void ObjectiveAreaPreserving::init()
 	detJ.resize(F.rows());
 	grad.resize(F.rows(), 6);
 	Hessian.resize(F.rows());
+	dJ_dX.resize(F.rows());
 
 	// compute init energy matrices
 	igl::doublearea(V, F, Area);
@@ -29,6 +30,18 @@ void ObjectiveAreaPreserving::init()
 	Utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
 	D1d = D1cols.transpose();
 	D2d = D2cols.transpose();
+
+	//prepare dJ/dX
+	for (int i = 0; i < F.rows(); i++) {
+		MatrixXd Dx = D1d.col(i).transpose();
+		MatrixXd Dy = D2d.col(i).transpose();
+		MatrixXd zero = VectorXd::Zero(3).transpose();
+		dJ_dX[i] << 
+			Dx	, zero	,
+			zero, Dx	,
+			Dy	, zero	,
+			zero, Dy;
+	}
 
 	prepare_hessian();
 	w = 1;
@@ -112,93 +125,42 @@ void ObjectiveAreaPreserving::hessian()
 bool ObjectiveAreaPreserving::updateJ(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
-	// 	a = D1*U;
-	// 	b = D2*U;
-	// 	c = D1*V;
-	// 	d = D2*V;
+	
 	for (int i = 0; i < F.rows(); i++)
 	{
-		// For each face Fi = (p0,p1,p2)
-		//		Xi = [ p0.x , p1.x , p2.x ]
-		//		Yi = [ p0.y , p1.y , p2.y ]
 		Vector3d Xi, Yi;
 		Xi << x(F(i, 0), 0), x(F(i, 1), 0), x(F(i, 2), 0);
 		Yi << x(F(i, 0), 1), x(F(i, 1), 1), x(F(i, 2), 1);
-		Matrix<double, 1, 3> Xi_T = Xi.transpose();
-		Matrix<double, 1, 3> Yi_T = Yi.transpose();
 		Vector3d Dx = D1d.col(i);
 		Vector3d Dy = D2d.col(i);
-		Matrix<double, 1, 3> Dx_T = Dx.transpose();
-		Matrix<double, 1, 3> Dy_T = Dy.transpose();
-
+		
 		//prepare jacobian		
-		a(i) = Dx_T * Xi;
-		b(i) = Dy_T * Xi;
-		c(i) = Dx_T * Yi;
-		d(i) = Dy_T * Yi;
+		a(i) = Dx.transpose() * Xi;
+		b(i) = Dx.transpose() * Yi;
+		c(i) = Dy.transpose() * Xi;
+		d(i) = Dy.transpose() * Yi;
+		double detj_1 = (a(i) * d(i) - b(i) * c(i)) - 1;
 
 		//prepare gradient
-		double detj_1 = (a(i) * d(i) - b(i) * c(i)) - 1;
-		Vector3d dx = (Dx * Yi_T * Dy) - (Dy * Yi_T * Dx);
-		dx *= detj_1;
-		Vector3d dy = (Dy * Xi_T * Dx) - (Dx * Xi_T * Dy);
-		dy *= detj_1;
-
-		grad.row(i) << dx(0), dx(1), dx(2), dy(0), dy(1), dy(2);
-
-
+		Vector4d dE_dJ(d(i), -c(i), -b(i), a(i));
+		dE_dJ *= detj_1;
+		grad.row(i) = (dE_dJ.transpose() * dJ_dX[i]).transpose();
 
 		//prepare hessian
-		double DyT_Yi = Dy_T * Yi;
-		double YiT_Dy = Yi_T * Dy;
-		double YiT_Dx = Yi_T * Dx;
-		double DxT_Yi = Dx_T * Yi;
-		double DyT_Xi = Dy_T * Xi;
-		double DxT_Xi = Dx_T * Xi;
-		double XiT_Dy = Xi_T * Dy;
-		double XiT_Dx = Xi_T * Dx;
+		MatrixXd d2E_dJ2(4, 4);
+		d2E_dJ2 <<
+			d(i)*d(i)						, -c(i)*d(i)					, -b(i)*d(i)					, 2 * a(i)*d(i) - b(i)*c(i) - 1,
+			-c(i)*d(i)						, c(i)*c(i)						, 2 * b(i)*c(i) - a(i)*d(i) + 1	, -c(i)*a(i),
+			-b(i)*d(i)						, 2 * b(i)*c(i) - a(i)*d(i) + 1	, b(i)*b(i)						, -b(i)*a(i),
+			2 * a(i)*d(i) - b(i)*c(i) - 1	, -a(i)*c(i)					, -a(i)*b(i)					, a(i)*a(i);
 
-		Matrix<double, 3, 3> dxx =
-			DyT_Yi * Dx * YiT_Dy*Dx_T
-			- DyT_Yi * Dy * YiT_Dx*Dx_T
-			- DxT_Yi * Dx * YiT_Dy*Dy_T
-			+ DxT_Yi * Dy * YiT_Dx*Dy_T;
-
-		Matrix<double, 3, 3> dyy =
-			DyT_Xi * Dx * XiT_Dy*Dx_T
-			- DyT_Xi * Dy * XiT_Dx*Dx_T
-			- DxT_Xi * Dx * XiT_Dy*Dy_T
-			+ DxT_Xi * Dy * XiT_Dx*Dy_T;
-
-		Matrix<double, 3, 3> dxy =	//not sure!
-			DyT_Yi * Dy * XiT_Dx*Dx_T
-			+ DxT_Xi * DyT_Yi *Dy*Dx_T
-			- DyT_Yi * Dx * XiT_Dy*Dx_T
-			- DxT_Xi * DyT_Yi *Dx*Dy_T
-			- DxT_Yi * Dy * XiT_Dx*Dy_T
-			- DyT_Xi * DxT_Yi *Dy*Dx_T
-			+ DxT_Yi * Dx * XiT_Dy*Dy_T
-			+ DyT_Xi * DxT_Yi *Dx*Dy_T
-			- Dy * Dx_T
-			+ Dx * Dy_T;
-		
-		Matrix<double, 3, 3> dyx = dxy.transpose();
-								
-		Hessian[i] << dxx(0, 0), dxx(0, 1), dxx(0, 2), dxy(0, 0), dxy(0, 1), dxy(0, 2),
-			dxx(1, 0), dxx(1, 1), dxx(1, 2), dxy(1, 0), dxy(1, 1), dxy(1, 2),
-			dxx(2, 0), dxx(2, 1), dxx(2, 2), dxy(2, 0), dxy(2, 1), dxy(2, 2),
-
-			dyx(0, 0), dyx(0, 1), dyx(0, 2), dyy(0, 0), dyy(0, 1), dyy(0, 2),
-			dyx(1, 0), dyx(1, 1), dyx(1, 2), dyy(1, 0), dyy(1, 1), dyy(1, 2),
-			dyx(2, 0), dyx(2, 1), dyx(2, 2), dyy(2, 0), dyy(2, 1), dyy(2, 2);
-
+		Hessian[i] = dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
 	}
 	detJ = a.cwiseProduct(d) - b.cwiseProduct(c);
 	
 	return ((detJ.array() < 0).any());
 }
 
-//Here we build our hessian matrix with zeros
 void ObjectiveAreaPreserving::prepare_hessian()
 {
 	II.clear();
@@ -211,37 +173,37 @@ void ObjectiveAreaPreserving::prepare_hessian()
 		// They are access and also put into the big hessian in column order. 
 
 		// First column
-		PushPair(F(i, 0), F(i, 0));
+		PushPair(F(i, 0)			, F(i, 0));
 
 		// Second column
-		PushPair(F(i, 0), F(i, 1));
-		PushPair(F(i, 1), F(i, 1));
+		PushPair(F(i, 0)			, F(i, 1));
+		PushPair(F(i, 1)			, F(i, 1));
 
 		// Third column
-		PushPair(F(i, 0), F(i, 2));
-		PushPair(F(i, 1), F(i, 2));
-		PushPair(F(i, 2), F(i, 2));
+		PushPair(F(i, 0)			, F(i, 2));
+		PushPair(F(i, 1)			, F(i, 2));
+		PushPair(F(i, 2)			, F(i, 2));
 
 		// Fourth column
-		PushPair(F(i, 0), F(i, 0) + V.rows());
-		PushPair(F(i, 1), F(i, 0) + V.rows());
-		PushPair(F(i, 2), F(i, 0) + V.rows());
-		PushPair(F(i, 0) + V.rows(), F(i, 0) + V.rows());
+		PushPair(F(i, 0)			, F(i, 0) + V.rows());
+		PushPair(F(i, 1)			, F(i, 0) + V.rows());
+		PushPair(F(i, 2)			, F(i, 0) + V.rows());
+		PushPair(F(i, 0) + V.rows()	, F(i, 0) + V.rows());
 
 		// Fifth column
-		PushPair(F(i, 0), F(i, 1) + V.rows());
-		PushPair(F(i, 1), F(i, 1) + V.rows());
-		PushPair(F(i, 2), F(i, 1) + V.rows());
-		PushPair(F(i, 0) + V.rows(), F(i, 1) + V.rows());
-		PushPair(F(i, 1) + V.rows(), F(i, 1) + V.rows());
+		PushPair(F(i, 0)			, F(i, 1) + V.rows());
+		PushPair(F(i, 1)			, F(i, 1) + V.rows());
+		PushPair(F(i, 2)			, F(i, 1) + V.rows());
+		PushPair(F(i, 0) + V.rows()	, F(i, 1) + V.rows());
+		PushPair(F(i, 1) + V.rows()	, F(i, 1) + V.rows());
 
 		// Sixth column
-		PushPair(F(i, 0), F(i, 2) + V.rows());
-		PushPair(F(i, 1), F(i, 2) + V.rows());
-		PushPair(F(i, 2), F(i, 2) + V.rows());
-		PushPair(F(i, 0) + V.rows(), F(i, 2) + V.rows());
-		PushPair(F(i, 1) + V.rows(), F(i, 2) + V.rows());
-		PushPair(F(i, 2) + V.rows(), F(i, 2) + V.rows());
+		PushPair(F(i, 0)			, F(i, 2) + V.rows());
+		PushPair(F(i, 1)			, F(i, 2) + V.rows());
+		PushPair(F(i, 2)			, F(i, 2) + V.rows());
+		PushPair(F(i, 0) + V.rows()	, F(i, 2) + V.rows());
+		PushPair(F(i, 1) + V.rows()	, F(i, 2) + V.rows());
+		PushPair(F(i, 2) + V.rows()	, F(i, 2) + V.rows());
 	}
 	SS = vector<double>(II.size(), 0.);
 }
