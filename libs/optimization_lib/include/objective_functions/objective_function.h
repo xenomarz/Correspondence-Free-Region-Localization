@@ -29,7 +29,7 @@ public:
 	virtual ~ObjectiveFunction(){}
 	virtual void init() = 0;
 	virtual void updateX(const VectorXd& X) = 0;
-	virtual double value() = 0;
+	virtual double value(bool update = true) = 0;
 	virtual void gradient(VectorXd& g) = 0;
 	virtual void hessian() = 0;
 	virtual void prepare_hessian() = 0;
@@ -46,8 +46,7 @@ public:
 
 	//weight for each objective function
 	float w;
-	float Shift_eigen_values = 1e-6;
-	VectorXd Efi;     //Efi=sum(Ef_dist.^2,2), for data->Efi history
+	VectorXd Efi;     
 	double energy_value = 0;
 	double gradient_norm = 0;
 	char* name = "Objective function";

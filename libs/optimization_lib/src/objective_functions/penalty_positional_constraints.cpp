@@ -22,13 +22,17 @@ void PenaltyPositionalConstraints::updateX(const VectorXd& X)
 	}
 }
 
-double PenaltyPositionalConstraints::value()
+double PenaltyPositionalConstraints::value(bool update)
 {
 	if (CurrConstrainedVerticesPos.rows() != ConstrainedVerticesPos.rows()) {
 		return 0;
 	}
-	energy_value = (ConstrainedVerticesPos - CurrConstrainedVerticesPos).squaredNorm();
-	return energy_value;
+	double E = (ConstrainedVerticesPos - CurrConstrainedVerticesPos).squaredNorm();
+	if (update) {
+		energy_value = E;
+	}
+	
+	return E;
 }
 
 void PenaltyPositionalConstraints::gradient(VectorXd& g)

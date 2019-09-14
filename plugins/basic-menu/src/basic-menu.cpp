@@ -371,6 +371,7 @@ void BasicMenu::Draw_menu_for_Solver() {
 				stop_solver_thread();
 			}
 		}
+		ImGui::Combo("step", (int *)(&solver->is_graient_descent_step), "Newton\0Gradient Descent\0\0");
 
 		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");
 		
@@ -421,6 +422,8 @@ void BasicMenu::Draw_menu_for_Solver() {
 		
 		ImGui::DragFloat("Max Distortion", &(Max_Distortion), 0.05f, 0.1f, 20.0f);
 		
+		ImGui::PushItemWidth(80 * menu_scaling());
+		ImGui::DragFloat("shift eigen values", &(totalObjective->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
 
 		// objective functions wieghts
 		int id = 0;
@@ -429,8 +432,7 @@ void BasicMenu::Draw_menu_for_Solver() {
 			ImGui::Text(obj->name);
 			ImGui::PushItemWidth(80 * menu_scaling());
 			ImGui::DragFloat("weight", &(obj->w) , 0.05f, 0.1f, 20.0f);
-			ImGui::PushItemWidth(80 * menu_scaling());
-			ImGui::DragFloat("shift eigen values", &(obj->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
+			
 			ImGui::PopID();
 		}
 	}
@@ -1057,6 +1059,10 @@ void BasicMenu::update_mesh()
 	MatrixXd V(X.rows() / 2, 2);
 	V = Map<MatrixXd>(X.data(), X.rows() / 2, 2);
 	
+	if (IsTranslate) {
+		Vector2d temp = viewer->data(OutputModelID()).V.row(Translate_Index);
+		V.row(Translate_Index) = temp;
+	}
 	update_texture(V);
 }
 
@@ -1165,6 +1171,26 @@ void angle_degree(MatrixXd& V, MatrixXi& F, MatrixXd& angle) {
 			alfa(i, 1) += c1;
 		else if ((c2 > (diff - 1)) && (c2 < (diff + 1)))
 			alfa(i, 2) += c2;
+
+		/////////////////////////////////
+		//sorting - you can remove this part if the order of angles is important!
+		if (alfa(i, 0) > alfa(i, 1)) {
+			double temp = alfa(i, 0);
+			alfa(i, 0) = alfa(i, 1);
+			alfa(i, 1) = temp;
+		}
+		if (alfa(i, 0) > alfa(i, 2)) {
+			double temp = alfa(i, 0);
+			alfa(i, 0) = alfa(i, 2);
+			alfa(i, 2) = alfa(i, 1);
+			alfa(i, 1) = temp;
+		}
+		else if(alfa(i, 1) > alfa(i, 2)) {
+			double temp = alfa(i, 1);
+			alfa(i, 1) = alfa(i, 2);
+			alfa(i, 2) = temp;
+		}
+		/////////////////////////////////
 	}
 	angle = alfa;
 
@@ -1174,8 +1200,6 @@ void angle_degree(MatrixXd& V, MatrixXi& F, MatrixXd& angle) {
 	//	cout << i << ": " << alfa(i, 0) << " " << alfa(i, 1) << " " << alfa(i, 2) << " " << sum.row(i) << endl;
 	//}
 }
-
-
 
 void BasicMenu::UpdateEnergyColors() {
 	int numF = viewer->data(OutputModelID()).F.rows();
@@ -1206,7 +1230,8 @@ void BasicMenu::UpdateEnergyColors() {
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
 		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
 	}
-	else if (distortion_type == AREA_DISTORTION) {	//distortion according to area preserving
+	else if (distortion_type == AREA_DISTORTION) {
+		//distortion according to area preserving
 		VectorXd Area_output, Area_input;
 		igl::doublearea(viewer->data(OutputModelID()).V, viewer->data(OutputModelID()).F, Area_output);
 		igl::doublearea(viewer->data(InputModelID()).V, viewer->data(InputModelID()).F, Area_input);
@@ -1215,7 +1240,7 @@ void BasicMenu::UpdateEnergyColors() {
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
 		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
 	}
-	else if(distortion_type == TOTAL_DISTORTION) {
+	else if (distortion_type == TOTAL_DISTORTION) {
 		// calculate the distortion over all the energies
 		for (auto& obj : totalObjective->objectiveList) 
 			if ((obj->Efi.size() != 0) && (obj->w != 0)) 

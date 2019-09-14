@@ -17,6 +17,7 @@ public:
 	virtual bool test_progress() override;
 	virtual void internal_init() override;
 
+	int is_graient_descent_step = 0;
 private:
 	#ifdef USE_PARDISO
 		unique_ptr<PardisoSolver<vector<int>, vector<double>>> pardiso = nullptr;

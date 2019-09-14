@@ -55,12 +55,18 @@ void ObjectiveAreaPreserving::setVF(MatrixXd& V, MatrixX3i& F) {
 	this->F = F;
 }
 
-double ObjectiveAreaPreserving::value()
+double ObjectiveAreaPreserving::value(bool update)
 {
-	// E = (det(J) - 1)^2
-	Efi = (detJ - VectorXd::Ones(detJ.rows())).cwiseAbs2();
-	energy_value = 0.5 * (Area.asDiagonal() * Efi).sum();
-	return energy_value;
+	// E = 0.5(det(J) - 1)^2
+	VectorXd E = (detJ - VectorXd::Ones(detJ.rows())).cwiseAbs2();
+	double value = 0.5 * (Area.asDiagonal() * E).sum();
+	
+	if (update) {
+		Efi = E;
+		energy_value = value;
+	}
+	
+	return value;
 }
 
 void ObjectiveAreaPreserving::gradient(VectorXd& g)
@@ -100,17 +106,6 @@ void ObjectiveAreaPreserving::hessian()
 				SS[index2++] = Hi(a, b);
 			}
 		}
-	}
-	for (int i = 0; i < F.rows(); i++)
-	{
-		//adding epsilon to the diagonal to prevent solver's errors
-		int base = 21 * i;
-		SS[base] += Shift_eigen_values;
-		SS[base + 2] += Shift_eigen_values;
-		SS[base + 5] += Shift_eigen_values;
-		SS[base + 9] += Shift_eigen_values;
-		SS[base + 14] += Shift_eigen_values;
-		SS[base + 20] += Shift_eigen_values;
 	}
 }
 

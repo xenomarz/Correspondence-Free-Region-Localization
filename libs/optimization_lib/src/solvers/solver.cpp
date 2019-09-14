@@ -31,13 +31,9 @@ int Solver::run()
 	do
 	{
 		prevX = X;
-		//cout << "steps = " << steps << " , ";
-		
 		currentEnergy = step();
-		//cout << "currentEnergy = " << currentEnergy << " , ";
 		linesearch();
 		update_external_data();
-		//cout << "diff = " << (X - prevX).norm() << endl;
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
 	cout << ">> solver stopped" << endl;
@@ -47,10 +43,6 @@ int Solver::run()
 void Solver::linesearch()
 {
 	double step_size;
-	auto funcation_evaluator = [this](MatrixXd& x) {
-		objective->updateX(x);
-		return objective->value();
-	};
 	if (FlipAvoidingLineSearch)
 	{
 		auto MatX = Map<MatrixX2d>(X.data(), X.rows() / 2, 2);
@@ -82,7 +74,6 @@ void Solver::linesearch()
 		}
 		cur_iter++;
 	}
-	//cout << "step_size = " << step_size << " , ";
 }
 
 void Solver::stop()

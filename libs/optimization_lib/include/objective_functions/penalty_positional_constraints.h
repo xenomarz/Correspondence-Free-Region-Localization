@@ -9,7 +9,7 @@ public:
 
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
-	virtual double value() override;
+	virtual double value(bool update = true) override;
 	virtual void gradient(Eigen::VectorXd& g) override;
 	virtual void hessian() override;
 	virtual void prepare_hessian() override;

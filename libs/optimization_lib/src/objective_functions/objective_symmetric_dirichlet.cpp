@@ -80,14 +80,20 @@ void ObjectiveSymmetricDirichlet::setVF(MatrixXd& V, MatrixX3i& F) {
 	this->F = F;
 }
 
-double ObjectiveSymmetricDirichlet::value()
+double ObjectiveSymmetricDirichlet::value(bool update)
 {
 	// E = ||J||^2+||J^-1||^2 = ||J||^2+||J||^2/det(J)^2
 	VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
 	VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
-	Efi = dirichlet + invDirichlet;
-	energy_value = 0.5 * (Area.asDiagonal() * Efi).sum();
-	return energy_value;
+
+	VectorXd E = dirichlet + invDirichlet;
+	double value = 0.5 * (Area.asDiagonal() * E).sum();
+	if (update) {
+		Efi = E;
+		energy_value = value;
+	}
+	
+	return value;
 }
 
 void ObjectiveSymmetricDirichlet::gradient(VectorXd& g)
@@ -167,16 +173,6 @@ void ObjectiveSymmetricDirichlet::hessian()
 				SS[index2++] = Hi(a, b);
 			}
 		}
-	}
-	for (int i = 0; i < F.rows(); i++)
-	{
-		int base = 21 * i;
-		SS[base] += Shift_eigen_values;
-		SS[base + 2] += Shift_eigen_values;
-		SS[base + 5] += Shift_eigen_values;
-		SS[base + 9] += Shift_eigen_values;
-		SS[base + 14] += Shift_eigen_values;
-		SS[base + 20] += Shift_eigen_values;
 	}
 }
 

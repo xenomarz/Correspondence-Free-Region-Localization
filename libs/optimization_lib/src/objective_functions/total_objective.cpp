@@ -20,14 +20,16 @@ void TotalObjective::updateX(const VectorXd& X)
 		objective->updateX(X);
 }
 
-double TotalObjective::value()
+double TotalObjective::value(bool update)
 {
 	double f=0;
     for (auto &objective : objectiveList)
         if (objective->w != 0)
-		    f+= objective->w*objective->value();
-
-	energy_value = f;
+		    f+= objective->w*objective->value(update);
+	
+	if (update) {
+		energy_value = f;
+	}
 	return f;
 }
 
@@ -56,6 +58,14 @@ void TotalObjective::hessian()
         for (int i = 0; i < objective->SS.size(); i++)
             SSi[i] = objective->w * objective->SS[i];
 		SS.insert(SS.end(), SSi.begin(), SSi.end());
+	}
+
+	for (int i = 0; i < SS.size(); i++)
+	{
+		// shift the diagonal of the hessian
+		if (II[i] == JJ[i]) {
+			SS[i] += Shift_eigen_values;
+		}
 	}
 }
 

@@ -25,10 +25,11 @@ double Newton::step()
 	VectorXd rhs = -g;
 	p = eigen_solver->solve(rhs);
 
-	//////////////////////
-	//Gradient Descent
-	//p = rhs;
-	//////////////////////
+	if (is_graient_descent_step) {
+		cout << is_graient_descent_step << endl;
+		p = rhs;
+	}
+	
 #endif
 	return f;
 }
