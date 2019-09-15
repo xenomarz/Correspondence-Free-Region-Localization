@@ -950,6 +950,9 @@ void BasicMenu::initializeSolver()
 	auto symDirichlet = make_unique<SymmetricDirichlet>();
 	symDirichlet->setVF(V, F);
 	symDirichlet->init();
+	auto symDirichletold = make_unique<SymmetricDirichletOld>();
+	symDirichletold->setVF(V, F);
+	symDirichletold->init();
 	auto areaPreserving = make_unique<AreaPreserving>();
 	areaPreserving->setVF(V, F);
 	areaPreserving->init();
@@ -966,6 +969,7 @@ void BasicMenu::initializeSolver()
 	totalObjective->objectiveList.push_back(move(areaPreserving));
 	totalObjective->objectiveList.push_back(move(anglePreserving));
 	totalObjective->objectiveList.push_back(move(symDirichlet));
+	totalObjective->objectiveList.push_back(move(symDirichletold));
 	totalObjective->objectiveList.push_back(move(constraintsPositional));
 
 	totalObjective->init();

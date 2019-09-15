@@ -2,61 +2,50 @@
 
 SymmetricDirichlet::SymmetricDirichlet()
 {
-    name = "Symmetric Dirichlet";
+	name = "symmetric dirichlet";
 }
 
 void SymmetricDirichlet::init()
 {
 	if (V.size() == 0 || F.size() == 0)
-		throw "DistortionSymmetricDirichlet must define members V,F before init()!";
-		
+		throw "SymmetricDirichlet must define members V,F before init()!";
+	
 	a.resize(F.rows());
 	b.resize(F.rows());
 	c.resize(F.rows());
 	d.resize(F.rows());
-    alpha.resize(F.rows(), 2);
-    beta.resize(F.rows(), 2);
-	s.resize(F.rows(), 2);
-	v.resize(F.rows(), 4);
-	u.resize(F.rows(), 4);
-
-	Dsd[0].resize(6, F.rows());
-	Dsd[1].resize(6, F.rows());
-
-	// Parameterization J mats resize
-	detJ.resize(F.rows());
-
-	MatrixX3d D1cols, D2cols;
 	
+	//Parameterization J mats resize
+	detJ.resize(F.rows());
+	dirichlet.resize(F.rows());
+	grad.resize(F.rows(), 6);
+	Hessian.resize(F.rows());
+	dJ_dX.resize(F.rows());
 
-	// Compute init energy matrices
+	// compute init energy matrices
 	igl::doublearea(V, F, Area);
 	Area /= 2;
-	
+
+	MatrixX3d D1cols, D2cols;
+
 	Utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
-	D1d=D1cols.transpose();
-	D2d=D2cols.transpose();
+	D1d = D1cols.transpose();
+	D2d = D2cols.transpose();
 
-	// Columns belong to different faces
-	a1d.resize(6, F.rows());
-	a2d.resize(6, F.rows());
-	b1d.resize(6, F.rows());
-	b2d.resize(6, F.rows());
-
-	a1d.topRows(3) = 0.5*D1d;
-	a1d.bottomRows(3) = 0.5*D2d;
-
-	a2d.topRows(3) = -0.5*D2d;
-	a2d.bottomRows(3) = 0.5*D1d;
-
-	b1d.topRows(3) = 0.5*D1d;
-	b1d.bottomRows(3) = -0.5*D2d;
-
-	b2d.topRows(3) = 0.5*D2d;
-	b2d.bottomRows(3) = 0.5*D1d;
+	//prepare dJ/dX
+	for (int i = 0; i < F.rows(); i++) {
+		MatrixXd Dx = D1d.col(i).transpose();
+		MatrixXd Dy = D2d.col(i).transpose();
+		MatrixXd zero = VectorXd::Zero(3).transpose();
+		dJ_dX[i] << 
+			Dx	, zero	,
+			zero, Dx	,
+			Dy	, zero	,
+			zero, Dy;
+	}
 
 	prepare_hessian();
-	w = 0.01;
+	w = 0.1;
 }
 
 void SymmetricDirichlet::updateX(const VectorXd& X)
@@ -68,7 +57,7 @@ void SymmetricDirichlet::updateX(const VectorXd& X)
 }
 
 void SymmetricDirichlet::setVF(MatrixXd& V, MatrixX3i& F) {
-	MatrixXd V3d(V.rows(), 3);
+	MatrixX3d V3d(V.rows(), 3);
 	if (V.cols() == 2) {
 		V3d.leftCols(2) = V;
 		V3d.col(2).setZero();
@@ -82,88 +71,45 @@ void SymmetricDirichlet::setVF(MatrixXd& V, MatrixX3i& F) {
 
 double SymmetricDirichlet::value(bool update)
 {
-	// E = ||J||^2+||J^-1||^2 = ||J||^2+||J||^2/det(J)^2
-	VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
 	VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
-
 	VectorXd E = dirichlet + invDirichlet;
 	double value = 0.5 * (Area.asDiagonal() * E).sum();
 	if (update) {
 		Efi = E;
 		energy_value = value;
 	}
-	
+
 	return value;
 }
 
 void SymmetricDirichlet::gradient(VectorXd& g)
 {
-    // Energy is h(S(x),s(x)), then grad_x h = grad_(S,s) h * [grad(S); grad(s)]
-    MatrixX2d S(alpha);
-    S.col(0) = alpha.rowwise().norm() + beta.rowwise().norm();
-    S.col(1) = alpha.rowwise().norm() - beta.rowwise().norm();
-	
-	MatrixX2d invs = s.cwiseInverse();
-
-	g.conservativeResize(V.rows() *2);
+	g.conservativeResize(V.rows() * 2);
 	g.setZero();
 
 	for (int fi = 0; fi < F.rows(); ++fi) {
-        Vector2d dhdS(s(fi, 0) - pow(invs(fi, 0), 3), s(fi, 1) - pow(invs(fi, 1), 3));
-        Vector6d dnormAlphadx = (a1d.col(fi)*alpha(fi, 0) + a2d.col(fi)*alpha(fi, 1))/alpha.row(fi).norm();
-        Vector6d dnormBetadx = (b1d.col(fi)*beta(fi, 0) + b2d.col(fi)*beta(fi, 1))/(beta.row(fi).norm()+1e-6);
-        Vector6d dSdx = dnormAlphadx + dnormBetadx;
-        Vector6d dsdx = dnormAlphadx - dnormBetadx;
-        Vector6d gi = Area(fi)*(dSdx * dhdS(0) + dsdx * dhdS(1));
-		
+		VectorXd gi;
+		gi.resize(6);
+		gi = Area(fi)*(grad.row(fi));
+
 		//Update the gradient of the x-axis
-		g(F(fi,0)) += gi(0);
-		g(F(fi,1)) += gi(1);
-		g(F(fi,2)) += gi(2);
+		g(F(fi, 0)) += gi(0);
+		g(F(fi, 1)) += gi(1);
+		g(F(fi, 2)) += gi(2);
 		//Update the gradient of the y-axis
-		g(F(fi,0) + V.rows()) += gi(3);
-		g(F(fi,1) + V.rows()) += gi(4);
-		g(F(fi,2) + V.rows()) += gi(5);
+		g(F(fi, 0) + V.rows()) += gi(3);
+		g(F(fi, 1) + V.rows()) += gi(4);
+		g(F(fi, 2) + V.rows()) += gi(5);
 	}
 	gradient_norm = g.norm();
 }
 
 void SymmetricDirichlet::hessian()
 {
-    UpdateSSVDFunction();
-    ComputeDenseSSVDDerivatives();
-
-	auto lambda1 = [](double a) {return a - 1.0 / (a*a*a); };
-	//gradient of outer function in composition
-	VectorXd gradfS = s.col(0).unaryExpr(lambda1);
-	VectorXd gradfs = s.col(1).unaryExpr(lambda1);
-	auto lambda2 = [](double a) {return 1 + 3 / (a*a*a*a); };
-	//hessian of outer function in composition (diagonal)
-	VectorXd HS = s.col(0).unaryExpr(lambda2);
-	VectorXd Hs = s.col(1).unaryExpr(lambda2);
-	//simliarity alpha
-	VectorXd aY = 0.5*(a + d);
-	VectorXd bY = 0.5*(c - b);
-	//anti similarity beta
-	VectorXd cY = 0.5*(a - d);
-	VectorXd dY = 0.5*(b + c);
 #pragma omp parallel for num_threads(24)
 	for (int i = 0; i < F.rows(); ++i) {
-		//vectors of size 6
-		//svd derivatives
-		Vector6d dSi = Dsd[0].col(i);
-		Vector6d dsi = Dsd[1].col(i);
-		//cones constant coefficients (cone = |Ax|, A is a coefficient)
-		Vector6d a1i = a1d.col(i);
-		Vector6d a2i = a2d.col(i);
-		Vector6d b1i = b1d.col(i);
-		Vector6d b2i = b2d.col(i);
-		Matrix<double, 6, 6> Hi = Area(i)*ComputeConvexConcaveFaceHessian(
-			a1i, a2i, b1i, b2i,
-			aY(i), bY(i), cY(i), dY(i),
-			dSi, dsi,
-			gradfS(i), gradfs(i),
-			HS(i), Hs(i));
+		
+		Matrix<double, 6, 6> Hi = Area(i)*Hessian[i];
 
 		int index2 = i * 21;
 		for (int a = 0; a < 6; ++a)
@@ -178,89 +124,93 @@ void SymmetricDirichlet::hessian()
 
 bool SymmetricDirichlet::updateJ(const VectorXd& X)
 {
-	Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
-	// 	a = D1*U;
-	// 	b = D2*U;
-	// 	c = D1*V;
-	// 	d = D2*V;
+	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
+	
 	for (int i = 0; i < F.rows(); i++)
 	{
-		Vector3d X1i, X2i;
-		X1i << x(F(i, 0), 0), x(F(i, 1), 0), x(F(i, 2), 0);
-		X2i << x(F(i, 0), 1), x(F(i, 1), 1), x(F(i, 2), 1);
-		a(i) = D1d.col(i).transpose()*X1i;
-		b(i) = D2d.col(i).transpose()*X1i;
-		c(i) = D1d.col(i).transpose()*X2i;
-		d(i) = D2d.col(i).transpose()*X2i;
+		Vector3d Xi, Yi;
+		Xi << x(F(i, 0), 0), x(F(i, 1), 0), x(F(i, 2), 0);
+		Yi << x(F(i, 0), 1), x(F(i, 1), 1), x(F(i, 2), 1);
+		Vector3d Dx = D1d.col(i);
+		Vector3d Dy = D2d.col(i);
+		
+		//prepare jacobian		
+		a(i) = Dx.transpose() * Xi;
+		b(i) = Dx.transpose() * Yi;
+		c(i) = Dy.transpose() * Xi;
+		d(i) = Dy.transpose() * Yi;
+		dirichlet(i) = a(i)*a(i) + b(i)*b(i) + c(i)*c(i) + d(i)*d(i);
+		detJ(i) = a(i) * d(i) - b(i) * c(i);
+		
+
+		//prepare gradient
+		Vector4d dE_dJ;
+		dE_dJ <<
+			a(i) + (a(i) / pow(detJ(i), 2)) - ((d(i)*dirichlet(i)) / pow(detJ(i), 3)),
+			b(i) + (b(i) / pow(detJ(i), 2)) + ((c(i)*dirichlet(i)) / pow(detJ(i), 3)),
+			c(i) + (c(i) / pow(detJ(i), 2)) + ((b(i)*dirichlet(i)) / pow(detJ(i), 3)),
+			d(i) + (d(i) / pow(detJ(i), 2)) - ((a(i)*dirichlet(i)) / pow(detJ(i), 3));
+
+		grad.row(i) = (dE_dJ.transpose() * dJ_dX[i]).transpose();
+
+		//prepare hessian
+		MatrixXd d2E_dJ2(4, 4);
+		double aa = 1 
+			+ (1 / pow(detJ(i), 2))
+			- ((4 * a(i)*d(i)) / pow(detJ(i), 3)) 
+			+ ((3 * pow(d(i), 2)*dirichlet(i)) / pow(detJ(i), 4));
+
+		double bb = 1 
+			+ (1 / pow(detJ(i), 2)) 
+			+ ((4 * b(i)*c(i)) / pow(detJ(i), 3)) 
+			+ ((3 * pow(c(i), 2)*dirichlet(i)) / pow(detJ(i), 4));
+
+		double cc = 1
+			+ (1 / pow(detJ(i), 2))
+			+ ((4 * b(i)*c(i)) / pow(detJ(i), 3))
+			+ ((3 * pow(b(i), 2)*dirichlet(i)) / pow(detJ(i), 4));
+
+		double dd = 1
+			+ (1 / pow(detJ(i), 2))
+			- ((4 * a(i)*d(i)) / pow(detJ(i), 3))
+			+ ((3 * pow(a(i), 2)*dirichlet(i)) / pow(detJ(i), 4));
+
+		double ab = (-3 * c(i)*d(i)*dirichlet(i)) 
+			+ (2 * (a(i)*c(i) - b(i)*d(i))*detJ(i));
+		ab /= pow(detJ(i), 4);
+
+		double ac = (-3 * b(i)*d(i)*dirichlet(i))
+			+ (2 * (a(i)*b(i) - c(i)*d(i))*detJ(i));
+		ac /= pow(detJ(i), 4);
+
+		double ad = (3*a(i)*d(i)*dirichlet(i))
+			-((2*pow(a(i),2)+ 2*pow(d(i), 2)+dirichlet(i))*detJ(i));
+		ad /= pow(detJ(i), 4);
+
+		double bc = (3 * b(i)*c(i)*dirichlet(i))
+			+((2 * pow(b(i), 2) + 2 * pow(c(i), 2) + dirichlet(i))*detJ(i));
+		bc /= pow(detJ(i), 4);
+
+		double bd = (-3 * a(i)*c(i)*dirichlet(i))
+			+ (2 * (c(i)*d(i) - a(i)*b(i))*detJ(i));
+		bd /= pow(detJ(i), 4);
+
+		double cd = (-3 * a(i)*b(i)*dirichlet(i))
+			+ (2 * (b(i)*d(i) - a(i)*c(i))*detJ(i));;
+		cd /= pow(detJ(i), 4);
+
+		d2E_dJ2 <<
+			aa, ab, ac, ad,
+			ab, bb, bc, bd,
+			ac, bc, cc, cd,
+			ad, bd, cd, dd;
+
+
+		Hessian[i] = dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
 	}
-	detJ = a.cwiseProduct(d) - b.cwiseProduct(c);
-    alpha.col(0) = 0.5*(a + d);   alpha.col(1) = 0.5*(c - b);
-    beta.col(0) = 0.5*(a - d);    beta.col(1) = 0.5*(c + b);
+	
 	
 	return ((detJ.array() < 0).any());
-};
-
-void SymmetricDirichlet::UpdateSSVDFunction()
-{
-	#pragma omp parallel for num_threads(24)
-	for (int i = 0; i < a.size(); i++)
-	{
-		Matrix2d A;
-		Matrix2d U, S, V;
-		A << a[i], b[i], c[i], d[i];
-		Utils::SSVD2x2(A, U, S, V);
-		u.row(i) << U(0), U(1), U(2), U(3);
-		v.row(i) << V(0), V(1), V(2), V(3);
-		s.row(i) << S(0), S(3);
-	}
-}
-
-void SymmetricDirichlet::ComputeDenseSSVDDerivatives()
-{
-	// Different columns belong to diferent faces
-	MatrixXd B(D1d*v.col(0).asDiagonal() + D2d*v.col(1).asDiagonal());
-	MatrixXd C(D1d*v.col(2).asDiagonal() + D2d*v.col(3).asDiagonal());
-
-	MatrixXd t1 = B* u.col(0).asDiagonal();
-	MatrixXd t2 = B* u.col(1).asDiagonal();
-	Dsd[0].topRows(t1.rows()) = t1;
-	Dsd[0].bottomRows(t1.rows()) = t2;
-	t1 = C*u.col(2).asDiagonal();
-	t2 = C*u.col(3).asDiagonal();
-	Dsd[1].topRows(t1.rows()) = t1;
-	Dsd[1].bottomRows(t1.rows()) = t2;
-}
-
-inline Matrix6d SymmetricDirichlet::ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x)
-{
-	double f2 = a1x*a1x + a2x*a2x;
-	double invf = 1.0/sqrt(f2);
-	double invf3 = invf*invf*invf;
-
-	Matrix6d A1A1t = A1*A1.transpose();
-	Matrix6d A2A2t = A2*A2.transpose();
-	Matrix6d A1A2t = A1*A2.transpose();
-	Matrix6d A2A1t = A1A2t.transpose();
-
-	double a2 = a1x*a1x; 
-	double b2 = a2x*a2x; 
-	double ab = a1x*a2x; 
-
-	return  (invf - invf3*a2) * A1A1t + (invf - invf3*b2) * A2A2t - invf3 * ab*(A1A2t + A2A1t);
-}
-
-inline Matrix6d SymmetricDirichlet::ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs)
-{
-	// No multiplying by area in this function
-	Matrix6d H = HS*dSi*dSi.transpose() + Hs*dsi*dsi.transpose(); //generalized gauss newton
-	double walpha = gradfS + gradfs;
-	if (walpha > 0)
-		H += walpha*ComputeFaceConeHessian(a1, a2, aY, bY);
-
-	double wbeta = gradfS - gradfs;
-	if (wbeta > 1e-7)
-		H += wbeta*ComputeFaceConeHessian(b1, b2, cY, dY);
-	return H;
 }
 
 void SymmetricDirichlet::prepare_hessian()
