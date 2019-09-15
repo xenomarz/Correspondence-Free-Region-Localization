@@ -13,12 +13,13 @@ private:
 	MenuUtils::View view;
 	MenuUtils::MouseMode mouse_mode;
 	MenuUtils::Parametrization param_type;
+	float texture_scaling_input, texture_scaling_output;
 	Vector3f Highlighted_face_color, Fixed_face_color, Fixed_vertex_color;
 	bool Highlighted_face;
 	Vector3f model_color, Dragged_face_color, Dragged_vertex_color, Vertex_Energy_color, text_color;
 	MatrixXd color_per_face, Vertices_Input, Vertices_output, color_per_vertex;
 	set<int> selected_faces, selected_vertices;
-	float core_percentage_size, texture_size;
+	float core_percentage_size;
 	bool IsTranslate;
 	int Translate_Index, Model_Translate_ID, Core_Translate_ID, down_mouse_x, down_mouse_y;
 	ImGuiMenu menu;

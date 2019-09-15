@@ -10,7 +10,6 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 	if (_viewer)
 	{
 		//Basic (necessary) parameteres
-		texture_size = 0.5;
 		core_percentage_size = 0.5;
 		param_type = MenuUtils::None;
 		Max_Distortion = 5;
@@ -31,6 +30,7 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		solver_type = MenuUtils::NEWTON;
 		solverInitialized = false;
 		down_mouse_x = down_mouse_y = -1;
+		texture_scaling_input = texture_scaling_output = 1;
 
 		//Solver Parameters
 		solver_on = false;
@@ -381,7 +381,6 @@ void BasicMenu::Draw_menu_for_Solver() {
 			else {
 				solver = gradient_descent;
 			}
-			
 			VectorXd initialguessXX = Map<const VectorXd>(OutputModel().V.leftCols(2).data(), OutputModel().V.leftCols(2).rows() * 2);
 			solver->init(totalObjective, initialguessXX);
 			MatrixX3i F = OutputModel().F;
@@ -558,13 +557,13 @@ void BasicMenu::Draw_menu_for_models() {
 			float w = ImGui::GetContentRegionAvailWidth();
 			float p = ImGui::GetStyle().FramePadding.x;
 
-			if (ImGui::Button("texture x2", ImVec2((w - p) / 2.f, 0))) {
-				data.set_uv(data.V_uv * 2);
+			if (data.id == InputModelID()) {
+				ImGui::SliderFloat("texture", &texture_scaling_input, 0.01, 100, to_string(texture_scaling_input).c_str(), 1);
 			}
-			ImGui::SameLine(0, p);
-			if (ImGui::Button("texture /2", ImVec2((w - p) / 2.f, 0))) {
-				data.set_uv(data.V_uv / 2);
+			else {
+				ImGui::SliderFloat("texture", &texture_scaling_output, 0.01, 100, to_string(texture_scaling_output).c_str(), 1);
 			}
+			
 
 			if (ImGui::Checkbox("Face-based", &(data.face_based)))
 			{
@@ -871,9 +870,9 @@ void BasicMenu::update_texture(MatrixXd& V_uv) {
 	}
 
 	// Plot the mesh
-	InputModel().set_uv(V_uv_2D);
+	InputModel().set_uv(V_uv_2D * texture_scaling_input);
 	OutputModel().set_vertices(V_uv_3D);
-	OutputModel().set_uv(V_uv_2D);
+	OutputModel().set_uv(V_uv_2D * texture_scaling_output);
 	OutputModel().compute_normals();
 }
 	
