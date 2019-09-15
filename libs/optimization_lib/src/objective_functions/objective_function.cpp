@@ -18,11 +18,11 @@ void ObjectiveFunction::InitializeGradient(const std::shared_ptr<MeshWrapper>& m
 	g.conservativeResize(mesh_wrapper->GetImageVertices().rows());
 }
 
-void ObjectiveFunction::Update(const Eigen::MatrixX2d& X)
+void ObjectiveFunction::Update(const Eigen::MatrixX2d& x)
 {
-	CalculateValue(X, f_);
-	CalculateGradient(X, g_);
-	CalculateHessian(X, SS_);
+	CalculateValue(x, f_);
+	CalculateGradient(x, g_);
+	CalculateHessian(x, ss_);
 }
 
 double ObjectiveFunction::GetValue() const
@@ -37,17 +37,17 @@ const Eigen::VectorXd& ObjectiveFunction::GetGradient() const
 
 const std::vector<int>& ObjectiveFunction::GetII() const
 {
-	return II_;
+	return ii_;
 }
 
 const std::vector<int>& ObjectiveFunction::GetJJ() const
 {
-	return JJ_;
+	return jj_;
 }
 
 const std::vector<double>& ObjectiveFunction::GetSS() const
 {
-	return SS_;
+	return ss_;
 }
 
 const MeshWrapper& ObjectiveFunction::GetMeshWrapper() const

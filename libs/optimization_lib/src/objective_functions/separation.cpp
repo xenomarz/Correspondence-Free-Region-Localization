@@ -35,16 +35,16 @@ Separation::~Separation()
 
 }
 
-void Separation::InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrapper, std::vector<int>& II, std::vector<int>& JJ, std::vector<double>& SS)
+void Separation::InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrapper, std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
 {
 	auto n = GetMeshWrapper().GetImageVertices().rows();
 
-	II.clear();
-	JJ.clear();
+	ii.clear();
+	jj.clear();
 
 	auto PushPair = [&](int i, int j) { 
-		II.push_back(i);
-		JJ.push_back(j); 
+		ii.push_back(i);
+		jj.push_back(j); 
 	};
 
 	for (int i = 0; i < Esept.outerSize(); ++i)
@@ -78,14 +78,14 @@ void Separation::InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrap
 		PushPair(idx_xj + n, idx_xj + n);
 	}
 
-	SS = std::vector<double>(II.size(), 0.);
+	ss = std::vector<double>(ii.size(), 0.);
 }
 
-void Separation::CalculateValue(const Eigen::MatrixX2d& X, double& f)
+void Separation::CalculateValue(const Eigen::MatrixX2d& x, double& f)
 {
 	auto n = GetMeshWrapper().GetImageVertices().rows();
 
-	EsepP = Esep * X;
+	EsepP = Esep * x;
 	EsepP_squared_rowwise_sum = EsepP.array().pow(2.0).rowwise().sum();
 
 	for (int i = 0; i < Esept.outerSize(); ++i)
@@ -120,7 +120,7 @@ void Separation::CalculateValue(const Eigen::MatrixX2d& X, double& f)
 	f = f_per_pair.sum();
 }
 
-void Separation::CalculateGradient(const Eigen::MatrixX2d& X, Eigen::VectorXd& g)
+void Separation::CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g)
 {
 	Eigen::MatrixX2d ge;
 
@@ -133,9 +133,9 @@ void Separation::CalculateGradient(const Eigen::MatrixX2d& X, Eigen::VectorXd& g
 	g = Eigen::Map<Eigen::VectorXd>(ge.data(), 2.0 * ge.rows(), 1);
 }
 
-void Separation::CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>& SS)
+void Separation::CalculateHessian(const Eigen::MatrixX2d& x, std::vector<double>& ss)
 {
-	int n = X.rows();
+	int n = x.rows();
 	int threads = omp_get_max_threads();
 
 	// no inner loop because there are only 2 nnz values per col
@@ -155,8 +155,8 @@ void Separation::CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>
 		idx_xi = it.row();
 		factor = it.value();
 		idx_xj = (++it).row();
-		xi = X.row(idx_xi);
-		xj = X.row(idx_xj);
+		xi = x.row(idx_xi);
+		xj = x.row(idx_xj);
 		FindSingleHessian(xi, xj, sh);
 		sh *= factor;
 
@@ -176,7 +176,7 @@ void Separation::CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>
 		{
 			for (int b = 0; b <= a; ++b)
 			{
-				SS[ind++] = sh(b, a);
+				ss[ind++] = sh(b, a);
 			}
 		}
 	}

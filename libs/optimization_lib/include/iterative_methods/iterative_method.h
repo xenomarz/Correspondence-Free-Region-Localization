@@ -25,23 +25,35 @@ public:
 	IterativeMethod(std::shared_ptr<ObjectiveFunction> objective_function, const Eigen::VectorXd& x0);
 	virtual ~IterativeMethod();
 
-	virtual void Run();
-	virtual void Stop();
-	void GetApproximation(Eigen::VectorXd& x);
+	void Start();
+	void Pause();
+	void Resume();
+	void Shutdown();
+	bool GetApproximation(Eigen::VectorXd& x);
 	void EnableFlipAvoidingLineSearch(Eigen::MatrixX3i& f);
 	void DisableFlipAvoidingLineSearch(Eigen::MatrixX3i& f);
 
 private:
+	enum class ThreadState {
+		SHUTDOWN,
+		RUNNING,
+		PAUSED
+	};
+
 	// Iteration step
-	virtual void Step(Eigen::VectorXd& p) = 0;
+	virtual void ComputeDescentDirection(Eigen::VectorXd& p) = 0;
+	void LineSearch(const Eigen::VectorXd& p);
+
 	std::thread thread_;
+	std::condition_variable cv_;
+	std::mutex m_;
+	const double max_backtracking_iterations_;
 
 	// Objective function
 	std::shared_ptr<ObjectiveFunction> objective_function_;
 
 	// Flags
-	std::atomic_bool is_running_;
-	std::atomic_bool progressed_;
+	ThreadState thread_state_;
 	bool flip_avoiding_line_search_enabled_;
 
 	// Concurrent queue of solution approximations
@@ -52,7 +64,7 @@ private:
 	Eigen::VectorXd p_;
 
 	// Faces
-	Eigen::MatrixX3i f;
+	Eigen::MatrixX3i f_;
 };
 
 #endif

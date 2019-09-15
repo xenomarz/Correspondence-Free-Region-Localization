@@ -17,10 +17,10 @@ private:
 	virtual ~SymmetricDirichlet();
 
 	// Overrides
-	void InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrapper, std::vector<int>& II, std::vector<int>& JJ, std::vector<double>& SS);
-	void CalculateValue(const Eigen::MatrixX2d& X, double& f);
-	void CalculateGradient(const Eigen::MatrixX2d& X, Eigen::VectorXd& g);
-	void CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>& SS);
+	void InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrapper, std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss);
+	void CalculateValue(const Eigen::MatrixX2d& x, double& f);
+	void CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g);
+	void CalculateHessian(const Eigen::MatrixX2d& x, std::vector<double>& ss);
 
 	double bound=0;
 	Eigen::MatrixX3i F;

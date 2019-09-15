@@ -46,12 +46,12 @@ protected:
 private:
 	// Gradient and hessian initializers
 	virtual void InitializeGradient(const std::shared_ptr<MeshWrapper>& mesh_wrapper, Eigen::VectorXd& g);
-	virtual void InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrapper, std::vector<int>& II, std::vector<int>& JJ, std::vector<double>& SS) = 0;
+	virtual void InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrapper, std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss) = 0;
 
 	// Value, gradient and hessian calculation functions
-	virtual void CalculateValue(const Eigen::MatrixX2d& X, double& f) = 0;
-	virtual void CalculateGradient(const Eigen::MatrixX2d& X, Eigen::VectorXd& g) = 0;
-	virtual void CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>& SS) = 0;
+	virtual void CalculateValue(const Eigen::MatrixX2d& x, double& f) = 0;
+	virtual void CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g) = 0;
+	virtual void CalculateHessian(const Eigen::MatrixX2d& x, std::vector<double>& ss) = 0;
 
 	// Mesh Wrapper
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
@@ -63,8 +63,8 @@ private:
 	Eigen::VectorXd g_;
 
 	// Hessian (sparse representation)
-	std::vector<int> II_; 
-	std::vector<int> JJ_;
-	std::vector<double> SS_;
+	std::vector<int> ii_; 
+	std::vector<int> jj_;
+	std::vector<double> ss_;
 };
 
