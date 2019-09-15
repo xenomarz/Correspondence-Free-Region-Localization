@@ -18,28 +18,10 @@
 Separation::Separation(const std::shared_ptr<MeshWrapper>& mesh_wrapper) :
 	ObjectiveFunction(mesh_wrapper)
 {
-	// wedges energy
-	igl::cat(1, EVvar1, EVvar2, Esep);
+	Esep = GetMeshWrapper().GetCorrespondingVertexPairsCoefficients();
 	Esept = Esep.transpose();
 
-	for (int i = 0; i < Esept.outerSize(); ++i)
-	{
-		// no inner loop because there are only 2 nnz values per col
-		Eigen::SparseMatrix<double>::InnerIterator it(Esept, i);
-		int idx_xi = it.row();
-		int idx_xj = (++it).row();
-		std::pair<int, int> p(idx_xi, idx_xj);
-		pair2ind.push_back(p);
-		ind2pair.emplace(p, i);
-		ind2pair.emplace(std::make_pair(p.second, p.first), i);
-	}
-
-	V2Vt = V2V.transpose();
-	C2C = V2Vt * V2V;
-	Eigen::SparseMatrix<double> I(V2V.cols(), V2V.cols());
-	I.setIdentity();
-	C2C -= I;
-	C2C.prune(0, 0);
+	edge_lenghts_per_pair = GetMeshWrapper().GetCorrespondingVertexPairsEdgeLength();
 
 	connect_alphas = Eigen::VectorXd::Zero(Esep.rows());
 	disconnect_alphas = Eigen::VectorXd::Ones(Esep.rows());

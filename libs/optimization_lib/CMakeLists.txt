@@ -7,20 +7,22 @@ file(GLOB SOURCES
 	src/objective_functions/symmetric_dirichlet.cpp
 	src/objective_functions/separation.cpp
 	src/objective_functions/total_objective.cpp
-	src/solvers/newton.cpp
+	src/iterative_methods/iterative_method.cpp
+	src/iterative_methods/newton_method.cpp
+	src/solvers/solver.cpp
 	src/solvers/eigen_sparse_solver.cpp
 	src/solvers/pardiso_solver.cpp
-	src/solvers/solver.cpp
 	src/utils/utils.cpp
 	src/utils/mesh_wrapper.cpp
 	include/objective_functions/objective_function.h
 	include/objective_functions/symmetric_dirichlet.h
 	include/objective_functions/separation.h
 	include/objective_functions/total_objective.h
-	include/solvers/newton.h
+	include/iterative_methods/iterative_method.h
+	include/iterative_methods/newton_method.h
+	include/solvers/solver.h	
 	include/solvers/eigen_sparse_solver.h
 	include/solvers/pardiso_solver.h
-	include/solvers/solver.h
 	include/utils/utils.h
 	include/utils/mesh_wrapper.h)
 
@@ -46,7 +48,8 @@ endif()
 # Properties
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	CXX_STANDARD 20
-	VS_GLOBAL_UseIntelMKL "Parallel")
+	VS_GLOBAL_UseIntelMKL "Parallel"
+	VS_GLOBAL_UseIntelTBB "Yes")
 
 if (MSVC)
 	# Turn on the __cplusplus flag in MSVC, so the __cplusplus macro will report the correct C++ version

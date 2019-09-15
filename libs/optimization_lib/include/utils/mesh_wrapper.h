@@ -48,6 +48,8 @@ public:
 	const Eigen::MatrixX2i& GetImageEdges() const;
 	const Eigen::MatrixX3d& GetD1() const;
 	const Eigen::MatrixX3d& GetD2() const;
+	const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const;
+	const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const;
 
 private:
 
@@ -86,12 +88,14 @@ private:
 	using IndexType = Eigen::DenseIndex;
 	using VertexIndex = IndexType;
 	using EdgeIndex = IndexType;
+	using FaceIndex = IndexType;
 	using EdgeDescriptor = std::pair<EdgeIndex, EdgeIndex>;
 	using ED2EIMap = std::unordered_map<EdgeDescriptor, EdgeIndex, pair_hash, pair_equals>;
 	using VI2VIsMap = std::unordered_map<VertexIndex, std::vector<VertexIndex>>;
 	using VI2VIMap = std::unordered_map<VertexIndex, VertexIndex>;
 	using EI2EIsMap = std::unordered_map<EdgeIndex, std::vector<EdgeIndex>>;
 	using EI2EIMap = std::unordered_map<EdgeIndex, EdgeIndex>;
+	//using EI2LengthMap = std::unordered_map<EdgeIndex, double>;
 
 	/**
 	 * General use mesh methods
@@ -115,23 +119,19 @@ private:
 	void FixFlippedFaces(const Eigen::MatrixX3i& f_im, Eigen::MatrixX2d& v_im);
 	void GenerateRandom2DSoup(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out, Eigen::MatrixX2d& v_out);
 
-	// Vertex and edge iteration helper functions
-	static void IterateSoupFaces(const Eigen::MatrixX3i& f_dom, std::function<void(Eigen::MatrixX3i::Index, IndexType)> callback);
-	static void IterateSoupEdges(const Eigen::MatrixX2i& e_im, const VI2VIMap& v_im_2_v_dom, const ED2EIMap& ed_dom_2_ei_dom, std::function<void(IndexType, IndexType)> callback);
+	// Edge descriptor -> edge index map
+	void ComputeEdgeDescriptorMap(const Eigen::MatrixX2i& e, ED2EIMap& ed_2_ei);
 
-	// Edge descriptor -> Edge index map
-	void ComputeED2EIMap(const Eigen::MatrixX2i& e, ED2EIMap& ed_2_ei);
+	// Domain edge index <-> image edge index maps
+	void ComputeEdgeIndexMaps();
 
-	// Soup vertex index <-> Domain vertex index maps
-	void ComputeSoupVI2VIMap(const Eigen::MatrixX3i& f_dom, VI2VIMap& v_im_2_v_dom);
-	void ComputeVI2SoupVIsMap(const Eigen::MatrixX3i& f_dom, VI2VIsMap& v_dom_2_v_im);
+	// Domain vertex index <-> image vertex index maps
+	void ComputeVertexIndexMaps();
 
-	// Soup edge index <-> Domain edge index maps
-	void ComputeSoupEI2EIMap(const Eigen::MatrixX2i& e_im, const VI2VIMap& v_im_2_v_dom, const ED2EIMap& ed_dom_2_ei_dom, EI2EIMap& e_im_2_e_dom);
-	void ComputeEI2SoupEIsMap(const Eigen::MatrixX2i& e_im, const VI2VIMap& v_im_2_v_dom, const ED2EIMap& ed_dom_2_ei_dom, EI2EIsMap& e_dom_2_e_im);
-
-	// Corner correspondences
-	void ComputeCornerCorrespondences(const Eigen::MatrixX2i& e_dom, const Eigen::MatrixX2i& e_im, const EI2EIsMap& e_dom_2_e_im, const VI2VIMap& v_im_2_v_dom, Eigen::SparseMatrix<double>& cc);
+	// Image vertices corresponding pairs and image edges corresponding pairs
+	void ComputeCorrespondingPairs();
+	void ComputeCorrespondingVertexPairsCoefficients();
+	void ComputeCorrespondingVertexPairsEdgeLength();
 
 	/**
 	 * Fields
@@ -151,15 +151,19 @@ private:
 	Eigen::MatrixX3d d1_;
 	Eigen::MatrixX3d d2_;
 
-	// Corner correspondences matrix
-	Eigen::SparseMatrix<double> cc_;
+	// Image corresponding pairs
+	std::vector<std::pair<VertexIndex, VertexIndex>> cv_pairs_;
+	std::vector<std::pair<EdgeIndex, EdgeIndex>> ce_pairs_;
+	Eigen::SparseMatrix<double> cv_pairs_coefficients_;
+	Eigen::VectorXd cv_pairs_edge_length_;
 
 	// Maps
-	ED2EIMap	ed_dom_2_ei_dom_;
-	VI2VIsMap	v_dom_2_v_im_;
-	VI2VIMap	v_im_2_v_dom_;
-	EI2EIsMap	e_dom_2_e_im_;
-	EI2EIMap	e_im_2_e_dom_;
+	ED2EIMap ed_im_2_ei_im_;
+	ED2EIMap ed_dom_2_ei_dom_;
+	VI2VIsMap v_dom_2_v_im_;
+	VI2VIMap v_im_2_v_dom_;
+	EI2EIsMap e_dom_2_e_im_;
+	EI2EIMap e_im_2_e_dom_;
 };
 
 // https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values/35991300#35991300

@@ -1,14 +1,14 @@
 #pragma once
 
-// STL Includes
+// STL includes
 #include <vector>
 
-// Eigen Includes
+// Eigen includes
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
-// Optimization Lib Includes
-#include "objective_functions/objective_function.h"
+// Optimization lib includes
+#include <objective_functions/objective_function.h>
 
 class SymmetricDirichlet : public ObjectiveFunction
 {
