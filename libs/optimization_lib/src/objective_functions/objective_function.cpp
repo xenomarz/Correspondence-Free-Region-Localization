@@ -1,8 +1,9 @@
 #include "objective_functions/objective_function.h"
 
-ObjectiveFunction::ObjectiveFunction(const std::shared_ptr<MeshWrapper>& mesh_wrapper) :
+ObjectiveFunction::ObjectiveFunction(const std::shared_ptr<MeshWrapper>& mesh_wrapper, const std::string& name) :
 	f_(0),
-	w_(0),
+	w_(1),
+	name_(name),
 	mesh_wrapper_(mesh_wrapper)
 {
 
@@ -60,6 +61,11 @@ const Eigen::SparseMatrix<double>& ObjectiveFunction::GetHessian() const
 double ObjectiveFunction::GetWeight() const
 {
 	return w_;
+}
+
+const std::string ObjectiveFunction::GetName() const
+{
+	return name_;
 }
 
 const MeshWrapper& ObjectiveFunction::GetMeshWrapper() const

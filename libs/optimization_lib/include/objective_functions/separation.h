@@ -1,4 +1,6 @@
 #pragma once
+#ifndef OPTIMIZATION_LIB_SEPARATION
+#define OPTIMIZATION_LIB_SEPARATION
 
 // STL includes
 #include <vector>
@@ -45,3 +47,5 @@ private:
 	Eigen::VectorXd EsepP_squared_rowwise_sum;
 	Eigen::VectorXd EsepP_squared_rowwise_sum_plus_delta;
 };
+
+#endif

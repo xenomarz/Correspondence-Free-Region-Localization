@@ -4,7 +4,7 @@
 #include <igl/doublearea.h>
 
 SymmetricDirichlet::SymmetricDirichlet(const std::shared_ptr<MeshWrapper>& mesh_wrapper)
-	: ObjectiveFunction(mesh_wrapper)
+	: ObjectiveFunction(mesh_wrapper, "Symmetric Dirichlet")
 {
 	auto Fs = GetMeshWrapper().GetImageFaces();
 	auto Vs = GetMeshWrapper().GetImageVertices();

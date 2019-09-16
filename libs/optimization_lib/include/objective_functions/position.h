@@ -1,25 +1,26 @@
 #pragma once
-#ifndef OPTIMIZATION_LIB_COMPOSITE_OBJECTIVE
-#define OPTIMIZATION_LIB_COMPOSITE_OBJECTIVE
+#ifndef OPTIMIZATION_LIB_POSITION
+#define OPTIMIZATION_LIB_POSITION
 
 // STL includes
-#include <memory>
 #include <vector>
+
+// Eigen includes
+#include <Eigen/Core>
+#include <Eigen/Sparse>
 
 // Optimization lib includes
 #include <objective_functions/objective_function.h>
 
-class CompositeObjective : public ObjectiveFunction
+class Position : public ObjectiveFunction
 {
 public:
-	void AddObjectiveFunction(const std::shared_ptr<ObjectiveFunction> objective_function);
+	void AddConstrainedVertex(Eigen::DenseIndex vertex_index);
+	void RemoveConstrainedVertex(Eigen::DenseIndex vertex_index);
 
 private:
-	/**
-	 * Constructor and destructor
-	 */
-	CompositeObjective(const std::shared_ptr<MeshWrapper>& mesh_wrapper);
-	virtual ~CompositeObjective();
+	Position(const std::shared_ptr<MeshWrapper>& mesh_wrapper);
+	virtual ~Position();
 
 	/**
 	 * Overrides
@@ -28,12 +29,12 @@ private:
 	void CalculateValue(const Eigen::MatrixX2d& X, double& f);
 	void CalculateGradient(const Eigen::MatrixX2d& X, Eigen::VectorXd& g);
 	void CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>& ss);
-	void Update(const Eigen::MatrixX2d& X);
 
 	/**
 	 * Fields
 	 */
-	std::vector<std::shared_ptr<ObjectiveFunction>> objective_functions_;
+	std::vector<Eigen::DenseIndex> constrained_vertices_indices;
+	Eigen::MatrixX2d X_constained;
 };
 
 #endif

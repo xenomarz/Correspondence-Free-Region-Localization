@@ -16,7 +16,7 @@
 #include <omp.h>
 
 Separation::Separation(const std::shared_ptr<MeshWrapper>& mesh_wrapper) :
-	ObjectiveFunction(mesh_wrapper)
+	ObjectiveFunction(mesh_wrapper, "Separation")
 {
 	Esep = GetMeshWrapper().GetCorrespondingVertexPairsCoefficients();
 	Esept = Esep.transpose();

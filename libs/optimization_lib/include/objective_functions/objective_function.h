@@ -1,4 +1,6 @@
 #pragma once
+#ifndef OPTIMIZATION_LIB_OBJECTIVE_FUNCTION
+#define OPTIMIZATION_LIB_OBJECTIVE_FUNCTION
 
 // STL Includes
 #include <vector>
@@ -6,6 +8,7 @@
 #include <atomic>
 #include <functional>
 #include <type_traits>
+#include <string>
 
 // Eigen Includes
 #include <Eigen/Core>
@@ -28,7 +31,9 @@ public:
 		return objective_function;
 	}
 
-	// Value, gradient and hessian getters
+	/**
+	 * Getters
+	 */
 	double GetValue() const;
 	const Eigen::VectorXd& GetGradient() const;
 	const std::vector<int>& GetII() const;
@@ -37,14 +42,19 @@ public:
 	const Eigen::SparseMatrix<double>& GetHessian() const;
 	const MeshWrapper& GetMeshWrapper() const;
 	double GetWeight() const;
+
+	/**
+	 * Setters
+	 */
 	void SetWeight(const double w);
+	const std::string GetName() const;
 
 	// Update value, gradient and hessian for a given x
 	virtual void Update(const Eigen::MatrixX2d& X);
 
 protected:
 	// Protected constructor and destructor
-	ObjectiveFunction(const std::shared_ptr<MeshWrapper>& mesh_wrapper);
+	ObjectiveFunction(const std::shared_ptr<MeshWrapper>& mesh_wrapper, const std::string& name);
 	virtual ~ObjectiveFunction();
 
 private:
@@ -75,5 +85,9 @@ private:
 	std::vector<int> jj_;
 	std::vector<double> ss_;
 	Eigen::SparseMatrix<double> H_;
+
+	// Name
+	const std::string name_;
 };
 
+#endif

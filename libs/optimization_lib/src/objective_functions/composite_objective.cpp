@@ -1,5 +1,16 @@
 #include <objective_functions/composite_objective.h>
 
+CompositeObjective::CompositeObjective(const std::shared_ptr<MeshWrapper>& mesh_wrapper) :
+	ObjectiveFunction(mesh_wrapper, "Composite Objective")
+{
+
+}
+
+CompositeObjective::~CompositeObjective()
+{
+
+}
+
 void CompositeObjective::AddObjectiveFunction(const std::shared_ptr<ObjectiveFunction> objective_function)
 {
 	objective_functions_.push_back(objective_function);

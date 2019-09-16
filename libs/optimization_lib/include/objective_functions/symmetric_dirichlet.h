@@ -1,4 +1,6 @@
 #pragma once
+#ifndef OPTIMIZATION_LIB_SYMMETRIC_DIRICHLET
+#define OPTIMIZATION_LIB_SYMMETRIC_DIRICHLET
 
 // STL includes
 #include <vector>
@@ -105,3 +107,5 @@ private:
 	// Per face Hessians vector
 	std::vector<Eigen::Matrix<double,6,6>> Hi;
 };
+
+#endif
