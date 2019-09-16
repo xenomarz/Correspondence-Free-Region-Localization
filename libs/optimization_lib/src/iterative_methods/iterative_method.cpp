@@ -18,6 +18,11 @@ IterativeMethod::~IterativeMethod()
 	Shutdown();
 }
 
+const std::shared_ptr<ObjectiveFunction> IterativeMethod::GetObjectiveFunction() const
+{
+	return objective_function_;
+}
+
 void IterativeMethod::LineSearch(const Eigen::VectorXd& p)
 {
 	/**

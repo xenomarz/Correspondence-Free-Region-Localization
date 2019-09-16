@@ -32,6 +32,7 @@ public:
 	bool GetApproximation(Eigen::VectorXd& x);
 	void EnableFlipAvoidingLineSearch(Eigen::MatrixX3i& f);
 	void DisableFlipAvoidingLineSearch(Eigen::MatrixX3i& f);
+	const std::shared_ptr<ObjectiveFunction> GetObjectiveFunction() const;
 
 private:
 	enum class ThreadState {

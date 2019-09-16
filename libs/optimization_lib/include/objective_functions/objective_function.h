@@ -33,6 +33,7 @@ public:
 	const std::vector<int>& GetII() const;
 	const std::vector<int>& GetJJ() const;
 	const std::vector<double>& GetSS() const;
+	const Eigen::SparseMatrix<double>& GetHessian() const;
 	const MeshWrapper& GetMeshWrapper() const;
 
 	// Update value, gradient and hessian for a given x
@@ -52,6 +53,7 @@ private:
 	virtual void CalculateValue(const Eigen::MatrixX2d& x, double& f) = 0;
 	virtual void CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g) = 0;
 	virtual void CalculateHessian(const Eigen::MatrixX2d& x, std::vector<double>& ss) = 0;
+	void CalculateHessianInternal(const std::vector<int>& ii, const std::vector<int>& jj, const std::vector<double>& ss, Eigen::SparseMatrix<double>& H);
 
 	// Mesh Wrapper
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
@@ -66,5 +68,6 @@ private:
 	std::vector<int> ii_; 
 	std::vector<int> jj_;
 	std::vector<double> ss_;
+	Eigen::SparseMatrix<double> H_;
 };
 
