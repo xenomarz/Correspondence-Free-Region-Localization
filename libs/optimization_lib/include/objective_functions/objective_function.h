@@ -3,6 +3,7 @@
 // STL Includes
 #include <vector>
 #include <memory>
+#include <atomic>
 #include <functional>
 #include <type_traits>
 
@@ -35,9 +36,11 @@ public:
 	const std::vector<double>& GetSS() const;
 	const Eigen::SparseMatrix<double>& GetHessian() const;
 	const MeshWrapper& GetMeshWrapper() const;
+	double GetWeight() const;
+	void SetWeight(const double w);
 
 	// Update value, gradient and hessian for a given x
-	void Update(const Eigen::MatrixX2d& X);
+	virtual void Update(const Eigen::MatrixX2d& X);
 
 protected:
 	// Protected constructor and destructor
@@ -60,6 +63,9 @@ private:
 
 	// Value
 	double f_;
+
+	// Weight
+	std::atomic<double> w_;
 
 	// Gradient
 	Eigen::VectorXd g_;

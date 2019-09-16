@@ -2,6 +2,7 @@
 
 ObjectiveFunction::ObjectiveFunction(const std::shared_ptr<MeshWrapper>& mesh_wrapper) :
 	f_(0),
+	w_(0),
 	mesh_wrapper_(mesh_wrapper)
 {
 
@@ -56,9 +57,19 @@ const Eigen::SparseMatrix<double>& ObjectiveFunction::GetHessian() const
 	return H_;
 }
 
+double ObjectiveFunction::GetWeight() const
+{
+	return w_;
+}
+
 const MeshWrapper& ObjectiveFunction::GetMeshWrapper() const
 {
 	return *mesh_wrapper_;
+}
+
+void ObjectiveFunction::SetWeight(const double w)
+{
+	w_ = w;
 }
 
 void ObjectiveFunction::CalculateHessianInternal(const std::vector<int>& ii, const std::vector<int>& jj, const std::vector<double>& ss, Eigen::SparseMatrix<double>& H)

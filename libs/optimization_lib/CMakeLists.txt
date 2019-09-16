@@ -6,9 +6,10 @@ file(GLOB SOURCES
 	src/objective_functions/objective_function.cpp
 	src/objective_functions/symmetric_dirichlet.cpp
 	src/objective_functions/separation.cpp
-	src/objective_functions/total_objective.cpp
+	src/objective_functions/composite_objective.cpp
 	src/iterative_methods/iterative_method.cpp
 	src/iterative_methods/newton_method.cpp
+	src/iterative_methods/gradient_descent.cpp
 	src/solvers/solver.cpp
 	src/solvers/eigen_sparse_solver.cpp
 	src/solvers/pardiso_solver.cpp
@@ -17,9 +18,10 @@ file(GLOB SOURCES
 	include/objective_functions/objective_function.h
 	include/objective_functions/symmetric_dirichlet.h
 	include/objective_functions/separation.h
-	include/objective_functions/total_objective.h
+	include/objective_functions/composite_objective.h
 	include/iterative_methods/iterative_method.h
 	include/iterative_methods/newton_method.h
+	include/iterative_methods/gradient_descent.h
 	include/solvers/solver.h	
 	include/solvers/eigen_sparse_solver.h
 	include/solvers/pardiso_solver.h

@@ -8,7 +8,8 @@ IterativeMethod::IterativeMethod(std::shared_ptr<ObjectiveFunction> objective_fu
 	objective_function_(objective_function),
 	x_(x0),
 	thread_state_(ThreadState::SHUTDOWN),
-	max_backtracking_iterations_(10)
+	max_backtracking_iterations_(10),
+	flip_avoiding_line_search_enabled_(false)
 {
 
 }
@@ -34,7 +35,7 @@ void IterativeMethod::LineSearch(const Eigen::VectorXd& p)
 	{
 		Eigen::MatrixX2d mat_x = Eigen::Map<Eigen::MatrixX2d>(x_.data(), x_.rows() / 2, 2);
 		Eigen::MatrixXd mat_p = Eigen::Map<const Eigen::MatrixX2d>(p.data(), p.rows() / 2, 2);
-		double min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(mat_x, f_, mat_p);
+		double min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(mat_x, F_, mat_p);
 		step_size = std::min(1., min_step_to_singularity * 0.8);
 	}
 	else
@@ -125,13 +126,13 @@ bool IterativeMethod::GetApproximation(Eigen::VectorXd& x)
 	return approximations_queue_.try_pop(x);
 }
 
-void IterativeMethod::EnableFlipAvoidingLineSearch(Eigen::MatrixX3i& f)
+void IterativeMethod::EnableFlipAvoidingLineSearch(Eigen::MatrixX3i& F)
 {
-	f_ = f;
+	F_ = F;
 	flip_avoiding_line_search_enabled_ = true;
 }
 
-void IterativeMethod::DisableFlipAvoidingLineSearch(Eigen::MatrixX3i& f)
+void IterativeMethod::DisableFlipAvoidingLineSearch()
 {
 	flip_avoiding_line_search_enabled_ = false;
 }

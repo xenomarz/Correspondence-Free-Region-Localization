@@ -31,7 +31,7 @@ public:
 	void Shutdown();
 	bool GetApproximation(Eigen::VectorXd& x);
 	void EnableFlipAvoidingLineSearch(Eigen::MatrixX3i& f);
-	void DisableFlipAvoidingLineSearch(Eigen::MatrixX3i& f);
+	void DisableFlipAvoidingLineSearch();
 	const std::shared_ptr<ObjectiveFunction> GetObjectiveFunction() const;
 
 private:
@@ -65,7 +65,7 @@ private:
 	Eigen::VectorXd p_;
 
 	// Faces
-	Eigen::MatrixX3i f_;
+	Eigen::MatrixX3i F_;
 };
 
 #endif
