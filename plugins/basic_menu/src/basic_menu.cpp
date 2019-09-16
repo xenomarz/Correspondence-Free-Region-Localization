@@ -123,6 +123,7 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 	}
 
 	Draw_menu_for_Solver();
+	Draw_menu_for_Energies();
 	Draw_menu_for_cores();
 	Draw_menu_for_models();
 	Draw_menu_for_colors();
@@ -449,14 +450,19 @@ void BasicMenu::Draw_menu_for_Solver() {
 		ImGui::PushItemWidth(80 * menu_scaling());
 		ImGui::DragFloat("shift eigen values", &(totalObjective->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
 
-		// objective functions wieghts
+		
+	}
+}
+
+void BasicMenu::Draw_menu_for_Energies() {
+	if (!ImGui::CollapsingHeader("Energies", ImGuiTreeNodeFlags_DefaultOpen))
+	{
 		int id = 0;
 		for (auto& obj : totalObjective->objectiveList) {
 			ImGui::PushID(id++);
-			ImGui::Text(obj->name);
+			ImGui::Text(obj->name.c_str());
 			ImGui::PushItemWidth(80 * menu_scaling());
-			ImGui::DragFloat("weight", &(obj->w) , 0.05f, 0.1f, 20.0f);
-			
+			ImGui::DragFloat("weight", &(obj->w), 0.05f, 0.1f, 20.0f);
 			ImGui::PopID();
 		}
 	}
@@ -628,16 +634,18 @@ void BasicMenu::Draw_menu_for_text_results() {
 	ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
 
 	//add text...
-	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string(" energy ") + std::to_string(totalObjective->energy_value)).c_str());
+	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (totalObjective->name + " energy " + to_string(totalObjective->energy_value)).c_str());
 	h += shift;
-	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string(" gradient ") + std::to_string(totalObjective->gradient_norm)).c_str());
+	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (totalObjective->name + " gradient " + to_string(totalObjective->gradient_norm)).c_str());
 	h += shift;
 
 	for (auto& obj : totalObjective->objectiveList) {
-		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
-		h += shift;
-		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
-		h += shift;
+		if (obj->w != 0) {
+			ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (obj->name + " energy " + to_string(obj->energy_value)).c_str());
+			h += shift;
+			ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (obj->name + " gradient " + to_string(obj->gradient_norm)).c_str());
+			h += shift;
+		}
 	}
 
 	ImGui::End();
@@ -950,9 +958,9 @@ void BasicMenu::initializeSolver()
 	auto symDirichlet = make_unique<SymmetricDirichlet>();
 	symDirichlet->setVF(V, F);
 	symDirichlet->init();
-	auto symDirichletold = make_unique<SymmetricDirichletOld>();
-	symDirichletold->setVF(V, F);
-	symDirichletold->init();
+	auto symDirichletoptimized = make_unique<SymmetricDirichletOptimized>();
+	symDirichletoptimized->setVF(V, F);
+	symDirichletoptimized->init();
 	auto areaPreserving = make_unique<AreaPreserving>();
 	areaPreserving->setVF(V, F);
 	areaPreserving->init();
@@ -969,7 +977,7 @@ void BasicMenu::initializeSolver()
 	totalObjective->objectiveList.push_back(move(areaPreserving));
 	totalObjective->objectiveList.push_back(move(anglePreserving));
 	totalObjective->objectiveList.push_back(move(symDirichlet));
-	totalObjective->objectiveList.push_back(move(symDirichletold));
+	totalObjective->objectiveList.push_back(move(symDirichletoptimized));
 	totalObjective->objectiveList.push_back(move(constraintsPositional));
 
 	totalObjective->init();

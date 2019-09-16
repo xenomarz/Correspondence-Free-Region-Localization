@@ -14,7 +14,7 @@ set(SOURCES
 	src/objective_functions/angle_preserving.cpp
 	src/objective_functions/total_objective.cpp
 	src/objective_functions/symmetric_dirichlet.cpp
-	src/objective_functions/symmetric_dirichlet_old.cpp
+	src/objective_functions/symmetric_dirichlet_optimized.cpp
 	src/objective_functions/penalty_positional_constraints.cpp
 
 
@@ -30,7 +30,7 @@ set(SOURCES
 	include/objective_functions/angle_preserving.h
 	include/objective_functions/total_objective.h
 	include/objective_functions/symmetric_dirichlet.h
-	include/objective_functions/symmetric_dirichlet_old.h
+	include/objective_functions/symmetric_dirichlet_optimized.h
 	include/objective_functions/penalty_positional_constraints.h
 
 	

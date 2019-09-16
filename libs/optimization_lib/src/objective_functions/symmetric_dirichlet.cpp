@@ -3,12 +3,13 @@
 SymmetricDirichlet::SymmetricDirichlet()
 {
 	name = "symmetric dirichlet";
+	w = 0.1;
 }
 
 void SymmetricDirichlet::init()
 {
 	if (V.size() == 0 || F.size() == 0)
-		throw "SymmetricDirichlet must define members V,F before init()!";
+		throw name + " must define members V,F before init()!";
 	
 	a.resize(F.rows());
 	b.resize(F.rows());
@@ -45,7 +46,6 @@ void SymmetricDirichlet::init()
 	}
 
 	prepare_hessian();
-	w = 0.1;
 }
 
 void SymmetricDirichlet::updateX(const VectorXd& X)

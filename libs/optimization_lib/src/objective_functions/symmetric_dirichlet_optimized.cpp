@@ -2,13 +2,14 @@
 
 SymmetricDirichletOptimized::SymmetricDirichletOptimized()
 {
-    name = "symmetric dirichlet old";
+    name = "symmetric dirichlet optimized";
+	w = 0;
 }
 
 void SymmetricDirichletOptimized::init()
 {
 	if (V.size() == 0 || F.size() == 0)
-		throw "DistortionSymmetricDirichletOld must define members V,F before init()!";
+		throw name + " must define members V,F before init()!";
 		
 	a.resize(F.rows());
 	b.resize(F.rows());
@@ -56,7 +57,6 @@ void SymmetricDirichletOptimized::init()
 	b2d.bottomRows(3) = 0.5*D1d;
 
 	prepare_hessian();
-	w = 0.01;
 }
 
 void SymmetricDirichletOptimized::updateX(const VectorXd& X)

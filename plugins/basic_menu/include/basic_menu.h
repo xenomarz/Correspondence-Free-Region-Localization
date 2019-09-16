@@ -64,6 +64,7 @@ public:
 	void Draw_menu_for_cores();
 	void Draw_menu_for_models();
 	void Draw_menu_for_Solver();
+	void Draw_menu_for_Energies();
 	void Draw_menu_for_colors();
 	void Draw_menu_for_text_results();
 
@@ -75,7 +76,7 @@ public:
 	void UpdateHandles();
 	void UpdateEnergyColors();
 
-	//Name's methods
+	//Name
 	void set_name_mapping(unsigned int data_id, string name);
 	
 	//Basic Methods

@@ -3,12 +3,13 @@
 AreaPreserving::AreaPreserving()
 {
 	name = "Area Preserving";
+	w = 1;
 }
 
 void AreaPreserving::init()
 {
 	if (V.size() == 0 || F.size() == 0)
-		throw "DistortionAreaPreserving must define members V,F before init()!";
+		throw name + " must define members V,F before init()!";
 	
 	a.resize(F.rows());
 	b.resize(F.rows());
@@ -44,7 +45,6 @@ void AreaPreserving::init()
 	}
 
 	prepare_hessian();
-	w = 1;
 }
 
 void AreaPreserving::updateX(const VectorXd& X)

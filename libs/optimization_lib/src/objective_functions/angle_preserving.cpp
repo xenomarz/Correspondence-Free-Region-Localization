@@ -3,12 +3,13 @@
 AnglePreserving::AnglePreserving()
 {
 	name = "Angle Preserving";
+	w = 0;
 }
 
 void AnglePreserving::init()
 {
 	if (V.size() == 0 || F.size() == 0)
-		throw "DistortionAnglePreserving must define members V,F before init()!";
+		throw name + " must define members V,F before init()!";
 	
 	a.resize(F.rows());
 	b.resize(F.rows());
@@ -44,7 +45,6 @@ void AnglePreserving::init()
 	}
 
 	prepare_hessian();
-	w = 0;
 }
 
 void AnglePreserving::updateX(const VectorXd& X)
