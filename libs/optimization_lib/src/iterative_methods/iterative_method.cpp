@@ -82,7 +82,7 @@ void IterativeMethod::Start()
 	thread_ = std::thread([&]() {
 		while (true)
 		{
-			std::unique_lock<decltype(m_)> lock(m_);
+			std::unique_lock<std::mutex> lock(m_);
 			cv_.wait(lock, [this] { return thread_state_ != ThreadState::PAUSED; });
 
 			if (thread_state_ == ThreadState::SHUTDOWN)
@@ -99,14 +99,14 @@ void IterativeMethod::Start()
 
 void IterativeMethod::Pause()
 {
-	::std::unique_lock<decltype(m_)> lock(m_);
+	::std::unique_lock<std::mutex> lock(m_);
 	thread_state_ = ThreadState::PAUSED;
 }
 
 void IterativeMethod::Resume()
 {
 	{
-		::std::unique_lock<decltype(m_)> lock(m_);
+		::std::unique_lock<std::mutex> lock(m_);
 		thread_state_ = ThreadState::RUNNING;
 	}
 	cv_.notify_one();
@@ -115,7 +115,7 @@ void IterativeMethod::Resume()
 void IterativeMethod::Shutdown()
 {
 	{
-		::std::unique_lock<decltype(m_)> lock(m_);
+		::std::unique_lock<std::mutex> lock(m_);
 		thread_state_ = ThreadState::SHUTDOWN;
 	}
 	thread_.join();

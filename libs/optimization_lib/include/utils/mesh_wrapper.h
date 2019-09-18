@@ -15,7 +15,10 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
-class MeshWrapper
+// Optimization lib includes
+#include "./objective_function_data_provider.h"
+
+class MeshWrapper : public ObjectiveFunctionDataProvider
 {
 public:
 
@@ -40,21 +43,27 @@ public:
 	 * Getters
 	 */
 
-	const Eigen::MatrixX3i& GetDomainFaces() const;
-	const Eigen::MatrixX3d& GetDomainVertices() const;
-	const Eigen::MatrixX2i& GetDomainEdges() const;
 	const Eigen::MatrixX3i& GetImageFaces() const;
 	const Eigen::MatrixX2d& GetImageVertices() const;
 	const Eigen::MatrixX2i& GetImageEdges() const;
+
+	/**
+	 * Overrides
+	 */
+
+	const Eigen::MatrixX3i& GetDomainFaces() const;
+	const Eigen::MatrixX3d& GetDomainVertices() const;
+	const Eigen::MatrixX2i& GetDomainEdges() const;
 	const Eigen::MatrixX3d& GetD1() const;
 	const Eigen::MatrixX3d& GetD2() const;
 	const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const;
 	const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const;
+	const Eigen::DenseIndex GetImageVerticesCount() const;
 
 private:
 
 	/**
-	 * Function objects
+	 * Private function objects
 	 */
 
 	// Custom hash and equals functions for unordered_map
@@ -95,7 +104,6 @@ private:
 	using VI2VIMap = std::unordered_map<VertexIndex, VertexIndex>;
 	using EI2EIsMap = std::unordered_map<EdgeIndex, std::vector<EdgeIndex>>;
 	using EI2EIMap = std::unordered_map<EdgeIndex, EdgeIndex>;
-	//using EI2LengthMap = std::unordered_map<EdgeIndex, double>;
 
 	/**
 	 * General use mesh methods
@@ -111,7 +119,7 @@ private:
 	void ComputeSurfaceGradientPerFace(const Eigen::MatrixX3d& v, const Eigen::MatrixX3i& f, Eigen::MatrixX3d& d1, Eigen::MatrixX3d& d2);
 
 	/**
-	 * Mesh soup methods
+	 * Triangle soup methods
 	 */
 
 	// Soup generation

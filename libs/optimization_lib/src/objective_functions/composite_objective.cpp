@@ -1,7 +1,7 @@
 #include <objective_functions/composite_objective.h>
 
-CompositeObjective::CompositeObjective(const std::shared_ptr<MeshWrapper>& mesh_wrapper) :
-	ObjectiveFunction(mesh_wrapper, "Composite Objective")
+CompositeObjective::CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider) :
+	ObjectiveFunction(objective_function_data_provider, "Composite Objective")
 {
 
 }
@@ -16,7 +16,7 @@ void CompositeObjective::AddObjectiveFunction(const std::shared_ptr<ObjectiveFun
 	objective_functions_.push_back(objective_function);
 }
 
-void CompositeObjective::InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrapper, std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
+void CompositeObjective::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
 {
 	ii.clear();
 	jj.clear();

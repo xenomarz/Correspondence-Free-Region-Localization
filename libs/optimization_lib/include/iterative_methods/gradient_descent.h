@@ -13,8 +13,8 @@
 #include <Eigen/Sparse>
 
 // Optimization lib includes
-#include <iterative_methods/iterative_method.h>
-#include <solvers/solver.h>
+#include "./iterative_methods/iterative_method.h"
+#include "../solvers/solver.h"
 
 // https://en.wikipedia.org/wiki/Gradient_descent
 class GradientDescent : public IterativeMethod

@@ -10,18 +10,18 @@
 #include <igl/cat.h>
 
 // Optimization lib includes
-#include "objective_functions/separation.h"
+#include <objective_functions/separation.h>
 
 // OpenMP
 #include <omp.h>
 
-Separation::Separation(const std::shared_ptr<MeshWrapper>& mesh_wrapper) :
-	ObjectiveFunction(mesh_wrapper, "Separation")
+Separation::Separation(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider) :
+	ObjectiveFunction(objective_function_data_provider, "Separation")
 {
-	Esep = GetMeshWrapper().GetCorrespondingVertexPairsCoefficients();
+	Esep = objective_function_data_provider_->GetCorrespondingVertexPairsCoefficients();
 	Esept = Esep.transpose();
 
-	edge_lenghts_per_pair = GetMeshWrapper().GetCorrespondingVertexPairsEdgeLength();
+	edge_lenghts_per_pair = objective_function_data_provider_->GetCorrespondingVertexPairsEdgeLength();
 
 	connect_alphas = Eigen::VectorXd::Zero(Esep.rows());
 	disconnect_alphas = Eigen::VectorXd::Ones(Esep.rows());
@@ -35,9 +35,9 @@ Separation::~Separation()
 
 }
 
-void Separation::InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrapper, std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
+void Separation::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
 {
-	auto n = GetMeshWrapper().GetImageVertices().rows();
+	auto n = objective_function_data_provider_->GetImageVerticesCount();
 
 	ii.clear();
 	jj.clear();
@@ -83,7 +83,7 @@ void Separation::InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrap
 
 void Separation::CalculateValue(const Eigen::MatrixX2d& x, double& f)
 {
-	auto n = GetMeshWrapper().GetImageVertices().rows();
+	auto n = objective_function_data_provider_->GetImageVerticesCount();
 
 	EsepP = Esep * x;
 	EsepP_squared_rowwise_sum = EsepP.array().pow(2.0).rowwise().sum();

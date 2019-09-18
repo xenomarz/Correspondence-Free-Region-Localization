@@ -2,7 +2,7 @@
 //#include <ranges>
 
 // Optimization library includes
-#include "utils/mesh_wrapper.h"
+#include <utils/mesh_wrapper.h>
 
 // LIBIGL includes
 #include <igl/slice.h>
@@ -335,4 +335,9 @@ void MeshWrapper::ComputeCorrespondingVertexPairsEdgeLength()
 		auto edge_length = 0.5 * (v1_dom - v2_dom).squaredNorm();
 		cv_pairs_edge_length_(cv_pair_index) = edge_length;
 	}
+}
+
+const Eigen::DenseIndex MeshWrapper::GetImageVerticesCount() const
+{
+	return v_im_.rows();
 }

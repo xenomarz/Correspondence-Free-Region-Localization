@@ -15,6 +15,7 @@ file(GLOB SOURCES
 	src/solvers/eigen_sparse_solver.cpp
 	src/solvers/pardiso_solver.cpp
 	src/utils/utils.cpp
+	src/utils/objective_function_data_provider.cpp
 	src/utils/mesh_wrapper.cpp
 	include/objective_functions/objective_function.h
 	include/objective_functions/symmetric_dirichlet.h
@@ -28,6 +29,7 @@ file(GLOB SOURCES
 	include/solvers/eigen_sparse_solver.h
 	include/solvers/pardiso_solver.h
 	include/utils/utils.h
+	include/utils/objective_function_data_provider.h
 	include/utils/mesh_wrapper.h)
 
 # Add Library Target

@@ -7,7 +7,7 @@
 #include <Eigen/Sparse>
 
 // Optimization lib includes
-#include <solvers/solver.h>
+#include "./solver.h"
 
 class EigenSparseSolver : public Solver
 {

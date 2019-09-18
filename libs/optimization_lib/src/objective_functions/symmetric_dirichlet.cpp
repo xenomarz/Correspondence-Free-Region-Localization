@@ -1,20 +1,25 @@
-#include "objective_functions/symmetric_dirichlet.h"
-#include "utils/utils.h"
+#include <utils/utils.h>
+#include <objective_functions/symmetric_dirichlet.h>
 #include <limits>
 #include <igl/doublearea.h>
 
-SymmetricDirichlet::SymmetricDirichlet(const std::shared_ptr<MeshWrapper>& mesh_wrapper)
-	: ObjectiveFunction(mesh_wrapper, "Symmetric Dirichlet")
+SymmetricDirichlet::SymmetricDirichlet(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider)
+	: ObjectiveFunction(objective_function_data_provider, "Symmetric Dirichlet")
 {
-	auto Fs = GetMeshWrapper().GetImageFaces();
-	auto Vs = GetMeshWrapper().GetImageVertices();
+	auto F = objective_function_data_provider_->GetDomainFaces();
+	auto V = objective_function_data_provider_->GetDomainVertices();
+
+	auto D1 = objective_function_data_provider_->GetD1();
+	auto D2 = objective_function_data_provider_->GetD2();
+
+	auto Fs = objective_function_data_provider_->GetImageFaces();
 
 	numF = Fs.rows();
-	numV = Vs.rows();
+	numV = objective_function_data_provider_->GetImageVerticesCount();
 
 	Fuv.resize(6, numF);
 	Fuv.topRows(3) = Fs.transpose();
-	Fuv.bottomRows(3) = Fuv.topRows(3) + Eigen::MatrixXi::Constant(3, numF, numV);
+	Fuv.bottomRows(3) = Fuv.topRows(3) + Eigen::MatrixXi::Constant(3, numF, static_cast<int>(numV));
 
 	a.resize(numF);
 	b.resize(numF);
@@ -30,14 +35,14 @@ SymmetricDirichlet::SymmetricDirichlet(const std::shared_ptr<MeshWrapper>& mesh_
 	//Parameterization J mats resize
 	detJuv.resize(numF);
 	invdetJuv.resize(numF);
-	DdetJuv_DUV.resize(numF, numV * 2);
+	DdetJuv_DUV.resize(static_cast<int>(numF), static_cast<int>(numV * 2));
 
 	// compute init energy matrices
-	igl::doublearea(Vs, Fs, Area);
+	igl::doublearea(V, F, Area);
 	Area /= 2;
 
-	D1d = GetMeshWrapper().GetD1().transpose();
-	D2d = GetMeshWrapper().GetD2().transpose();
+	D1d = D1.transpose();
+	D2d = D2.transpose();
 
 	//columns belong to different faces
 	a1d.resize(6, numF);
@@ -65,7 +70,7 @@ SymmetricDirichlet::~SymmetricDirichlet()
 
 }
 
-void SymmetricDirichlet::InitializeHessian(const std::shared_ptr<MeshWrapper>& mesh_wrapper, std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
+void SymmetricDirichlet::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
 {
 	ii.clear();
 	jj.clear();
@@ -75,8 +80,8 @@ void SymmetricDirichlet::InitializeHessian(const std::shared_ptr<MeshWrapper>& m
 		jj.push_back(j);
 	};
 
-	int nfs = GetMeshWrapper().GetImageFaces().rows();
-	int nvs = GetMeshWrapper().GetImageVertices().rows();
+	auto nfs = objective_function_data_provider_->GetImageFaces().rows();
+	auto nvs = objective_function_data_provider_->GetImageVerticesCount();
 	for (int i = 0; i < nfs; ++i)
 	{
 		// for every face there is a 6x6 local hessian
@@ -86,9 +91,9 @@ void SymmetricDirichlet::InitializeHessian(const std::shared_ptr<MeshWrapper>& m
 
 		// base indices
 		int uhbr = 3 * i;		//upper_half_base_row
-		int lhbr = 3 * i + nvs; // lower_half_base_row 
+		int lhbr = 3 * i + static_cast<int>(nvs); // lower_half_base_row 
 		int lhbc = 3 * i;		// left_half_base_col 
-		int rhbc = 3 * i + nvs; // right_half_base_col 
+		int rhbc = 3 * i + static_cast<int>(nvs); // right_half_base_col 
 
 		// first column
 		PushPair(uhbr, lhbc);
@@ -230,9 +235,10 @@ void SymmetricDirichlet::CalculateHessian(const Eigen::MatrixX2d& x, std::vector
 		}
 	}
 
-	for (int i = 0; i < F.rows(); i++)
+	std::size_t nf = F.rows();
+	for (std::size_t i = 0; i < nf; i++)
 	{
-		int base = 21 * i;
+		std::size_t base = 21 * i;
 		ss[base] += 1e-6;
 		ss[base + 2] += 1e-6;
 		ss[base + 5] += 1e-6;

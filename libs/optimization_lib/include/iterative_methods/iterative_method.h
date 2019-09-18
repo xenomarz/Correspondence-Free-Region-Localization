@@ -16,7 +16,7 @@
 #include <tbb/concurrent_queue.h>
 
 // Optimization lib includes
-#include <objective_functions/objective_function.h>
+#include "../objective_functions/objective_function.h"
 
 // https://en.wikipedia.org/wiki/Iterative_method
 class IterativeMethod
