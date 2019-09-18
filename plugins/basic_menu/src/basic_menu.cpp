@@ -129,6 +129,7 @@ IGL_INLINE void BasicMenu::draw_viewer_menu()
 	Draw_menu_for_colors();
 	Draw_menu_for_text_results();
 
+
 	follow_and_mark_selected_faces();
 	Update_view();
 }
@@ -958,6 +959,9 @@ void BasicMenu::initializeSolver()
 	auto symDirichlet = make_unique<SymmetricDirichlet>();
 	symDirichlet->setVF(V, F);
 	symDirichlet->init();
+	auto oneRingAreaPreserving = make_unique<OneRingAreaPreserving>();
+	oneRingAreaPreserving->setVF(V, F);
+	oneRingAreaPreserving->init();
 	auto symDirichletoptimized = make_unique<SymmetricDirichletOptimized>();
 	symDirichletoptimized->setVF(V, F);
 	symDirichletoptimized->init();
@@ -977,6 +981,7 @@ void BasicMenu::initializeSolver()
 	totalObjective->objectiveList.push_back(move(areaPreserving));
 	totalObjective->objectiveList.push_back(move(anglePreserving));
 	totalObjective->objectiveList.push_back(move(symDirichlet));
+	totalObjective->objectiveList.push_back(move(oneRingAreaPreserving));
 	totalObjective->objectiveList.push_back(move(symDirichletoptimized));
 	totalObjective->objectiveList.push_back(move(constraintsPositional));
 

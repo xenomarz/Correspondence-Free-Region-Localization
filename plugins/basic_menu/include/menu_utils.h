@@ -38,6 +38,7 @@
 #include "../../libs/optimization_lib/include/objective_functions/symmetric_dirichlet.h"
 #include "../../libs/optimization_lib/include/objective_functions/symmetric_dirichlet_optimized.h"
 #include "../../libs/optimization_lib/include/objective_functions/area_preserving.h"
+#include "../../libs/optimization_lib/include/objective_functions/one_ring_area_preserving.h"
 #include "../../libs/optimization_lib/include/objective_functions/angle_preserving.h"
 #include "../../libs/optimization_lib/include/objective_functions/penalty_positional_constraints.h"
 #include <atomic>
