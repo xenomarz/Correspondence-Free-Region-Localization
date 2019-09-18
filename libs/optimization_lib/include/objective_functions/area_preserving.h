@@ -9,18 +9,6 @@ private:
 	MatrixX3i F;
 	MatrixXd V;
 
-public:
-	AreaPreserving();
-
-	virtual void init() override;
-	virtual void updateX(const VectorXd& X) override;
-	virtual double value(bool update = true) override;
-	virtual void gradient(VectorXd& g) override;
-	virtual void hessian() override;
-	virtual void prepare_hessian() override;
-	bool updateJ(const VectorXd& X);
-	void setVF(MatrixXd& V, MatrixX3i& F);
-
 	// Jacobian of the parameterization per face
 	VectorXd a;
 	VectorXd b;
@@ -37,4 +25,15 @@ public:
 	VectorXd Area;
 	Matrix3Xd D1d, D2d;		//dense mesh derivative matrices
 
+public:
+	AreaPreserving();
+
+	virtual void init() override;
+	virtual void updateX(const VectorXd& X) override;
+	virtual double value(bool update = true) override;
+	virtual void gradient(VectorXd& g) override;
+	virtual void hessian() override;
+	virtual void prepare_hessian() override;
+	bool updateJ(const VectorXd& X);
+	void setVF(MatrixXd& V, MatrixX3i& F);
 };

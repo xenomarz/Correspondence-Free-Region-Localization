@@ -149,11 +149,11 @@ bool AreaPreserving::updateJ(const VectorXd& X)
 		//prepare hessian
 		MatrixXd d2E_dJ2(4, 4);
 		d2E_dJ2 <<
-			d(i)*d(i)						, -c(i)*d(i)					, -b(i)*d(i)					, 2 * a(i)*d(i) - b(i)*c(i) - 1,
-			-c(i)*d(i)						, c(i)*c(i)						, 2 * b(i)*c(i) - a(i)*d(i) + 1	, -c(i)*a(i),
-			-b(i)*d(i)						, 2 * b(i)*c(i) - a(i)*d(i) + 1	, b(i)*b(i)						, -b(i)*a(i),
-			2 * a(i)*d(i) - b(i)*c(i) - 1	, -a(i)*c(i)					, -a(i)*b(i)					, a(i)*a(i);
-
+			d(i)*d(i)			, -c(i)*d(i)		, -b(i)*d(i)		, a(i)*d(i) + detj_1,
+			-c(i)*d(i)			, c(i)*c(i)			, b(i)*c(i) - detj_1, -c(i)*a(i),
+			-b(i)*d(i)			, b(i)*c(i) - detj_1, b(i)*b(i)			, -b(i)*a(i),
+			a(i)*d(i) + detj_1	, -a(i)*c(i)		, -a(i)*b(i)		, a(i)*a(i);
+		
 		Hessian[i] = dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
 	}
 	detJ = a.cwiseProduct(d) - b.cwiseProduct(c);

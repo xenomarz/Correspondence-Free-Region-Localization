@@ -156,6 +156,10 @@ bool OneRingAreaPreserving::updateJ(const VectorXd& X)
 	}
 
 	grad.setZero();
+	for (int i = 0; i < F.rows(); i++)
+	{
+		Hessian[i].setZero();
+	}
 	for (int vi = 0; vi < VF.size(); vi++) {
 		vector<int> OneRing = VF[vi];
 		for (int fi : OneRing) {
@@ -169,15 +173,16 @@ bool OneRingAreaPreserving::updateJ(const VectorXd& X)
 			grad.row(fi) += (dE_dJ.transpose() * dJ_dX[fi]).transpose();
 
 			
-			////prepare hessian
-			//MatrixXd d2E_dJ2(4, 4);
-			//d2E_dJ2 <<
-			//	d(i)*d(i), -c(i)*d(i), -b(i)*d(i), 2 * a(i)*d(i) - b(i)*c(i) - 1,
-			//	-c(i)*d(i), c(i)*c(i), 2 * b(i)*c(i) - a(i)*d(i) + 1, -c(i)*a(i),
-			//	-b(i)*d(i), 2 * b(i)*c(i) - a(i)*d(i) + 1, b(i)*b(i), -b(i)*a(i),
-			//	2 * a(i)*d(i) - b(i)*c(i) - 1, -a(i)*c(i), -a(i)*b(i), a(i)*a(i);
+			//prepare hessian
 
-			//Hessian[i] = dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
+			MatrixXd d2E_dJ2(4, 4);
+			d2E_dJ2 <<
+				Area(fi)*d(fi)*d(fi)					, -Area(fi)*c(fi)*d(fi)					, -Area(fi)*b(fi)*d(fi)					, Area(fi)*a(fi)*d(fi) + OneRingSum(vi),
+				-Area(fi)*c(fi)*d(fi)					, Area(fi)*c(fi)*c(fi)					, Area(fi)*b(fi)*c(fi) - OneRingSum(vi)	, -Area(fi)*c(fi)*a(fi),
+				-Area(fi)*b(fi)*d(fi)					, Area(fi)*b(fi)*c(fi) - OneRingSum(vi)	, Area(fi)* b(fi)*b(fi)					, -Area(fi)*b(fi)*a(fi),
+				Area(fi)*a(fi)*d(fi) + OneRingSum(vi)	, -Area(fi)*a(fi)*c(fi)					, -Area(fi)*a(fi)*b(fi)					, Area(fi)*a(fi)*a(fi);
+				
+			Hessian[fi] += dJ_dX[fi].transpose() * d2E_dJ2 * dJ_dX[fi];
 		}
 	}
 	

@@ -979,10 +979,10 @@ void BasicMenu::initializeSolver()
 
 	totalObjective->objectiveList.clear();
 	totalObjective->objectiveList.push_back(move(areaPreserving));
-	totalObjective->objectiveList.push_back(move(anglePreserving));
-	totalObjective->objectiveList.push_back(move(symDirichlet));
+	//totalObjective->objectiveList.push_back(move(anglePreserving));
+	//totalObjective->objectiveList.push_back(move(symDirichlet));
 	totalObjective->objectiveList.push_back(move(oneRingAreaPreserving));
-	totalObjective->objectiveList.push_back(move(symDirichletoptimized));
+	//totalObjective->objectiveList.push_back(move(symDirichletoptimized));
 	totalObjective->objectiveList.push_back(move(constraintsPositional));
 
 	totalObjective->init();
