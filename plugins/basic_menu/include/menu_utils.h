@@ -33,6 +33,9 @@
 #include <igl/arap.h>
 #include <igl/file_dialog_open.h>
 #include <igl/unproject.h>
+#include <igl/slice.h>
+#include <igl/edge_lengths.h>
+
 #include "../../libs/optimization_lib/include/solvers/newton_solver.h"
 #include "../../libs/optimization_lib/include/solvers/gradient_descent_solver.h"
 #include "../../libs/optimization_lib/include/objective_functions/symmetric_dirichlet.h"

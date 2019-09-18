@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(autoquads)
+project(basic_app)
 
 # Add your project files
 set(SOURCES src/main.cpp ${CMAKE_SOURCE_DIR}/natvis/eigen.natvis)
