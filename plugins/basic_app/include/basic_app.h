@@ -37,7 +37,7 @@ private:
 	thread solver_thread;
 	shared_ptr<NewtonSolver> newton;
 	shared_ptr<GradientDescentSolver> gradient_descent;
-	shared_ptr<solver> Solver;
+	shared_ptr<solver> solver;
 	shared_ptr<TotalObjective> totalObjective;
 
 protected:

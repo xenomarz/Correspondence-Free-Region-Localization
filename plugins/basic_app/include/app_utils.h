@@ -42,7 +42,7 @@
 #include "../../libs/optimization_lib/include/objective_functions/AreaDistortion.h"
 #include "../../libs/optimization_lib/include/objective_functions/AreaDistortionOneRing.h"
 #include "../../libs/optimization_lib/include/objective_functions/LeastSquaresConformal.h"
-#include "../../libs/optimization_lib/include/objective_functions/penalty_positional_constraints.h"
+#include "../../libs/optimization_lib/include/objective_functions/PenaltyPositionalConstraints.h"
 #include <atomic>
 
 #define RED_COLOR Vector3f(1, 0, 0)
@@ -51,6 +51,7 @@
 #define GOLD_COLOR Vector3f(1, 215.0f / 255.0f, 0)
 #define GREY_COLOR Vector3f(0.75, 0.75, 0.75)
 #define WHITE_COLOR Vector3f(1, 1, 1)
+#define BLACK_COLOR Vector3f(0, 0, 0)
 
 using namespace std;
 using namespace Eigen;

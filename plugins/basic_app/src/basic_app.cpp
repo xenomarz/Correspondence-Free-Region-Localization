@@ -1,6 +1,5 @@
 #include <basic_app/include/basic_app.h>
 
-
 basic_app::basic_app() :
 	opengl::glfw::imgui::ImGuiMenu(){}
 
@@ -21,7 +20,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		Dragged_vertex_color = GREEN_COLOR;
 		Fixed_vertex_color = BLUE_COLOR;
 		model_color = GREY_COLOR;
-		text_color = WHITE_COLOR;
+		text_color = BLACK_COLOR;
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
 		IsTranslate = false;
@@ -39,8 +38,10 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		//Load two views
 		viewer->core().viewport = Vector4f(0, 0, 640, 800);
 		input_view_id = viewer->core(0).id;
+		viewer->core(input_view_id).background_color = Vector4f(0.9, 0.9, 0.9, 0);
+
 		output_view_id = viewer->append_core(Vector4f(640, 0, 640, 800));
-		viewer->core(output_view_id).background_color += Vector4f(0.1,0,0,0);
+		viewer->core(output_view_id).background_color = Vector4f(0.9, 0.9, 0.9 ,0);
 
 		//set rotarion type to 2D mode
 		viewer->core(output_view_id).trackball_angle = Quaternionf::Identity();
@@ -61,7 +62,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		// Initialize solver thread
 		newton = make_shared<NewtonSolver>();
 		gradient_descent = make_shared<GradientDescentSolver>();
-		Solver = newton;
+		solver = newton;
 		totalObjective = make_shared<TotalObjective>();	
 
 		//maximize window
@@ -124,12 +125,10 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	}
 
 	Draw_menu_for_Solver();
-	Draw_menu_for_Energies();
 	Draw_menu_for_cores();
 	Draw_menu_for_models();
 	Draw_menu_for_colors();
 	Draw_menu_for_text_results();
-
 
 	follow_and_mark_selected_faces();
 	Update_view();
@@ -332,7 +331,7 @@ IGL_INLINE bool basic_app::pre_draw() {
 	//call parent function
 	ImGuiMenu::pre_draw();
 
-	if (Solver->progressed)
+	if (solver->progressed)
 		update_mesh();
 
 	//Update the model's faces colors in the two screens
@@ -379,15 +378,15 @@ void basic_app::Draw_menu_for_Solver() {
 		if (ImGui::Combo("step", (int *)(&solver_type), "Newton\0Gradient Descent\0\0")) {
 			stop_solver_thread();
 			if (solver_type == app_utils::NEWTON) {
-				Solver = newton;
+				solver = newton;
 			}
 			else {
-				Solver = gradient_descent;
+				solver = gradient_descent;
 			}
 			VectorXd initialguessXX = Map<const VectorXd>(OutputModel().V.leftCols(2).data(), OutputModel().V.leftCols(2).rows() * 2);
-			Solver->init(totalObjective, initialguessXX);
+			solver->init(totalObjective, initialguessXX);
 			MatrixX3i F = OutputModel().F;
-			Solver->setFlipAvoidingLineSearch(F);
+			solver->setFlipAvoidingLineSearch(F);
 			start_solver_thread();
 		}
 
@@ -409,8 +408,8 @@ void basic_app::Draw_menu_for_Solver() {
 					update_texture(initialguess);
 					Update_view();
 					VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-					Solver->init(totalObjective, initialguessXX);
-					Solver->setFlipAvoidingLineSearch(F);
+					solver->init(totalObjective, initialguessXX);
+					solver->setFlipAvoidingLineSearch(F);
 				}
 			}
 			else {
@@ -431,8 +430,8 @@ void basic_app::Draw_menu_for_Solver() {
 				update_texture(initialguess);
 				Update_view();
 				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-				Solver->init(totalObjective, initialguessXX);
-				Solver->setFlipAvoidingLineSearch(F);
+				solver->init(totalObjective, initialguessXX);
+				solver->setFlipAvoidingLineSearch(F);
 			}
 			
 		}
@@ -452,19 +451,14 @@ void basic_app::Draw_menu_for_Solver() {
 		ImGui::PushItemWidth(80 * menu_scaling());
 		ImGui::DragFloat("shift eigen values", &(totalObjective->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
 
-		
-	}
-}
-
-void basic_app::Draw_menu_for_Energies() {
-	if (!ImGui::CollapsingHeader("Energies", ImGuiTreeNodeFlags_DefaultOpen))
-	{
+		// objective functions wieghts
 		int id = 0;
 		for (auto& obj : totalObjective->objectiveList) {
 			ImGui::PushID(id++);
 			ImGui::Text(obj->name.c_str());
 			ImGui::PushItemWidth(80 * menu_scaling());
-			ImGui::DragFloat("weight", &(obj->w), 0.05f, 0.1f, 20.0f);
+			ImGui::DragFloat("weight", &(obj->w) , 0.05f, 0.1f, 20.0f);
+			
 			ImGui::PopID();
 		}
 	}
@@ -636,18 +630,16 @@ void basic_app::Draw_menu_for_text_results() {
 	ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
 
 	//add text...
-	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (totalObjective->name + " energy " + to_string(totalObjective->energy_value)).c_str());
+	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string(" energy ") + std::to_string(totalObjective->energy_value)).c_str());
 	h += shift;
-	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (totalObjective->name + " gradient " + to_string(totalObjective->gradient_norm)).c_str());
+	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string(" gradient ") + std::to_string(totalObjective->gradient_norm)).c_str());
 	h += shift;
 
 	for (auto& obj : totalObjective->objectiveList) {
-		if (obj->w != 0) {
-			ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (obj->name + " energy " + to_string(obj->energy_value)).c_str());
-			h += shift;
-			ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (obj->name + " gradient " + to_string(obj->gradient_norm)).c_str());
-			h += shift;
-		}
+		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
+		h += shift;
+		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
+		h += shift;
 	}
 
 	ImGui::End();
@@ -894,7 +886,7 @@ void basic_app::checkGradients()
 	}
 	stop_solver_thread();
 	for (auto const &objective : totalObjective->objectiveList) {
-		objective->checkGradient(Solver->ext_x);
+		objective->checkGradient(solver->ext_x);
 	}
 	start_solver_thread();
 }
@@ -907,7 +899,7 @@ void basic_app::checkHessians()
 	}
 	stop_solver_thread();
 	for (auto const &objective : totalObjective->objectiveList) {
-		objective->checkHessian(Solver->ext_x);
+		objective->checkHessian(solver->ext_x);
 	}
 	start_solver_thread();
 }
@@ -920,22 +912,22 @@ void basic_app::start_solver_thread() {
 	cout << ">> start new solver" << endl;
 	solver_on = true;
 	
-	solver_thread = thread(&solver::run, Solver.get());
+	solver_thread = thread(&solver::run, solver.get());
 	solver_thread.detach();
 }
 
 void basic_app::stop_solver_thread() {
 	solver_on = false;
-	if (Solver->is_running) {
-		Solver->stop();
+	if (solver->is_running) {
+		solver->stop();
 	}
-	while (Solver->is_running);
+	while (solver->is_running);
 }
 
 void basic_app::update_mesh()
 {
 	VectorXd X;
-	Solver->get_data(X);
+	solver->get_data(X);
 	MatrixXd V(X.rows() / 2, 2);
 	V = Map<MatrixXd>(X.data(), X.rows() / 2, 2);
 	
@@ -960,19 +952,13 @@ void basic_app::initializeSolver()
 	auto symDirichlet = make_unique<SymmetricDirichlet>();
 	symDirichlet->init_mesh(V, F);
 	symDirichlet->init();
-	auto oneRingAreaPreserving = make_unique<AreaDistortionOneRing>();
-	oneRingAreaPreserving->init_mesh(V, F);
-	oneRingAreaPreserving->init();
-	auto symDirichletCompositeMajorization = make_unique<SymmetricDirichletCompositeMajorization>();
-	symDirichletCompositeMajorization->init_mesh(V, F);
-	symDirichletCompositeMajorization->init();
 	auto areaPreserving = make_unique<AreaDistortion>();
 	areaPreserving->init_mesh(V, F);
 	areaPreserving->init();
 	auto anglePreserving = make_unique<LeastSquaresConformal>();
 	anglePreserving->init_mesh(V, F);
 	anglePreserving->init();
-	auto constraintsPositional = make_shared<penalty_positional_constraints>();
+	auto constraintsPositional = make_shared<PenaltyPositionalConstraints>();
 	constraintsPositional->numV = V.rows();
 	constraintsPositional->init();
 	HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
@@ -982,8 +968,6 @@ void basic_app::initializeSolver()
 	totalObjective->objectiveList.push_back(move(areaPreserving));
 	totalObjective->objectiveList.push_back(move(anglePreserving));
 	totalObjective->objectiveList.push_back(move(symDirichlet));
-	totalObjective->objectiveList.push_back(move(oneRingAreaPreserving));
-	totalObjective->objectiveList.push_back(move(symDirichletCompositeMajorization));
 	totalObjective->objectiveList.push_back(move(constraintsPositional));
 
 	totalObjective->init();
