@@ -14,6 +14,6 @@ add_subdirectory("libs/optimization_lib")
 add_subdirectory("plugins")
 
 # applications
-add_subdirectory("apps/autoquads")
+add_subdirectory("apps/basic_app")
 add_subdirectory("apps/optimization_lib_tests")
 add_subdirectory("apps/plugins_tests")
