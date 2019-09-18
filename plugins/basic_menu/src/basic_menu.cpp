@@ -20,7 +20,7 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		Dragged_vertex_color = GREEN_COLOR;
 		Fixed_vertex_color = BLUE_COLOR;
 		model_color = GREY_COLOR;
-		text_color = WHITE_COLOR;
+		text_color = BLACK_COLOR;
 		mouse_mode = MenuUtils::VERTEX_SELECT;
 		view = MenuUtils::Horizontal;
 		IsTranslate = false;
@@ -38,8 +38,10 @@ IGL_INLINE void BasicMenu::init(opengl::glfw::Viewer *_viewer)
 		//Load two views
 		viewer->core().viewport = Vector4f(0, 0, 640, 800);
 		input_view_id = viewer->core(0).id;
+		viewer->core(input_view_id).background_color = Vector4f(0.9, 0.9, 0.9, 0);
+
 		output_view_id = viewer->append_core(Vector4f(640, 0, 640, 800));
-		viewer->core(output_view_id).background_color += Vector4f(0.1,0,0,0);
+		viewer->core(output_view_id).background_color = Vector4f(0.9, 0.9, 0.9 ,0);
 
 		//set rotarion type to 2D mode
 		viewer->core(output_view_id).trackball_angle = Quaternionf::Identity();
