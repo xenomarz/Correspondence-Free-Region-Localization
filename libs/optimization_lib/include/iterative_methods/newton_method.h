@@ -1,6 +1,6 @@
 #pragma once
-#ifndef OPTIMIZATION_LIB_NEWTON_METHOD
-#define OPTIMIZATION_LIB_NEWTON_METHOD
+#ifndef OPTIMIZATION_LIB_NEWTON_METHOD_H
+#define OPTIMIZATION_LIB_NEWTON_METHOD_H
 
 // STL includes
 #include <vector>
@@ -36,7 +36,7 @@ private:
 	void ComputeDescentDirection(Eigen::VectorXd& p)
 	{
 		auto objective_function = GetObjectiveFunction();
-		solver.Solve(objective_function->GetHessian(), -objective_function->CalculateGradient(), p);
+		solver.Solve(objective_function->GetHessian(), -objective_function->GetGradient(), p);
 	}
 
 	std::enable_if_t<std::is_base_of<Solver, Derived>::value, Derived> solver;

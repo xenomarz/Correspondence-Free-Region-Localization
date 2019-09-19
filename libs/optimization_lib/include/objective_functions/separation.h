@@ -1,6 +1,6 @@
 #pragma once
-#ifndef OPTIMIZATION_LIB_SEPARATION
-#define OPTIMIZATION_LIB_SEPARATION
+#ifndef OPTIMIZATION_LIB_SEPARATION_H
+#define OPTIMIZATION_LIB_SEPARATION_H
 
 // STL includes
 #include <vector>
@@ -12,18 +12,28 @@
 
 class Separation : public ObjectiveFunction
 {
-private:
-	/**
-	 * Constructor and destructor
-	 */
+public:
 
-	Separation(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
+	/**
+	 * Destructor
+	 */
 	virtual ~Separation();
+
+private:
+
+	/**
+	 * Friend classes
+	 */
+	friend class ObjectiveFunction;
+
+	/**
+	 * Constructors
+	 */
+	Separation(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
 
 	/**
 	 * Overrides
 	 */
-
 	void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss);
 	void CalculateValue(const Eigen::MatrixX2d& x, double& f);
 	void CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g);
@@ -32,13 +42,11 @@ private:
 	/**
 	 * Methods
 	 */
-
 	void FindSingleHessian(const Eigen::Vector2d& xi, const Eigen::Vector2d& xj, Eigen::Matrix4d& h);
 
 	/**
 	 * Fields
 	 */
-
 	double delta = 1.0;
 
 	Eigen::SparseMatrix<double> Esep;

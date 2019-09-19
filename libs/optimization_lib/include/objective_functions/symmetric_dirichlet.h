@@ -1,6 +1,6 @@
 #pragma once
-#ifndef OPTIMIZATION_LIB_SYMMETRIC_DIRICHLET
-#define OPTIMIZATION_LIB_SYMMETRIC_DIRICHLET
+#ifndef OPTIMIZATION_LIB_SYMMETRIC_DIRICHLET_H
+#define OPTIMIZATION_LIB_SYMMETRIC_DIRICHLET_H
 
 // STL includes
 #include <vector>
@@ -14,18 +14,29 @@
 
 class SymmetricDirichlet : public ObjectiveFunction
 {
-private:
-	/**
-	 * Constructor and destructor
-	 */
+public:
 
-	SymmetricDirichlet(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
+	/**
+	 * Destructor
+	 */
 	virtual ~SymmetricDirichlet();
+
+private:
+
+	/**
+	 * Friend classes
+	 */
+	friend class ObjectiveFunction;
+
+	/**
+	 * Constructors
+	 */
+	SymmetricDirichlet(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
+
 
 	/**
 	 * Overrides
 	 */
-
 	void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss);
 	void CalculateValue(const Eigen::MatrixX2d& x, double& f);
 	void CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g);
@@ -34,7 +45,6 @@ private:
 	/**
 	 * Methods
 	 */
-
 	inline Eigen::Matrix<double, 6, 6> ComputeFaceConeHessian(
 		const Eigen::Matrix<double, 6, 1> & A1,
 		const Eigen::Matrix<double, 6, 1> & A2,
@@ -64,7 +74,6 @@ private:
 	/**
 	 * Fields
 	 */
-
 	double bound=0;
 
 	Eigen::MatrixX3i F;

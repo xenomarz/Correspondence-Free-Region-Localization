@@ -1,6 +1,6 @@
 #pragma once
-#ifndef OPTIMIZATION_LIB_OBJECTIVE_FUNCTION
-#define OPTIMIZATION_LIB_OBJECTIVE_FUNCTION
+#ifndef OPTIMIZATION_LIB_OBJECTIVE_FUNCTION_H
+#define OPTIMIZATION_LIB_OBJECTIVE_FUNCTION_H
 
 // STL Includes
 #include <vector>
@@ -22,13 +22,13 @@
 class ObjectiveFunction
 {
 public:
+
 	// Factory function. Won't compile if Derived is not a subclass of ObjectiveFunction.
-	template <class Derived>
-	static std::enable_if_t<std::is_base_of<ObjectiveFunction, Derived>::value, std::unique_ptr<Derived>> Create(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name)
+	template <typename Derived>
+	static std::enable_if_t<std::is_base_of<ObjectiveFunction, Derived>::value, std::shared_ptr<Derived>> Create(std::shared_ptr<ObjectiveFunctionDataProvider> objective_function_data_provider)
 	{
-		std::unique_ptr<Derived> objective_function(new Derived(objective_function_data_provider, name));
-		objective_function->InitializeGradient();
-		objective_function->InitializeHessian();
+		std::shared_ptr<Derived> objective_function(new Derived(objective_function_data_provider));
+		objective_function->Initialize();
 		return objective_function;
 	}
 
@@ -84,6 +84,7 @@ protected:
 
 private:
 	// Gradient and hessian initializers
+	void Initialize();
 	virtual void InitializeGradient(Eigen::VectorXd& g);
 	virtual void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss) = 0;
 
@@ -91,7 +92,6 @@ private:
 	virtual void CalculateValue(const Eigen::MatrixX2d& X, double& f) = 0;
 	virtual void CalculateGradient(const Eigen::MatrixX2d& X, Eigen::VectorXd& g) = 0;
 	virtual void CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>& ss) = 0;
-	void CalculateHessianInternal(const std::vector<int>& ii, const std::vector<int>& jj, const std::vector<double>& ss, Eigen::SparseMatrix<double>& H);
 
 	// Value
 	double f_;

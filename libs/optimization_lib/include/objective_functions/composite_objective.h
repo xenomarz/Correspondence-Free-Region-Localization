@@ -1,6 +1,6 @@
 #pragma once
-#ifndef OPTIMIZATION_LIB_COMPOSITE_OBJECTIVE
-#define OPTIMIZATION_LIB_COMPOSITE_OBJECTIVE
+#ifndef OPTIMIZATION_LIB_COMPOSITE_OBJECTIVE_H
+#define OPTIMIZATION_LIB_COMPOSITE_OBJECTIVE_H
 
 // STL includes
 #include <memory>
@@ -12,14 +12,29 @@
 class CompositeObjective : public ObjectiveFunction
 {
 public:
+
+	/**
+	 * Destructor
+	 */
+	virtual ~CompositeObjective();
+
+	/**
+	 * Public Methods
+	 */
 	void AddObjectiveFunction(const std::shared_ptr<ObjectiveFunction> objective_function);
 
 private:
+
 	/**
-	 * Constructor and destructor
+	 * Friend classes
+	 */
+	friend class ObjectiveFunction;
+
+	/**
+	 * Constructors
 	 */
 	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
-	virtual ~CompositeObjective();
+
 
 	/**
 	 * Overrides

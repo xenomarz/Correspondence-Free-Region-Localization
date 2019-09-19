@@ -1,11 +1,13 @@
 #pragma once
-#ifndef OPTIMIZATION_LIB_POSITION
-#define OPTIMIZATION_LIB_POSITION
+#ifndef OPTIMIZATION_LIB_POSITION_H
+#define OPTIMIZATION_LIB_POSITION_H
 
 // STL includes
 #include <vector>
 #include <mutex>
 #include <utility>
+#include <functional>
+#include <map>
 
 // Eigen includes
 #include <Eigen/Core>
@@ -17,28 +19,39 @@
 class Position : public ObjectiveFunction
 {
 public:
+
+	/**
+	 * Destructor
+	 */
+	virtual ~Position();
+
+	/**
+	 * Public Methods
+	 */
 	void AddConstrainedVertex(Eigen::DenseIndex vertex_index, Eigen::Vector2d vertex_position);
+	void UpdateConstrainedVertex(Eigen::DenseIndex vertex_index, Eigen::Vector2d vertex_position);
 	void RemoveConstrainedVertex(Eigen::DenseIndex vertex_index);
 
 private:
 
 	/**
+	 * Friend classes
+	 */
+	friend class ObjectiveFunction;
+
+	/**
 	 * Private type definitions
 	 */
-
 	using ConstrainedVertex = std::pair<Eigen::DenseIndex, Eigen::Vector2d>;
 
 	/**
-	 * Constructor and destructor
+	 * Constructors
 	 */
-	
 	Position(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
-	virtual ~Position();
 
 	/**
 	 * Overrides
 	 */
-
 	void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss);
 	void CalculateValue(const Eigen::MatrixX2d& x, double& f);
 	void CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g);
@@ -46,16 +59,9 @@ private:
 	void PreUpdate(const Eigen::MatrixX2d& x);
 
 	/**
-	 * Methods
-	 */
-
-	void UpdateConstrainedPositionsMatrix();
-
-	/**
 	 * Fields
 	 */
-
-	std::vector<ConstrainedVertex> constrained_vertices_;
+	std::unordered_map<Eigen::DenseIndex, Eigen::DenseIndex> im_vi_2_ci_;
 	Eigen::DenseIndex constrained_vertices_count_;
 	Eigen::MatrixX2d x_constrained_;
 	Eigen::MatrixX2d x_current_;

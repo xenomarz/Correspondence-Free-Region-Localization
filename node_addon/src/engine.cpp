@@ -1,4 +1,4 @@
-#include "engine.h"
+#include "../include/engine.h"
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
 
@@ -31,7 +31,10 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	Napi::ObjectWrap<Engine>(info),
 	mesh_wrapper_(std::make_shared<MeshWrapper>())
 {
-
+	auto& x = mesh_wrapper_->GetImageVertices();
+	auto x0 = Eigen::Map<const Eigen::VectorXd>(x.data(), x.cols() * x.rows());
+	composite_objective_ = ObjectiveFunction::Create<CompositeObjective>(mesh_wrapper_);
+	newton_method_ = std::make_unique<NewtonMethod<EigenSparseSolver>>(composite_objective_, x0);
 }
 
 Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)

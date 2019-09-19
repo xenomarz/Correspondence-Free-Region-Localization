@@ -1,4 +1,6 @@
+// Optimization lib includes
 #include <objective_functions/objective_function.h>
+#include <utils/utils.h>
 
 ObjectiveFunction::ObjectiveFunction(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name) :
 	f_(0),
@@ -17,7 +19,13 @@ ObjectiveFunction::ObjectiveFunction(const std::shared_ptr<ObjectiveFunctionData
 
 ObjectiveFunction::~ObjectiveFunction()
 {
+	// Empty implementation
+}
 
+void ObjectiveFunction::Initialize()
+{
+	InitializeGradient(g_);
+	InitializeHessian(ii_, jj_, ss_);
 }
 
 void ObjectiveFunction::InitializeGradient(Eigen::VectorXd& g)
@@ -27,7 +35,7 @@ void ObjectiveFunction::InitializeGradient(Eigen::VectorXd& g)
 
 void ObjectiveFunction::PreUpdate(const Eigen::MatrixX2d& x)
 {
-
+	// Empty implementation
 }
 
 void ObjectiveFunction::Update(const Eigen::MatrixX2d& x)
@@ -37,13 +45,13 @@ void ObjectiveFunction::Update(const Eigen::MatrixX2d& x)
 	CalculateValue(x, f_);
 	CalculateGradient(x, g_);
 	CalculateHessian(x, ss_);
-	CalculateHessianInternal(ii_, jj_, ss_, H_);
+	Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, H_);
 	PostUpdate(x);
 }
 
 void ObjectiveFunction::PostUpdate(const Eigen::MatrixX2d& x)
 {
-
+	// Empty implementation
 }
 
 double ObjectiveFunction::GetValue() const
@@ -89,20 +97,4 @@ const std::string ObjectiveFunction::GetName() const
 void ObjectiveFunction::SetWeight(const double w)
 {
 	w_ = w;
-}
-
-void ObjectiveFunction::CalculateHessianInternal(const std::vector<int>& ii, const std::vector<int>& jj, const std::vector<double>& ss, Eigen::SparseMatrix<double>& H)
-{
-	std::vector<Eigen::Triplet<double>> triplets;
-	triplets.reserve(ii.size());
-	int rows = *std::max_element(ii.begin(), ii.end()) + 1;
-	int cols = *std::max_element(jj.begin(), jj.end()) + 1;
-
-	for (int i = 0; i < ii_.size(); i++)
-	{
-		triplets.push_back(Eigen::Triplet<double>(ii[i], jj[i], ss[i]));
-	}
-
-	H_.resize(rows, cols);
-	H_.setFromTriplets(triplets.begin(), triplets.end());
 }

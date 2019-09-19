@@ -13,6 +13,10 @@
 
 // Optimization Lib Includes
 #include <libs/optimization_lib/include/utils/mesh_wrapper.h>
+#include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
+#include <libs/optimization_lib/include/iterative_methods/newton_method.h>
+#include <libs/optimization_lib/include/objective_functions/composite_objective.h>
+#include <libs/optimization_lib/include/objective_functions/position.h>
 
 class Engine : public Napi::ObjectWrap<Engine> {
 public:
@@ -126,7 +130,10 @@ private:
 	/**
 	 * Fields
 	 */
+
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
+	std::shared_ptr<CompositeObjective> composite_objective_;
+	std::unique_ptr<NewtonMethod<EigenSparseSolver>> newton_method_;
 };
 
 #endif
