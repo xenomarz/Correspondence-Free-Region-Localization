@@ -3,14 +3,16 @@
 PenaltyPositionalConstraints::PenaltyPositionalConstraints()
 {
     name = "Positional Constraints";
+	w = 10000;
 }
 
 void PenaltyPositionalConstraints::init()
 {
+	
 	if(numV==0)
-		throw "ConstraintsPositional must define members numV before init()!";
+		throw name + " must define members numV before init()!";
 	prepare_hessian();
-	w = 10000;
+	
 }
 
 void PenaltyPositionalConstraints::updateX(const VectorXd& X)

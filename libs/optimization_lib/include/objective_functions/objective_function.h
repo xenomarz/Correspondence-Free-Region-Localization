@@ -49,6 +49,6 @@ public:
 	VectorXd Efi;     
 	double energy_value = 0;
 	double gradient_norm = 0;
-	char* name = "Objective function";
+	string name = "Objective function";
 };
 

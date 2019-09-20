@@ -2,7 +2,7 @@
 
 #include <libs/optimization_lib/include/objective_functions/objective_function.h>
 
-class SymmetricDirichlet : public ObjectiveFunction
+class OneRingAreaPreserving : public ObjectiveFunction
 {	
 private:
 	// mesh vertices and faces
@@ -15,9 +15,12 @@ private:
 	VectorXd c;
 	VectorXd d;
 
+	// adjacency matrix (vertex to face)
+	vector<vector<int> > VF, VFi;
+
 	// Jacobian determinant (ad-bc)
-	VectorXd dirichlet; //Forbinous norm of the jacobian
 	VectorXd detJ;
+	VectorXd OneRingSum;
 	MatrixXd grad;
 	vector<Matrix<double, 6, 6>> Hessian;
 	vector<Matrix<double, 4, 6>> dJ_dX;
@@ -27,7 +30,7 @@ private:
 	Matrix3Xd D1d, D2d;		//dense mesh derivative matrices
 
 public:
-	SymmetricDirichlet();
+	OneRingAreaPreserving();
 
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;

@@ -52,7 +52,7 @@ void TotalObjective::hessian()
 	SS.clear();
 	for (auto const &objective : objectiveList)
 	{
-        if (objective->w != 0) //Just don't update the hessian, but we still must enter those elements into the big hessian to have the same sparsity pattern
+        //if (objective->w != 0) //Just don't update the hessian, but we still must enter those elements into the big hessian to have the same sparsity pattern
 		    objective->hessian();
         vector<double> SSi; SSi.resize(objective->SS.size());
         for (int i = 0; i < objective->SS.size(); i++)

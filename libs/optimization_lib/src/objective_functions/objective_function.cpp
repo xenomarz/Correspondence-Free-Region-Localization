@@ -97,7 +97,7 @@ bool ObjectiveFunction::checkHessian(const VectorXd& X)
 	for (int i = 0; i < II.size(); i++)
 		Ht.push_back(Eigen::Triplet<double>(II[i], JJ[i], SS[i]));
 	FDH.setFromTriplets(Ht.begin(), Ht.end());
-
+	
 	Ht.clear();
 	init();
 	updateX(X);
@@ -107,7 +107,12 @@ bool ObjectiveFunction::checkHessian(const VectorXd& X)
 	for (int i = 0; i < II.size(); i++)
 		Ht.push_back(Eigen::Triplet<double>(II[i], JJ[i], SS[i]));
 	H.setFromTriplets(Ht.begin(), Ht.end());
-	
+
+	std::cout << "FDH.selfadjointView<Upper>()" << endl;
+	std::cout << FDH.selfadjointView<Upper>() << endl;
+	std::cout << "H.selfadjointView<Upper>()" << endl;
+	std::cout << H.selfadjointView<Upper>() << endl;
+
 	std::cout << name << ": testing hessians...\n";
 	for (int i = 0; i < X.size(); i++) {
 		for (int j = 0; j < X.size(); j++) {
