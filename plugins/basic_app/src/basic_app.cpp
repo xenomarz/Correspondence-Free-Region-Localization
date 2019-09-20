@@ -43,7 +43,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		output_view_id = viewer->append_core(Vector4f(640, 0, 640, 800));
 		viewer->core(output_view_id).background_color = Vector4f(0.9, 0.9, 0.9 ,0);
 
-		//set rotarion type to 2D mode
+		//set rotation type to 2D mode
 		viewer->core(output_view_id).trackball_angle = Quaternionf::Identity();
 		viewer->core(output_view_id).orthographic = true;
 		viewer->core(output_view_id).set_rotation_type(ViewerCore::RotationType(2));
@@ -318,6 +318,9 @@ IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 		selected_vertices.clear();
 		UpdateHandles();
 	}
+	if (key == ' ') 
+		solver_on ? stop_solver_thread() : start_solver_thread();
+
 	return ImGuiMenu::key_pressed(key, modifiers);
 }
 
