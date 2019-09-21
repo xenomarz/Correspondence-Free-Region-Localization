@@ -9,15 +9,20 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 	Napi::HandleScope scope(env);
 
 	Napi::Function func = DefineClass(env, "Engine", {
-	  InstanceMethod("loadModel", &Engine::LoadModel),
-	  InstanceAccessor("domainBufferedVertices", &Engine::GetDomainBufferedVertices, nullptr),
-	  InstanceAccessor("imageBufferedVertices", &Engine::GetImageBufferedVertices, nullptr),
-	  InstanceAccessor("domainBufferedMeshVertices", &Engine::GetDomainBufferedMeshVertices, nullptr),
-	  InstanceAccessor("imageBufferedMeshVertices", &Engine::GetImageBufferedMeshVertices, nullptr),
-	  InstanceAccessor("domainVertices", &Engine::GetDomainVertices, nullptr),
-	  InstanceAccessor("imageVertices", &Engine::GetImageVertices, nullptr),
-	  InstanceAccessor("domainFaces", &Engine::GetDomainFaces, nullptr),
-	  InstanceAccessor("imageFaces", &Engine::GetImageFaces, nullptr)
+		InstanceMethod("loadModel", &Engine::LoadModel),
+		InstanceMethod("resumeSolver", &Engine::ResumeSolver),
+		InstanceMethod("pauseSolver", &Engine::PauseSolver),
+		InstanceMethod("constrainFacePosition", &Engine::ConstrainFacePosition),
+		InstanceMethod("updateConstrainedFacePosition", &Engine::UpdateConstrainedFacePosition),
+		InstanceMethod("unconstrainFacePosition", &Engine::UnconstrainFacePosition),
+		InstanceAccessor("domainBufferedVertices", &Engine::GetDomainBufferedVertices, nullptr),
+		InstanceAccessor("imageBufferedVertices", &Engine::GetImageBufferedVertices, nullptr),
+		InstanceAccessor("domainBufferedMeshVertices", &Engine::GetDomainBufferedMeshVertices, nullptr),
+		InstanceAccessor("imageBufferedMeshVertices", &Engine::GetImageBufferedMeshVertices, nullptr),
+		InstanceAccessor("domainVertices", &Engine::GetDomainVertices, nullptr),
+		InstanceAccessor("imageVertices", &Engine::GetImageVertices, nullptr),
+		InstanceAccessor("domainFaces", &Engine::GetDomainFaces, nullptr),
+		InstanceAccessor("imageFaces", &Engine::GetImageFaces, nullptr)
 	});
 
 	constructor = Napi::Persistent(func);
@@ -33,7 +38,9 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 {
 	auto& x = mesh_wrapper_->GetImageVertices();
 	auto x0 = Eigen::Map<const Eigen::VectorXd>(x.data(), x.cols() * x.rows());
-	composite_objective_ = ObjectiveFunction::Create<CompositeObjective>(mesh_wrapper_);
+	composite_objective_ = std::make_shared<CompositeObjective>(mesh_wrapper_);
+	position_ = std::make_shared<Position>(mesh_wrapper_);
+	composite_objective_->AddObjectiveFunction(position_);
 	newton_method_ = std::make_unique<NewtonMethod<EigenSparseSolver>>(composite_objective_, x0);
 }
 
@@ -84,11 +91,12 @@ Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
 	if (F.cols() == 4)
 	{
 		auto F_triangulated = Eigen::MatrixXi(F.rows() * 2, 3);
-		for (auto i = 0; i < F.rows(); ++i)
+		for (Eigen::DenseIndex i = 0; i < F.rows(); ++i)
 		{
 			auto face = F.row(i);
-			F_triangulated.row(2 * i) << face[0], face[1], face[3];
-			F_triangulated.row(2 * i + 1) << face[1], face[2], face[3];
+			auto triangle_index = 2 * i;
+			F_triangulated.row(triangle_index) << face[0], face[1], face[3];
+			F_triangulated.row(triangle_index + 1) << face[1], face[2], face[3];
 		}
 
 		F = F_triangulated;
@@ -199,4 +207,150 @@ Napi::Array Engine::CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F)
 	}
 
 	return facesArray;
+}
+
+Napi::Value Engine::ResumeSolver(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	newton_method_->Resume();
+
+	return env.Null();
+}
+
+Napi::Value Engine::PauseSolver(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	newton_method_->Pause();
+
+	return env.Null();
+}
+
+Napi::Value Engine::ConstrainFacePosition(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (info.Length() >= 1)
+	{
+		if (!info[0].IsNumber())
+		{
+			Napi::TypeError::New(env, "First argument is expected to be a Number").ThrowAsJavaScriptException();
+			return env.Null();
+		}
+	}
+	else
+	{
+		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
+		return env.Null();
+	}
+
+	/**
+	 * Add face vertices to the constrained vertices list of the position objective function
+	 */
+	Napi::Number argument1 = info[0].As<Napi::Number>();
+	Eigen::DenseIndex face_index = argument1.Int64Value();
+	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
+	Eigen::MatrixXd face_vertices = mesh_wrapper_->GetImageVertices(face_vertices_indices);
+	for (int i = 0; i < 3; i++)
+	{
+		position_->AddConstrainedVertex(face_vertices_indices(i), face_vertices.row(i));
+	}
+
+	return env.Null();
+}
+
+Napi::Value Engine::UpdateConstrainedFacePosition(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (info.Length() >= 3)
+	{
+		if (!info[0].IsNumber())
+		{
+			Napi::TypeError::New(env, "First argument is expected to be a Number").ThrowAsJavaScriptException();
+			return env.Null();
+		}
+
+		if (!info[1].IsNumber())
+		{
+			Napi::TypeError::New(env, "Second argument is expected to be a Number").ThrowAsJavaScriptException();
+			return env.Null();
+		}
+
+		if (!info[2].IsNumber())
+		{
+			Napi::TypeError::New(env, "Third argument is expected to be a Number").ThrowAsJavaScriptException();
+			return env.Null();
+		}
+	}
+	else
+	{
+		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
+		return env.Null();
+	}
+
+	/**
+	 * Move the position of the constrained face vertices by a given offset
+	 */
+	Napi::Number argument1 = info[0].As<Napi::Number>();
+	Napi::Number argument2 = info[1].As<Napi::Number>();
+	Napi::Number argument3 = info[2].As<Napi::Number>();
+	Eigen::DenseIndex face_index = argument1.Int64Value();
+	double offset_x = argument2.DoubleValue();
+	double offset_y = argument3.DoubleValue();
+	Eigen::Vector2d offset = Eigen::Vector2d(offset_x, offset_y);
+	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
+	for (int i = 0; i < 3; i++)
+	{
+		position_->OffsetConstrainedVertexPosition(face_vertices_indices(i), offset);
+	}
+
+	return env.Null();
+}
+
+Napi::Value Engine::UnconstrainFacePosition(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (info.Length() >= 1)
+	{
+		if (!info[0].IsNumber())
+		{
+			Napi::TypeError::New(env, "First argument is expected to be a Number").ThrowAsJavaScriptException();
+			return env.Null();
+		}
+	}
+	else
+	{
+		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
+		return env.Null();
+	}
+
+	/**
+	 * Remove face vertices from the constrained vertices list of the position objective function
+	 */
+	Napi::Number argument1 = info[0].As<Napi::Number>();
+	Eigen::DenseIndex face_index = argument1.Int64Value();
+	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
+	for (int i = 0; i < 3; i++)
+	{
+		position_->RemoveConstrainedVertex(face_vertices_indices(i));
+	}
+
+	return env.Null();
 }

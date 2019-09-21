@@ -45,6 +45,11 @@ private:
 	Napi::Value GetImageBufferedVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainBufferedMeshVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetImageBufferedMeshVertices(const Napi::CallbackInfo& info);
+	Napi::Value ResumeSolver(const Napi::CallbackInfo& info);
+	Napi::Value PauseSolver(const Napi::CallbackInfo& info);
+	Napi::Value ConstrainFacePosition(const Napi::CallbackInfo& info);
+	Napi::Value UpdateConstrainedFacePosition(const Napi::CallbackInfo& info);
+	Napi::Value UnconstrainFacePosition(const Napi::CallbackInfo& info);
 
 	/**
 	 * Regular Instance Methods
@@ -130,10 +135,11 @@ private:
 	/**
 	 * Fields
 	 */
-
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
 	std::shared_ptr<CompositeObjective> composite_objective_;
+	std::shared_ptr<Position> position_;
 	std::unique_ptr<NewtonMethod<EigenSparseSolver>> newton_method_;
+	std::vector<Eigen::DenseIndex> constrained_faces_indices;
 };
 
 #endif

@@ -21,33 +21,26 @@ class Position : public ObjectiveFunction
 public:
 
 	/**
-	 * Destructor
+	 * Constructors and destructor
 	 */
+	Position(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
 	virtual ~Position();
 
 	/**
 	 * Public Methods
 	 */
-	void AddConstrainedVertex(Eigen::DenseIndex vertex_index, Eigen::Vector2d vertex_position);
-	void UpdateConstrainedVertex(Eigen::DenseIndex vertex_index, Eigen::Vector2d vertex_position);
+	void AddConstrainedVertex(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position);
+	void ResetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position);
+	void OffsetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_offset);
+	Eigen::Vector2d GetConstrainedVertexPosition(Eigen::DenseIndex vertex_index);
 	void RemoveConstrainedVertex(Eigen::DenseIndex vertex_index);
 
 private:
 
 	/**
-	 * Friend classes
-	 */
-	friend class ObjectiveFunction;
-
-	/**
 	 * Private type definitions
 	 */
 	using ConstrainedVertex = std::pair<Eigen::DenseIndex, Eigen::Vector2d>;
-
-	/**
-	 * Constructors
-	 */
-	Position(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
 
 	/**
 	 * Overrides

@@ -14,8 +14,9 @@ class CompositeObjective : public ObjectiveFunction
 public:
 
 	/**
-	 * Destructor
+	 * Constructors and destructor
 	 */
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
 	virtual ~CompositeObjective();
 
 	/**
@@ -24,17 +25,6 @@ public:
 	void AddObjectiveFunction(const std::shared_ptr<ObjectiveFunction> objective_function);
 
 private:
-
-	/**
-	 * Friend classes
-	 */
-	friend class ObjectiveFunction;
-
-	/**
-	 * Constructors
-	 */
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
-
 
 	/**
 	 * Overrides

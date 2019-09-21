@@ -15,21 +15,12 @@ class Separation : public ObjectiveFunction
 public:
 
 	/**
-	 * Destructor
+	 * Constructors and destructor
 	 */
+	Separation(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
 	virtual ~Separation();
 
 private:
-
-	/**
-	 * Friend classes
-	 */
-	friend class ObjectiveFunction;
-
-	/**
-	 * Constructors
-	 */
-	Separation(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
 
 	/**
 	 * Overrides

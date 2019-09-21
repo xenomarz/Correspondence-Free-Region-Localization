@@ -18,6 +18,8 @@
 Separation::Separation(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider) :
 	ObjectiveFunction(objective_function_data_provider, "Separation")
 {
+	Initialize();
+
 	Esep = objective_function_data_provider_->GetCorrespondingVertexPairsCoefficients();
 	Esept = Esep.transpose();
 

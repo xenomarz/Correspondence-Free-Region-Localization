@@ -9,7 +9,7 @@ Position::Position(const std::shared_ptr<ObjectiveFunctionDataProvider>& objecti
 	ObjectiveFunction(objective_function_data_provider, "Position"),
 	constrained_vertices_count_(0)
 {
-
+	Initialize();
 }
 
 Position::~Position()
@@ -17,7 +17,7 @@ Position::~Position()
 
 }
 
-void Position::AddConstrainedVertex(Eigen::DenseIndex vertex_index, Eigen::Vector2d vertex_position)
+void Position::AddConstrainedVertex(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position)
 {
 	std::unique_lock<std::mutex> lock(m_);
 	if (im_vi_2_ci_.find(vertex_index) == im_vi_2_ci_.end())
@@ -30,13 +30,28 @@ void Position::AddConstrainedVertex(Eigen::DenseIndex vertex_index, Eigen::Vecto
 	}
 }
 
-void Position::UpdateConstrainedVertex(Eigen::DenseIndex vertex_index, Eigen::Vector2d vertex_position)
+void Position::ResetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position)
 {
 	std::unique_lock<std::mutex> lock(m_);
 	if (im_vi_2_ci_.find(vertex_index) != im_vi_2_ci_.end())
 	{
 		x_constrained_.row(im_vi_2_ci_[vertex_index]) = vertex_position;
 	}
+}
+
+void Position::OffsetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_offset)
+{
+	std::unique_lock<std::mutex> lock(m_);
+	if (im_vi_2_ci_.find(vertex_index) != im_vi_2_ci_.end())
+	{
+		x_constrained_.row(im_vi_2_ci_[vertex_index]) += vertex_offset;
+	}
+}
+
+Eigen::Vector2d Position::GetConstrainedVertexPosition(Eigen::DenseIndex vertex_index)
+{
+	std::unique_lock<std::mutex> lock(m_);
+	return x_constrained_.row(im_vi_2_ci_[vertex_index]);
 }
 
 void Position::RemoveConstrainedVertex(Eigen::DenseIndex vertex_index)

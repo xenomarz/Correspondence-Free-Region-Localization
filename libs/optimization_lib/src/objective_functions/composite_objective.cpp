@@ -3,7 +3,7 @@
 CompositeObjective::CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider) :
 	ObjectiveFunction(objective_function_data_provider, "Composite Objective")
 {
-
+	Initialize();
 }
 
 CompositeObjective::~CompositeObjective()

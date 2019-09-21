@@ -283,7 +283,7 @@ void MeshWrapper::ComputeCorrespondingPairs()
 			VertexIndex e2_v1_index_dom = v_im_2_v_dom_.at(e2_v1_index_im);
 			VertexIndex e2_v2_index_dom = v_im_2_v_dom_.at(e2_v2_index_im);
 
-			// Sort the four image vertex indices according to their corresponding domain vertex index
+			// Sort the four image vertex-indices according to their corresponding domain vertex-index
 			std::unordered_map<VertexIndex, std::vector<VertexIndex>> dom_v_index_2_im_v_indices;
 			dom_v_index_2_im_v_indices[e1_v1_index_dom].push_back(e1_v1_index_im);
 			dom_v_index_2_im_v_indices[e1_v2_index_dom].push_back(e1_v2_index_im);
@@ -340,4 +340,14 @@ void MeshWrapper::ComputeCorrespondingVertexPairsEdgeLength()
 const Eigen::DenseIndex MeshWrapper::GetImageVerticesCount() const
 {
 	return v_im_.rows();
+}
+
+Eigen::VectorXi MeshWrapper::GetImageFaceVerticesIndices(FaceIndex face_index)
+{
+	return f_im_.row(face_index);
+}
+
+Eigen::MatrixXd MeshWrapper::GetImageVertices(const Eigen::VectorXi& vertex_indices)
+{
+	return igl::slice(v_im_, vertex_indices, 1);
 }

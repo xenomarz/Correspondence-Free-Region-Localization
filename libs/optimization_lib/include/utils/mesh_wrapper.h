@@ -20,54 +20,14 @@
 
 class MeshWrapper : public ObjectiveFunctionDataProvider
 {
-public:
-
-	/**
-	 * Public type definitions
-	 */
-
-	enum class SoupInitType {
-		RANDOM,
-		ISOMETRIC
-	};
-
-	/**
-	 * Constructors and destructor
-	 */
-
-	MeshWrapper();
-	MeshWrapper(const Eigen::MatrixX3d& v, const Eigen::MatrixX3i& f);
-	virtual ~MeshWrapper();
-
-	/**
-	 * Getters
-	 */
-
-	const Eigen::MatrixX3i& GetImageFaces() const;
-	const Eigen::MatrixX2d& GetImageVertices() const;
-	const Eigen::MatrixX2i& GetImageEdges() const;
-
-	/**
-	 * Overrides
-	 */
-
-	const Eigen::MatrixX3i& GetDomainFaces() const;
-	const Eigen::MatrixX3d& GetDomainVertices() const;
-	const Eigen::MatrixX2i& GetDomainEdges() const;
-	const Eigen::MatrixX3d& GetD1() const;
-	const Eigen::MatrixX3d& GetD2() const;
-	const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const;
-	const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const;
-	const Eigen::DenseIndex GetImageVerticesCount() const;
-
 private:
 
 	/**
 	 * Private function objects
 	 */
 
-	// Custom hash and equals functions for unordered_map
-	// https://stackoverflow.com/questions/32685540/why-cant-i-compile-an-unordered-map-with-a-pair-as-key
+	 // Custom hash and equals functions for unordered_map
+	 // https://stackoverflow.com/questions/32685540/why-cant-i-compile-an-unordered-map-with-a-pair-as-key
 	struct pair_hash {
 		template <class T1, class T2>
 		std::size_t operator () (const std::pair<T1, T2>& pair) const
@@ -93,7 +53,6 @@ private:
 	/**
 	 * Private type definitions
 	 */
-
 	using IndexType = Eigen::DenseIndex;
 	using VertexIndex = IndexType;
 	using EdgeIndex = IndexType;
@@ -105,17 +64,59 @@ private:
 	using EI2EIsMap = std::unordered_map<EdgeIndex, std::vector<EdgeIndex>>;
 	using EI2EIMap = std::unordered_map<EdgeIndex, EdgeIndex>;
 
+public:
+
+	/**
+	 * Public type definitions
+	 */
+	enum class SoupInitType {
+		RANDOM,
+		ISOMETRIC
+	};
+
+	/**
+	 * Constructors and destructor
+	 */
+	MeshWrapper();
+	MeshWrapper(const Eigen::MatrixX3d& v, const Eigen::MatrixX3i& f);
+	virtual ~MeshWrapper();
+
+	/**
+	 * Getters
+	 */
+	const Eigen::MatrixX3i& GetImageFaces() const;
+	const Eigen::MatrixX2d& GetImageVertices() const;
+	const Eigen::MatrixX2i& GetImageEdges() const;
+
+	/**
+	 * Overrides
+	 */
+	const Eigen::MatrixX3i& GetDomainFaces() const;
+	const Eigen::MatrixX3d& GetDomainVertices() const;
+	const Eigen::MatrixX2i& GetDomainEdges() const;
+	const Eigen::MatrixX3d& GetD1() const;
+	const Eigen::MatrixX3d& GetD2() const;
+	const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const;
+	const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const;
+	const Eigen::DenseIndex GetImageVerticesCount() const;
+
+	/**
+	 * Public methods
+	 */
+	Eigen::VectorXi GetImageFaceVerticesIndices(FaceIndex face_index);
+	Eigen::MatrixXd GetImageVertices(const Eigen::VectorXi& vertex_indices);
+
+private:
+
 	/**
 	 * General use mesh methods
 	 */
-
 	void ComputeEdges(const Eigen::MatrixX3i& f, Eigen::MatrixX2i& e);
 	void NormalizeVertices(Eigen::MatrixX3d& v);
 
 	/**
 	 * Discrete operators
 	 */
-
 	void ComputeSurfaceGradientPerFace(const Eigen::MatrixX3d& v, const Eigen::MatrixX3i& f, Eigen::MatrixX3d& d1, Eigen::MatrixX3d& d2);
 
 	/**

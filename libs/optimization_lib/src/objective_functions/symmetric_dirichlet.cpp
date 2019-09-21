@@ -6,6 +6,8 @@
 SymmetricDirichlet::SymmetricDirichlet(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider)
 	: ObjectiveFunction(objective_function_data_provider, "Symmetric Dirichlet")
 {
+	Initialize();
+
 	auto F = objective_function_data_provider_->GetDomainFaces();
 	auto V = objective_function_data_provider_->GetDomainVertices();
 

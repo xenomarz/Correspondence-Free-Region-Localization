@@ -23,19 +23,15 @@ class ObjectiveFunction
 {
 public:
 
-	// Factory function. Won't compile if Derived is not a subclass of ObjectiveFunction.
-	template <typename Derived>
-	static std::enable_if_t<std::is_base_of<ObjectiveFunction, Derived>::value, std::shared_ptr<Derived>> Create(std::shared_ptr<ObjectiveFunctionDataProvider> objective_function_data_provider)
-	{
-		std::shared_ptr<Derived> objective_function(new Derived(objective_function_data_provider));
-		objective_function->Initialize();
-		return objective_function;
-	}
+	/**
+	 * Constructor and destructor
+	 */
+	ObjectiveFunction(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name);
+	virtual ~ObjectiveFunction();
 
 	/**
 	 * Getters
 	 */
-
 	double GetValue() const;
 	const Eigen::VectorXd& GetGradient() const;
 	const std::vector<int>& GetII() const;
@@ -47,23 +43,28 @@ public:
 	/**
 	 * Setters
 	 */
-
 	void SetWeight(const double w);
 	const std::string GetName() const;
 
+	/**
+	 * Public methods
+	 */
+
+	// Initializes the objective function object. Must be called from any derived class constructor.
+	void Initialize();
+
 	// Update value, gradient and hessian for a given x
-	virtual void PreUpdate(const Eigen::MatrixX2d& x);
 	virtual void Update(const Eigen::MatrixX2d& x);
-	virtual void PostUpdate(const Eigen::MatrixX2d& x);
 
 protected:
 
 	/**
-	 * Constructor and destructor
+	 * Protected methods
 	 */
-
-	ObjectiveFunction(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name);
-	virtual ~ObjectiveFunction();
+	virtual void PreInitialize();
+	virtual void PostInitialize();
+	virtual void PreUpdate(const Eigen::MatrixX2d& x);
+	virtual void PostUpdate(const Eigen::MatrixX2d& x);
 
 	/**
 	 * Protected Fields
@@ -84,7 +85,6 @@ protected:
 
 private:
 	// Gradient and hessian initializers
-	void Initialize();
 	virtual void InitializeGradient(Eigen::VectorXd& g);
 	virtual void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss) = 0;
 

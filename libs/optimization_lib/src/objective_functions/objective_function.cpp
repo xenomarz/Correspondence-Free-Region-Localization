@@ -22,10 +22,22 @@ ObjectiveFunction::~ObjectiveFunction()
 	// Empty implementation
 }
 
+void ObjectiveFunction::PreInitialize()
+{
+	// Empty implementation
+}
+
 void ObjectiveFunction::Initialize()
 {
+	PreInitialize();
 	InitializeGradient(g_);
 	InitializeHessian(ii_, jj_, ss_);
+	PostInitialize();
+}
+
+void ObjectiveFunction::PostInitialize()
+{
+	// Empty implementation
 }
 
 void ObjectiveFunction::InitializeGradient(Eigen::VectorXd& g)

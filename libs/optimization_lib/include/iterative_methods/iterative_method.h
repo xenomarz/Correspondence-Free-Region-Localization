@@ -28,7 +28,7 @@ public:
 	void Start();
 	void Pause();
 	void Resume();
-	void Shutdown();
+	void Terminate();
 	bool GetApproximation(Eigen::VectorXd& x);
 	void EnableFlipAvoidingLineSearch(Eigen::MatrixX3i& f);
 	void DisableFlipAvoidingLineSearch();
@@ -36,7 +36,8 @@ public:
 
 private:
 	enum class ThreadState {
-		SHUTDOWN,
+		TERMINATED,
+		TERMINATING,
 		RUNNING,
 		PAUSED
 	};

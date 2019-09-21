@@ -17,22 +17,12 @@ class SymmetricDirichlet : public ObjectiveFunction
 public:
 
 	/**
-	 * Destructor
+	 * Constructors and destructor
 	 */
+	SymmetricDirichlet(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
 	virtual ~SymmetricDirichlet();
 
 private:
-
-	/**
-	 * Friend classes
-	 */
-	friend class ObjectiveFunction;
-
-	/**
-	 * Constructors
-	 */
-	SymmetricDirichlet(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
-
 
 	/**
 	 * Overrides

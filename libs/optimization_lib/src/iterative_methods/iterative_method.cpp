@@ -7,7 +7,7 @@
 IterativeMethod::IterativeMethod(std::shared_ptr<ObjectiveFunction> objective_function, const Eigen::VectorXd& x0) :
 	objective_function_(objective_function),
 	x_(x0),
-	thread_state_(ThreadState::SHUTDOWN),
+	thread_state_(ThreadState::TERMINATED),
 	max_backtracking_iterations_(10),
 	flip_avoiding_line_search_enabled_(false)
 {
@@ -16,7 +16,7 @@ IterativeMethod::IterativeMethod(std::shared_ptr<ObjectiveFunction> objective_fu
 
 IterativeMethod::~IterativeMethod()
 {
-	Shutdown();
+	Terminate();
 }
 
 const std::shared_ptr<ObjectiveFunction> IterativeMethod::GetObjectiveFunction() const
@@ -74,51 +74,69 @@ void IterativeMethod::LineSearch(const Eigen::VectorXd& p)
 
 void IterativeMethod::Start()
 {
-	if (thread_.joinable())
+	std::unique_lock<std::mutex> lock(m_);
+	switch (thread_state_)
 	{
-		Shutdown();
-	}
-
-	thread_ = std::thread([&]() {
-		while (true)
-		{
-			std::unique_lock<std::mutex> lock(m_);
-			cv_.wait(lock, [this] { return thread_state_ != ThreadState::PAUSED; });
-
-			if (thread_state_ == ThreadState::SHUTDOWN)
+	case ThreadState::TERMINATED:
+		thread_state_ = ThreadState::RUNNING;
+		thread_ = std::thread([&]() {
+			while (true)
 			{
-				break;
-			}
+				std::unique_lock<std::mutex> lock(m_);
+				cv_.wait(lock, [this] { return thread_state_ != ThreadState::PAUSED; });
 
-			ComputeDescentDirection(p_);
-			LineSearch(p_);
-			approximations_queue_.push(x_);
-		}
-	});
+				if (thread_state_ == ThreadState::TERMINATING)
+				{
+					thread_state_ = ThreadState::TERMINATED;
+					break;
+				}
+
+				ComputeDescentDirection(p_);
+				LineSearch(p_);
+				approximations_queue_.push(x_);
+			}
+		});
+		break;
+	}
 }
 
 void IterativeMethod::Pause()
 {
-	::std::unique_lock<std::mutex> lock(m_);
-	thread_state_ = ThreadState::PAUSED;
+	std::unique_lock<std::mutex> lock(m_);
+	switch (thread_state_)
+	{
+	case ThreadState::RUNNING:
+		thread_state_ = ThreadState::PAUSED;
+		break;
+	}
 }
 
 void IterativeMethod::Resume()
 {
+	std::unique_lock<std::mutex> lock(m_);
+	switch (thread_state_)
 	{
-		::std::unique_lock<std::mutex> lock(m_);
+	case ThreadState::PAUSED:
 		thread_state_ = ThreadState::RUNNING;
+		cv_.notify_one();
+		break;
+	case ThreadState::TERMINATED:
+		Start();
+		break;
 	}
-	cv_.notify_one();
 }
 
-void IterativeMethod::Shutdown()
+void IterativeMethod::Terminate()
 {
+	std::unique_lock<std::mutex> lock(m_);
+	switch (thread_state_)
 	{
-		::std::unique_lock<std::mutex> lock(m_);
-		thread_state_ = ThreadState::SHUTDOWN;
+	case ThreadState::RUNNING:
+		thread_state_ = ThreadState::TERMINATING;
+		lock.unlock();
+		thread_.join();
+		break;
 	}
-	thread_.join();
 }
 
 bool IterativeMethod::GetApproximation(Eigen::VectorXd& x)
