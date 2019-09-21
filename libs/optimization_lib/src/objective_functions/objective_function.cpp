@@ -72,7 +72,10 @@ bool ObjectiveFunction::checkGradient(const VectorXd& X)
     FDGradient(X, FD_gradient);
 
     cout << name << ": g.norm() = " << Analytic_gradient.norm() << "(analytic) , " << FD_gradient.norm() << "(FD)" << endl;
-    for (int i = 0; i < Analytic_gradient.size(); i++) {
+	//cout << "analyt = " << endl << Analytic_gradient.transpose() << endl;
+	//cout << "FD = " << endl << FD_gradient.transpose() << endl;
+
+	for (int i = 0; i < Analytic_gradient.size(); i++) {
         double absErr = abs(FD_gradient[i] - Analytic_gradient[i]);
         double relError = 2 * absErr / (eps + Analytic_gradient[i] + FD_gradient[i]);
         if (relError > tol && absErr > 1e-6) {

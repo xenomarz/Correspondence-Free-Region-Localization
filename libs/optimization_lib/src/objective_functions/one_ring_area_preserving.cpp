@@ -39,28 +39,74 @@ void OneRingAreaPreserving::init()
 	//prepare dJ/dX
 	for (int vi = 0; vi < VF.size(); vi++) {
 		vector<int> OneRingFaces = VF[vi];
+		vector<int> OneRingVertices = get_one_ring_vertices(OneRingFaces);
 
 		int J_size = 4 * OneRingFaces.size();
-		int X_size = 6 * OneRingFaces.size();
+		int X_size = 2 * OneRingVertices.size();
 
 		dJ_dX[vi].resize(J_size, X_size);
 		dJ_dX[vi].setZero();
 		for (int i = 0; i < OneRingFaces.size(); i++) {
 			int fi = OneRingFaces[i];
 			int base_row = 4 * i;
-			int base_column = 6 * i;
 			RowVectorXd Dx = D1d.col(fi).transpose();
 			RowVectorXd Dy = D2d.col(fi).transpose();
+
+			//Find the indexes of the face's vertices (p0,p1,p2) on the gradient vector
+			int x0 = distance(OneRingVertices.begin(), find(OneRingVertices.begin(), OneRingVertices.end(), F(fi, 0)));
+			int x1 = distance(OneRingVertices.begin(), find(OneRingVertices.begin(), OneRingVertices.end(), F(fi, 1)));
+			int x2 = distance(OneRingVertices.begin(), find(OneRingVertices.begin(), OneRingVertices.end(), F(fi, 2)));
+			int y0 = x0 + OneRingVertices.size();
+			int y1 = x1 + OneRingVertices.size();
+			int y2 = x2 + OneRingVertices.size();
 			
-			dJ_dX[vi].block<4,6>(base_row, base_column) <<
-				Dx					, RowVectorXd::Zero(3)	,
-				RowVectorXd::Zero(3), Dx					,
-				Dy					, RowVectorXd::Zero(3)	,
-				RowVectorXd::Zero(3), Dy;
+			// update the gradient for: 
+			// X cordinate of the first vertex 
+			dJ_dX[vi](base_row + 0, x0) += Dx(0);
+			dJ_dX[vi](base_row + 2, x0) += Dy(0);
+			// X cordinate of the second vertex
+			dJ_dX[vi](base_row + 0, x1) += Dx(1);
+			dJ_dX[vi](base_row + 2, x1) += Dy(1);
+			// X cordinate of the third vertex
+			dJ_dX[vi](base_row + 0, x2) += Dx(2);
+			dJ_dX[vi](base_row + 2, x2) += Dy(2);
+
+			// Y cordinate of the first vertex
+			dJ_dX[vi](base_row + 1, y0) += Dx(0);
+			dJ_dX[vi](base_row + 3, y0) += Dy(0);
+			// Y cordinate of the second vertex
+			dJ_dX[vi](base_row + 1, y1) += Dx(1);
+			dJ_dX[vi](base_row + 3, y1) += Dy(1);
+			// Y cordinate of the third vertex
+			dJ_dX[vi](base_row + 1, y2) += Dx(2);
+			dJ_dX[vi](base_row + 3, y2) += Dy(2);
 		}
 	}
 	
 	prepare_hessian();
+}
+
+vector<int> OneRingAreaPreserving::get_one_ring_vertices(const vector<int>& OneRingFaces) {
+	vector<int> vertices;
+	vertices.clear();
+	for (int i = 0; i < OneRingFaces.size(); i++) {
+		int fi = OneRingFaces[i];
+		int P0 = F(fi, 0);
+		int P1 = F(fi, 1);
+		int P2 = F(fi, 2);
+
+		//check if the vertex already exist
+		if (!(find(vertices.begin(), vertices.end(), P0) != vertices.end())) {
+			vertices.push_back(P0);
+		}
+		if (!(find(vertices.begin(), vertices.end(), P1) != vertices.end())) {
+			vertices.push_back(P1);
+		}
+		if (!(find(vertices.begin(), vertices.end(), P2) != vertices.end())) {
+			vertices.push_back(P2);
+		}
+	}
+	return vertices;
 }
 
 void OneRingAreaPreserving::updateX(const VectorXd& X)
@@ -104,23 +150,44 @@ void OneRingAreaPreserving::gradient(VectorXd& g)
 
 	for (int vi = 0; vi < V.rows(); ++vi) {
 		vector<int> OneRingFaces = VF[vi];
+		vector<int> OneRingVertices = get_one_ring_vertices(OneRingFaces);
+
+		int X_size = 2 * OneRingVertices.size();
+
 		VectorXd gi;
-		gi.resize(6 * OneRingFaces.size());
+		gi.resize(X_size);
 		gi = grad[vi];
 
 		for (int i = 0; i < OneRingFaces.size(); i++) {
 			int fi = OneRingFaces[i];
-			int base_column = 6 * i;
-			//Update the gradient of the x-axis
-			g(F(fi, 0)) += gi(base_column + 0);
-			g(F(fi, 1)) += gi(base_column + 1);
-			g(F(fi, 2)) += gi(base_column + 2);
-			//Update the gradient of the y-axis
-			g(F(fi, 0) + V.rows()) += gi(base_column + 3);
-			g(F(fi, 1) + V.rows()) += gi(base_column + 4);
-			g(F(fi, 2) + V.rows()) += gi(base_column + 5);
+
+			//Find the indexes of the face's vertices (p0,p1,p2) on the gradient vector
+			int x0 = distance(OneRingVertices.begin(), find(OneRingVertices.begin(), OneRingVertices.end(), F(fi, 0)));
+			int x1 = distance(OneRingVertices.begin(), find(OneRingVertices.begin(), OneRingVertices.end(), F(fi, 1)));
+			int x2 = distance(OneRingVertices.begin(), find(OneRingVertices.begin(), OneRingVertices.end(), F(fi, 2)));
+			int y0 = x0 + OneRingVertices.size();
+			int y1 = x1 + OneRingVertices.size();
+			int y2 = x2 + OneRingVertices.size();
+
+			//add each vertex only once
+			if (x0 < OneRingVertices.size()) {
+				g(F(fi, 0)) += gi(x0);
+				g(F(fi, 0) + V.rows()) += gi(y0);
+				OneRingVertices[x0] = -1;
+			}
+			//add each vertex only once
+			if (x1 < OneRingVertices.size()) {
+				g(F(fi, 1)) += gi(x1);
+				g(F(fi, 1) + V.rows()) += gi(y1);
+				OneRingVertices[x1] = -1;
+			}
+			//add each vertex only once
+			if (x2 < OneRingVertices.size()) {
+				g(F(fi, 2)) += gi(x2);
+				g(F(fi, 2) + V.rows()) += gi(y2);
+				OneRingVertices[x2] = -1;
+			}	
 		}
-		
 	}
 	gradient_norm = g.norm();
 }
@@ -147,7 +214,6 @@ bool OneRingAreaPreserving::updateJ(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
-	
 
 	for (int i = 0; i < F.rows(); i++)
 	{
@@ -164,7 +230,6 @@ bool OneRingAreaPreserving::updateJ(const VectorXd& X)
 	}
 	detJ = a.cwiseProduct(d) - b.cwiseProduct(c);
 
-
 	OneRingSum.setZero();
 	for (int vi = 0; vi < VF.size(); vi++) {
 		vector<int> OneRing = VF[vi];
@@ -173,7 +238,6 @@ bool OneRingAreaPreserving::updateJ(const VectorXd& X)
 		}
 	}
 
-	
 	for (int i = 0; i < F.rows(); i++)
 	{
 		Hessian[i].setZero();
@@ -190,7 +254,6 @@ bool OneRingAreaPreserving::updateJ(const VectorXd& X)
 			//prepare gradient
 			dE_dJ.block<1, 4>(0, base_column) = OneRingSum(vi)*Area(fi)*Vector4d(d(fi), -c(fi), -b(fi), a(fi));
 
-			
 
 			////prepare hessian
 			//MatrixXd d2E_dJ2(4, 4);
