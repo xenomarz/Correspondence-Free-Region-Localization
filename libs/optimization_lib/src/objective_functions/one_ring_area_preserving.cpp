@@ -22,9 +22,9 @@ void OneRingAreaPreserving::init()
 	//Parameterization J mats resize
 	detJ.resize(F.rows());
 	OneRingSum.resize(V.rows());
-	grad2.resize(V.rows());
+	grad.resize(V.rows());
 	Hessian.resize(F.rows());
-	dJ_dX2.resize(V.rows());
+	dJ_dX.resize(V.rows());
 
 	// compute init energy matrices
 	igl::doublearea(V, F, Area);
@@ -43,8 +43,8 @@ void OneRingAreaPreserving::init()
 		int J_size = 4 * OneRingFaces.size();
 		int X_size = 6 * OneRingFaces.size();
 
-		dJ_dX2[vi].resize(J_size, X_size);
-		dJ_dX2[vi].setZero();
+		dJ_dX[vi].resize(J_size, X_size);
+		dJ_dX[vi].setZero();
 		for (int i = 0; i < OneRingFaces.size(); i++) {
 			int fi = OneRingFaces[i];
 			int base_row = 4 * i;
@@ -52,7 +52,7 @@ void OneRingAreaPreserving::init()
 			RowVectorXd Dx = D1d.col(fi).transpose();
 			RowVectorXd Dy = D2d.col(fi).transpose();
 			
-			dJ_dX2[vi].block<4,6>(base_row, base_column) <<
+			dJ_dX[vi].block<4,6>(base_row, base_column) <<
 				Dx					, RowVectorXd::Zero(3)	,
 				RowVectorXd::Zero(3), Dx					,
 				Dy					, RowVectorXd::Zero(3)	,
@@ -106,7 +106,7 @@ void OneRingAreaPreserving::gradient(VectorXd& g)
 		vector<int> OneRingFaces = VF[vi];
 		VectorXd gi;
 		gi.resize(6 * OneRingFaces.size());
-		gi = grad2[vi];
+		gi = grad[vi];
 
 		for (int i = 0; i < OneRingFaces.size(); i++) {
 			int fi = OneRingFaces[i];
@@ -181,21 +181,14 @@ bool OneRingAreaPreserving::updateJ(const VectorXd& X)
 	for (int vi = 0; vi < VF.size(); vi++) {
 		vector<int> OneRingFaces = VF[vi];
 		
-		int J_size = 4 * OneRingFaces.size();
-		int X_size = 6 * OneRingFaces.size();
-		
-		RowVectorXd grad_curr(X_size);
-		grad_curr.setZero();
-		MatrixXd dE_dJ_curr(1,J_size);
-		dE_dJ_curr.setZero();
+		MatrixXd dE_dJ(1, 4 * OneRingFaces.size());
+		dE_dJ.setZero();
 		for (int i = 0; i < OneRingFaces.size(); i++) {
 			int fi = OneRingFaces[i];
 			int base_column = 4 * i;
 			
 			//prepare gradient
-			Vector4d dE_dJ(Area(fi)*d(fi), -Area(fi)*c(fi), -Area(fi)*b(fi), Area(fi)*a(fi));
-			dE_dJ *= OneRingSum(vi);
-			dE_dJ_curr.block<1, 4>(0, base_column) = dE_dJ;
+			dE_dJ.block<1, 4>(0, base_column) = OneRingSum(vi)*Area(fi)*Vector4d(d(fi), -c(fi), -b(fi), a(fi));
 
 			
 
@@ -209,7 +202,7 @@ bool OneRingAreaPreserving::updateJ(const VectorXd& X)
 			//	
 			//Hessian[fi] += dJ_dX[fi].transpose() * d2E_dJ2 * dJ_dX[fi];
 		}
-		grad2[vi] = dE_dJ_curr * dJ_dX2[vi];
+		grad[vi] = dE_dJ * dJ_dX[vi];
 	}
 	
 
