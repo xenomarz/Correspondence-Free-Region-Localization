@@ -65,7 +65,7 @@ public:
 		D1 = F1.col(0).asDiagonal()*Dx + F1.col(1).asDiagonal()*Dy + F1.col(2).asDiagonal()*Dz;
 		D2 = F2.col(0).asDiagonal()*Dx + F2.col(1).asDiagonal()*Dy + F2.col(2).asDiagonal()*Dz;
 	}
-
+	
 	static inline void SSVD2x2(const Eigen::Matrix2d& A, Eigen::Matrix2d& U, Eigen::Matrix2d& S, Eigen::Matrix2d& V)
 	{
 		double e = (A(0) + A(3))*0.5;
@@ -98,6 +98,13 @@ public:
 		V(2) = s;
 		V(3) = c;
 	}
+
+	static int GetUpperTriangleSize(int MatrixSize) {
+		if (MatrixSize <= 0)
+			return 0;
+		return MatrixSize + GetUpperTriangleSize(MatrixSize - 1);
+	}
+
 private:
 	static unsigned int nv, nf, ne, nvs, nfs, nes;
 	static Eigen::MatrixX2d E, Es;

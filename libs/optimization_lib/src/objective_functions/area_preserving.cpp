@@ -107,11 +107,12 @@ void AreaPreserving::gradient(VectorXd& g)
 void AreaPreserving::hessian()
 {
 #pragma omp parallel for num_threads(24)
+	int index2 = 0;
 	for (int i = 0; i < F.rows(); ++i) {
 		
 		Matrix<double, 6, 6> Hi = Area(i)*Hessian[i];
 
-		int index2 = i * 21;
+		
 		for (int a = 0; a < 6; ++a)
 		{
 			for (int b = 0; b <= a; ++b)

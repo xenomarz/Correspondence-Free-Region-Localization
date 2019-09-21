@@ -23,13 +23,13 @@ private:
 	VectorXd OneRingSum;
 	vector<RowVectorXd> grad;
 	vector<MatrixXd> dJ_dX;
-	vector<Matrix<double, 6, 6>> Hessian;
+	vector<MatrixXd> Hessian;
 
 	//Energy parts - distortion
 	VectorXd Area;
 	Matrix3Xd D1d, D2d;		//dense mesh derivative matrices
 
-	vector<int> one_ring_vertices(const vector<int>& OneRingFaces);
+	vector<int> get_one_ring_vertices(const vector<int>& OneRingFaces);
 
 public:
 	OneRingAreaPreserving();

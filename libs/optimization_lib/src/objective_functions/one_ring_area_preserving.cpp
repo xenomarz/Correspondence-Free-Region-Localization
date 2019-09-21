@@ -23,7 +23,7 @@ void OneRingAreaPreserving::init()
 	detJ.resize(F.rows());
 	OneRingSum.resize(V.rows());
 	grad.resize(V.rows());
-	Hessian.resize(F.rows());
+	Hessian.resize(V.rows());
 	dJ_dX.resize(V.rows());
 
 	// compute init energy matrices
@@ -154,39 +154,10 @@ void OneRingAreaPreserving::gradient(VectorXd& g)
 
 		int X_size = 2 * OneRingVertices.size();
 
-		VectorXd gi;
-		gi.resize(X_size);
-		gi = grad[vi];
-
-		for (int i = 0; i < OneRingFaces.size(); i++) {
-			int fi = OneRingFaces[i];
-
-			//Find the indexes of the face's vertices (p0,p1,p2) on the gradient vector
-			int x0 = distance(OneRingVertices.begin(), find(OneRingVertices.begin(), OneRingVertices.end(), F(fi, 0)));
-			int x1 = distance(OneRingVertices.begin(), find(OneRingVertices.begin(), OneRingVertices.end(), F(fi, 1)));
-			int x2 = distance(OneRingVertices.begin(), find(OneRingVertices.begin(), OneRingVertices.end(), F(fi, 2)));
-			int y0 = x0 + OneRingVertices.size();
-			int y1 = x1 + OneRingVertices.size();
-			int y2 = x2 + OneRingVertices.size();
-
-			//add each vertex only once
-			if (x0 < OneRingVertices.size()) {
-				g(F(fi, 0)) += gi(x0);
-				g(F(fi, 0) + V.rows()) += gi(y0);
-				OneRingVertices[x0] = -1;
-			}
-			//add each vertex only once
-			if (x1 < OneRingVertices.size()) {
-				g(F(fi, 1)) += gi(x1);
-				g(F(fi, 1) + V.rows()) += gi(y1);
-				OneRingVertices[x1] = -1;
-			}
-			//add each vertex only once
-			if (x2 < OneRingVertices.size()) {
-				g(F(fi, 2)) += gi(x2);
-				g(F(fi, 2) + V.rows()) += gi(y2);
-				OneRingVertices[x2] = -1;
-			}	
+		for (int xi = 0; xi < OneRingVertices.size(); xi++) {
+			int global_xi = OneRingVertices[xi];
+			g(global_xi) += grad[vi](xi);
+			g(global_xi + V.rows()) += grad[vi](xi + OneRingVertices.size());
 		}
 	}
 	gradient_norm = g.norm();
@@ -195,20 +166,30 @@ void OneRingAreaPreserving::gradient(VectorXd& g)
 void OneRingAreaPreserving::hessian()
 {
 #pragma omp parallel for num_threads(24)
-	for (int i = 0; i < F.rows(); ++i) {
-		
-		Matrix<double, 6, 6> Hi = Area(i)*Hessian[i];
+	int index2 = 0;
+	for (int vi = 0; vi < V.rows(); ++vi) {
+		vector<int> OneRingFaces = VF[vi];
+		vector<int> OneRingVertices = get_one_ring_vertices(OneRingFaces);
 
-		int index2 = i * 21;
-		for (int a = 0; a < 6; ++a)
+		int X_size = 2 * OneRingVertices.size();
+
+		MatrixXd Hi = Hessian[vi];
+		for (int a = 0; a < X_size; ++a)
 		{
 			for (int b = 0; b <= a; ++b)
 			{
 				SS[index2++] = Hi(a, b);
 			}
 		}
+
+		/*for (int xi = 0; xi < OneRingVertices.size(); xi++) {
+			int global_xi = OneRingVertices[xi];
+			g(global_xi) += grad[vi](xi);
+			g(global_xi + V.rows()) += grad[vi](xi + OneRingVertices.size());
+		}*/
 	}
 }
+
 
 bool OneRingAreaPreserving::updateJ(const VectorXd& X)
 {
@@ -238,34 +219,44 @@ bool OneRingAreaPreserving::updateJ(const VectorXd& X)
 		}
 	}
 
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Hessian[i].setZero();
-	}
+	
 	for (int vi = 0; vi < VF.size(); vi++) {
 		vector<int> OneRingFaces = VF[vi];
-		
-		MatrixXd dE_dJ(1, 4 * OneRingFaces.size());
+		int J_size = 4 * OneRingFaces.size();
+
+		MatrixXd dE_dJ(1, J_size);
 		dE_dJ.setZero();
+
+		MatrixXd d2E_dJ2(J_size, J_size);
+		d2E_dJ2.setZero();
+		
+		//prepare gradient
 		for (int i = 0; i < OneRingFaces.size(); i++) {
 			int fi = OneRingFaces[i];
 			int base_column = 4 * i;
-			
-			//prepare gradient
 			dE_dJ.block<1, 4>(0, base_column) = OneRingSum(vi)*Area(fi)*Vector4d(d(fi), -c(fi), -b(fi), a(fi));
+		}
 
+		//prepare hessian
+		for (int i = 0; i < OneRingFaces.size(); i++) {
+			int fi = OneRingFaces[i];
+			int base_row = 4 * i;
 
-			////prepare hessian
-			//MatrixXd d2E_dJ2(4, 4);
-			//d2E_dJ2 <<
-			//	Area(fi)*d(fi)*d(fi)					, -Area(fi)*c(fi)*d(fi)					, -Area(fi)*b(fi)*d(fi)					, Area(fi)*a(fi)*d(fi) + OneRingSum(vi),
-			//	-Area(fi)*c(fi)*d(fi)					, Area(fi)*c(fi)*c(fi)					, Area(fi)*b(fi)*c(fi) - OneRingSum(vi)	, -Area(fi)*c(fi)*a(fi),
-			//	-Area(fi)*b(fi)*d(fi)					, Area(fi)*b(fi)*c(fi) - OneRingSum(vi)	, Area(fi)* b(fi)*b(fi)					, -Area(fi)*b(fi)*a(fi),
-			//	Area(fi)*a(fi)*d(fi) + OneRingSum(vi)	, -Area(fi)*a(fi)*c(fi)					, -Area(fi)*a(fi)*b(fi)					, Area(fi)*a(fi)*a(fi);
-			//	
-			//Hessian[fi] += dJ_dX[fi].transpose() * d2E_dJ2 * dJ_dX[fi];
+			
+			d2E_dJ2.block(0, 0, 1, J_size) = dE_dJ * Area(fi)*d(fi);
+			d2E_dJ2(base_row + 0, base_row + 3) += OneRingSum(vi)*Area(fi);
+
+			d2E_dJ2.block(1, 0, 1, J_size) = -1 * dE_dJ * Area(fi)*c(fi);
+			d2E_dJ2(base_row + 1, base_row + 2) -= OneRingSum(vi)*Area(fi);
+
+			d2E_dJ2.block(2, 0, 1, J_size) = -1 * dE_dJ * Area(fi)*b(fi);
+			d2E_dJ2(base_row + 2, base_row + 1) -= OneRingSum(vi)*Area(fi);
+
+			d2E_dJ2.block(3, 0, 1, J_size) = dE_dJ * Area(fi)*a(fi);
+			d2E_dJ2(base_row + 3, base_row + 0) += OneRingSum(vi)*Area(fi);
 		}
 		grad[vi] = dE_dJ * dJ_dX[vi];
+		Hessian[vi] = dJ_dX[vi] * d2E_dJ2 * dJ_dX[vi].transpose();
 	}
 	
 
@@ -277,44 +268,21 @@ void OneRingAreaPreserving::prepare_hessian()
 	II.clear();
 	JJ.clear();
 	auto PushPair = [&](int i, int j) { if (i > j) swap(i, j); II.push_back(i); JJ.push_back(j); };
-	for (int i = 0; i < F.rows(); ++i)
-	{
-		// For every face there is a 6x6 local hessian.
-		// We only need the 21 values contained in the upper triangle.
-		// They are access and also put into the big hessian in column order. 
+	
+	for (int vi = 0; vi < V.rows(); ++vi) {
+		vector<int> OneRingFaces = VF[vi];
+		vector<int> OneRingVertices = get_one_ring_vertices(OneRingFaces);
+		int X_size = 2 * OneRingVertices.size();
 
-		// First column
-		PushPair(F(i, 0)			, F(i, 0));
-
-		// Second column
-		PushPair(F(i, 0)			, F(i, 1));
-		PushPair(F(i, 1)			, F(i, 1));
-
-		// Third column
-		PushPair(F(i, 0)			, F(i, 2));
-		PushPair(F(i, 1)			, F(i, 2));
-		PushPair(F(i, 2)			, F(i, 2));
-
-		// Fourth column
-		PushPair(F(i, 0)			, F(i, 0) + V.rows());
-		PushPair(F(i, 1)			, F(i, 0) + V.rows());
-		PushPair(F(i, 2)			, F(i, 0) + V.rows());
-		PushPair(F(i, 0) + V.rows()	, F(i, 0) + V.rows());
-
-		// Fifth column
-		PushPair(F(i, 0)			, F(i, 1) + V.rows());
-		PushPair(F(i, 1)			, F(i, 1) + V.rows());
-		PushPair(F(i, 2)			, F(i, 1) + V.rows());
-		PushPair(F(i, 0) + V.rows()	, F(i, 1) + V.rows());
-		PushPair(F(i, 1) + V.rows()	, F(i, 1) + V.rows());
-
-		// Sixth column
-		PushPair(F(i, 0)			, F(i, 2) + V.rows());
-		PushPair(F(i, 1)			, F(i, 2) + V.rows());
-		PushPair(F(i, 2)			, F(i, 2) + V.rows());
-		PushPair(F(i, 0) + V.rows()	, F(i, 2) + V.rows());
-		PushPair(F(i, 1) + V.rows()	, F(i, 2) + V.rows());
-		PushPair(F(i, 2) + V.rows()	, F(i, 2) + V.rows());
+		for (int a = 0; a < X_size; ++a)
+		{
+			for (int b = 0; b <= a; ++b)
+			{
+				int global_a = OneRingVertices[a];
+				int global_b = OneRingVertices[b];
+				PushPair(global_a, global_b);
+			}
+		}
 	}
 	SS = vector<double>(II.size(), 0.);
 }
