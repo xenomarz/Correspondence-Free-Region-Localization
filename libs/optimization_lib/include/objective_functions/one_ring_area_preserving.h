@@ -21,9 +21,9 @@ private:
 	// Jacobian determinant (ad-bc)
 	VectorXd detJ;
 	VectorXd OneRingSum;
-	MatrixXd grad;
+	vector<RowVectorXd> grad2;
 	vector<Matrix<double, 6, 6>> Hessian;
-	vector<Matrix<double, 4, 6>> dJ_dX;
+	vector<MatrixXd> dJ_dX2;
 
 	//Energy parts - distortion
 	VectorXd Area;
