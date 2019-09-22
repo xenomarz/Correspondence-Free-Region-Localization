@@ -99,10 +99,10 @@ public:
 		V(3) = c;
 	}
 
-	static int GetUpperTriangleSize(int MatrixSize) {
+	static int GetLowerTriangleSize(int MatrixSize) {
 		if (MatrixSize <= 0)
 			return 0;
-		return MatrixSize + GetUpperTriangleSize(MatrixSize - 1);
+		return MatrixSize + GetLowerTriangleSize(MatrixSize - 1);
 	}
 
 private:
