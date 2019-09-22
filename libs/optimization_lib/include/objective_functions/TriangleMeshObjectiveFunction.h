@@ -27,5 +27,6 @@ public:
 	
 	void init_mesh(const MatrixXd& V, const MatrixX3i& F);
 
-	VectorXd Efi;     
+	void AddElementToHessian(std::vector<int> ind);
+	VectorXd Efi;
 };

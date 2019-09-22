@@ -1051,7 +1051,7 @@ void BasicMenu::UpdateEnergyColors() {
 		igl::doublearea(InputModel().V, InputModel().F, Area_input);
 		// DistortionPerFace = Area_output / Area_input
 		DistortionPerFace = Area_input.cwiseInverse().cwiseProduct(Area_output);
-		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
+		// Because we want  DistortionPerFace to be as close as possible to zero instead of one!
 		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
 	}
 	else if (distortion_type == MenuUtils::TOTAL_DISTORTION) {
