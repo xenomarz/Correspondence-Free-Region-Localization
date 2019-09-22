@@ -2,7 +2,7 @@
 
 LeastSquaresConformal::LeastSquaresConformal()
 {
-	name = "Angle Preserving";
+	name = "Least Squares Conformal";
 	w = 0;
 }
 
@@ -134,4 +134,15 @@ bool LeastSquaresConformal::update_variables(const VectorXd& X)
 	detJ = a.cwiseProduct(d) - b.cwiseProduct(c);
 	
 	return ((detJ.array() < 0).any());
+}
+
+void LeastSquaresConformal::init_hessian()
+{
+	II.clear();
+	JJ.clear();
+	auto PushPair = [&](int i, int j) { if (i > j) swap(i, j); II.push_back(i); JJ.push_back(j); };
+	int n = V.rows();
+	for (int i = 0; i < F.rows(); ++i)
+		AddElementToHessian({ F(i, 0), F(i, 1), F(i, 2), F(i, 0) + n, F(i, 1) + n, F(i, 2) + n });
+	SS = vector<double>(II.size(), 0.);
 }

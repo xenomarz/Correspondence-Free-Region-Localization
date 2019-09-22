@@ -1,7 +1,7 @@
 #pragma once
-#include <libs/optimization_lib/include/objective_functions/ObjectiveFunction.h>
+#include <libs/optimization_lib/include/objective_functions/TriangleMeshObjectiveFunction.h>
 
-class SymmetricDirichlet : public ObjectiveFunction
+class SymmetricDirichlet : public TriangleMeshObjectiveFunction
 {	
 private:
 	VectorXd dirichlet;
@@ -9,6 +9,7 @@ private:
 	vector<Matrix<double, 6, 6>> Hessian;
 	vector<Matrix<double, 4, 6>> dJ_dX;
 	bool update_variables(const VectorXd& X);
+	void init_hessian() override;
 public:
 	SymmetricDirichlet();
 	virtual void init() override;

@@ -19,12 +19,13 @@ protected:
 	//dense mesh derivative matrices
 	Matrix3Xd D1d, D2d;		
 
-	virtual void init_hessian();
+	
 
 public:
 	ObjectiveFunction() {}
 	virtual ~ObjectiveFunction(){}
 	virtual void init() = 0;
+	virtual void init_hessian() = 0;
 	virtual void updateX(const VectorXd& X) = 0;
 	virtual double value(const bool update = true) = 0;
 	virtual void gradient(VectorXd& g) = 0;
