@@ -76,7 +76,7 @@ void AnglePreserving::gradient(VectorXd& g)
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		VectorXd gi;
 		gi.resize(6);
-		gi = Area(fi)*(grad.row(fi));
+		gi = grad.row(fi);
 
 		//Update the gradient of the x-axis
 		g(F(fi, 0)) += gi(0);
@@ -129,7 +129,7 @@ bool AnglePreserving::update_variables(const VectorXd& X)
 
 		//prepare gradient
 		Vector4d dE_dJ(4 * a(i), 2 * b(i) + 2 * c(i), 2 * b(i) + 2 * c(i), 4 * d(i));
-		grad.row(i) = (dE_dJ.transpose() * dJ_dX[i]).transpose();
+		grad.row(i) = Area(i)*(dE_dJ.transpose() * dJ_dX[i]).transpose();
 
 		//prepare hessian
 		MatrixXd d2E_dJ2(4, 4);
@@ -144,51 +144,4 @@ bool AnglePreserving::update_variables(const VectorXd& X)
 	detJ = a.cwiseProduct(d) - b.cwiseProduct(c);
 	
 	return ((detJ.array() < 0).any());
-}
-
-void AnglePreserving::init_hessian()
-{
-	II.clear();
-	JJ.clear();
-	auto PushPair = [&](int i, int j) { if (i > j) swap(i, j); II.push_back(i); JJ.push_back(j); };
-	for (int i = 0; i < F.rows(); ++i)
-	{
-		// For every face there is a 6x6 local hessian.
-		// We only need the 21 values contained in the upper triangle.
-		// They are access and also put into the big hessian in column order. 
-
-		// First column
-		PushPair(F(i, 0)			, F(i, 0));
-
-		// Second column
-		PushPair(F(i, 0)			, F(i, 1));
-		PushPair(F(i, 1)			, F(i, 1));
-
-		// Third column
-		PushPair(F(i, 0)			, F(i, 2));
-		PushPair(F(i, 1)			, F(i, 2));
-		PushPair(F(i, 2)			, F(i, 2));
-
-		// Fourth column
-		PushPair(F(i, 0)			, F(i, 0) + V.rows());
-		PushPair(F(i, 1)			, F(i, 0) + V.rows());
-		PushPair(F(i, 2)			, F(i, 0) + V.rows());
-		PushPair(F(i, 0) + V.rows()	, F(i, 0) + V.rows());
-
-		// Fifth column
-		PushPair(F(i, 0)			, F(i, 1) + V.rows());
-		PushPair(F(i, 1)			, F(i, 1) + V.rows());
-		PushPair(F(i, 2)			, F(i, 1) + V.rows());
-		PushPair(F(i, 0) + V.rows()	, F(i, 1) + V.rows());
-		PushPair(F(i, 1) + V.rows()	, F(i, 1) + V.rows());
-
-		// Sixth column
-		PushPair(F(i, 0)			, F(i, 2) + V.rows());
-		PushPair(F(i, 1)			, F(i, 2) + V.rows());
-		PushPair(F(i, 2)			, F(i, 2) + V.rows());
-		PushPair(F(i, 0) + V.rows()	, F(i, 2) + V.rows());
-		PushPair(F(i, 1) + V.rows()	, F(i, 2) + V.rows());
-		PushPair(F(i, 2) + V.rows()	, F(i, 2) + V.rows());
-	}
-	SS = vector<double>(II.size(), 0.);
 }

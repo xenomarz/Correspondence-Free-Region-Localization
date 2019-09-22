@@ -20,8 +20,8 @@ protected:
 	//dense mesh derivative matrices
 	Matrix3Xd D1d, D2d;		
 
-	/*virtual void prepare_dJdX() = 0;*/
-	virtual void init_hessian() = 0;
+	
+	virtual void init_hessian();
 
 public:
 	ObjectiveFunction() {}

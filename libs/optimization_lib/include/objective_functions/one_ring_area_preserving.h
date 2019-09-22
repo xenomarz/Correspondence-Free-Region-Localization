@@ -7,7 +7,6 @@ private:
 	// adjacency matrix (vertex to face)
 	vector<vector<int> > VF, VFi;
 
-	// Jacobian determinant (ad-bc)
 	VectorXd OneRingSum;
 	vector<RowVectorXd> grad;
 	vector<MatrixXd> dJ_dX;
