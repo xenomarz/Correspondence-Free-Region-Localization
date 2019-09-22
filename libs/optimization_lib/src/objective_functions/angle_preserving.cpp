@@ -44,12 +44,12 @@ void AnglePreserving::init()
 			zero, Dy;
 	}
 
-	prepare_hessian();
+	init_hessian();
 }
 
 void AnglePreserving::updateX(const VectorXd& X)
 {
-	bool inversions_exist = updateJ(X);
+	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
 		cout << name << " Error! inversion exists." << endl;
 	}
@@ -108,7 +108,7 @@ void AnglePreserving::hessian()
 	}
 }
 
-bool AnglePreserving::updateJ(const VectorXd& X)
+bool AnglePreserving::update_variables(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
@@ -146,7 +146,7 @@ bool AnglePreserving::updateJ(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 }
 
-void AnglePreserving::prepare_hessian()
+void AnglePreserving::init_hessian()
 {
 	II.clear();
 	JJ.clear();

@@ -44,12 +44,12 @@ void AreaPreserving::init()
 			zero, Dy;
 	}
 
-	prepare_hessian();
+	init_hessian();
 }
 
 void AreaPreserving::updateX(const VectorXd& X)
 {
-	bool inversions_exist = updateJ(X);
+	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
 		cout << name << " Error! inversion exists." << endl;
 	}
@@ -110,7 +110,7 @@ void AreaPreserving::hessian()
 	}
 }
 
-bool AreaPreserving::updateJ(const VectorXd& X)
+bool AreaPreserving::update_variables(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
@@ -149,7 +149,7 @@ bool AreaPreserving::updateJ(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 }
 
-void AreaPreserving::prepare_hessian()
+void AreaPreserving::init_hessian()
 {
 	II.clear();
 	JJ.clear();

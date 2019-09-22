@@ -14,13 +14,12 @@ private:
 	vector<MatrixXd> Hessian;
 
 	vector<int> get_one_ring_vertices(const vector<int>& OneRingFaces);
-	virtual void prepare_hessian() override;
-	void prepare_dJdX();
-	bool updateJ(const VectorXd& X);
+	virtual void init_hessian() override;
+	void init_dJdX();
+	bool update_variables(const VectorXd& X);
 
 public:
 	OneRingAreaPreserving();
-
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
 	virtual double value(const bool update = true) override;

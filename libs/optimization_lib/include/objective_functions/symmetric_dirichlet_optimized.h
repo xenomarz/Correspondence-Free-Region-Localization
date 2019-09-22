@@ -18,21 +18,20 @@ private:
 	SparseMatrix<double> a1, a1t, a2, a2t, b1, b1t, b2, b2t;     //constant matrices for cones calcualtion
 	MatrixXd a1d, a2d, b1d, b2d;					//dense constant matrices for cones calcualtion
 
-public:
-	SymmetricDirichletOptimized();
-
-	virtual void init() override;
-	virtual void updateX(const VectorXd& X) override;
-	virtual double value(bool update = true) override;
-	virtual void gradient(VectorXd& g) override;
-    virtual void hessian() override;
-	virtual void prepare_hessian() override;
-	
 	//SVD methods
-	bool updateJ(const VectorXd& X);
+	bool update_variables(const VectorXd& X);
 	void UpdateSSVDFunction();
 	void ComputeDenseSSVDDerivatives();
 
 	inline Matrix6d ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x);
 	inline Matrix6d ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs);
+	virtual void init_hessian() override;
+
+public:
+	SymmetricDirichletOptimized();
+	virtual void init() override;
+	virtual void updateX(const VectorXd& X) override;
+	virtual double value(const bool update = true) override;
+	virtual void gradient(VectorXd& g) override;
+    virtual void hessian() override;	
 };

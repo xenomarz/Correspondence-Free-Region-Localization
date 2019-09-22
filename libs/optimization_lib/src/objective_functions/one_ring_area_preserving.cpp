@@ -33,8 +33,8 @@ void OneRingAreaPreserving::init()
 	D1d = D1cols.transpose();
 	D2d = D2cols.transpose();
 
-	prepare_dJdX();
-	prepare_hessian();
+	init_dJdX();
+	init_hessian();
 }
 
 vector<int> OneRingAreaPreserving::get_one_ring_vertices(const vector<int>& OneRingFaces) {
@@ -62,7 +62,7 @@ vector<int> OneRingAreaPreserving::get_one_ring_vertices(const vector<int>& OneR
 
 void OneRingAreaPreserving::updateX(const VectorXd& X)
 {
-	bool inversions_exist = updateJ(X);
+	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
 		cout << name << " Error! inversion exists." << endl;
 	}
@@ -121,7 +121,7 @@ void OneRingAreaPreserving::hessian()
 	}
 }
 
-bool OneRingAreaPreserving::updateJ(const VectorXd& X)
+bool OneRingAreaPreserving::update_variables(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
@@ -190,7 +190,7 @@ bool OneRingAreaPreserving::updateJ(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 }
 
-void OneRingAreaPreserving::prepare_hessian()
+void OneRingAreaPreserving::init_hessian()
 {
 	II.clear();
 	JJ.clear();
@@ -224,7 +224,7 @@ void OneRingAreaPreserving::prepare_hessian()
 	SS = vector<double>(II.size(), 0.);
 }
 
-void OneRingAreaPreserving::prepare_dJdX() {
+void OneRingAreaPreserving::init_dJdX() {
 	//prepare dJ/dX
 	for (int vi = 0; vi < VF.size(); vi++) {
 		vector<int> OneRingFaces = VF[vi];

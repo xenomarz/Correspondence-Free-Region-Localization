@@ -56,12 +56,12 @@ void SymmetricDirichletOptimized::init()
 	b2d.topRows(3) = 0.5*D2d;
 	b2d.bottomRows(3) = 0.5*D1d;
 
-	prepare_hessian();
+	init_hessian();
 }
 
 void SymmetricDirichletOptimized::updateX(const VectorXd& X)
 {
-	bool inversions_exist = updateJ(X);
+	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
 		cout << name << " Error! inversion exists." << endl;
 	}
@@ -163,7 +163,7 @@ void SymmetricDirichletOptimized::hessian()
 	}
 }
 
-bool SymmetricDirichletOptimized::updateJ(const VectorXd& X)
+bool SymmetricDirichletOptimized::update_variables(const VectorXd& X)
 {
 	Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	// 	a = D1*U;
@@ -250,7 +250,7 @@ inline Matrix6d SymmetricDirichletOptimized::ComputeConvexConcaveFaceHessian(con
 	return H;
 }
 
-void SymmetricDirichletOptimized::prepare_hessian()
+void SymmetricDirichletOptimized::init_hessian()
 {
 	II.clear();
 	JJ.clear();
