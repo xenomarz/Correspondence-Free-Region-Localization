@@ -55,19 +55,6 @@ void AnglePreserving::updateX(const VectorXd& X)
 	}
 }
 
-void AnglePreserving::setVF(MatrixXd& V, MatrixX3i& F) {
-	MatrixX3d V3d(V.rows(), 3);
-	if (V.cols() == 2) {
-		V3d.leftCols(2) = V;
-		V3d.col(2).setZero();
-	}
-	else if (V.cols() == 3) {
-		V3d = V;
-	}
-	this->V = V3d;
-	this->F = F;
-}
-
 double AnglePreserving::value(bool update)
 {
 	VectorXd E = 2*(d.cwiseAbs2()) + (b+c).cwiseAbs2() + 2 * (a.cwiseAbs2());

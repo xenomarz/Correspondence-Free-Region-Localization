@@ -5,26 +5,11 @@
 class SymmetricDirichlet : public ObjectiveFunction
 {	
 private:
-	// mesh vertices and faces
-	MatrixX3i F;
-	MatrixXd V;
-
-	// Jacobian of the parameterization per face
-	VectorXd a;
-	VectorXd b;
-	VectorXd c;
-	VectorXd d;
-
 	// Jacobian determinant (ad-bc)
 	VectorXd dirichlet; //Forbinous norm of the jacobian
-	VectorXd detJ;
 	MatrixXd grad;
 	vector<Matrix<double, 6, 6>> Hessian;
 	vector<Matrix<double, 4, 6>> dJ_dX;
-
-	//Energy parts - distortion
-	VectorXd Area;
-	Matrix3Xd D1d, D2d;		//dense mesh derivative matrices
 
 public:
 	SymmetricDirichlet();
@@ -36,5 +21,4 @@ public:
 	virtual void hessian() override;
 	virtual void prepare_hessian() override;
 	bool updateJ(const VectorXd& X);
-	void setVF(MatrixXd& V, MatrixX3i& F);
 };

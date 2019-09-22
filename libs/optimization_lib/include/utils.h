@@ -3,19 +3,31 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-
+#include <Eigen/Core>
+#include <Eigen/Sparse>
+#include <Eigen/SparseCore>
+#include <functional>
 #include <vector>
+#include <string>
+#include <utility>
+#include <iostream>
+#include <memory>
+#include <limits>
+#include <igl/doublearea.h>
+#include <chrono>
 #include <igl/local_basis.h>
 #include <igl/boundary_loop.h>
 #include <igl/per_face_normals.h>
-#include <igl/doublearea.h>
-#include <chrono>
-
 // for EXCEPTION_POINTERS
 //#include <Windows.h>
 
 using namespace std;
 using namespace Eigen;
+
+typedef Triplet<double> T;
+typedef SparseMatrix<double> SpMat;
+typedef Matrix<double, 6, 6> Matrix6d;
+typedef Matrix<double, 6, 1> Vector6d;
 
 class Utils
 {

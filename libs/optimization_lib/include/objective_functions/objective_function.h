@@ -1,39 +1,39 @@
 #pragma once
 
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <Eigen/SparseCore>
-#include <functional>
-#include <vector>
-#include <string>
-#include <utility>
-#include <iostream>
-#include <memory>
 #include <libs/optimization_lib/include/utils.h>
-#include <limits>
-#include <igl/doublearea.h>
-#include <chrono>
-
-using namespace Eigen;
-using namespace std;
-
-typedef Triplet<double> T;
-typedef SparseMatrix<double> SpMat;
-typedef Matrix<double, 6, 6> Matrix6d;
-typedef Matrix<double, 6, 1> Vector6d;
 
 class ObjectiveFunction
 {
+protected:
+	// mesh vertices and faces
+	MatrixX3i F;
+	MatrixXd V;
+
+	// Jacobian of the parameterization per face
+	VectorXd a;
+	VectorXd b;
+	VectorXd c;
+	VectorXd d;
+	VectorXd detJ;
+	VectorXd Area;
+
+	//dense mesh derivative matrices
+	Matrix3Xd D1d, D2d;		
+
+	/*virtual void prepare_dJdX() = 0;*/
+	virtual void prepare_hessian() = 0;
+
 public:
 	ObjectiveFunction() {}
 	virtual ~ObjectiveFunction(){}
 	virtual void init() = 0;
 	virtual void updateX(const VectorXd& X) = 0;
-	virtual double value(bool update = true) = 0;
+	virtual double value(const bool update = true) = 0;
 	virtual void gradient(VectorXd& g) = 0;
 	virtual void hessian() = 0;
-	virtual void prepare_hessian() = 0;
 	
+	void init_mesh(const MatrixXd& V, const MatrixX3i& F);
+
 	//Finite Differences check point
     void FDGradient(const VectorXd& X,VectorXd& g);
     void FDHessian(const VectorXd& X);

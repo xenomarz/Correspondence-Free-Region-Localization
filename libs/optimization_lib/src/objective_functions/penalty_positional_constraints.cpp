@@ -8,11 +8,9 @@ PenaltyPositionalConstraints::PenaltyPositionalConstraints()
 
 void PenaltyPositionalConstraints::init()
 {
-	
 	if(numV==0)
 		throw name + " must define members numV before init()!";
-	prepare_hessian();
-	
+	prepare_hessian();	
 }
 
 void PenaltyPositionalConstraints::updateX(const VectorXd& X)

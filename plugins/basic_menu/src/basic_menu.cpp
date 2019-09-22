@@ -957,19 +957,19 @@ void BasicMenu::initializeSolver()
 
 	// initialize the energy
 	auto symDirichlet = make_unique<SymmetricDirichlet>();
-	symDirichlet->setVF(V, F);
+	symDirichlet->init_mesh(V, F);
 	symDirichlet->init();
 	auto oneRingAreaPreserving = make_unique<OneRingAreaPreserving>();
-	oneRingAreaPreserving->setVF(V, F);
+	oneRingAreaPreserving->init_mesh(V, F);
 	oneRingAreaPreserving->init();
 	auto symDirichletoptimized = make_unique<SymmetricDirichletOptimized>();
-	symDirichletoptimized->setVF(V, F);
+	symDirichletoptimized->init_mesh(V, F);
 	symDirichletoptimized->init();
 	auto areaPreserving = make_unique<AreaPreserving>();
-	areaPreserving->setVF(V, F);
+	areaPreserving->init_mesh(V, F);
 	areaPreserving->init();
 	auto anglePreserving = make_unique<AnglePreserving>();
-	anglePreserving->setVF(V, F);
+	anglePreserving->init_mesh(V, F);
 	anglePreserving->init();
 	auto constraintsPositional = make_shared<PenaltyPositionalConstraints>();
 	constraintsPositional->numV = V.rows();
