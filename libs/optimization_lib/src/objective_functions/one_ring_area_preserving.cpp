@@ -1,4 +1,5 @@
 #include <objective_functions/one_ring_area_preserving.h>
+#include <igl/vertex_triangle_adjacency.h>
 
 OneRingAreaPreserving::OneRingAreaPreserving()
 {

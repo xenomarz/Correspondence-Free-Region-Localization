@@ -2,7 +2,7 @@
 
 #include <libs/optimization_lib/include/objective_functions/objective_function.h>
 
-class SymmetricDirichletOptimized : public ObjectiveFunction
+class SymmetricDirichletCompositeMajorization : public ObjectiveFunction
 {
 private:
 	// mesh vertices and faces
@@ -10,7 +10,7 @@ private:
 	MatrixXd V;
 
 	// Jacobian of the parameterization per face
-	VectorXd a;
+	VectorXd a; 
 	VectorXd b;
 	VectorXd c;
 	VectorXd d;
@@ -36,7 +36,7 @@ private:
 	MatrixXd a1d, a2d, b1d, b2d;					//dense constant matrices for cones calcualtion
 
 public:
-	SymmetricDirichletOptimized();
+	SymmetricDirichletCompositeMajorization();
 
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
