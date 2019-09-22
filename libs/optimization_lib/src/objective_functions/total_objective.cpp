@@ -11,7 +11,7 @@ void TotalObjective::init()
 	for (auto &objective : objectiveList) {
 		objective->init();
 	}
-	prepare_hessian();
+	init_hessian();
 }
 
 void TotalObjective::updateX(const VectorXd& X)
@@ -69,7 +69,7 @@ void TotalObjective::hessian()
 	}
 }
 
-void TotalObjective::prepare_hessian()
+void TotalObjective::init_hessian()
 {
 	//assume that each subobjective already prepared its hessian
 	II.clear(); JJ.clear(); SS.clear();

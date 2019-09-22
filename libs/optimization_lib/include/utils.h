@@ -3,18 +3,31 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-
+#include <Eigen/Core>
+#include <Eigen/Sparse>
+#include <Eigen/SparseCore>
+#include <functional>
 #include <vector>
+#include <string>
+#include <utility>
+#include <iostream>
+#include <memory>
+#include <limits>
+#include <igl/doublearea.h>
+#include <chrono>
 #include <igl/local_basis.h>
 #include <igl/boundary_loop.h>
 #include <igl/per_face_normals.h>
-#include <igl/doublearea.h>
-#include <chrono>
-
 // for EXCEPTION_POINTERS
 //#include <Windows.h>
 
 using namespace std;
+using namespace Eigen;
+
+typedef Triplet<double> T;
+typedef SparseMatrix<double> SpMat;
+typedef Matrix<double, 6, 6> Matrix6d;
+typedef Matrix<double, 6, 1> Vector6d;
 
 class Utils
 {
@@ -64,7 +77,7 @@ public:
 		D1 = F1.col(0).asDiagonal()*Dx + F1.col(1).asDiagonal()*Dy + F1.col(2).asDiagonal()*Dz;
 		D2 = F2.col(0).asDiagonal()*Dx + F2.col(1).asDiagonal()*Dy + F2.col(2).asDiagonal()*Dz;
 	}
-
+	
 	static inline void SSVD2x2(const Eigen::Matrix2d& A, Eigen::Matrix2d& U, Eigen::Matrix2d& S, Eigen::Matrix2d& V)
 	{
 		double e = (A(0) + A(3))*0.5;
@@ -97,6 +110,13 @@ public:
 		V(2) = s;
 		V(3) = c;
 	}
+
+	static int GetLowerTriangleSize(int MatrixSize) {
+		if (MatrixSize <= 0)
+			return 0;
+		return MatrixSize + GetLowerTriangleSize(MatrixSize - 1);
+	}
+
 private:
 	static unsigned int nv, nf, ne, nvs, nfs, nes;
 	static Eigen::MatrixX2d E, Es;

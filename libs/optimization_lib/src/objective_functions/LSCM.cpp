@@ -1,20 +1,16 @@
-#include <objective_functions/one_ring_area_preserving.h>
-#include <igl/vertex_triangle_adjacency.h>
+#include <objective_functions/LSCM.h>
 
-OneRingAreaPreserving::OneRingAreaPreserving()
+LSCM::LSCM()
 {
-	name = "One Ring Area Preserving";
+	name = "LSCM";
 	w = 0;
 }
 
-void OneRingAreaPreserving::init()
+void LSCM::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw name + " must define members V,F before init()!";
 	
-
-	igl::vertex_triangle_adjacency(V, F, VF, VFi);
-
 	a.resize(F.rows());
 	b.resize(F.rows());
 	c.resize(F.rows());
@@ -22,7 +18,6 @@ void OneRingAreaPreserving::init()
 	
 	//Parameterization J mats resize
 	detJ.resize(F.rows());
-	OneRingSum.resize(V.rows());
 	grad.resize(F.rows(), 6);
 	Hessian.resize(F.rows());
 	dJ_dX.resize(F.rows());
@@ -49,44 +44,31 @@ void OneRingAreaPreserving::init()
 			zero, Dy;
 	}
 
-	prepare_hessian();
+	init_hessian();
 }
 
-void OneRingAreaPreserving::updateX(const VectorXd& X)
+void LSCM::updateX(const VectorXd& X)
 {
-	bool inversions_exist = updateJ(X);
+	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
 		cout << name << " Error! inversion exists." << endl;
 	}
 }
 
-void OneRingAreaPreserving::setVF(MatrixXd& V, MatrixX3i& F) {
-	MatrixX3d V3d(V.rows(), 3);
-	if (V.cols() == 2) {
-		V3d.leftCols(2) = V;
-		V3d.col(2).setZero();
-	}
-	else if (V.cols() == 3) {
-		V3d = V;
-	}
-	this->V = V3d;
-	this->F = F;
-}
-
-double OneRingAreaPreserving::value(bool update)
+double LSCM::value(bool update)
 {
-	double value = OneRingSum.cwiseAbs2().sum();
-	value /= 2;
-
+	VectorXd E = 2*(d.cwiseAbs2()) + (b+c).cwiseAbs2() + 2 * (a.cwiseAbs2());
+	double value = (Area.asDiagonal() * E).sum();
+	
 	if (update) {
-		Efi.setZero();
+		Efi = E;
 		energy_value = value;
 	}
 	
 	return value;
 }
 
-void OneRingAreaPreserving::gradient(VectorXd& g)
+void LSCM::gradient(VectorXd& g)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
@@ -108,7 +90,7 @@ void OneRingAreaPreserving::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void OneRingAreaPreserving::hessian()
+void LSCM::hessian()
 {
 #pragma omp parallel for num_threads(24)
 	for (int i = 0; i < F.rows(); ++i) {
@@ -126,12 +108,10 @@ void OneRingAreaPreserving::hessian()
 	}
 }
 
-bool OneRingAreaPreserving::updateJ(const VectorXd& X)
+bool LSCM::update_variables(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
-	
-
 	for (int i = 0; i < F.rows(); i++)
 	{
 		Vector3d Xi, Yi;
@@ -139,59 +119,34 @@ bool OneRingAreaPreserving::updateJ(const VectorXd& X)
 		Yi << x(F(i, 0), 1), x(F(i, 1), 1), x(F(i, 2), 1);
 		Vector3d Dx = D1d.col(i);
 		Vector3d Dy = D2d.col(i);
+		
 		//prepare jacobian		
 		a(i) = Dx.transpose() * Xi;
 		b(i) = Dx.transpose() * Yi;
 		c(i) = Dy.transpose() * Xi;
 		d(i) = Dy.transpose() * Yi;
+		double detj_1 = (a(i) * d(i) - b(i) * c(i)) - 1;
+
+		//prepare gradient
+		Vector4d dE_dJ(4 * a(i), 2 * b(i) + 2 * c(i), 2 * b(i) + 2 * c(i), 4 * d(i));
+		grad.row(i) = (dE_dJ.transpose() * dJ_dX[i]).transpose();
+
+		//prepare hessian
+		MatrixXd d2E_dJ2(4, 4);
+		d2E_dJ2 <<
+			4, 0, 0, 0,
+			0, 2, 2, 0,
+			0, 2, 2, 0,
+			0, 0, 0, 4;
+
+		Hessian[i] = dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
 	}
 	detJ = a.cwiseProduct(d) - b.cwiseProduct(c);
-
-
-	OneRingSum.setZero();
-	for (int vi = 0; vi < VF.size(); vi++) {
-		vector<int> OneRing = VF[vi];
-		for (int fi : OneRing) {
-			OneRingSum(vi) += Area(fi)*detJ(fi) - Area(fi);
-		}
-	}
-
-	grad.setZero();
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Hessian[i].setZero();
-	}
-	for (int vi = 0; vi < VF.size(); vi++) {
-		vector<int> OneRing = VF[vi];
-		for (int fi : OneRing) {
-
-
-
-			//prepare gradient
-			Vector4d dE_dJ(d(fi), -c(fi), -b(fi), a(fi));
-			dE_dJ *= OneRingSum(vi);
-
-			grad.row(fi) += (dE_dJ.transpose() * dJ_dX[fi]).transpose();
-
-			
-			//prepare hessian
-
-			MatrixXd d2E_dJ2(4, 4);
-			d2E_dJ2 <<
-				Area(fi)*d(fi)*d(fi)					, -Area(fi)*c(fi)*d(fi)					, -Area(fi)*b(fi)*d(fi)					, Area(fi)*a(fi)*d(fi) + OneRingSum(vi),
-				-Area(fi)*c(fi)*d(fi)					, Area(fi)*c(fi)*c(fi)					, Area(fi)*b(fi)*c(fi) - OneRingSum(vi)	, -Area(fi)*c(fi)*a(fi),
-				-Area(fi)*b(fi)*d(fi)					, Area(fi)*b(fi)*c(fi) - OneRingSum(vi)	, Area(fi)* b(fi)*b(fi)					, -Area(fi)*b(fi)*a(fi),
-				Area(fi)*a(fi)*d(fi) + OneRingSum(vi)	, -Area(fi)*a(fi)*c(fi)					, -Area(fi)*a(fi)*b(fi)					, Area(fi)*a(fi)*a(fi);
-				
-			Hessian[fi] += dJ_dX[fi].transpose() * d2E_dJ2 * dJ_dX[fi];
-		}
-	}
 	
-
 	return ((detJ.array() < 0).any());
 }
 
-void OneRingAreaPreserving::prepare_hessian()
+void LSCM::init_hessian()
 {
 	II.clear();
 	JJ.clear();

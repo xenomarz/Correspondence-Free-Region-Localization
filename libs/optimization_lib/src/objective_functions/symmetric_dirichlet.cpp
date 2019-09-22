@@ -45,28 +45,15 @@ void SymmetricDirichlet::init()
 			zero, Dy;
 	}
 
-	prepare_hessian();
+	init_hessian();
 }
 
 void SymmetricDirichlet::updateX(const VectorXd& X)
 {
-	bool inversions_exist = updateJ(X);
+	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
 		cout << name << " Error! inversion exists." << endl;
 	}
-}
-
-void SymmetricDirichlet::setVF(MatrixXd& V, MatrixX3i& F) {
-	MatrixX3d V3d(V.rows(), 3);
-	if (V.cols() == 2) {
-		V3d.leftCols(2) = V;
-		V3d.col(2).setZero();
-	}
-	else if (V.cols() == 3) {
-		V3d = V;
-	}
-	this->V = V3d;
-	this->F = F;
 }
 
 double SymmetricDirichlet::value(bool update)
@@ -122,7 +109,7 @@ void SymmetricDirichlet::hessian()
 	}
 }
 
-bool SymmetricDirichlet::updateJ(const VectorXd& X)
+bool SymmetricDirichlet::update_variables(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
@@ -213,7 +200,7 @@ bool SymmetricDirichlet::updateJ(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 }
 
-void SymmetricDirichlet::prepare_hessian()
+void SymmetricDirichlet::init_hessian()
 {
 	II.clear();
 	JJ.clear();

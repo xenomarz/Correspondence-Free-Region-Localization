@@ -2,11 +2,10 @@
 
 #include <libs/optimization_lib/include/objective_functions/TriangleMeshObjectiveFunction.h>
 
-class SymmetricDirichlet : public TriangleMeshObjectiveFunction
+class LSCM : public TriangleMeshObjectiveFunction
 {	
 private:
 	// Jacobian determinant (ad-bc)
-	VectorXd dirichlet; //Forbinous norm of the jacobian
 	MatrixXd grad;
 	vector<Matrix<double, 6, 6>> Hessian;
 	vector<Matrix<double, 4, 6>> dJ_dX;
@@ -15,7 +14,7 @@ private:
 	bool update_variables(const VectorXd& X);
 
 public:
-	SymmetricDirichlet();
+	LSCM();
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
 	virtual double value(const bool update = true) override;

@@ -4,18 +4,18 @@
 
 class PenaltyPositionalConstraints : public ObjectiveFunction
 {
+private:
+	virtual void init_hessian() override;
 public:
 	PenaltyPositionalConstraints();
-
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
-	virtual double value(bool update = true) override;
+	virtual double value(const bool update = true) override;
 	virtual void gradient(Eigen::VectorXd& g) override;
 	virtual void hessian() override;
-	virtual void prepare_hessian() override;
-
-	std::vector<int> ConstrainedVerticesInd;
-	Eigen::MatrixX2d ConstrainedVerticesPos;
-	Eigen::MatrixX2d CurrConstrainedVerticesPos;
+	
+	vector<int> ConstrainedVerticesInd;
+	MatrixX2d ConstrainedVerticesPos;
+	MatrixX2d CurrConstrainedVerticesPos;
 	int numV=0;
 };

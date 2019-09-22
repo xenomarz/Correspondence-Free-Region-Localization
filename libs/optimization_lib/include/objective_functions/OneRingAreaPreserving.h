@@ -1,21 +1,25 @@
 #pragma once
-
 #include <libs/optimization_lib/include/objective_functions/TriangleMeshObjectiveFunction.h>
 
-class SymmetricDirichlet : public TriangleMeshObjectiveFunction
+class OneRingAreaPreserving : public TriangleMeshObjectiveFunction
 {	
 private:
-	// Jacobian determinant (ad-bc)
-	VectorXd dirichlet; //Forbinous norm of the jacobian
-	MatrixXd grad;
-	vector<Matrix<double, 6, 6>> Hessian;
-	vector<Matrix<double, 4, 6>> dJ_dX;
+	// adjacency matrix (vertex to face)
+	vector<vector<int> > VF, VFi;
 
+	// Jacobian determinant (ad-bc)
+	VectorXd OneRingSum;
+	vector<RowVectorXd> grad;
+	vector<MatrixXd> dJ_dX;
+	vector<MatrixXd> Hessian;
+
+	vector<int> get_one_ring_vertices(const vector<int>& OneRingFaces);
 	virtual void init_hessian() override;
+	void init_dJdX();
 	bool update_variables(const VectorXd& X);
 
 public:
-	SymmetricDirichlet();
+	OneRingAreaPreserving();
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
 	virtual double value(const bool update = true) override;

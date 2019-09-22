@@ -8,11 +8,9 @@ PenaltyPositionalConstraints::PenaltyPositionalConstraints()
 
 void PenaltyPositionalConstraints::init()
 {
-	
 	if(numV==0)
 		throw name + " must define members numV before init()!";
-	prepare_hessian();
-	
+	init_hessian();
 }
 
 void PenaltyPositionalConstraints::updateX(const VectorXd& X)
@@ -62,7 +60,7 @@ void PenaltyPositionalConstraints::hessian()
 	}
 }
 
-void PenaltyPositionalConstraints::prepare_hessian()
+void PenaltyPositionalConstraints::init_hessian()
 {
 	II.resize(2*numV);
 	JJ.resize(2*numV);

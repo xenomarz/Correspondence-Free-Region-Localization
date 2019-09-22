@@ -44,28 +44,15 @@ void AreaPreserving::init()
 			zero, Dy;
 	}
 
-	prepare_hessian();
+	init_hessian();
 }
 
 void AreaPreserving::updateX(const VectorXd& X)
 {
-	bool inversions_exist = updateJ(X);
+	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
 		cout << name << " Error! inversion exists." << endl;
 	}
-}
-
-void AreaPreserving::setVF(MatrixXd& V, MatrixX3i& F) {
-	MatrixX3d V3d(V.rows(), 3);
-	if (V.cols() == 2) {
-		V3d.leftCols(2) = V;
-		V3d.col(2).setZero();
-	}
-	else if (V.cols() == 3) {
-		V3d = V;
-	}
-	this->V = V3d;
-	this->F = F;
 }
 
 double AreaPreserving::value(bool update)
@@ -107,11 +94,12 @@ void AreaPreserving::gradient(VectorXd& g)
 void AreaPreserving::hessian()
 {
 #pragma omp parallel for num_threads(24)
+	int index2 = 0;
 	for (int i = 0; i < F.rows(); ++i) {
 		
 		Matrix<double, 6, 6> Hi = Area(i)*Hessian[i];
 
-		int index2 = i * 21;
+		
 		for (int a = 0; a < 6; ++a)
 		{
 			for (int b = 0; b <= a; ++b)
@@ -122,7 +110,7 @@ void AreaPreserving::hessian()
 	}
 }
 
-bool AreaPreserving::updateJ(const VectorXd& X)
+bool AreaPreserving::update_variables(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
@@ -161,7 +149,7 @@ bool AreaPreserving::updateJ(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 }
 
-void AreaPreserving::prepare_hessian()
+void AreaPreserving::init_hessian()
 {
 	II.clear();
 	JJ.clear();
