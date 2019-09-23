@@ -93,11 +93,11 @@ void Separation::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, s
 	ss = std::vector<double>(ii.size(), 0.);
 }
 
-void Separation::CalculateValue(const Eigen::MatrixX2d& x, double& f)
+void Separation::CalculateValue(const Eigen::VectorXd& x, double& f)
 {
 	auto n = objective_function_data_provider_->GetImageVerticesCount();
 
-	EsepP = Esep * x;
+	EsepP = Esep * X;
 	EsepP_squared_rowwise_sum = EsepP.array().pow(2.0).rowwise().sum();
 
 	for (int i = 0; i < Esept.outerSize(); ++i)
@@ -132,7 +132,7 @@ void Separation::CalculateValue(const Eigen::MatrixX2d& x, double& f)
 	f = f_per_pair.sum();
 }
 
-void Separation::CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g)
+void Separation::CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g)
 {
 	Eigen::MatrixX2d ge;
 
@@ -145,9 +145,9 @@ void Separation::CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g
 	g = Eigen::Map<Eigen::VectorXd>(ge.data(), 2.0 * ge.rows(), 1);
 }
 
-void Separation::CalculateHessian(const Eigen::MatrixX2d& x, std::vector<double>& ss)
+void Separation::CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss)
 {
-	int n = x.rows();
+	int n = X.rows();
 	int threads = omp_get_max_threads();
 
 	// no inner loop because there are only 2 nnz values per col
@@ -167,8 +167,8 @@ void Separation::CalculateHessian(const Eigen::MatrixX2d& x, std::vector<double>
 		idx_xi = it.row();
 		factor = it.value();
 		idx_xj = (++it).row();
-		xi = x.row(idx_xi);
-		xj = x.row(idx_xj);
+		xi = X.row(idx_xi);
+		xj = X.row(idx_xj);
 		FindSingleHessian(xi, xj, sh);
 		sh *= factor;
 
@@ -192,6 +192,11 @@ void Separation::CalculateHessian(const Eigen::MatrixX2d& x, std::vector<double>
 			}
 		}
 	}
+}
+
+void Separation::PreUpdate(const Eigen::VectorXd& x)
+{
+	X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
 }
 
 void Separation::FindSingleHessian(const Eigen::Vector2d& xi, const Eigen::Vector2d& xj, Eigen::Matrix4d& h)

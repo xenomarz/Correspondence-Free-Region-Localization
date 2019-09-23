@@ -1,9 +1,15 @@
 #include <objective_functions/composite_objective.h>
 
-CompositeObjective::CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider) :
+CompositeObjective::CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction> objective_function) :
 	ObjectiveFunction(objective_function_data_provider, "Composite Objective")
 {
-	Initialize();
+	AddObjectiveFunction(objective_function);
+}
+
+CompositeObjective::CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions) :
+	ObjectiveFunction(objective_function_data_provider, "Composite Objective")
+{
+	AddObjectiveFunctions(objective_functions);
 }
 
 CompositeObjective::~CompositeObjective()
@@ -15,6 +21,16 @@ void CompositeObjective::AddObjectiveFunction(const std::shared_ptr<ObjectiveFun
 {
 	std::lock_guard<std::mutex> lock(m_);
 	objective_functions_.push_back(objective_function);
+	Initialize();
+}
+
+void CompositeObjective::AddObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions)
+{
+	for (auto& objective_function : objective_functions)
+	{
+		objective_functions_.push_back(objective_function);
+	}
+	Initialize();
 }
 
 void CompositeObjective::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
@@ -30,39 +46,39 @@ void CompositeObjective::InitializeHessian(std::vector<int>& ii, std::vector<int
 	}
 }
 
-void CompositeObjective::CalculateValue(const Eigen::MatrixX2d& X, double& f)
+void CompositeObjective::CalculateValue(const Eigen::VectorXd& x, double& f)
 {
 	f = 0;
 	for (auto objective_function : objective_functions_)
 	{
 		auto w = objective_function->GetWeight();
-		if (w != 0)
+		if (objective_function->IsValid() && w != 0)
 		{
 			f += w * objective_function->GetValue();
 		}
 	}
 }
 
-void CompositeObjective::CalculateGradient(const Eigen::MatrixX2d& X, Eigen::VectorXd& g)
+void CompositeObjective::CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g)
 {
 	g.setZero();
 	for (auto objective_function : objective_functions_)
 	{
 		auto w = objective_function->GetWeight();
-		if (w != 0)
+		if (objective_function->IsValid() && w != 0)
 		{
 			g += w * objective_function->GetGradient();
 		}
 	}
 }
 
-void CompositeObjective::CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>& ss)
+void CompositeObjective::CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss)
 {
 	ss.clear();
 	for (auto objective_function : objective_functions_)
 	{
 		auto w = objective_function->GetWeight();
-		if (w != 0)
+		if (objective_function->IsValid() && w != 0)
 		{
 			auto current_ss = objective_function->GetSS();
 			for (int i = 0; i < current_ss.size(); i++)
@@ -74,10 +90,11 @@ void CompositeObjective::CalculateHessian(const Eigen::MatrixX2d& X, std::vector
 	}
 }
 
-void CompositeObjective::Update(const Eigen::MatrixX2d& X)
+void CompositeObjective::Update(const Eigen::VectorXd& x)
 {
 	for (auto objective_function : objective_functions_)
 	{
-		objective_function->Update(X);
+		objective_function->Update(x);
 	}
+	ObjectiveFunction::Update(x);
 }

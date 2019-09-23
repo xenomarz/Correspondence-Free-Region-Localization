@@ -127,10 +127,10 @@ export class AutoquadsSideBar extends SideBar {
                 caption="Solver">
                 <paper-toggle-button
                     class="solver"
-                    checked="${HelpersExports.isSolverOn(this._solverState)}"
-                    disabled
+                    ?checked="${HelpersExports.isSolverOn(this.solverState)}"
+                    ?disabled="${!HelpersExports.isModelLoaded(this.modelState)}"
                     @change="${this._solverStateInputChanged}">
-                    <span>${HelpersExports.solverStateText(this._solverState)}</span>
+                    <span>${HelpersExports.solverStateText(this.solverState)}</span>
                 </paper-toggle-button>
             </side-bar-collapsable-section>
             <side-bar-collapsable-section
@@ -416,38 +416,49 @@ export class AutoquadsSideBar extends SideBar {
      */
 
     stateChanged(state) {
-        this.splitOrientation = state.splitOrientation;
-        this.modelViewportColor = state.modelViewportColor;
-        this.soupViewportColor = state.soupViewportColor;
-        this.modelColor = state.modelColor;
-        this.soupColor = state.soupColor;
-        this.wireframeVisibility = state.wireframeVisibility;
-        this.modelViewVisibility = state.modelViewVisibility;
-        this.soupViewVisibility = state.soupViewVisibility;
-        this.delta = state.delta;
-        this.lambda = state.lambda;
-        this.seamlessWeight = state.seamlessWeight;
-        this.positionWeight = state.positionWeight;
-        this.gridHorizontalColor = state.gridHorizontalColor;
-        this.gridVerticalColor = state.gridVerticalColor;
-        this.gridBackgroundColor1 = state.gridBackgroundColor1;
-        this.gridBackgroundColor2 = state.gridBackgroundColor2;
-        this.highlightedFaceColor = state.highlightedFaceColor;
-        this.draggedFaceColor = state.draggedFaceColor;
-        this.fixedFaceColor = state.fixedFaceColor;
-        this.vertexEnergyColor = state.vertexEnergyColor;
-        this.vertexEnergyType = state.vertexEnergyType;
-        this.gridSize = state.gridSize;
-        this.gridTextureSize = state.gridTextureSize;
-        this.gridLineWidth = state.gridLineWidth;
-        this.unitGridVisibility = state.unitGridVisibility;
-        this.soupViewGridTextureVisibility = state.soupViewGridTextureVisibility;
-        this.optimizationDataMonitorVisibility = state.optimizationDataMonitorVisibility;
-        this.solverState = state.solverState;
-        this.modelFilename = state.modelFilename;
-        this.moduleFilename = state.moduleFilename;
-        this.modelState = state.modelState;
-        this.moduleState = state.moduleState;        
+        let localState = {};
+        for (let [key, value] of Object.entries(state)) {
+            localState[key] = this[key];
+        }
+
+        for (let [key, value] of Object.entries(state)) {
+            if(localState[key] !== state[key]) {
+                this[key] = state[key];
+            }
+        }  
+
+        // this.splitOrientation = state.splitOrientation;
+        // this.modelViewportColor = state.modelViewportColor;
+        // this.soupViewportColor = state.soupViewportColor;
+        // this.modelColor = state.modelColor;
+        // this.soupColor = state.soupColor;
+        // this.wireframeVisibility = state.wireframeVisibility;
+        // this.modelViewVisibility = state.modelViewVisibility;
+        // this.soupViewVisibility = state.soupViewVisibility;
+        // this.delta = state.delta;
+        // this.lambda = state.lambda;
+        // this.seamlessWeight = state.seamlessWeight;
+        // this.positionWeight = state.positionWeight;
+        // this.gridHorizontalColor = state.gridHorizontalColor;
+        // this.gridVerticalColor = state.gridVerticalColor;
+        // this.gridBackgroundColor1 = state.gridBackgroundColor1;
+        // this.gridBackgroundColor2 = state.gridBackgroundColor2;
+        // this.highlightedFaceColor = state.highlightedFaceColor;
+        // this.draggedFaceColor = state.draggedFaceColor;
+        // this.fixedFaceColor = state.fixedFaceColor;
+        // this.vertexEnergyColor = state.vertexEnergyColor;
+        // this.vertexEnergyType = state.vertexEnergyType;
+        // this.gridSize = state.gridSize;
+        // this.gridTextureSize = state.gridTextureSize;
+        // this.gridLineWidth = state.gridLineWidth;
+        // this.unitGridVisibility = state.unitGridVisibility;
+        // this.soupViewGridTextureVisibility = state.soupViewGridTextureVisibility;
+        // this.optimizationDataMonitorVisibility = state.optimizationDataMonitorVisibility;
+        // this.solverState = state.solverState;
+        // this.modelFilename = state.modelFilename;
+        // this.moduleFilename = state.moduleFilename;
+        // this.modelState = state.modelState;
+        // this.moduleState = state.moduleState;
     }
 
     /**
@@ -463,7 +474,9 @@ export class AutoquadsSideBar extends SideBar {
      */
 
     set splitOrientation(value) {
+        const oldValue = this._splitOrientation;
         this._splitOrientation = value;
+        this.requestUpdate('splitOrientation', oldValue);
     }
 
     get splitOrientation() {
@@ -471,7 +484,9 @@ export class AutoquadsSideBar extends SideBar {
     }
     
     set modelViewportColor(value) {
+        const oldValue = this._modelViewportColor;
         this._modelViewportColor = value;
+        this.requestUpdate('modelViewportColor', oldValue);
     }
 
     get modelViewportColor() {
@@ -479,7 +494,9 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set soupViewportColor(value) {
+        const oldValue = this._soupViewportColor;
         this._soupViewportColor = value;
+        this.requestUpdate('soupViewportColor', oldValue);
     }
 
     get soupViewportColor() {
@@ -487,7 +504,9 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set modelColor(value) {
+        const oldValue = this._modelColor;
         this._modelColor = value;
+        this.requestUpdate('modelColor', oldValue);
     }
 
     get modelColor() {
@@ -495,7 +514,9 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set soupColor(value) {
+        const oldValue = this._soupColor;
         this._soupColor = value;
+        this.requestUpdate('soupColor', oldValue);
     }
 
     get soupColor() {
@@ -503,7 +524,9 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set wireframeVisibility(value) {
+        const oldValue = this._wireframeVisibility;
         this._wireframeVisibility = value;
+        this.requestUpdate('wireframeVisibility', oldValue);
     }
 
     get wireframeVisibility() {
@@ -511,7 +534,9 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set modelViewVisibility(value) {
+        const oldValue = this._modelViewVisibility;
         this._modelViewVisibility = value;
+        this.requestUpdate('modelViewVisibility', oldValue);
     }
 
     get modelViewVisibility() {
@@ -519,7 +544,9 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set soupViewVisibility(value) {
+        const oldValue = this._soupViewVisibility;
         this._soupViewVisibility = value;
+        this.requestUpdate('soupViewVisibility', oldValue);        
     }
 
     get soupViewVisibility() {
@@ -527,7 +554,9 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set delta(value) {
+        const oldValue = this._delta;
         this._delta = value;
+        this.requestUpdate('delta', oldValue);
     }
 
     get delta() {
@@ -535,7 +564,9 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set lambda(value) {
+        const oldValue = this._lambda;
         this._lambda = value;
+        this.requestUpdate('lambda', oldValue);
     }
 
     get lambda() {
@@ -543,7 +574,9 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set seamlessWeight(value) {
+        const oldValue = this._seamlessWeight;
         this._seamlessWeight = value;
+        this.requestUpdate('seamlessWeight', oldValue);
     }
 
     get seamlessWeight() {
@@ -551,7 +584,9 @@ export class AutoquadsSideBar extends SideBar {
     }
     
     set positionWeight(value) {
+        const oldValue = this._positionWeight;
         this._positionWeight = value;
+        this.requestUpdate('positionWeight', oldValue);
     }
 
     get positionWeight() {
@@ -559,7 +594,9 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set gridHorizontalColor(value) {
+        const oldValue = this._gridHorizontalColor;
         this._gridHorizontalColor = value;
+        this.requestUpdate('gridHorizontalColor', oldValue);
     }
 
     get gridHorizontalColor() {
@@ -567,7 +604,9 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set gridVerticalColor(value) {
+        const oldValue = this._gridVerticalColor;
         this._gridVerticalColor = value;
+        this.requestUpdate('gridVerticalColor', oldValue);
     }
 
     get gridVerticalColor() {
@@ -575,7 +614,9 @@ export class AutoquadsSideBar extends SideBar {
     } 
 
     set gridBackgroundColor1(value) {
+        const oldValue = this._gridBackgroundColor1;
         this._gridBackgroundColor1 = value;
+        this.requestUpdate('gridBackgroundColor1', oldValue);
     }
 
     get gridBackgroundColor1() {
@@ -583,7 +624,9 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set gridBackgroundColor2(value) {
+        const oldValue = this._gridBackgroundColor2;
         this._gridBackgroundColor2 = value;
+        this.requestUpdate('gridBackgroundColor2', oldValue);
     }
 
     get gridBackgroundColor2() {
@@ -591,7 +634,9 @@ export class AutoquadsSideBar extends SideBar {
     } 
 
     set highlightedFaceColor(value) {
+        const oldValue = this._highlightedFaceColor;
         this._highlightedFaceColor = value;
+        this.requestUpdate('highlightedFaceColor', oldValue);
     }
 
     get highlightedFaceColor() {
@@ -599,7 +644,9 @@ export class AutoquadsSideBar extends SideBar {
     } 
 
     set draggedFaceColor(value) {
+        const oldValue = this._draggedFaceColor;
         this._draggedFaceColor = value;
+        this.requestUpdate('draggedFaceColor', oldValue);
     }
 
     get draggedFaceColor() {
@@ -607,7 +654,9 @@ export class AutoquadsSideBar extends SideBar {
     }  
     
     set fixedFaceColor(value) {
+        const oldValue = this._fixedFaceColor;
         this._fixedFaceColor = value;
+        this.requestUpdate('fixedFaceColor', oldValue);
     }
 
     get fixedFaceColor() {
@@ -615,23 +664,29 @@ export class AutoquadsSideBar extends SideBar {
     }
     
     set vertexEnergyColor(value) {
+        const oldValue = this._vertexEnergyColor;
         this._vertexEnergyColor = value;
+        this.requestUpdate('vertexEnergyColor', oldValue);
     }
 
     get vertexEnergyColor() {
         return this._vertexEnergyColor;
-    }    
+    } 
 
     set vertexEnergyType(value) {
+        const oldValue = this._vertexEnergyType;
         this._vertexEnergyType = value;
+        this.requestUpdate('vertexEnergyType', oldValue);
     }
 
     get vertexEnergyType() {
         return this._vertexEnergyType;
-    }     
+    }
     
     set gridSize(value) {
+        const oldValue = this._gridSize;
         this._gridSize = value;
+        this.requestUpdate('gridSize', oldValue);
     }
 
     get gridSize() {
@@ -639,7 +694,9 @@ export class AutoquadsSideBar extends SideBar {
     }     
 
     set gridTextureSize(value) {
+        const oldValue = this._gridTextureSize;
         this._gridTextureSize = value;
+        this.requestUpdate('gridTextureSize', oldValue);
     }
 
     get gridTextureSize() {
@@ -647,7 +704,9 @@ export class AutoquadsSideBar extends SideBar {
     }     
 
     set gridLineWidth(value) {
+        const oldValue = this._gridLineWidth;
         this._gridLineWidth = value;
+        this.requestUpdate('gridLineWidth', oldValue);
     }
 
     get gridLineWidth() {
@@ -655,7 +714,9 @@ export class AutoquadsSideBar extends SideBar {
     } 
    
     set unitGridVisibility(value) {
+        const oldValue = this._unitGridVisibility;
         this._unitGridVisibility = value;
+        this.requestUpdate('unitGridVisibility', oldValue);
     }
 
     get unitGridVisibility() {
@@ -663,7 +724,9 @@ export class AutoquadsSideBar extends SideBar {
     } 
     
     set soupViewGridTextureVisibility(value) {
+        const oldValue = this._soupViewGridTextureVisibility;
         this._soupViewGridTextureVisibility = value;
+        this.requestUpdate('soupViewGridTextureVisibility', oldValue);
     }
 
     get soupViewGridTextureVisibility() {
@@ -671,7 +734,9 @@ export class AutoquadsSideBar extends SideBar {
     } 
 
     set optimizationDataMonitorVisibility(value) {
+        const oldValue = this._optimizationDataMonitorVisibility;
         this._optimizationDataMonitorVisibility = value;
+        this.requestUpdate('optimizationDataMonitorVisibility', oldValue);
     }
 
     get optimizationDataMonitorVisibility() {
@@ -679,15 +744,19 @@ export class AutoquadsSideBar extends SideBar {
     } 
 
     set solverState(value) {
+        const oldValue = this._solverState;
         this._solverState = value;
+        this.requestUpdate('solverState', oldValue);
     }
 
     get solverState() {
         return this._solverState;
-    } 
+    }
 
     set modelFilename(value) {
+        const oldValue = this._modelFilename;
         this._modelFilename = value;
+        this.requestUpdate('modelFilename', oldValue);
     }
 
     get modelFilename() {
@@ -695,23 +764,29 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     set modelState(value) {
+        const oldValue = this._modelState;
         this._modelState = value;
+        this.requestUpdate('modelState', oldValue);
     }
 
     get modelState() {
         return this._modelState;
-    }    
+    }
 
     set moduleFilename(value) {
+        const oldValue = this._moduleFilename; 
         this._moduleFilename = value;
-    }
+        this.requestUpdate('moduleFilename', oldValue);
+    }    
 
     get moduleFilename() {
         return this._moduleFilename;
     }
 
     set moduleState(value) {
+        const oldValue = this._moduleState;
         this._moduleState = value;
+        this.requestUpdate('moduleState', oldValue);
     }
 
     get moduleState() {

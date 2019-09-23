@@ -40,12 +40,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	Napi::ObjectWrap<Engine>(info),
 	mesh_wrapper_(std::make_shared<MeshWrapper>())
 {
-	auto& x = mesh_wrapper_->GetImageVertices();
-	auto x0 = Eigen::Map<const Eigen::VectorXd>(x.data(), x.cols() * x.rows());
-	composite_objective_ = std::make_shared<CompositeObjective>(mesh_wrapper_);
-	position_ = std::make_shared<Position>(mesh_wrapper_);
-	composite_objective_->AddObjectiveFunction(position_);
-	newton_method_ = std::make_unique<NewtonMethod<EigenSparseSolver>>(composite_objective_, x0);
+
 }
 
 Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
@@ -110,6 +105,11 @@ Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
 	 * Initialize MeshWrapper with loaded mesh model (faces and vertices)
 	 */
 	mesh_wrapper_ = std::make_shared<MeshWrapper>(V, F);
+	auto& x = mesh_wrapper_->GetImageVertices();
+	auto x0 = Eigen::Map<const Eigen::VectorXd>(x.data(), x.cols() * x.rows());
+	position_ = std::make_shared<Position>(mesh_wrapper_);
+	composite_objective_ = std::make_shared<CompositeObjective>(mesh_wrapper_, position_);
+	newton_method_ = std::make_unique<NewtonMethod<EigenSparseSolver>>(composite_objective_, x0);
 
 	return env.Null();
 }
@@ -232,7 +232,9 @@ void Engine::SetPositionWeight(const Napi::CallbackInfo& info, const Napi::Value
 	 */
 	Napi::Number number = value.As<Napi::Number>();
 	double position_weight = number.DoubleValue();
-	position_->SetWeight(position_weight);
+	if (position_) {
+		position_->SetWeight(position_weight);
+	}
 }
 
 Napi::Value Engine::GetPositionWeight(const Napi::CallbackInfo& info)
@@ -337,7 +339,9 @@ Napi::Value Engine::ResumeSolver(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	newton_method_->Resume();
+	if (newton_method_) {
+		newton_method_->Resume();
+	}
 
 	return env.Null();
 }
@@ -347,7 +351,9 @@ Napi::Value Engine::PauseSolver(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	newton_method_->Pause();
+	if (newton_method_) {
+		newton_method_->Pause();
+	}
 
 	return env.Null();
 }
@@ -383,7 +389,9 @@ Napi::Value Engine::ConstrainFacePosition(const Napi::CallbackInfo& info)
 	Eigen::MatrixXd face_vertices = mesh_wrapper_->GetImageVertices(face_vertices_indices);
 	for (int i = 0; i < 3; i++)
 	{
-		position_->AddConstrainedVertex(face_vertices_indices(i), face_vertices.row(i));
+		if (position_) {
+			position_->AddConstrainedVertex(face_vertices_indices(i), face_vertices.row(i));
+		}
 	}
 
 	return env.Null();
@@ -436,7 +444,9 @@ Napi::Value Engine::UpdateConstrainedFacePosition(const Napi::CallbackInfo& info
 	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
 	for (int i = 0; i < 3; i++)
 	{
-		position_->OffsetConstrainedVertexPosition(face_vertices_indices(i), offset);
+		if (position_) {
+			position_->OffsetConstrainedVertexPosition(face_vertices_indices(i), offset);
+		}
 	}
 
 	return env.Null();
@@ -472,7 +482,9 @@ Napi::Value Engine::UnconstrainFacePosition(const Napi::CallbackInfo& info)
 	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
 	for (int i = 0; i < 3; i++)
 	{
-		position_->RemoveConstrainedVertex(face_vertices_indices(i));
+		if (position_) {
+			position_->RemoveConstrainedVertex(face_vertices_indices(i));
+		}
 	}
 
 	return env.Null();

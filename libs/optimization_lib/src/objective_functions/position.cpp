@@ -66,6 +66,11 @@ void Position::RemoveConstrainedVertex(Eigen::DenseIndex vertex_index)
 	}
 }
 
+bool Position::IsValid()
+{
+	return constrained_vertices_count_ > 0;
+}
+
 void Position::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
 {
 	ii.resize(variables_count_);
@@ -79,12 +84,12 @@ void Position::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std
 	ss = std::vector<double>(ii.size(), 0);
 }
 
-void Position::CalculateValue(const Eigen::MatrixX2d& X, double& f)
+void Position::CalculateValue(const Eigen::VectorXd& x, double& f)
 {
 	f = x_diff_.squaredNorm();
 }
 
-void Position::CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g)
+void Position::CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g)
 {
 	g.setZero();
 	Eigen::DenseIndex current_vertex_index;
@@ -95,7 +100,7 @@ void Position::CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g)
 	}
 }
 
-void Position::CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>& ss)
+void Position::CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss)
 {
 	std::fill(ss.begin(), ss.end(), 0);
 	Eigen::DenseIndex current_vertex_index;
@@ -106,14 +111,14 @@ void Position::CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>& 
 	}
 }
 
-void Position::PreUpdate(const Eigen::MatrixX2d& x)
+void Position::PreUpdate(const Eigen::VectorXd& x)
 {
 	x_current_.resize(2, constrained_vertices_count_);
 	Eigen::DenseIndex current_vertex_index;
 	for (const auto& [image_vertex_index, constrained_index] : im_vi_2_ci_)
 	{
-		x_current_(constrained_index, 0) = x(image_vertex_index, 0);
-		x_current_(constrained_index, 1) = x(image_vertex_index, 1);
+		x_current_(constrained_index, 0) = x(image_vertex_index);
+		x_current_(constrained_index, 1) = x(image_vertex_index + image_vertices_count_);
 	}
 
 	x_diff_ = x_constrained_ - x_current_;

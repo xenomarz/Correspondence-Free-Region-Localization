@@ -45,23 +45,31 @@ void ObjectiveFunction::InitializeGradient(Eigen::VectorXd& g)
 	g.conservativeResize(objective_function_data_provider_->GetImageVerticesCount());
 }
 
-void ObjectiveFunction::PreUpdate(const Eigen::MatrixX2d& x)
+void ObjectiveFunction::PreUpdate(const Eigen::VectorXd& x)
 {
 	// Empty implementation
 }
 
-void ObjectiveFunction::Update(const Eigen::MatrixX2d& x)
+void ObjectiveFunction::Update(const Eigen::VectorXd& x)
 {
 	std::lock_guard<std::mutex> lock(m_);
-	PreUpdate(x);
-	CalculateValue(x, f_);
-	CalculateGradient(x, g_);
-	CalculateHessian(x, ss_);
-	Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, H_);
-	PostUpdate(x);
+	if (IsValid())
+	{
+		PreUpdate(x);
+		CalculateValue(x, f_);
+		CalculateGradient(x, g_);
+		CalculateHessian(x, ss_);
+		Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, H_);
+		PostUpdate(x);
+	}
 }
 
-void ObjectiveFunction::PostUpdate(const Eigen::MatrixX2d& x)
+bool ObjectiveFunction::IsValid()
+{
+	return true;
+}
+
+void ObjectiveFunction::PostUpdate(const Eigen::VectorXd& x)
 {
 	// Empty implementation
 }

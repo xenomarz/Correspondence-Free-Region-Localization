@@ -54,7 +54,10 @@ public:
 	void Initialize();
 
 	// Update value, gradient and hessian for a given x
-	virtual void Update(const Eigen::MatrixX2d& x);
+	virtual void Update(const Eigen::VectorXd& x);
+
+	// Returns true is the objective function's state is valid, false otherwise
+	virtual bool IsValid();
 
 protected:
 
@@ -63,8 +66,8 @@ protected:
 	 */
 	virtual void PreInitialize();
 	virtual void PostInitialize();
-	virtual void PreUpdate(const Eigen::MatrixX2d& x);
-	virtual void PostUpdate(const Eigen::MatrixX2d& x);
+	virtual void PreUpdate(const Eigen::VectorXd& x);
+	virtual void PostUpdate(const Eigen::VectorXd& x);
 
 	/**
 	 * Protected Fields
@@ -89,9 +92,9 @@ private:
 	virtual void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss) = 0;
 
 	// Value, gradient and hessian calculation functions
-	virtual void CalculateValue(const Eigen::MatrixX2d& X, double& f) = 0;
-	virtual void CalculateGradient(const Eigen::MatrixX2d& X, Eigen::VectorXd& g) = 0;
-	virtual void CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>& ss) = 0;
+	virtual void CalculateValue(const Eigen::VectorXd& x, double& f) = 0;
+	virtual void CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g) = 0;
+	virtual void CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss) = 0;
 
 	// Value
 	double f_;

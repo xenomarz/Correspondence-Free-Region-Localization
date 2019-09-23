@@ -32,9 +32,10 @@ private:
 	 * Overrides
 	 */
 	void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss);
-	void CalculateValue(const Eigen::MatrixX2d& x, double& f);
-	void CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g);
-	void CalculateHessian(const Eigen::MatrixX2d& x, std::vector<double>& ss);
+	void CalculateValue(const Eigen::VectorXd& x, double& f);
+	void CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g);
+	void CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss);
+	void PreUpdate(const Eigen::VectorXd& x);
 
 	/**
 	 * Methods
@@ -45,6 +46,8 @@ private:
 	 * Fields
 	 */
 	double delta_ = 1.0;
+
+	Eigen::MatrixX2d X;
 
 	Eigen::SparseMatrix<double> Esep;
 	Eigen::SparseMatrix<double> Esept;

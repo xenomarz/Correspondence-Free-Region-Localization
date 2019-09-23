@@ -11,7 +11,7 @@ IterativeMethod::IterativeMethod(std::shared_ptr<ObjectiveFunction> objective_fu
 	max_backtracking_iterations_(10),
 	flip_avoiding_line_search_enabled_(false)
 {
-
+	objective_function_->Update(x0);
 }
 
 IterativeMethod::~IterativeMethod()
@@ -83,7 +83,7 @@ void IterativeMethod::Start()
 			while (true)
 			{
 				std::unique_lock<std::mutex> lock(m_);
-				cv_.wait(lock, [this] { return thread_state_ != ThreadState::PAUSED; });
+				cv_.wait(lock, [&] { return thread_state_ != ThreadState::PAUSED; });
 
 				if (thread_state_ == ThreadState::TERMINATING)
 				{
@@ -113,7 +113,7 @@ void IterativeMethod::Pause()
 
 void IterativeMethod::Resume()
 {
-	std::lock_guard<std::mutex> lock(m_);
+	std::unique_lock<std::mutex> lock(m_);
 	switch (thread_state_)
 	{
 	case ThreadState::PAUSED:
@@ -121,6 +121,7 @@ void IterativeMethod::Resume()
 		cv_.notify_one();
 		break;
 	case ThreadState::TERMINATED:
+		lock.unlock();
 		Start();
 		break;
 	}

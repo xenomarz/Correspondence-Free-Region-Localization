@@ -134,9 +134,9 @@ void SymmetricDirichlet::InitializeHessian(std::vector<int>& ii, std::vector<int
 	ss = std::vector<double>(ii.size(), 0.);
 }
 
-void SymmetricDirichlet::CalculateValue(const Eigen::MatrixX2d& x, double& f)
+void SymmetricDirichlet::CalculateValue(const Eigen::VectorXd& x, double& f)
 {
-	bool inversions_exist = updateJ(x);
+	bool inversions_exist = updateJ(X);
 
 	// E = ||J||^2 + ||J^-1||^2 = ||J||^2 + ||J||^2 / det(J)^2
 	Eigen::VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
@@ -146,14 +146,14 @@ void SymmetricDirichlet::CalculateValue(const Eigen::MatrixX2d& x, double& f)
 	f = 0.5 * (Area.asDiagonal() * Efi).sum();
 }
 
-void SymmetricDirichlet::CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g)
+void SymmetricDirichlet::CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g)
 {
-	bool inversions_exist = updateJ(x);
+	bool inversions_exist = updateJ(X);
 	UpdateSSVDFunction();
 
 	Eigen::MatrixX2d invs = s.cwiseInverse();
 
-	g.conservativeResize(x.size());
+	g.conservativeResize(X.size());
 	g.setZero();
 	ComputeDenseSSVDDerivatives();
 
@@ -179,7 +179,7 @@ void SymmetricDirichlet::CalculateGradient(const Eigen::MatrixX2d& x, Eigen::Vec
 	}
 }
 
-void SymmetricDirichlet::CalculateHessian(const Eigen::MatrixX2d& x, std::vector<double>& ss)
+void SymmetricDirichlet::CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss)
 {
 	auto lambda1 = [](double a) {return a - 1.0 / (a * a * a); };
 
@@ -248,6 +248,11 @@ void SymmetricDirichlet::CalculateHessian(const Eigen::MatrixX2d& x, std::vector
 		ss[base + 14] += 1e-6;
 		ss[base + 20] += 1e-6;
 	}
+}
+
+void SymmetricDirichlet::PreUpdate(const Eigen::VectorXd& x)
+{
+	X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
 }
 
 bool SymmetricDirichlet::updateJ(const Eigen::MatrixX2d& x)

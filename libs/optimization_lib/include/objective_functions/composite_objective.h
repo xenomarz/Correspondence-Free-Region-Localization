@@ -16,13 +16,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction> objective_function);
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions);
 	virtual ~CompositeObjective();
 
 	/**
 	 * Public Methods
 	 */
 	void AddObjectiveFunction(const std::shared_ptr<ObjectiveFunction> objective_function);
+	void AddObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions);
 
 private:
 
@@ -30,10 +32,10 @@ private:
 	 * Overrides
 	 */
 	void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss);
-	void CalculateValue(const Eigen::MatrixX2d& X, double& f);
-	void CalculateGradient(const Eigen::MatrixX2d& X, Eigen::VectorXd& g);
-	void CalculateHessian(const Eigen::MatrixX2d& X, std::vector<double>& ss);
-	void Update(const Eigen::MatrixX2d& X);
+	void CalculateValue(const Eigen::VectorXd& X, double& f);
+	void CalculateGradient(const Eigen::VectorXd& X, Eigen::VectorXd& g);
+	void CalculateHessian(const Eigen::VectorXd& X, std::vector<double>& ss);
+	void Update(const Eigen::VectorXd& X);
 
 	/**
 	 * Fields
