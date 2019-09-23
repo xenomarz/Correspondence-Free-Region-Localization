@@ -43,19 +43,23 @@ public:
 	}
 
 	template<int Scheme>
-	static inline void SparseMatrixFromTriplets(const std::vector<int>& ii, const std::vector<int>& jj, const std::vector<double>& ss, Eigen::SparseMatrix<double, Scheme>& M)
+	static inline void SparseMatrixFromTriplets(
+		const std::vector<int>& ii, 
+		const std::vector<int>& jj, 
+		const std::vector<double>& ss, 
+		const Eigen::SparseMatrix<double>::Index rows, 
+		const Eigen::SparseMatrix<double>::Index columns, 
+		Eigen::SparseMatrix<double, Scheme>& M)
 	{
 		std::vector<Eigen::Triplet<double>> triplets;
 		triplets.reserve(ii.size());
-		int rows = *std::max_element(ii.begin(), ii.end()) + 1;
-		int cols = *std::max_element(jj.begin(), jj.end()) + 1;
 
 		for (int i = 0; i < ii.size(); i++)
 		{
 			triplets.push_back(Eigen::Triplet<double>(ii[i], jj[i], ss[i]));
 		}
 
-		M.resize(rows, cols);
+		M.resize(rows, columns);
 		M.setFromTriplets(triplets.begin(), triplets.end());
 	}
 

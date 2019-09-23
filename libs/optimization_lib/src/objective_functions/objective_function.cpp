@@ -42,7 +42,7 @@ void ObjectiveFunction::PostInitialize()
 
 void ObjectiveFunction::InitializeGradient(Eigen::VectorXd& g)
 {
-	g.conservativeResize(objective_function_data_provider_->GetImageVerticesCount());
+	g.conservativeResize(image_vertices_count_);
 }
 
 void ObjectiveFunction::PreUpdate(const Eigen::VectorXd& x)
@@ -59,7 +59,7 @@ void ObjectiveFunction::Update(const Eigen::VectorXd& x)
 		CalculateValue(x, f_);
 		CalculateGradient(x, g_);
 		CalculateHessian(x, ss_);
-		Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, H_);
+		Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, image_vertices_count_, image_vertices_count_, H_);
 		PostUpdate(x);
 	}
 }

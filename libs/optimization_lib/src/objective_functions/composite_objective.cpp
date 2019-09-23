@@ -98,3 +98,16 @@ void CompositeObjective::Update(const Eigen::VectorXd& x)
 	}
 	ObjectiveFunction::Update(x);
 }
+
+bool CompositeObjective::IsValid()
+{
+	for (auto objective_function : objective_functions_)
+	{
+		if (objective_function->IsValid())
+		{
+			return true;
+		}
+	}
+
+	return false;
+}

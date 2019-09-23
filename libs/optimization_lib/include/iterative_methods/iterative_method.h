@@ -49,7 +49,7 @@ private:
 	std::thread thread_;
 	std::condition_variable cv_;
 	mutable std::mutex m_;
-	const double max_backtracking_iterations_;
+	const long max_backtracking_iterations_;
 
 	// Objective function
 	std::shared_ptr<ObjectiveFunction> objective_function_;

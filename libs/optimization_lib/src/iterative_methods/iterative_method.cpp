@@ -91,9 +91,12 @@ void IterativeMethod::Start()
 					break;
 				}
 
-				ComputeDescentDirection(p_);
-				LineSearch(p_);
-				approximations_queue_.push(x_);
+				if (objective_function_->IsValid())
+				{
+					ComputeDescentDirection(p_);
+					LineSearch(p_);
+					approximations_queue_.push(x_);
+				}
 			}
 		});
 		break;

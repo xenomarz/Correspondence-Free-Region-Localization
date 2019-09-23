@@ -25,6 +25,7 @@ public:
 	 */
 	void AddObjectiveFunction(const std::shared_ptr<ObjectiveFunction> objective_function);
 	void AddObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions);
+	bool IsValid();
 
 private:
 

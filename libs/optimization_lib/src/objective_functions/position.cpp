@@ -75,6 +75,8 @@ void Position::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std
 {
 	ii.resize(variables_count_);
 	jj.resize(variables_count_);
+
+	// TODO: No need to fill the whole main diagonal, but only the relevant indices of vertices that were constrained
 	for (int i = 0; i < variables_count_; i++)
 	{
 		ii[i] = i;

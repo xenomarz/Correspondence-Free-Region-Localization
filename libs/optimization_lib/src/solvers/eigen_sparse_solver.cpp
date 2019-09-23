@@ -26,8 +26,8 @@ void EigenSparseSolver::Solve(const Eigen::SparseMatrix<double>& A, const Eigen:
 
 void EigenSparseSolver::Solve(const std::vector<int>& ii, const std::vector<int>& jj, const std::vector<double>& ss, const Eigen::VectorXd& b, Eigen::VectorXd& x)
 {
-	Eigen::SparseMatrix<double> A;
-	Utils::SparseMatrixFromTriplets(ii, jj, ss, A);
-	A.makeCompressed();
-	Solve(A, b, x);
+	//Eigen::SparseMatrix<double> A;
+	//Utils::SparseMatrixFromTriplets(ii, jj, ss, A);
+	//A.makeCompressed();
+	//Solve(A, b, x);
 }

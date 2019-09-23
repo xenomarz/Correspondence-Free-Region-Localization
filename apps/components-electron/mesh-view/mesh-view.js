@@ -305,7 +305,19 @@ export class MeshView extends LitElement {
                 this._resetHighlightedFace();
                 this._externalFaceHighlight = false;
             }
-        });        
+        });
+        
+        this.meshViewSelectFaceSubscriptionToken = PubSub.subscribe('mesh-view-select-face', (name, payload) => {
+            if (payload.meshViewId !== this.id) {
+                this._selectFace(payload.face);
+            }
+        });
+
+        this.meshViewUnselectFaceSubscriptionToken = PubSub.subscribe('mesh-view-unselect-face', (name, payload) => {
+            if (payload.meshViewId !== this.id) {
+                this._unselectFace(payload.face);
+            }
+        });
     }
 
     disconnectedCallback() {
@@ -582,6 +594,7 @@ export class MeshView extends LitElement {
      */
 
     _mouseDownHandler(e) {
+        e.preventDefault();
         if (e.button === 0) {
             if (this._interactionService.state.value === 'idle' && this.enableFaceDragging) {
                 if (this._faceIntersection) {
@@ -595,10 +608,12 @@ export class MeshView extends LitElement {
     }     
 
     _mouseEnterHandler(e) {
+        e.preventDefault();
         this._mouseInCanvas = true;
     }
 
     _mouseLeaveHandler(e) {
+        e.preventDefault();
         switch (this._interactionService.state.value) {
             case 'faceDragging':
                     this._interactionService.send('END_FACE_DRAGGING');
@@ -646,6 +661,7 @@ export class MeshView extends LitElement {
     }     
 
     _mouseClickHandler(e) {
+        e.preventDefault();
         if (this._interactionService.state.value === 'vertexSelection') {
             if (this._vertexIntersection) {
                 if (this._selectedVerticesPoints[this._vertexIntersection.vertexId]) {
@@ -684,6 +700,7 @@ export class MeshView extends LitElement {
     }
 
     _contextMenuHandler(e) {
+        e.preventDefault();
         if (this._interactionService.state.value === 'faceDragging') {
             this._selectFace(this._faceIntersection.face);
             this._publishFaceMessage('mesh-view-face-selected', this._faceIntersection.face);  
@@ -697,30 +714,32 @@ export class MeshView extends LitElement {
         }
     }
 
-    _keyDownHandler(event) {
-        if (event.keyCode === 16) {
+    _keyDownHandler(e) {
+        e.preventDefault();
+        if (e.keyCode === 16) {
             if (this.enableVertexSelection) {
                 this._interactionService.send('BEGIN_VERTEX_SELECTION');
             }
-        } else if (event.keyCode === 17) {
+        } else if (e.keyCode === 17) {
             if (this.enableMeshRotation) {
                 this._interactionService.send('BEGIN_MESH_ROTATION');
             }
-        } else if (event.keyCode === 18) {
+        } else if (e.keyCode === 18) {
             this._interactionService.send('BEGIN_FACE_SELECTION');
         }
     }
 
-    _keyUpHandler(event) {
-        if (event.keyCode === 16) {
+    _keyUpHandler(e) {
+        e.preventDefault();
+        if (e.keyCode === 16) {
             if (this.enableVertexSelection) {
                 this._interactionService.send('END_VERTEX_SELECTION');
             }
-        } else if (event.keyCode === 17) {
+        } else if (e.keyCode === 17) {
             if (this.enableMeshRotation) {
                 this._interactionService.send('END_MESH_ROTATION');
             }
-        } else if (event.keyCode === 18) {
+        } else if (e.keyCode === 18) {
             this._interactionService.send('END_FACE_SELECTION');
         }
     }
@@ -735,9 +754,8 @@ export class MeshView extends LitElement {
             let intersection = intersections[0];
             intersection.plane = new THREE.Plane();
             intersection.offset = new THREE.Vector3();
-            intersection.plane.setFromNormalAndCoplanarPoint(this._camera.getWorldDirection(intersection.plane.normal),
-            intersection.point);
-            intersection.face.id = Math.round(intersection.faceIndex / 3);
+            intersection.plane.setFromNormalAndCoplanarPoint(this._camera.getWorldDirection(intersection.plane.normal), intersection.point);
+            intersection.face.id = intersection.faceIndex;
             return intersection;
         }
 
