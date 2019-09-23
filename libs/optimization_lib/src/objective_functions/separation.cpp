@@ -37,6 +37,16 @@ Separation::~Separation()
 
 }
 
+void Separation::SetDelta(const double delta)
+{
+	delta_ = delta;
+}
+
+double Separation::GetDelta() const
+{
+	return delta_;
+}
+
 void Separation::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
 {
 	auto n = objective_function_data_provider_->GetImageVerticesCount();
@@ -98,7 +108,7 @@ void Separation::CalculateValue(const Eigen::MatrixX2d& x, double& f)
 		int idx_xj = (++it).row();
 	}
 
-	EsepP_squared_rowwise_sum_plus_delta = EsepP_squared_rowwise_sum.array() + delta;
+	EsepP_squared_rowwise_sum_plus_delta = EsepP_squared_rowwise_sum.array() + delta_;
 	f_per_pair = EsepP_squared_rowwise_sum.cwiseQuotient(EsepP_squared_rowwise_sum_plus_delta);
 
 	// store values before taking painting into account
@@ -126,7 +136,7 @@ void Separation::CalculateGradient(const Eigen::MatrixX2d& x, Eigen::VectorXd& g
 {
 	Eigen::MatrixX2d ge;
 
-	Eigen::VectorXd d_vec = Eigen::VectorXd::Constant(EsepP_squared_rowwise_sum.rows(), delta);
+	Eigen::VectorXd d_vec = Eigen::VectorXd::Constant(EsepP_squared_rowwise_sum.rows(), delta_);
 	Eigen::VectorXd x_plus_d = EsepP_squared_rowwise_sum + d_vec;
 	Eigen::VectorXd d = d_vec.cwiseQuotient(x_plus_d.cwiseAbs2());
 	Eigen::VectorXd dconn_e_disconn = (d + connect_alphas + no_seam_constraints_per_pair).cwiseProduct(edge_lenghts_per_pair).cwiseProduct(disconnect_alphas);
@@ -193,7 +203,7 @@ void Separation::FindSingleHessian(const Eigen::Vector2d& xi, const Eigen::Vecto
 	double t = 0.5*dx.squaredNorm();
 	double fp, fpp;
 
-	fp = delta / ((t + delta) * (t + delta));
+	fp = delta_ / ((t + delta_) * (t + delta_));
 	Eigen::Matrix4d Esep4;
 	Esep4 << 1,  0, -1,  0,
 			 0,  1,  0, -1,

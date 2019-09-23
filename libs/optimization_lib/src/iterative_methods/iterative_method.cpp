@@ -74,7 +74,7 @@ void IterativeMethod::LineSearch(const Eigen::VectorXd& p)
 
 void IterativeMethod::Start()
 {
-	std::unique_lock<std::mutex> lock(m_);
+	std::lock_guard<std::mutex> lock(m_);
 	switch (thread_state_)
 	{
 	case ThreadState::TERMINATED:
@@ -102,7 +102,7 @@ void IterativeMethod::Start()
 
 void IterativeMethod::Pause()
 {
-	std::unique_lock<std::mutex> lock(m_);
+	std::lock_guard<std::mutex> lock(m_);
 	switch (thread_state_)
 	{
 	case ThreadState::RUNNING:
@@ -113,7 +113,7 @@ void IterativeMethod::Pause()
 
 void IterativeMethod::Resume()
 {
-	std::unique_lock<std::mutex> lock(m_);
+	std::lock_guard<std::mutex> lock(m_);
 	switch (thread_state_)
 	{
 	case ThreadState::PAUSED:

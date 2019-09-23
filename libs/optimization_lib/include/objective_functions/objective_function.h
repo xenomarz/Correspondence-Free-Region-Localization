@@ -74,7 +74,7 @@ protected:
 	std::shared_ptr<ObjectiveFunctionDataProvider> objective_function_data_provider_;
 
 	// Mutex
-	std::mutex m_;
+	mutable std::mutex m_;
 
 	// Elements count
 	const Eigen::DenseIndex domain_faces_count_;

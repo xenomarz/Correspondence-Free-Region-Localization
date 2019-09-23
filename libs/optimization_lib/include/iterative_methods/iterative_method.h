@@ -48,7 +48,7 @@ private:
 
 	std::thread thread_;
 	std::condition_variable cv_;
-	std::mutex m_;
+	mutable std::mutex m_;
 	const double max_backtracking_iterations_;
 
 	// Objective function

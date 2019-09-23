@@ -1,4 +1,6 @@
 import nanoid from '../web_modules/nano-id.js';
+import * as Enums from './enums.js';
+
 export const CHANGE_SPLIT_ORIENTATION = 'CHANGE_SPLIT_ORIENTATION';
 export const CHANGE_MODEL_VIEWPORT_COLOR = 'CHANGE_MODEL_VIEWPORT_COLOR';
 export const CHANGE_SOUP_VIEWPORT_COLOR = 'CHANGE_SOUP_VIEWPORT_COLOR';
@@ -28,206 +30,279 @@ export const CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY = 'CHANGE_SOUP_VIEW_GRID_T
 export const CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY = 'CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY';
 export const CHANGE_SOLVER_STATE = 'CHANGE_SOLVER_STATE';
 export const CHANGE_MODEL_FILENAME = 'CHANGE_MODEL_FILENAME';
+export const CHANGE_MODULE_FILENAME = 'CHANGE_MODULE_FILENAME';
+export const CHANGE_MODEL_STATE = 'CHANGE_MODEL_STATE';
+export const CHANGE_MODULE_STATE = 'CHANGE_MODULE_STATE';
 
-export const changeSplitOrientation = orientation => {
+export const setSplitOrientation = orientation => {
     return {
         type: CHANGE_SPLIT_ORIENTATION,
         orientation: orientation
     };
 };
 
-export const changeModelViewportColor = color => {
+export const setModelViewportColor = color => {
     return {
         type: CHANGE_MODEL_VIEWPORT_COLOR,
         color: color
     };
 };
 
-export const changeSoupViewportColor = color => {
+export const setSoupViewportColor = color => {
     return {
         type: CHANGE_SOUP_VIEWPORT_COLOR,
         color: color
     };
 };
 
-export const changeModelColor = color => {
+export const setModelColor = color => {
     return {
         type: CHANGE_MODEL_COLOR,
         color: color
     };
 };
 
-export const changeSoupColor = color => {
+export const setSoupColor = color => {
     return {
         type: CHANGE_SOUP_COLOR,
         color: color
     };
 };
 
-export const changeWireframeVisibility = visibility => {
+export const showWireframe = () => {
     return {
         type: CHANGE_WIREFRAME_VISIBILITY,
-        visibility: visibility
+        visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const changeModelViewVisibility = visibility => {
+export const hideWireframe = () => {
     return {
-        type: CHANGE_Model_VIEW_VISIBILITY,
-        visibility: visibility
+        type: CHANGE_WIREFRAME_VISIBILITY,
+        visibility: Enums.Visibility.HIDDEN
     };
 };
 
-export const changeSoupViewVisibility = visibility => {
+export const showModelView = () => {
+    return {
+        type: CHANGE_MODEL_VIEW_VISIBILITY,
+        visibility: Enums.Visibility.VISIBLE
+    };
+};
+
+export const hideModelView = () => {
+    return {
+        type: CHANGE_MODEL_VIEW_VISIBILITY,
+        visibility: Enums.Visibility.HIDDEN
+    };
+};
+
+export const showSoupView = () => {
     return {
         type: CHANGE_SOUP_VIEW_VISIBILITY,
-        visibility: visibility
+        visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const changeDelta = delta => {
+export const hideSoupView = () => {
+    return {
+        type: CHANGE_SOUP_VIEW_VISIBILITY,
+        visibility: Enums.Visibility.HIDDEN
+    };
+};
+
+export const setDelta = delta => {
     return {
         type: CHANGE_DELTA,
         delta: delta
     };
 };
 
-export const changeLambda = lambda => {
+export const setLambda = lambda => {
     return {
         type: CHANGE_LAMBDA,
         lambda: lambda
     };
 };
 
-export const changeSeamlessWeight = weight => {
+export const setSeamlessWeight = weight => {
     return {
         type: CHANGE_SEAMLESS_WEIGHT,
         weight: weight
     };
 };
 
-export const changePositionWeight = weight => {
+export const setPositionWeight = weight => {
     return {
         type: CHANGE_POSITION_WEIGHT,
         weight: weight
     };
 };
 
-export const changeGridHorizontalColor = color => {
+export const setGridHorizontalColor = color => {
     return {
         type: CHANGE_GRID_HORIZONTAL_COLOR,
         color: color
     };
 };
 
-export const changeGridVerticalColor = color => {
+export const setGridVerticalColor = color => {
     return {
         type: CHANGE_GRID_VERTICAL_COLOR,
         color: color
     };
 };
 
-export const changeGridBackgroundColor1 = color => {
+export const setGridBackgroundColor1 = color => {
     return {
         type: CHANGE_GRID_BACKGROUND_COLOR1,
         color: color
     };
 };
 
-export const changeGridBackgroundColor2 = color => {
+export const setGridBackgroundColor2 = color => {
     return {
         type: CHANGE_GRID_BACKGROUND_COLOR2,
         color: color
     };
 };
 
-export const changeHighlightedFaceColor = color => {
+export const setHighlightedFaceColor = color => {
     return {
         type: CHANGE_HIGHLIGHTED_FACE_COLOR,
         color: color
     };
 };
 
-export const changeDraggedFaceColor = color => {
+export const setDraggedFaceColor = color => {
     return {
         type: CHANGE_DRAGGED_FACE_COLOR,
         color: color
     };
 };
 
-export const changeFixedFaceColor = color => {
+export const setFixedFaceColor = color => {
     return {
         type: CHANGE_FIXED_FACE_COLOR,
         color: color
     };
 };
 
-export const changeVertexEnergyColor = color => {
+export const setVertexEnergyColor = color => {
     return {
         type: CHANGE_VERTEX_ENERGY_COLOR,
         color: color
     };
 };
 
-export const changeVertexEnergyType = type => {
+export const setVertexEnergyType = type => {
     return {
         type: CHANGE_VERTEX_ENERGY_TYPE,
         type: type
     };
 };
 
-export const changeGridSize = size => {
+export const setGridSize = size => {
     return {
         type: CHANGE_GRID_SIZE,
         size: size
     };
 };
 
-export const changeGridTextureSize = size => {
+export const setGridTextureSize = size => {
     return {
         type: CHANGE_GRID_TEXTURE_SIZE,
         size: size
     };
 };
 
-export const changeGridLineWidth = width => {
+export const setGridLineWidth = width => {
     return {
         type: CHANGE_GRID_LINE_WIDTH,
         width: width
     };
 };
 
-export const changeUnitGridVisibility = visibility => {
+export const showUnitGrid = () => {
     return {
         type: CHANGE_UNIT_GRID_VISIBILITY,
-        visibility: visibility
+        visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const changeSoupViewGridTextureVisibility = visibility => {
+export const hideUnitGrid = () => {
+    return {
+        type: CHANGE_UNIT_GRID_VISIBILITY,
+        visibility: Enums.Visibility.HIDDEN
+    };
+};
+
+export const showSoupViewGridTexture = () => {
     return {
         type: CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY,
-        visibility: visibility
+        visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const changeOptimizationDataMonitorVisibility = visibility => {
+export const hideSoupViewGridTexture = () => {
+    return {
+        type: CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY,
+        visibility: Enums.Visibility.HIDDEN
+    };
+};
+
+export const showOptimizationDataMonitor = () => {
     return {
         type: CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY,
-        visibility: visibility
+        visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const changeSolverState = state => {
+export const hideOptimizationDataMonitor = () => {
+    return {
+        type: CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY,
+        visibility: Enums.Visibility.HIDDEN
+    };
+};
+
+export const resumeSolver = () => {
     return {
         type: CHANGE_SOLVER_STATE,
+        state: Enums.SolverState.ON
+    };
+};
+
+export const pauseSolver = () => {
+    return {
+        type: CHANGE_SOLVER_STATE,
+        state: Enums.SolverState.OFF
+    };
+};
+
+export const loadModelFile = filename => {
+    return {
+        type: CHANGE_MODEL_FILENAME,
+        filename: filename
+    };
+};
+
+export const loadModuleFile = filename => {
+    return {
+        type: CHANGE_MODULE_FILENAME,
+        filename: filename
+    };
+};
+
+export const setModelState = state => {
+    return {
+        type: CHANGE_MODEL_STATE,
         state: state
     };
 };
 
-export const changeModelFilename = filename => {
+export const setModuleState = state => {
     return {
-        type: CHANGE_MODEL_FILENAME,
-        filename: filename
+        type: CHANGE_MODULE_STATE,
+        state: state
     };
 };

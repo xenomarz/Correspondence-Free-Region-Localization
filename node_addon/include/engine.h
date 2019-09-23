@@ -45,6 +45,14 @@ private:
 	Napi::Value GetImageBufferedVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainBufferedMeshVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetImageBufferedMeshVertices(const Napi::CallbackInfo& info);
+	void SetPositionWeight(const Napi::CallbackInfo& info, const Napi::Value& value);
+	Napi::Value GetPositionWeight(const Napi::CallbackInfo& info);
+	void SetSeamlessWeight(const Napi::CallbackInfo& info, const Napi::Value& value);
+	Napi::Value GetSeamlessWeight(const Napi::CallbackInfo& info);
+	void SetLambda(const Napi::CallbackInfo& info, const Napi::Value& value);
+	Napi::Value GetLambda(const Napi::CallbackInfo& info);
+	void SetDelta(const Napi::CallbackInfo& info, const Napi::Value& value);
+	Napi::Value GetDelta(const Napi::CallbackInfo& info);
 	Napi::Value ResumeSolver(const Napi::CallbackInfo& info);
 	Napi::Value PauseSolver(const Napi::CallbackInfo& info);
 	Napi::Value ConstrainFacePosition(const Napi::CallbackInfo& info);

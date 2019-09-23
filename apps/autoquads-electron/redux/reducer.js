@@ -27,66 +27,23 @@ import {
     CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY,
     CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY,
     CHANGE_SOLVER_STATE,
-    CHANGE_MODEL_FILENAME
+    CHANGE_MODEL_FILENAME,
+    CHANGE_MODULE_FILENAME,
+    CHANGE_MODEL_STATE,
+    CHANGE_MODULE_STATE    
 } from './actions.js';
 
-export const SplitOrientation = {
-    HORIZONTAL: 'Horizontal',
-    VERTICAL: 'Vertical'
-};
-
-export const Visibility = {
-    VISIBLE: 'Visible',
-    HIDDEN: 'Hidden'
-};
-
-export const EnergyType = {
-    SEPERATION: 'Seperation',
-    SEAMLESS: 'Seamless'
-};
-
-export const SolverState = {
-    ON: 'On',
-    OFF: 'Off'
-};
-
-export const isVisible = (visibility) => {
-    return visibility === Visibility.VISIBLE;
-};
-
-export const isSolverOn = (solverState) => {
-    return solverState === SolverState.ON;
-};
-
-export const  visibilityFromBool = (bool) => {
-    return bool ? Visibility.VISIBLE : Visibility.HIDDEN;
-};
-
-export const  SolverStateFromBool = (bool) => {
-    return bool ? SolverState.ON : SolverState.OFF;
-};
-
-export const solverStateText = (solverState) => {
-    return solverState;
-};
-
-export const energyTypeText = (energyType) => {
-    return energyType;
-};
-
-export const splitOrientationText = (splitOrientation) => {
-    return splitOrientation;
-};
+import * as EnumsExports from './enums.js';
 
 const INITIAL_STATE = {
-    splitOrientation: SplitOrientation.HORIZONTAL,
+    splitOrientation: EnumsExports.SplitOrientation.HORIZONTAL,
     modelViewportColor: 'rgb(200,200,200)',
     soupViewportColor: 'rgb(200,200,200)',
     modelColor: 'rgb(255, 255, 255)',
     soupColor: 'rgb(255, 255, 255)',
-    wireframeVisibility: Visibility.VISIBLE,
-    modelViewVisibility: Visibility.VISIBLE,
-    soupViewVisibility: Visibility.VISIBLE,
+    wireframeVisibility: EnumsExports.Visibility.VISIBLE,
+    modelViewVisibility: EnumsExports.Visibility.VISIBLE,
+    soupViewVisibility: EnumsExports.Visibility.VISIBLE,
     delta: 0.9,
     lambda: 0.1,
     seamlessWeight: 0,
@@ -99,15 +56,18 @@ const INITIAL_STATE = {
     draggedFaceColor: 'rgb(0,0,255)',
     fixedFaceColor: 'rgb(255,0,0)',
     vertexEnergyColor: 'rgb(255,0,0)',
-    vertexEnergyType: EnergyType.SEPERATION,
+    vertexEnergyType: EnumsExports.EnergyType.SEPERATION,
     gridSize: 3,
     gridTextureSize: 8,
     gridLineWidth: 0,
-    unitGridVisibility: Visibility.HIDDEN,
-    soupViewGridTextureVisibility: Visibility.HIDDEN,
-    optimizationDataMonitorVisibility: Visibility.VISIBLE,
-    solverState: SolverState.OFF,
-    modelFilename: ''
+    unitGridVisibility: EnumsExports.Visibility.HIDDEN,
+    soupViewGridTextureVisibility: EnumsExports.Visibility.HIDDEN,
+    optimizationDataMonitorVisibility: EnumsExports.Visibility.VISIBLE,
+    solverState: EnumsExports.SolverState.OFF,
+    modelFilename: '',
+    moduleFilename: '',
+    modelState: EnumsExports.LoadState.UNLOADED,
+    moduleState: EnumsExports.LoadState.UNLOADED    
 };
 
 export const reducer = (state = INITIAL_STATE, action) => {
@@ -257,7 +217,22 @@ export const reducer = (state = INITIAL_STATE, action) => {
             return {
                 ...state,
                 modelFilename: action.filename
-            };            
+            };
+        case CHANGE_MODULE_FILENAME:
+            return {
+                ...state,
+                moduleFilename: action.filename
+            };
+        case CHANGE_MODEL_STATE:
+            return {
+                ...state,
+                modelState: action.state
+            };
+        case CHANGE_MODULE_STATE:
+            return {
+                ...state,
+                moduleState: action.state
+            };
         default:
             return state;
     }

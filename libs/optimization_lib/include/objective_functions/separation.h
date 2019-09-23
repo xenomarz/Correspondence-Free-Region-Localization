@@ -20,6 +20,12 @@ public:
 	Separation(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
 	virtual ~Separation();
 
+	/**
+	 * Public methods
+	 */
+	void SetDelta(const double delta);
+	double GetDelta() const;
+
 private:
 
 	/**
@@ -38,7 +44,7 @@ private:
 	/**
 	 * Fields
 	 */
-	double delta = 1.0;
+	double delta_ = 1.0;
 
 	Eigen::SparseMatrix<double> Esep;
 	Eigen::SparseMatrix<double> Esept;

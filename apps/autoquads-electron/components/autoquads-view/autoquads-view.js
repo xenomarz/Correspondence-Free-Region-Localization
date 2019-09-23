@@ -14,6 +14,8 @@ import { AutoquadsModelMeshProvider } from '../autoquads-model-mesh-provider/aut
 import { AutoquadsSoupMeshProvider } from '../autoquads-soup-mesh-provider/autoquads-soup-mesh-provider.js';
 import * as ReducerExports from '../../redux/reducer.js';
 import * as ActionsExports from '../../redux/actions.js';
+import * as EnumsExports from '../../redux/enums.js';
+import * as HelpersExports from '../../redux/helpers.js';
 import { store } from '../../redux/store.js';
 
 export class AutoquadsView extends connect(store)(LitElement) {
@@ -62,7 +64,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         show-wireframe="${this.showWireframe}"
                         background-color="${this.modelViewportColor}"
                         mesh-color="${this.modelColor}"
-                        .meshProvider="${this.modelMeshProvider}"
+                        .meshProvider="${this._modelMeshProvider}"
                         mesh-interaction="${this.meshInteraction}"
                         highlighted-face-color="${this.highlightedFaceColor}"
                         dragged-face-color="${this.draggedFaceColor}"
@@ -83,7 +85,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         show-wireframe="${this.showWireframe}"
                         background-color="${this.soupViewportColor}"
                         mesh-color="${this.soupColor}"
-                        .meshProvider="${this.soupMeshProvider}"
+                        .meshProvider="${this._soupMeshProvider}"
                         mesh-interaction="${this.meshInteraction}"
                         highlighted-face-color="${this.highlightedFaceColor}"
                         dragged-face-color="${this.draggedFaceColor}"
@@ -96,20 +98,16 @@ export class AutoquadsView extends connect(store)(LitElement) {
         `;
     }
 
+    /**
+     * Properties static declaration
+     */
+
     static get properties() {
         return {
-            modelMeshProvider: {
-                type: Object,
-                attribute: 'model-mesh-provider'
-            },
-            soupMeshProvider: {
-                type: Object,
-                attribute: 'soup-mesh-provider'
-            },            
-            soupViewportColor: {
+            splitOrientation: {
                 type: String,
-                attribute: 'soup-viewport-color'
-            },            
+                attribute: 'split-orientation'
+            },
             modelViewportColor: {
                 type: String,
                 attribute: 'model-viewport-color'
@@ -126,21 +124,17 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: String,
                 attribute: 'soup-color'
             },
-            showWireframe: {
-                type: Boolean,
-                attribute: 'show-wireframe'
+            wireframeVisibility: {
+                type: String,
+                attribute: 'wireframe-visibility'
             },
-            showMeshView: {
-                type: Boolean,
-                attribute: 'show-mesh-view'
+            modelViewVisibility: {
+                type: String,
+                attribute: 'model-view-visibility'
             },
-            showSoupView: {
-                type: Boolean,
-                attribute: 'show-soup-view'
-            },
-            showSoupGrid: {
-                type: Boolean,
-                attribute: 'show-soup-grid'
+            soupViewVisibility: {
+                type: String,
+                attribute: 'soup-view-visibility'
             },
             delta: {
                 type: Number,
@@ -157,22 +151,6 @@ export class AutoquadsView extends connect(store)(LitElement) {
             positionWeight: {
                 type: Number,
                 attribute: 'position-weight'
-            },
-            splitOrientation: {
-                type: String,
-                attribute: 'split-orientation'
-            },
-            solver: {
-                type: Boolean,
-                attribute: 'solver'
-            },
-            editingTool: {
-                type: String,
-                attribute: 'editing-tool'
-            },
-            meshInteraction: {
-                type: String,
-                attribute: 'mesh-interaction'
             },
             gridHorizontalColor: {
                 type: String,
@@ -203,7 +181,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 attribute: 'fixed-face-color'
             },
             vertexEnergyColor: {
-                type: Boolean,
+                type: String,
                 attribute: 'vertex-energy-color'
             },
             vertexEnergyType: {
@@ -222,24 +200,36 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: Number,
                 attribute: 'grid-line-width'
             },
-            showOptimizationDataMonitor: {
-                type: Boolean,
-                attribute: 'show-optimization-data-monitor'
-            },
-            showUnitGrid: {
-                type: Boolean,
-                attribute: 'show-unit-grid'
-            },
-            showGridTextureInSoupView: {
-                type: Boolean,
-                attribute: 'show-grid-texture-in-soup-view'
-            },
-            modelFilename: {
+            unitGridVisibility: {
                 type: String,
-                attribute: 'model-filename'
+                attribute: 'unit-grid-visibility'
+            },
+            soupViewGridTextureVisibility: {
+                type: String,
+                attribute: 'soup-view-grid-texture-visibility'
+            },
+            optimizationDataMonitorVisibility: {
+                type: String,
+                attribute: 'optimization-data-monitor-visibility'
+            },  
+            solverState: {
+                type: String,
+                attribute: 'solver-state'
+            },  
+            model: {
+                type: Object,
+                attribute: 'model'
+            },  
+            module: {
+                type: Object,
+                attribute: 'module'
             }
         };
     }
+
+    /**
+     * State handling
+     */
 
     stateChanged(state) {
         this.splitOrientation = state.splitOrientation;
@@ -247,9 +237,13 @@ export class AutoquadsView extends connect(store)(LitElement) {
         this.soupViewportColor = state.soupViewportColor;
         this.modelColor = state.modelColor;
         this.soupColor = state.soupColor;
-        this.showWireframe = ReducerExports.isVisible(state.wireframeVisibility);
-        this.showMeshView = ReducerExports.isVisible(state.modelViewVisibility);
-        this.showSoupView = ReducerExports.isVisible(state.soupViewVisibility);
+        this.wireframeVisibility = state.wireframeVisibility;
+        this.modelViewVisibility = state.modelViewVisibility;
+        this.soupViewVisibility = state.soupViewVisibility;
+        this.delta = state.delta;
+        this.lambda = state.lambda;
+        this.seamlessWeight = state.seamlessWeight;
+        this.positionWeight = state.positionWeight;
         this.gridHorizontalColor = state.gridHorizontalColor;
         this.gridVerticalColor = state.gridVerticalColor;
         this.gridBackgroundColor1 = state.gridBackgroundColor1;
@@ -257,79 +251,65 @@ export class AutoquadsView extends connect(store)(LitElement) {
         this.highlightedFaceColor = state.highlightedFaceColor;
         this.draggedFaceColor = state.draggedFaceColor;
         this.fixedFaceColor = state.fixedFaceColor;
+        this.vertexEnergyColor = state.vertexEnergyColor;
+        this.vertexEnergyType = state.vertexEnergyType;
         this.gridSize = state.gridSize;
         this.gridTextureSize = state.gridTextureSize;
         this.gridLineWidth = state.gridLineWidth;
+        this.unitGridVisibility = state.unitGridVisibility;
+        this.soupViewGridTextureVisibility = state.soupViewGridTextureVisibility;
+        this.optimizationDataMonitorVisibility = state.optimizationDataMonitorVisibility;
+        this.solverState = state.solverState;
         this.modelFilename = state.modelFilename;
-    }    
+        this.moduleFilename = state.moduleFilename;
+        this.modelState = state.modelState;
+        this.moduleState = state.moduleState;   
+    }
+
+    /**
+     * Constructor
+     */
 
     constructor() {
         super();
-        this.modelMeshProvider = new MeshProvider();
-        this.soupMeshProvider = new MeshProvider();           
-    }
-
-    firstUpdated() {
-        this._loadModule();        
-    }
-
-    connectedCallback() {
-        super.connectedCallback();
-    }
-    
-    disconnectedCallback() {
-        // TODO: Remove event listeners
-        super.disconnectedCallback();
+        this._modelMeshProvider = new MeshProvider();
+        this._soupMeshProvider = new MeshProvider();           
     }
 
     /**
      * Properties
      */
 
-    set vertexEnergyType(value) {
-        const oldValue = this._vertexEnergyType;
-        this._vertexEnergyType = value;
-        
-        if(this.modelMeshProvider) {
-            this.modelMeshProvider.vertexEnergyType = vertexEnergyType;
-        }
-
-        if(this.soupMeshProvider) {
-            this.soupMeshProvider.vertexEnergyType = vertexEnergyType;
-        }
-
-        this.requestUpdate('vertexEnergyType', oldValue);
+    set splitOrientation(value) {
+        this._splitOrientation = value;
     }
 
-    get vertexEnergyType() {
-        return this._vertexEnergyType;
-    }  
+    get splitOrientation() {
+        return this._splitOrientation;
+    }
     
-    set vertexEnergyColor(value) {
-        const oldValue = this._vertexEnergyColor;
-        this._vertexEnergyColor = value;
-        
-        if(this.modelMeshProvider) {
-            this.modelMeshProvider.vertexEnergyColor = vertexEnergyColor;
-        }
-
-        if(this.soupMeshProvider) {
-            this.soupMeshProvider.vertexEnergyColor = vertexEnergyColor;
-        }
-
-        this.requestUpdate('vertexEnergyColor', oldValue);
+    set modelViewportColor(value) {
+        this._modelViewportColor = value;
     }
 
-    get vertexEnergyColor() {
-        return this._vertexEnergyColor;
-    }  
-    
+    get modelViewportColor() {
+        return this._modelViewportColor;
+    }
+
+    set soupViewportColor(value) {
+        this._soupViewportColor = value;
+    }
+
+    get soupViewportColor() {
+        return this._soupViewportColor;
+    }
+
     set modelColor(value) {
         const oldValue = this._modelColor;
         this._modelColor = value;
         
-        if(this.modelMeshProvider) {
-            this.modelMeshProvider.meshColor = this._modelColor;
+        if(this._modelMeshProvider) {
+            this._modelMeshProvider.meshColor = this._modelColor;
         }
 
         this.requestUpdate('modelColor', oldValue);
@@ -337,14 +317,14 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
     get modelColor() {
         return this._modelColor;
-    }  
-    
+    }
+
     set soupColor(value) {
         const oldValue = this._soupColor;
         this._soupColor = value;
         
-        if(this.soupMeshProvider) {
-            this.soupMeshProvider.meshColor = this._soupColor;
+        if(this._soupMeshProvider) {
+            this._soupMeshProvider.meshColor = this._soupColor;
         }
 
         this.requestUpdate('soupColor', oldValue);
@@ -354,104 +334,363 @@ export class AutoquadsView extends connect(store)(LitElement) {
         return this._soupColor;
     }
 
+    set wireframeVisibility(value) {
+        this._wireframeVisibility = value;
+    }
+
+    get wireframeVisibility() {
+        return this._wireframeVisibility;        
+    }
+
+    set modelViewVisibility(value) {
+        this._modelViewVisibility = value;
+    }
+
+    get modelViewVisibility() {
+        return this._modelViewVisibility;
+    }
+
+    set soupViewVisibility(value) {
+        this._soupViewVisibility = value;
+    }
+
+    get soupViewVisibility() {
+        return this._soupViewVisibility;
+    }
+
+    set delta(value) {
+        this._delta = value;
+    }
+
+    get delta() {
+        return this._delta;
+    }
+
+    set lambda(value) {
+        this._lambda = value;
+    }
+
+    get lambda() {
+        return this._lambda;
+    }
+
+    set seamlessWeight(value) {
+        this._seamlessWeight = value;
+    }
+
+    get seamlessWeight() {
+        return this._seamlessWeight;
+    }
+    
+    set positionWeight(value) {
+        this._positionWeight = value;
+    }
+
+    get positionWeight() {
+        return this._positionWeight;
+    }
+
+    set gridHorizontalColor(value) {
+        this._gridHorizontalColor = value;
+    }
+
+    get gridHorizontalColor() {
+        return this._gridHorizontalColor;
+    }
+
+    set gridVerticalColor(value) {
+        this._gridVerticalColor = value;
+    }
+
+    get gridVerticalColor() {
+        return this._gridVerticalColor;
+    } 
+
+    set gridBackgroundColor1(value) {
+        this._gridBackgroundColor1 = value;
+    }
+
+    get gridBackgroundColor1() {
+        return this._gridBackgroundColor1;
+    }
+
+    set gridBackgroundColor2(value) {
+        this._gridBackgroundColor2 = value;
+    }
+
+    get gridBackgroundColor2() {
+        return this._gridBackgroundColor2;
+    } 
+
+    set highlightedFaceColor(value) {
+        this._highlightedFaceColor = value;
+    }
+
+    get highlightedFaceColor() {
+        return this._highlightedFaceColor;
+    } 
+
+    set draggedFaceColor(value) {
+        this._draggedFaceColor = value;
+    }
+
+    get draggedFaceColor() {
+        return this._draggedFaceColor;
+    }  
+    
+    set fixedFaceColor(value) {
+        this._fixedFaceColor = value;
+    }
+
+    get fixedFaceColor() {
+        return this._fixedFaceColor;
+    }
+    
+    set vertexEnergyColor(value) {
+        const oldValue = this._vertexEnergyColor;
+        this._vertexEnergyColor = value;
+        
+        if(this._modelMeshProvider) {
+            this._modelMeshProvider.vertexEnergyColor = value;
+        }
+
+        if(this._soupMeshProvider) {
+            this._soupMeshProvider.vertexEnergyColor = value;
+        }
+
+        this.requestUpdate('vertexEnergyColor', oldValue);
+    }
+
+    get vertexEnergyColor() {
+        return this._vertexEnergyColor;
+    } 
+
+    set vertexEnergyType(value) {
+        const oldValue = this._vertexEnergyType;
+        this._vertexEnergyType = value;
+        
+        if(this._modelMeshProvider) {
+            this._modelMeshProvider.vertexEnergyType = value;
+        }
+
+        if(this._soupMeshProvider) {
+            this._soupMeshProvider.vertexEnergyType = value;
+        }
+
+        this.requestUpdate('vertexEnergyType', oldValue);
+    }
+
+    get vertexEnergyType() {
+        return this._vertexEnergyType;
+    }
+    
+    set gridSize(value) {
+        this._gridSize = value;
+    }
+
+    get gridSize() {
+        return this._gridSize;
+    }     
+
+    set gridTextureSize(value) {
+        this._gridTextureSize = value;
+    }
+
+    get gridTextureSize() {
+        return this._gridTextureSize;
+    }     
+
+    set gridLineWidth(value) {
+        this._gridLineWidth = value;
+    }
+
+    get gridLineWidth() {
+        return this._gridLineWidth;
+    } 
+   
+    set unitGridVisibility(value) {
+        this._unitGridVisibility = value;
+    }
+
+    get unitGridVisibility() {
+        return this._unitGridVisibility;
+    } 
+    
+    set soupViewGridTextureVisibility(value) {
+        this._soupViewGridTextureVisibility = value;
+    }
+
+    get soupViewGridTextureVisibility() {
+        return this._soupViewGridTextureVisibility;
+    } 
+
+    set optimizationDataMonitorVisibility(value) {
+        this._optimizationDataMonitorVisibility = value;
+    }
+
+    get optimizationDataMonitorVisibility() {
+        return this._optimizationDataMonitorVisibility;
+    } 
+
+    set solverState(value) {
+        const oldValue = this._solverState;
+        this._solverState = value;
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            switch(this._solverState) {
+                case ReducerExports.SolverState.ON:
+                    this._engine.resumeSolver();
+                    break;
+                case ReducerExports.SolverState.OFF:
+                    this._engine.pauseSolver();
+                    break;                
+            }
+        }
+        this.requestUpdate('solverState', oldValue);
+    }
+
+    get solverState() {
+        return this._solverState;
+    }
+
     set modelFilename(value) {
         const oldValue = this._modelFilename;
-        this._modelFilename = value;
-        if(this._modelFilename !== oldValue) {
-            this._reloadModel(this._modelFilename);
+        if(value && value !== oldValue) {
+            this._modelFilename = value;
+            this._loadModel(this._modelFilename);
+            this.requestUpdate('modelFilename', oldValue);
         }
-        this.requestUpdate('modelFilename', oldValue);
     }
 
     get modelFilename() {
         return this._modelFilename;
-    }      
+    }
+
+    set modelState(value) {
+        this._modelState = value;
+    }
+
+    get modelState() {
+        return this._modelState;
+    }
+
+    set moduleFilename(value) {
+        const oldValue = this._moduleFilename; 
+        if(value && value !== oldValue) {
+            this._moduleFilename = value;
+            this._loadModule(this._moduleFilename);
+            this.requestUpdate('moduleFilename', oldValue);
+        }
+    }    
+
+    get moduleFilename() {
+        return this._moduleFilename;
+    }
+
+    set moduleState(value) {
+        this._moduleState = value;
+    }
+
+    get moduleState() {
+        return this._moduleState;
+    } 
+
+    /**
+     * Element life-cycle callbacks
+     */
+
+    connectedCallback() {
+        super.connectedCallback();
+
+        this._meshViewFaceHighlightedSubscriptionToken = PubSub.subscribe('mesh-view-face-highlighted', (name, payload) => {
+            PubSub.publish('mesh-view-highlight-face', payload);
+        });
+
+        this._meshViewFaceUnhighlightedSubscriptionToken = PubSub.subscribe('mesh-view-face-unhighlighted', (name, payload) => {
+            PubSub.publish('mesh-view-unhighlight-face', payload);
+        });
+
+        this._meshViewFaceDraggingBeginSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging-begin', (name, payload) => {
+            if(!payload.faceSelected) {
+                this._engine.constrainFacePosition(payload.face.id);
+            }
+            PubSub.publish('mesh-view-set-dragged-face', payload);
+        });
+
+        this._meshViewFaceDraggingSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging', (name, payload) => {
+            this._engine.updateConstrainedFacePosition(payload.offset.x, payload.offset.y);
+        });
+
+        this._meshViewFaceDraggingEndSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging-end', (name, payload) => {
+            if(!payload.faceSelected) {
+                this._engine.unconstrainFacePosition();
+            }
+            PubSub.publish('mesh-view-reset-dragged-face', payload);
+        });
+
+        this._meshViewFaceSelectedSubscriptionToken = PubSub.subscribe('mesh-view-face-selected', (name, payload) => {
+            this._engine.constrainFacePosition(payload.face.id);
+            PubSub.publish('mesh-view-select-face', payload);
+        });
+
+        this._meshViewFaceUnselectedSubscriptionToken = PubSub.subscribe('mesh-view-face-unselected', (name, payload) => {
+            this._engine.unconstrainFacePosition();
+            PubSub.publish('mesh-view-unselect-face', payload);
+        });        
+    }
     
+    disconnectedCallback() {
+        // TODO: Remove event listeners
+        super.disconnectedCallback();
+    }
+
     /**
      * Private Methods
      */
 
-    _reloadModel(modelFilename) {
-        if(this._engine && this.modelFilename) {
-            this._engine.loadModel(modelFilename);   
-            this.modelMeshProvider = new AutoquadsModelMeshProvider(this._engine, this.vertexEnergyType, this.vertexEnergyColor, this.modelColor);
-            this.soupMeshProvider = new AutoquadsSoupMeshProvider(this._engine, this.vertexEnergyType, this.vertexEnergyColor, this.soupColor);     
+    _loadModel(modelFilename) {
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            store.dispatch(ActionsExports.setModelState(EnumsExports.LoadState.LOADING));
+            try {
+                this._engine.loadModel(modelFilename);
+                this._modelMeshProvider = new AutoquadsModelMeshProvider(this._engine, this.vertexEnergyType, this.vertexEnergyColor, this.modelColor);
+                this._soupMeshProvider = new AutoquadsSoupMeshProvider(this._engine, this.vertexEnergyType, this.vertexEnergyColor, this.soupColor);  
+                console.log("Model loaded: " + modelFilename);
+                store.dispatch(ActionsExports.setModelState(EnumsExports.LoadState.LOADED));
+            }
+            catch(e) {
+                this._modelMeshProvider = new MeshProvider();
+                this._soupMeshProvider = new MeshProvider();   
+                alert("Couldn't load model file");
+                console.error("Failed to load model: " + modelFilename);
+                store.dispatch(ActionsExports.setModelState(EnumsExports.LoadState.UNLOADED));
+            }
         }
     }
 
-    _loadModule() {
-        const { join } = require('path');
-        let RDSModule = require(join(appRoot, 'node-addon.node'));
-        this._engine = new RDSModule.Engine();
-        this.modelMeshProvider = new MeshProvider();
-        this.soupMeshProvider = new MeshProvider();      
+    _loadModule(moduleFilename) {
+        store.dispatch(ActionsExports.setModuleState(EnumsExports.LoadState.LOADING));
+        try {
+            let RDSModule = require(moduleFilename);
+            this._engine = new RDSModule.Engine();
+            PubSub.publish('module-loaded');
+            console.log("Node module loaded: " + moduleFilename);
+            store.dispatch(ActionsExports.setModuleState(EnumsExports.LoadState.LOADED));
+        }
+        catch(e) {
+            alert("Couldn't load node module");
+            console.error("Failed to node module: " + moduleFilename);
+            store.dispatch(ActionsExports.setModuleState(EnumsExports.LoadState.UNLOADED));
+        }
+        finally {
+            this._modelMeshProvider = new MeshProvider();
+            this._soupMeshProvider = new MeshProvider();
+        }
     }
 
     _reloadModule() {
         this._loadModule();
-        this._reloadModel(this._modelFilename);
+        this._loadModel(this._modelFilename);
     }
-
-    _lambdaChanged(lambda) {
-        if (!isNaN(lambda)) {
-            // this.autoquads.lambda = lambda;
-        }
-    }
-
-    _deltaChanged(delta) {
-        if (!isNaN(delta)) {
-            // this.autoquads.delta = delta;
-        }
-    }
-
-    _integerWeightChanged(integerWeight) {
-        if (!isNaN(integerWeight)) {
-            // this.autoquads.integerWeight = integerWeight;
-        }
-    }
-
-    _integerSpacingChanged(integerSpacing) {
-        if (!isNaN(integerSpacing)) {
-            // this.autoquads.integerSpacing = integerSpacing;
-        }
-    }
-
-    _seamlessWeightChanged(seamlessWeight) {
-        if (!isNaN(seamlessWeight)) {
-            // this.autoquads.seamlessWeight = seamlessWeight;
-        }
-    }
-
-    _positionWeightChanged(positionWeight) {
-        if (!isNaN(positionWeight)) {
-            // this.autoquads.positionWeight = positionWeight;
-        }
-    }
-
-    _editingToolChanged(editingTool) {
-
-    }
-
-    _vertexEnergyColorChanged(vertexEnergyColor) {
-        this._vertexEnergyColor = new THREE.Color(vertexEnergyColor);
-        this._modelMeshProvider.energyColor = this._vertexEnergyColor;
-        this._soupMeshProvider.energyColor = this._vertexEnergyColor;
-    }
-
-    _vertexEnergyChanged(vertexEnergy) {
-        this._modelMeshProvider.vertexEnergy = vertexEnergy;
-        this._soupMeshProvider.vertexEnergy = vertexEnergy;
-    }
-
-    _modelColorChanged(modelColor) {
-        this._modelColor = new THREE.Color(modelColor);
-        // this.modelMeshProvider.meshColor = this._modelColor;
-    }
-
-    _solverColorChanged(solverColor) {
-        this._solverColor = new THREE.Color(solverColor);
-        // this.solverMeshProvider.meshColor = this._solverColor;
-    }  
 }
 
 customElements.define('autoquads-view', AutoquadsView);

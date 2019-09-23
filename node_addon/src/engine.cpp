@@ -22,7 +22,11 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceAccessor("domainVertices", &Engine::GetDomainVertices, nullptr),
 		InstanceAccessor("imageVertices", &Engine::GetImageVertices, nullptr),
 		InstanceAccessor("domainFaces", &Engine::GetDomainFaces, nullptr),
-		InstanceAccessor("imageFaces", &Engine::GetImageFaces, nullptr)
+		InstanceAccessor("imageFaces", &Engine::GetImageFaces, nullptr),
+		InstanceAccessor("positionWeight", &Engine::GetPositionWeight, &Engine::SetPositionWeight),
+		InstanceAccessor("seamlessWeight", &Engine::GetSeamlessWeight, &Engine::SetSeamlessWeight),
+		InstanceAccessor("lambda", &Engine::GetLambda, &Engine::SetLambda),
+		InstanceAccessor("delta", &Engine::GetDelta, &Engine::SetDelta)
 	});
 
 	constructor = Napi::Persistent(func);
@@ -207,6 +211,125 @@ Napi::Array Engine::CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F)
 	}
 
 	return facesArray;
+}
+
+void Engine::SetPositionWeight(const Napi::CallbackInfo& info, const Napi::Value& value)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (!value.IsNumber())
+	{
+		Napi::TypeError::New(env, "value is expected to be a Number").ThrowAsJavaScriptException();
+		return;
+	}
+
+	/**
+	 * Set position weight
+	 */
+	Napi::Number number = value.As<Napi::Number>();
+	double position_weight = number.DoubleValue();
+	position_->SetWeight(position_weight);
+}
+
+Napi::Value Engine::GetPositionWeight(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	Napi::Number delta = Napi::Number::New(env, position_->GetWeight());
+
+	return delta;
+}
+
+void Engine::SetSeamlessWeight(const Napi::CallbackInfo& info, const Napi::Value& value)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (!value.IsNumber())
+	{
+		Napi::TypeError::New(env, "value is expected to be a Number").ThrowAsJavaScriptException();
+		return;
+	}
+
+	/**
+	 * Set seamless weight
+	 */
+	Napi::Number number = value.As<Napi::Number>();
+	double seamless_weight = number.DoubleValue();
+}
+
+Napi::Value Engine::GetSeamlessWeight(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	return env.Null();
+}
+
+void Engine::SetLambda(const Napi::CallbackInfo& info, const Napi::Value& value)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (!value.IsNumber())
+	{
+		Napi::TypeError::New(env, "value is expected to be a Number").ThrowAsJavaScriptException();
+		return;
+	}
+
+	/**
+	 * Set lambda
+	 */
+	Napi::Number number = value.As<Napi::Number>();
+	double lambda = number.DoubleValue();
+}
+
+Napi::Value Engine::GetLambda(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	return env.Null();
+}
+
+void Engine::SetDelta(const Napi::CallbackInfo& info, const Napi::Value& value)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (!value.IsNumber())
+	{
+		Napi::TypeError::New(env, "value is expected to be a Number").ThrowAsJavaScriptException();
+		return;
+	}
+
+	/**
+	 * Set delta
+	 */
+	Napi::Number number = value.As<Napi::Number>();
+	double delta = number.DoubleValue();
+}
+
+Napi::Value Engine::GetDelta(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	return env.Null();
 }
 
 Napi::Value Engine::ResumeSolver(const Napi::CallbackInfo& info)

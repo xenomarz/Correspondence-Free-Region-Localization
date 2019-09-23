@@ -52,7 +52,7 @@ void ObjectiveFunction::PreUpdate(const Eigen::MatrixX2d& x)
 
 void ObjectiveFunction::Update(const Eigen::MatrixX2d& x)
 {
-	std::unique_lock<std::mutex> lock(m_);
+	std::lock_guard<std::mutex> lock(m_);
 	PreUpdate(x);
 	CalculateValue(x, f_);
 	CalculateGradient(x, g_);
@@ -68,45 +68,54 @@ void ObjectiveFunction::PostUpdate(const Eigen::MatrixX2d& x)
 
 double ObjectiveFunction::GetValue() const
 {
+	std::lock_guard<std::mutex> lock(m_);
 	return f_;
 }
 
 const Eigen::VectorXd& ObjectiveFunction::GetGradient() const
 {
+	std::lock_guard<std::mutex> lock(m_);
 	return g_;
 }
 
 const std::vector<int>& ObjectiveFunction::GetII() const
 {
+	std::lock_guard<std::mutex> lock(m_);
 	return ii_;
 }
 
 const std::vector<int>& ObjectiveFunction::GetJJ() const
 {
+	std::lock_guard<std::mutex> lock(m_);
 	return jj_;
 }
 
 const std::vector<double>& ObjectiveFunction::GetSS() const
 {
+	std::lock_guard<std::mutex> lock(m_);
 	return ss_;
 }
 
 const Eigen::SparseMatrix<double>& ObjectiveFunction::GetHessian() const
 {
+	std::lock_guard<std::mutex> lock(m_);
 	return H_;
 }
 
 double ObjectiveFunction::GetWeight() const
 {
+	std::lock_guard<std::mutex> lock(m_);
 	return w_;
 }
 
 const std::string ObjectiveFunction::GetName() const
 {
+	std::lock_guard<std::mutex> lock(m_);
 	return name_;
 }
 
 void ObjectiveFunction::SetWeight(const double w)
 {
+	std::lock_guard<std::mutex> lock(m_);
 	w_ = w;
 }

@@ -105,6 +105,24 @@ export class SideBarParameterInput extends LitElement {
         this.step = 0.1;
     }
 
+    set value(value) {
+        const oldValue = this._value;
+        this._value = value;
+        let valueChangedEvent = new CustomEvent('value-changed', { 
+            detail: { 
+                value: value
+            },
+            bubbles: true, 
+            composed: true 
+        });
+        this.dispatchEvent(valueChangedEvent);
+        this.requestUpdate('value', oldValue);
+    }
+
+    get value() {
+        return this._value;
+    }
+
     connectedCallback() {
         super.connectedCallback();
         document.addEventListener("keydown", this._handleDocumentKeyDown.bind(this));

@@ -292,6 +292,20 @@ export class MeshView extends LitElement {
         this._renderer.domElement.addEventListener("contextmenu", this._contextMenuBoundHandler);
         window.addEventListener('keydown', this._keyDownBoundHandler);
         window.addEventListener('keyup', this._keyUpBoundHandler);
+
+        this._meshViewHighlightFaceSubscriptionToken = PubSub.subscribe('mesh-view-highlight-face', (name, payload) => {
+            if (payload.meshViewId !== this.id) {
+                this._setHighlightedFace(payload.face);
+                this._externalFaceHighlight = true;
+            }
+        });
+
+        this._meshViewUnhighlightFaceSubscriptionToken = PubSub.subscribe('mesh-view-unhighlight-face', (name, payload) => {
+            if (payload.meshViewId !== this.id) {
+                this._resetHighlightedFace();
+                this._externalFaceHighlight = false;
+            }
+        });        
     }
 
     disconnectedCallback() {
@@ -571,9 +585,10 @@ export class MeshView extends LitElement {
         if (e.button === 0) {
             if (this._interactionService.state.value === 'idle' && this.enableFaceDragging) {
                 if (this._faceIntersection) {
-                    PubSub.publish('mesh-view-face-down', {
-                        face: this._faceIntersection.face
-                    });
+                    this._publishFaceMessage('mesh-view-face-down', this._faceIntersection.face);  
+                    // PubSub.publish('mesh-view-face-down', {
+                    //     face: this._faceIntersection.face
+                    // });
                 }
             }
         }
@@ -593,9 +608,10 @@ export class MeshView extends LitElement {
         this._mouseInCanvas = false;
         if (this._faceIntersection) {
             this._resetHighlightedFace();
-            PubSub.publish('mesh-view-face-unhighlighted', {
-                meshViewId: this.id
-            });
+            this._publishFaceMessage('mesh-view-face-unhighlighted');  
+            // PubSub.publish('mesh-view-face-unhighlighted', {
+            //     meshViewId: this.id
+            // });
         }
 
         this._faceIntersection = null;
@@ -650,16 +666,18 @@ export class MeshView extends LitElement {
             if (this._faceIntersection) {
                 if (this._selectedFaces[this._faceIntersection.face.id]) {
                     this._unselectFace(this._faceIntersection.face);
-                    PubSub.publish('mesh-view-face-unselected', {
-                        face: this._faceIntersection.face,
-                        meshViewId: this.id
-                    });
+                    this._publishFaceMessage('mesh-view-face-unselected', this._faceIntersection.face);  
+                    // PubSub.publish('mesh-view-face-unselected', {
+                    //     face: this._faceIntersection.face,
+                    //     meshViewId: this.id
+                    // });
                 } else {
                     this._selectFace(this._faceIntersection.face);
-                    PubSub.publish('mesh-view-face-selected', {
-                        face: this._faceIntersection.face,
-                        meshViewId: this.id
-                    });
+                    this._publishFaceMessage('mesh-view-face-selected', this._faceIntersection.face);  
+                    // PubSub.publish('mesh-view-face-selected', {
+                    //     face: this._faceIntersection.face,
+                    //     meshViewId: this.id
+                    // });
                 }
             }
         }
@@ -668,10 +686,11 @@ export class MeshView extends LitElement {
     _contextMenuHandler(e) {
         if (this._interactionService.state.value === 'faceDragging') {
             this._selectFace(this._faceIntersection.face);
-            PubSub.publish('mesh-view-face-selected', {
-                face: this._faceIntersection.face,
-                meshViewId: this.id
-            });
+            this._publishFaceMessage('mesh-view-face-selected', this._faceIntersection.face);  
+            // PubSub.publish('mesh-view-face-selected', {
+            //     face: this._faceIntersection.face,
+            //     meshViewId: this.id
+            // });
             setTimeout(0, () => {
                 this._interactionService.send('END_FACE_DRAGGING');
             });
@@ -707,7 +726,7 @@ export class MeshView extends LitElement {
     }
 
     /**
-     * Intersection tests
+     * Face and vertex intersection
      */
 
     _getMeshIntersection() {
@@ -734,7 +753,28 @@ export class MeshView extends LitElement {
         }
 
         return null;
-    }     
+    }
+    
+    _getOffsetFromIntersection() {
+        let currentIntersectionPoint = new THREE.Vector3();
+        let offset = new THREE.Vector3();
+        if (this._raycaster.ray.intersectPlane(this._faceIntersection.plane, currentIntersectionPoint)) {
+            offset.subVectors(currentIntersectionPoint, this._faceIntersection.point);
+        }
+
+        return offset;
+    }
+
+    _updateDragOffset() {
+        this._faceIntersection.offset = this._getOffsetFromIntersection();
+        this._publishFaceMessage('mesh-view-face-dragging', this._faceIntersection.face, {
+            offset: this._faceIntersection.offset
+        });  
+        // PubSub.publish('mesh-view-face-dragging', {
+        //     face: this._faceIntersection.face,
+        //     offset: this._faceIntersection.offset
+        // });
+    }    
 
     /**
      * Three.js objects creation
@@ -941,15 +981,17 @@ export class MeshView extends LitElement {
 
             if (this._faceIntersection) {
                 this._setHighlightedFace(this._faceIntersection.face);
-                PubSub.publish('mesh-view-face-highlighted', {
-                    face: this._faceIntersection.face,
-                    meshViewId: this.id
-                });
+                this._publishFaceMessage('mesh-view-face-highlighted', this._faceIntersection.face);  
+                // PubSub.publish('mesh-view-face-highlighted', {
+                //     face: this._faceIntersection.face,
+                //     meshViewId: this.id
+                // });
             } else {
                 this._resetHighlightedFace();
-                PubSub.publish('mesh-view-face-unhighlighted', {
-                    meshViewId: this.id
-                });
+                this._publishFaceMessage('mesh-view-face-unhighlighted');        
+                // PubSub.publish('mesh-view-face-unhighlighted', {
+                //     meshViewId: this.id
+                // });
             }
         }
 
@@ -996,16 +1038,18 @@ export class MeshView extends LitElement {
 
     beginFaceDragging() {
         this._setDraggedFace(this._faceIntersection.face);
-        PubSub.publish('mesh-view-face-dragging-begin', {
-            face: this._draggedFace
-        });
+        this._publishFaceMessage('mesh-view-face-dragging-begin', this._draggedFace);        
+        // PubSub.publish('mesh-view-face-dragging-begin', {
+        //     face: this._draggedFace
+        // });
         this._controls.enablePan = false;
     }
 
     endFaceDragging() {
-        PubSub.publish('mesh-view-face-dragging-end', {
-            face: this._draggedFace
-        });
+        this._publishFaceMessage('mesh-view-face-dragging-end', this._draggedFace);
+        // PubSub.publish('mesh-view-face-dragging-end', {
+        //     face: this._draggedFace
+        // });
         this._resetDraggedFace();
         this._controls.enablePan = true;
     }    
@@ -1038,6 +1082,27 @@ export class MeshView extends LitElement {
         }
 
         return bufferedColors;
+    }
+
+    /**
+     * Message publication
+     */
+
+    _publishFaceMessage(message, face, options) {
+        let payload = {
+            meshViewId: this.id,
+            ...options
+        }
+
+        if(face) {
+            payload = {
+                ...payload,
+                face: face,
+                faceSelected: Boolean(this._selectedFaces[face.id])  
+            }
+        }
+
+        PubSub.publish(message, payload);         
     }
 }
 

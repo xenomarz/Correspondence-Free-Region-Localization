@@ -13,6 +13,7 @@ CompositeObjective::~CompositeObjective()
 
 void CompositeObjective::AddObjectiveFunction(const std::shared_ptr<ObjectiveFunction> objective_function)
 {
+	std::lock_guard<std::mutex> lock(m_);
 	objective_functions_.push_back(objective_function);
 }
 
