@@ -1,12 +1,12 @@
-#include <objective_functions/area_preserving.h>
+#include <objective_functions/AreaDistortion.h>
 
-AreaPreserving::AreaPreserving()
+AreaDistortion::AreaDistortion()
 {
 	name = "Area Preserving";
 	w = 1;
 }
 
-void AreaPreserving::init()
+void AreaDistortion::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw name + " must define members V,F before init()!";
@@ -47,7 +47,7 @@ void AreaPreserving::init()
 	init_hessian();
 }
 
-void AreaPreserving::updateX(const VectorXd& X)
+void AreaDistortion::updateX(const VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
@@ -55,7 +55,7 @@ void AreaPreserving::updateX(const VectorXd& X)
 	}
 }
 
-double AreaPreserving::value(bool update)
+double AreaDistortion::value(bool update)
 {
 	// E = 0.5(det(J) - 1)^2
 	VectorXd E = (detJ - VectorXd::Ones(detJ.rows())).cwiseAbs2();
@@ -69,7 +69,7 @@ double AreaPreserving::value(bool update)
 	return value;
 }
 
-void AreaPreserving::gradient(VectorXd& g)
+void AreaDistortion::gradient(VectorXd& g)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
@@ -91,7 +91,7 @@ void AreaPreserving::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void AreaPreserving::hessian()
+void AreaDistortion::hessian()
 {
 #pragma omp parallel for num_threads(24)
 	int index2 = 0;
@@ -110,7 +110,7 @@ void AreaPreserving::hessian()
 	}
 }
 
-bool AreaPreserving::update_variables(const VectorXd& X)
+bool AreaDistortion::update_variables(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
@@ -149,7 +149,7 @@ bool AreaPreserving::update_variables(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 }
 
-void AreaPreserving::init_hessian()
+void AreaDistortion::init_hessian()
 {
 	II.clear();
 	JJ.clear();

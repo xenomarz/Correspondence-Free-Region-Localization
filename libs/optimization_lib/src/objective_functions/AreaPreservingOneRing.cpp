@@ -1,13 +1,13 @@
 #include <objective_functions/OneRingAreaPreserving.h>
 #include <igl/vertex_triangle_adjacency.h>
 
-OneRingAreaPreserving::OneRingAreaPreserving()
+AreaPreservingOneRing::AreaPreservingOneRing()
 {
 	name = "One Ring Area Preserving";
 	w = 0;
 }
 
-void OneRingAreaPreserving::init()
+void AreaPreservingOneRing::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw name + " must define members V,F before init()!";
@@ -38,7 +38,7 @@ void OneRingAreaPreserving::init()
 	init_hessian();
 }
 
-vector<int> OneRingAreaPreserving::get_one_ring_vertices(const vector<int>& OneRingFaces) {
+vector<int> AreaPreservingOneRing::get_one_ring_vertices(const vector<int>& OneRingFaces) {
 	vector<int> vertices;
 	vertices.clear();
 	for (int i = 0; i < OneRingFaces.size(); i++) {
@@ -61,7 +61,7 @@ vector<int> OneRingAreaPreserving::get_one_ring_vertices(const vector<int>& OneR
 	return vertices;
 }
 
-void OneRingAreaPreserving::updateX(const VectorXd& X)
+void AreaPreservingOneRing::updateX(const VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
@@ -69,7 +69,7 @@ void OneRingAreaPreserving::updateX(const VectorXd& X)
 	}
 }
 
-double OneRingAreaPreserving::value(const bool update)
+double AreaPreservingOneRing::value(const bool update)
 {
 	double value = OneRingSum.cwiseAbs2().sum();
 	value /= 2;
@@ -82,7 +82,7 @@ double OneRingAreaPreserving::value(const bool update)
 	return value;
 }
 
-void OneRingAreaPreserving::gradient(VectorXd& g)
+void AreaPreservingOneRing::gradient(VectorXd& g)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
@@ -102,7 +102,7 @@ void OneRingAreaPreserving::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void OneRingAreaPreserving::hessian()
+void AreaPreservingOneRing::hessian()
 {
 #pragma omp parallel for num_threads(24)
 	int index2 = 0;
@@ -122,7 +122,7 @@ void OneRingAreaPreserving::hessian()
 	}
 }
 
-bool OneRingAreaPreserving::update_variables(const VectorXd& X)
+bool AreaPreservingOneRing::update_variables(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
@@ -191,7 +191,7 @@ bool OneRingAreaPreserving::update_variables(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 }
 
-void OneRingAreaPreserving::init_hessian()
+void AreaPreservingOneRing::init_hessian()
 {
 	II.clear();
 	JJ.clear();
@@ -225,7 +225,7 @@ void OneRingAreaPreserving::init_hessian()
 	SS = vector<double>(II.size(), 0.);
 }
 
-void OneRingAreaPreserving::init_dJdX() {
+void AreaPreservingOneRing::init_dJdX() {
 	//prepare dJ/dX
 	for (int vi = 0; vi < VF.size(); vi++) {
 		vector<int> OneRingFaces = VF[vi];

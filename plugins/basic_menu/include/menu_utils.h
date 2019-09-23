@@ -38,9 +38,9 @@
 
 #include "../../libs/optimization_lib/include/solvers/newton_solver.h"
 #include "../../libs/optimization_lib/include/solvers/gradient_descent_solver.h"
-#include "../../libs/optimization_lib/include/objective_functions/symmetric_dirichlet.h"
-#include "../../libs/optimization_lib/include/objective_functions/symmetric_dirichlet_optimized.h"
-#include "../../libs/optimization_lib/include/objective_functions/area_preserving.h"
+#include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichlet.h"
+#include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichletCompositeMajorization.h"
+#include "../../libs/optimization_lib/include/objective_functions/AreaDistortion.h"
 #include "../../libs/optimization_lib/include/objective_functions/OneRingAreaPreserving.h"
 #include "../../libs/optimization_lib/include/objective_functions/LSCM.h"
 #include "../../libs/optimization_lib/include/objective_functions/penalty_positional_constraints.h"

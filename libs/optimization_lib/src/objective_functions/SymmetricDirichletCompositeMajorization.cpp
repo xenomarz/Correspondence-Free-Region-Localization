@@ -1,8 +1,8 @@
-#include <objective_functions/symmetric_dirichlet_optimized.h>
+#include <objective_functions/SymmetricDirichletCompositeMajorization.h>
 
 SymmetricDirichletOptimized::SymmetricDirichletOptimized()
 {
-    name = "symmetric dirichlet optimized";
+    name = "Symmetric Dirichlet Composite Majorization";
 	w = 0;
 }
 

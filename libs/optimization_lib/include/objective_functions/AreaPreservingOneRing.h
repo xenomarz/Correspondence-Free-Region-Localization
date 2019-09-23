@@ -1,20 +1,25 @@
 #pragma once
-
 #include <libs/optimization_lib/include/objective_functions/TriangleMeshObjectiveFunction.h>
 
-class AreaPreserving : public TriangleMeshObjectiveFunction
+class AreaPreservingOneRing : public TriangleMeshObjectiveFunction
 {	
 private:
-	// Jacobian determinant (ad-bc)
-	MatrixXd grad;
-	vector<Matrix<double, 6, 6>> Hessian;
-	vector<Matrix<double, 4, 6>> dJ_dX;
+	// adjacency matrix (vertex to face)
+	vector<vector<int> > VF, VFi;
 
+	// Jacobian determinant (ad-bc)
+	VectorXd OneRingSum;
+	vector<RowVectorXd> grad;
+	vector<MatrixXd> dJ_dX;
+	vector<MatrixXd> Hessian;
+
+	vector<int> get_one_ring_vertices(const vector<int>& OneRingFaces);
 	virtual void init_hessian() override;
+	void init_dJdX();
 	bool update_variables(const VectorXd& X);
 
 public:
-	AreaPreserving();
+	AreaPreservingOneRing();
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
 	virtual double value(const bool update = true) override;
