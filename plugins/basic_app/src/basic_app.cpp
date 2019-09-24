@@ -59,10 +59,10 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		viewer->core(output_view_id).lighting_factor = 0;
 		
 		// Initialize solver thread
-		newton = make_shared<newton_solver>();
-		gradient_descent = make_shared<gradient_descent_solver>();
+		newton = make_shared<NewtonSolver>();
+		gradient_descent = make_shared<GradientDescentSolver>();
 		Solver = newton;
-		totalObjective = make_shared<total_objective>();	
+		totalObjective = make_shared<TotalObjective>();	
 
 		//maximize window
 		glfwMaximizeWindow(viewer->window);
@@ -957,19 +957,19 @@ void basic_app::initializeSolver()
 		return;
 
 	// initialize the energy
-	auto symDirichlet = make_unique<symmetric_dirichlet>();
+	auto symDirichlet = make_unique<SymmetricDirichlet>();
 	symDirichlet->init_mesh(V, F);
 	symDirichlet->init();
-	auto oneRingAreaPreserving = make_unique<one_ring_area_preserving>();
+	auto oneRingAreaPreserving = make_unique<AreaDistortionOneRing>();
 	oneRingAreaPreserving->init_mesh(V, F);
 	oneRingAreaPreserving->init();
-	auto symDirichletCompositeMajorization = make_unique<symmetric_dirichlet_composite_majorization>();
+	auto symDirichletCompositeMajorization = make_unique<SymmetricDirichletCompositeMajorization>();
 	symDirichletCompositeMajorization->init_mesh(V, F);
 	symDirichletCompositeMajorization->init();
-	auto areaPreserving = make_unique<area_preserving>();
+	auto areaPreserving = make_unique<AreaDistortion>();
 	areaPreserving->init_mesh(V, F);
 	areaPreserving->init();
-	auto anglePreserving = make_unique<angle_preserving>();
+	auto anglePreserving = make_unique<LeastSquaresConformal>();
 	anglePreserving->init_mesh(V, F);
 	anglePreserving->init();
 	auto constraintsPositional = make_shared<penalty_positional_constraints>();

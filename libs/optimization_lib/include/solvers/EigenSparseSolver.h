@@ -3,11 +3,11 @@
 #include <Eigen/Sparse>
 
 template <typename vectorTypeI, typename vectorTypeS>
-class eigen_sparse_solver
+class EigenSparseSolver
 {
 public:
-	eigen_sparse_solver();
-	~eigen_sparse_solver();
+	EigenSparseSolver();
+	~EigenSparseSolver();
 	void set_pattern(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS);
 	void analyze_pattern();
 	bool factorize(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS);

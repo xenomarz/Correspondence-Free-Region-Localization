@@ -1,7 +1,7 @@
 #pragma once
-#include <libs/optimization_lib/include/objective_functions/objective_function.h>
+#include <libs/optimization_lib/include/objective_functions/ObjectiveFunction.h>
 
-class symmetric_dirichlet : public objective_function
+class SymmetricDirichlet : public ObjectiveFunction
 {	
 private:
 	VectorXd dirichlet;
@@ -10,7 +10,7 @@ private:
 	vector<Matrix<double, 4, 6>> dJ_dX;
 	bool update_variables(const VectorXd& X);
 public:
-	symmetric_dirichlet();
+	SymmetricDirichlet();
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
 	virtual double value(const bool update = true) override;

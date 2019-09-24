@@ -1,7 +1,7 @@
 #pragma once
-#include <libs/optimization_lib/include/objective_functions/objective_function.h>
+#include <libs/optimization_lib/include/objective_functions/ObjectiveFunction.h>
 
-class symmetric_dirichlet_composite_majorization : public objective_function
+class SymmetricDirichletCompositeMajorization : public ObjectiveFunction
 {
 private:
 	// cones alpha and beta
@@ -26,7 +26,7 @@ private:
 	inline Matrix6d ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs);
 
 public:
-	symmetric_dirichlet_composite_majorization();
+	SymmetricDirichletCompositeMajorization();
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
 	virtual double value(const bool update = true) override;

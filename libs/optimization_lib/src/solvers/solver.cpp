@@ -8,7 +8,7 @@ solver::solver()
 	num_steps(2147483647)
 {}
 
-void solver::init(shared_ptr<objective_function> objective, const VectorXd& X0)
+void solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
 {
 	this->objective = objective;
 	X = X0;

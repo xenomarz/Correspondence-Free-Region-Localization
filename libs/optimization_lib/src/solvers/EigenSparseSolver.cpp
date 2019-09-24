@@ -1,20 +1,20 @@
-#include <solvers/eigen_sparse_solver.h>
+#include <solvers/EigenSparseSolver.h>
 #include <vector>
 #include <iostream>
 using namespace std;
 
 template <typename vectorTypeI, typename vectorTypeS>
-eigen_sparse_solver<vectorTypeI, vectorTypeS>::eigen_sparse_solver()
+EigenSparseSolver<vectorTypeI, vectorTypeS>::EigenSparseSolver()
 {
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-eigen_sparse_solver<vectorTypeI, vectorTypeS>::~eigen_sparse_solver()
+EigenSparseSolver<vectorTypeI, vectorTypeS>::~EigenSparseSolver()
 {
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-void eigen_sparse_solver<vectorTypeI, vectorTypeS>::set_pattern(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS)
+void EigenSparseSolver<vectorTypeI, vectorTypeS>::set_pattern(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS)
 {
 	std::vector<Eigen::Triplet<double>> tripletList;
 	tripletList.reserve(II.size());
@@ -28,13 +28,13 @@ void eigen_sparse_solver<vectorTypeI, vectorTypeS>::set_pattern(const vectorType
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-void eigen_sparse_solver<vectorTypeI, vectorTypeS>::analyze_pattern()
+void EigenSparseSolver<vectorTypeI, vectorTypeS>::analyze_pattern()
 {
 	solver.analyzePattern(A);
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-bool eigen_sparse_solver<vectorTypeI, vectorTypeS>::factorize(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS)
+bool EigenSparseSolver<vectorTypeI, vectorTypeS>::factorize(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS)
 {
 	std::vector<Eigen::Triplet<double>> tripletList;
 	tripletList.reserve(II.size());
@@ -50,11 +50,11 @@ bool eigen_sparse_solver<vectorTypeI, vectorTypeS>::factorize(const vectorTypeI 
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-Eigen::VectorXd eigen_sparse_solver<vectorTypeI, vectorTypeS>::solve(Eigen::VectorXd &rhs)
+Eigen::VectorXd EigenSparseSolver<vectorTypeI, vectorTypeS>::solve(Eigen::VectorXd &rhs)
 {
 	return solver.solve(rhs);
 }
 
-template class eigen_sparse_solver<std::vector<int, std::allocator<int> >, std::vector<double, std::allocator<double> > >;
+template class EigenSparseSolver<std::vector<int, std::allocator<int> >, std::vector<double, std::allocator<double> > >;
 
 //template class eigen_sparse_solver<Eigen::Matrix<int, -1, 1, 0, -1, 1>, Eigen::Matrix<double, -1, 1, 0, -1, 1> >;

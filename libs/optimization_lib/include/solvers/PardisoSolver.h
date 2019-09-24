@@ -38,12 +38,12 @@ void extract_ij_from_matrix(const Eigen::SparseMatrix<double> &A,
  }
 
 template <typename vectorTypeI, typename vectorTypeS>
- class pardiso_solver
+ class PardisoSolver
  {
  public:
    
-	pardiso_solver() ;
-   ~pardiso_solver();
+	PardisoSolver() ;
+   ~PardisoSolver();
    
    void set_type(int _mtype, bool is_upper_half = false);
    

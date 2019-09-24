@@ -1,7 +1,7 @@
 #pragma once
-#include <libs/optimization_lib/include/objective_functions/objective_function.h>
+#include <libs/optimization_lib/include/objective_functions/ObjectiveFunction.h>
 
-class penalty_positional_constraints : public objective_function
+class penalty_positional_constraints : public ObjectiveFunction
 {
 private:
 	virtual void init_hessian() override;

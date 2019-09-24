@@ -1,6 +1,6 @@
-#include <objective_functions/objective_function.h>
+#include <objective_functions/ObjectiveFunction.h>
 
-void objective_function::FDGradient(const VectorXd& X, VectorXd& g)
+void ObjectiveFunction::FDGradient(const VectorXd& X, VectorXd& g)
 {
     VectorXd Xd = X;
     updateX(Xd);
@@ -26,7 +26,7 @@ void objective_function::FDGradient(const VectorXd& X, VectorXd& g)
     updateX(X);
 }
 
-void objective_function::FDHessian(const VectorXd& X)
+void ObjectiveFunction::FDHessian(const VectorXd& X)
 {
     VectorXd Xd = X;
     updateX(Xd);
@@ -59,7 +59,7 @@ void objective_function::FDHessian(const VectorXd& X)
     }
 }
 
-bool objective_function::checkGradient(const VectorXd& X)
+bool ObjectiveFunction::checkGradient(const VectorXd& X)
 {
     double tol = 1e-4;
     double eps = 1e-10;
@@ -87,7 +87,7 @@ bool objective_function::checkGradient(const VectorXd& X)
     return true;
 }
 
-bool objective_function::checkHessian(const VectorXd& X)
+bool ObjectiveFunction::checkHessian(const VectorXd& X)
 {
 	double tol = 1e-4;
 	double eps = 1e-10;
@@ -130,7 +130,7 @@ bool objective_function::checkHessian(const VectorXd& X)
 	return true;
 }
 
-void objective_function::init_mesh(const MatrixXd& V, const MatrixX3i& F) {
+void ObjectiveFunction::init_mesh(const MatrixXd& V, const MatrixX3i& F) {
 	MatrixX3d V3d(V.rows(), 3);
 	if (V.cols() == 2) {
 		V3d.leftCols(2) = V;
@@ -143,7 +143,7 @@ void objective_function::init_mesh(const MatrixXd& V, const MatrixX3i& F) {
 	this->F = F;
 }
 
-void objective_function::init_hessian()
+void ObjectiveFunction::init_hessian()
 {
 	II.clear();
 	JJ.clear();

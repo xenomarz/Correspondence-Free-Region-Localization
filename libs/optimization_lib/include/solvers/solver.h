@@ -1,6 +1,6 @@
 #pragma once
 
-#include <libs/optimization_lib/include/objective_functions/total_objective.h>
+#include <libs/optimization_lib/include/objective_functions/TotalObjective.h>
 #include <atomic>
 #include <shared_mutex>
 #include <igl/flip_avoiding_line_search.h>
@@ -13,11 +13,11 @@ public:
 	int run();
 	void stop();
 	void get_data(VectorXd& X);
-	void init(shared_ptr<objective_function> objective, const VectorXd& X0);
+	void init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0);
 	void setFlipAvoidingLineSearch(MatrixX3i& F);
 
 	// Pointer to the energy class
-	shared_ptr<objective_function> objective;
+	shared_ptr<ObjectiveFunction> objective;
 
 	// Activity flags
 	atomic_bool is_running = {false};

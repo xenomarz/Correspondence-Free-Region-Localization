@@ -29,7 +29,7 @@ typedef SparseMatrix<double> SpMat;
 typedef Matrix<double, 6, 6> Matrix6d;
 typedef Matrix<double, 6, 1> Vector6d;
 
-class utils
+class Utils
 {
 public:
 	static void computeSurfaceGradientPerFace(const Eigen::MatrixX3d &V, const Eigen::MatrixX3i &F, Eigen::MatrixX3d &D1, Eigen::MatrixX3d &D2)

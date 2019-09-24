@@ -1,12 +1,12 @@
-#include <objective_functions/angle_preserving.h>
+#include <objective_functions/LeastSquaresConformal.h>
 
-angle_preserving::angle_preserving()
+LeastSquaresConformal::LeastSquaresConformal()
 {
 	name = "Angle Preserving";
 	w = 0;
 }
 
-void angle_preserving::init()
+void LeastSquaresConformal::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw name + " must define members V,F before init()!";
@@ -28,7 +28,7 @@ void angle_preserving::init()
 
 	MatrixX3d D1cols, D2cols;
 
-	utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
+	Utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
 	D1d = D1cols.transpose();
 	D2d = D2cols.transpose();
 
@@ -55,7 +55,7 @@ void angle_preserving::init()
 	init_hessian();
 }
 
-void angle_preserving::updateX(const VectorXd& X)
+void LeastSquaresConformal::updateX(const VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
@@ -63,7 +63,7 @@ void angle_preserving::updateX(const VectorXd& X)
 	}
 }
 
-double angle_preserving::value(bool update)
+double LeastSquaresConformal::value(bool update)
 {
 	VectorXd E = 2*(d.cwiseAbs2()) + (b+c).cwiseAbs2() + 2 * (a.cwiseAbs2());
 	double value = (Area.asDiagonal() * E).sum();
@@ -76,7 +76,7 @@ double angle_preserving::value(bool update)
 	return value;
 }
 
-void angle_preserving::gradient(VectorXd& g)
+void LeastSquaresConformal::gradient(VectorXd& g)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
@@ -98,7 +98,7 @@ void angle_preserving::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void angle_preserving::hessian()
+void LeastSquaresConformal::hessian()
 {
 #pragma omp parallel for num_threads(24)
 	for (int i = 0; i < F.rows(); ++i) {
@@ -113,7 +113,7 @@ void angle_preserving::hessian()
 	}
 }
 
-bool angle_preserving::update_variables(const VectorXd& X)
+bool LeastSquaresConformal::update_variables(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	

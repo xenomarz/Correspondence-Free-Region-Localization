@@ -1,12 +1,12 @@
-#include <objective_functions/symmetric_dirichlet_composite_majorization.h>
+#include <objective_functions/SymmetricDirichletCompositeMajorization.h>
 
-symmetric_dirichlet_composite_majorization::symmetric_dirichlet_composite_majorization()
+SymmetricDirichletCompositeMajorization::SymmetricDirichletCompositeMajorization()
 {
     name = "symmetric dirichlet composite majorization";
 	w = 0;
 }
 
-void symmetric_dirichlet_composite_majorization::init()
+void SymmetricDirichletCompositeMajorization::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw name + " must define members V,F before init()!";
@@ -34,7 +34,7 @@ void symmetric_dirichlet_composite_majorization::init()
 	igl::doublearea(V, F, Area);
 	Area /= 2;
 	
-	utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
+	Utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
 	D1d=D1cols.transpose();
 	D2d=D2cols.transpose();
 
@@ -59,7 +59,7 @@ void symmetric_dirichlet_composite_majorization::init()
 	init_hessian();
 }
 
-void symmetric_dirichlet_composite_majorization::updateX(const VectorXd& X)
+void SymmetricDirichletCompositeMajorization::updateX(const VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
@@ -67,7 +67,7 @@ void symmetric_dirichlet_composite_majorization::updateX(const VectorXd& X)
 	}
 }
 
-double symmetric_dirichlet_composite_majorization::value(bool update)
+double SymmetricDirichletCompositeMajorization::value(bool update)
 {
 	// E = ||J||^2+||J^-1||^2 = ||J||^2+||J||^2/det(J)^2
 	VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
@@ -83,7 +83,7 @@ double symmetric_dirichlet_composite_majorization::value(bool update)
 	return value;
 }
 
-void symmetric_dirichlet_composite_majorization::gradient(VectorXd& g)
+void SymmetricDirichletCompositeMajorization::gradient(VectorXd& g)
 {
     // Energy is h(S(x),s(x)), then grad_x h = grad_(S,s) h * [grad(S); grad(s)]
     MatrixX2d S(alpha);
@@ -115,7 +115,7 @@ void symmetric_dirichlet_composite_majorization::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void symmetric_dirichlet_composite_majorization::hessian()
+void SymmetricDirichletCompositeMajorization::hessian()
 {
     UpdateSSVDFunction();
     ComputeDenseSSVDDerivatives();
@@ -163,7 +163,7 @@ void symmetric_dirichlet_composite_majorization::hessian()
 	}
 }
 
-bool symmetric_dirichlet_composite_majorization::update_variables(const VectorXd& X)
+bool SymmetricDirichletCompositeMajorization::update_variables(const VectorXd& X)
 {
 	Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
@@ -184,7 +184,7 @@ bool symmetric_dirichlet_composite_majorization::update_variables(const VectorXd
 	return ((detJ.array() < 0).any());
 };
 
-void symmetric_dirichlet_composite_majorization::UpdateSSVDFunction()
+void SymmetricDirichletCompositeMajorization::UpdateSSVDFunction()
 {
 	#pragma omp parallel for num_threads(24)
 	for (int i = 0; i < a.size(); i++)
@@ -192,14 +192,14 @@ void symmetric_dirichlet_composite_majorization::UpdateSSVDFunction()
 		Matrix2d A;
 		Matrix2d U, S, V;
 		A << a[i], b[i], c[i], d[i];
-		utils::SSVD2x2(A, U, S, V);
+		Utils::SSVD2x2(A, U, S, V);
 		u.row(i) << U(0), U(1), U(2), U(3);
 		v.row(i) << V(0), V(1), V(2), V(3);
 		s.row(i) << S(0), S(3);
 	}
 }
 
-void symmetric_dirichlet_composite_majorization::ComputeDenseSSVDDerivatives()
+void SymmetricDirichletCompositeMajorization::ComputeDenseSSVDDerivatives()
 {
 	// Different columns belong to diferent faces
 	MatrixXd B(D1d*v.col(0).asDiagonal() + D2d*v.col(1).asDiagonal());
@@ -215,7 +215,7 @@ void symmetric_dirichlet_composite_majorization::ComputeDenseSSVDDerivatives()
 	Dsd[1].bottomRows(t1.rows()) = t2;
 }
 
-inline Matrix6d symmetric_dirichlet_composite_majorization::ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x)
+inline Matrix6d SymmetricDirichletCompositeMajorization::ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x)
 {
 	double f2 = a1x*a1x + a2x*a2x;
 	double invf = 1.0/sqrt(f2);
@@ -233,7 +233,7 @@ inline Matrix6d symmetric_dirichlet_composite_majorization::ComputeFaceConeHessi
 	return  (invf - invf3*a2) * A1A1t + (invf - invf3*b2) * A2A2t - invf3 * ab*(A1A2t + A2A1t);
 }
 
-inline Matrix6d symmetric_dirichlet_composite_majorization::ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs)
+inline Matrix6d SymmetricDirichletCompositeMajorization::ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs)
 {
 	// No multiplying by area in this function
 	Matrix6d H = HS*dSi*dSi.transpose() + Hs*dsi*dsi.transpose(); //generalized gauss newton

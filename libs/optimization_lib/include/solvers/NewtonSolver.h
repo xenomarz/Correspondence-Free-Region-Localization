@@ -4,15 +4,15 @@
 #include <libs/optimization_lib/include/solvers/solver.h>
 
 #ifdef USE_PARDISO
-	#include <libs/optimization_lib/include/solvers/pardiso_solver.h>
+	#include <libs/optimization_lib/include/solvers/PardisoSolver.h>
 #else
-	#include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
+	#include <libs/optimization_lib/include/solvers/EigenSparseSolver.h>
 #endif
 
-class newton_solver : public solver
+class NewtonSolver : public solver
 {
 public:
-	newton_solver() {}
+	NewtonSolver() {}
 	virtual double step() override;
 	virtual bool test_progress() override;
 	virtual void internal_init() override;
@@ -20,6 +20,6 @@ private:
 	#ifdef USE_PARDISO
 		unique_ptr<PardisoSolver<vector<int>, vector<double>>> pardiso = nullptr;
 	#else
-		unique_ptr<eigen_sparse_solver<vector<int>, vector<double>>> eigen_solver = nullptr;
+		unique_ptr<EigenSparseSolver<vector<int>, vector<double>>> eigen_solver = nullptr;
 	#endif
 };

@@ -35,10 +35,10 @@ private:
 	
 	// Solver thread
 	thread solver_thread;
-	shared_ptr<newton_solver> newton;
-	shared_ptr<gradient_descent_solver> gradient_descent;
+	shared_ptr<NewtonSolver> newton;
+	shared_ptr<GradientDescentSolver> gradient_descent;
 	shared_ptr<solver> Solver;
-	shared_ptr<total_objective> totalObjective;
+	shared_ptr<TotalObjective> totalObjective;
 
 protected:
 	//Basic (necessary) parameteres

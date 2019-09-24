@@ -33,13 +33,15 @@
 #include <igl/arap.h>
 #include <igl/file_dialog_open.h>
 #include <igl/unproject.h>
-#include "../../libs/optimization_lib/include/solvers/newton_solver.h"
-#include "../../libs/optimization_lib/include/solvers/gradient_descent_solver.h"
-#include "../../libs/optimization_lib/include/objective_functions/symmetric_dirichlet.h"
-#include "../../libs/optimization_lib/include/objective_functions/symmetric_dirichlet_optimized.h"
-#include "../../libs/optimization_lib/include/objective_functions/area_preserving.h"
-#include "../../libs/optimization_lib/include/objective_functions/one_ring_area_preserving.h"
-#include "../../libs/optimization_lib/include/objective_functions/angle_preserving.h"
+#include <igl/edge_lengths.h>
+#include <igl/slice.h>
+#include "../../libs/optimization_lib/include/solvers/NewtonSolver.h"
+#include "../../libs/optimization_lib/include/solvers/GradientDescentSolver.h"
+#include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichlet.h"
+#include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichletCompositeMajorization.h"
+#include "../../libs/optimization_lib/include/objective_functions/AreaDistortion.h"
+#include "../../libs/optimization_lib/include/objective_functions/AreaDistortionOneRing.h"
+#include "../../libs/optimization_lib/include/objective_functions/LeastSquaresConformal.h"
 #include "../../libs/optimization_lib/include/objective_functions/penalty_positional_constraints.h"
 #include <atomic>
 

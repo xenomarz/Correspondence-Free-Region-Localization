@@ -1,6 +1,6 @@
-#include <solvers/newton_solver.h>
+#include <solvers/NewtonSolver.h>
 
-double newton_solver::step()
+double NewtonSolver::step()
 {
 	objective->updateX(X);
 	f = objective->value();
@@ -28,12 +28,12 @@ double newton_solver::step()
 	return f;
 }
 
-bool newton_solver::test_progress()
+bool NewtonSolver::test_progress()
 {
 	return true;
 }
 
-void newton_solver::internal_init()
+void NewtonSolver::internal_init()
 {
 #ifdef USE_PARDISO
 	bool needs_init = pardiso == nullptr;
@@ -48,7 +48,7 @@ void newton_solver::internal_init()
 
 	if (needs_init)
 	{
-		eigen_solver = make_unique<eigen_sparse_solver<vector<int>, vector<double>>>();
+		eigen_solver = make_unique<EigenSparseSolver<vector<int>, vector<double>>>();
 	}
 #endif
 	objective->updateX(X);
