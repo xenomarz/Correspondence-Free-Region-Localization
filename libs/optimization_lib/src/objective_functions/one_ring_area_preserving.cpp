@@ -27,6 +27,12 @@ void one_ring_area_preserving::init()
 	grad.resize(V.rows());
 	Hessian.resize(V.rows());
 	dJ_dX.resize(V.rows());
+	OneRingVertices.resize(V.rows());
+
+	for (int vi = 0; vi < V.rows(); vi++) {
+		vector<int> OneRingFaces = VF[vi];
+		OneRingVertices[vi] = get_one_ring_vertices(OneRingFaces);
+	}
 
 	MatrixX3d D1cols, D2cols;
 	utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
@@ -87,15 +93,12 @@ void one_ring_area_preserving::gradient(VectorXd& g)
 	g.setZero();
 
 	for (int vi = 0; vi < V.rows(); ++vi) {
-		vector<int> OneRingFaces = VF[vi];
-		vector<int> OneRingVertices = get_one_ring_vertices(OneRingFaces);
+		int X_size = 2 * OneRingVertices[vi].size();
 
-		int X_size = 2 * OneRingVertices.size();
-
-		for (int xi = 0; xi < OneRingVertices.size(); xi++) {
-			int global_xi = OneRingVertices[xi];
+		for (int xi = 0; xi < OneRingVertices[vi].size(); xi++) {
+			int global_xi = OneRingVertices[vi][xi];
 			g(global_xi) += grad[vi](xi);
-			g(global_xi + V.rows()) += grad[vi](xi + OneRingVertices.size());
+			g(global_xi + V.rows()) += grad[vi](xi + OneRingVertices[vi].size());
 		}
 	}
 	gradient_norm = g.norm();
@@ -106,16 +109,13 @@ void one_ring_area_preserving::hessian()
 #pragma omp parallel for num_threads(24)
 	int index2 = 0;
 	for (int vi = 0; vi < V.rows(); ++vi) {
-		vector<int> OneRingFaces = VF[vi];
-		vector<int> OneRingVertices = get_one_ring_vertices(OneRingFaces);
-		int X_size = 2 * OneRingVertices.size();
+		int X_size = 2 * OneRingVertices[vi].size();
 
-		MatrixXd Hi = Hessian[vi];
 		for (int a = 0; a < X_size; ++a)
 		{
 			for (int b = 0; b <= a; ++b)
 			{
-				SS[index2++] = Hi(a, b);
+				SS[index2++] = Hessian[vi](a, b);
 			}
 		}
 	}
@@ -196,26 +196,24 @@ void one_ring_area_preserving::init_hessian()
 	JJ.clear();
 	auto PushPair = [&](int i, int j) { if (i > j) swap(i, j); II.push_back(i); JJ.push_back(j); };
 	for (int vi = 0; vi < V.rows(); ++vi) {
-		vector<int> OneRingFaces = VF[vi];
-		vector<int> OneRingVertices = get_one_ring_vertices(OneRingFaces);
-		int X_size = 2 * OneRingVertices.size();
+		int X_size = 2 * OneRingVertices[vi].size();
 		for (int a = 0; a < X_size; ++a)
 		{
 			for (int b = 0; b <= a; ++b)
 			{
 				int global_a, global_b;
 
-				if (a >= OneRingVertices.size()) {
-					global_a = OneRingVertices[a - OneRingVertices.size()] + V.rows();
+				if (a >= OneRingVertices[vi].size()) {
+					global_a = OneRingVertices[vi][a - OneRingVertices[vi].size()] + V.rows();
 				}
 				else {
-					global_a = OneRingVertices[a];
+					global_a = OneRingVertices[vi][a];
 				}
-				if (b >= OneRingVertices.size()) {
-					global_b = OneRingVertices[b - OneRingVertices.size()] + V.rows();
+				if (b >= OneRingVertices[vi].size()) {
+					global_b = OneRingVertices[vi][b - OneRingVertices[vi].size()] + V.rows();
 				}
 				else {
-					global_b = OneRingVertices[b];
+					global_b = OneRingVertices[vi][b];
 				}
 				PushPair(global_a, global_b);
 			}
@@ -228,10 +226,9 @@ void one_ring_area_preserving::init_dJdX() {
 	//prepare dJ/dX
 	for (int vi = 0; vi < VF.size(); vi++) {
 		vector<int> OneRingFaces = VF[vi];
-		vector<int> OneRingVertices = get_one_ring_vertices(OneRingFaces);
 
 		int J_size = 4 * OneRingFaces.size();
-		int X_size = 2 * OneRingVertices.size();
+		int X_size = 2 * OneRingVertices[vi].size();
 
 		dJ_dX[vi].resize(J_size, X_size);
 		dJ_dX[vi].setZero();
@@ -242,12 +239,12 @@ void one_ring_area_preserving::init_dJdX() {
 			RowVectorXd Dy = D2d.col(fi).transpose();
 
 			//Find the indexes of the face's vertices (p0,p1,p2) on the gradient vector
-			int x0 = distance(OneRingVertices.begin(), find(OneRingVertices.begin(), OneRingVertices.end(), F(fi, 0)));
-			int x1 = distance(OneRingVertices.begin(), find(OneRingVertices.begin(), OneRingVertices.end(), F(fi, 1)));
-			int x2 = distance(OneRingVertices.begin(), find(OneRingVertices.begin(), OneRingVertices.end(), F(fi, 2)));
-			int y0 = x0 + OneRingVertices.size();
-			int y1 = x1 + OneRingVertices.size();
-			int y2 = x2 + OneRingVertices.size();
+			int x0 = distance(OneRingVertices[vi].begin(), find(OneRingVertices[vi].begin(), OneRingVertices[vi].end(), F(fi, 0)));
+			int x1 = distance(OneRingVertices[vi].begin(), find(OneRingVertices[vi].begin(), OneRingVertices[vi].end(), F(fi, 1)));
+			int x2 = distance(OneRingVertices[vi].begin(), find(OneRingVertices[vi].begin(), OneRingVertices[vi].end(), F(fi, 2)));
+			int y0 = x0 + OneRingVertices[vi].size();
+			int y1 = x1 + OneRingVertices[vi].size();
+			int y2 = x2 + OneRingVertices[vi].size();
 
 			// update the gradient for: 
 			// X cordinate of the first vertex 

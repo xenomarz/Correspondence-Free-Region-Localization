@@ -11,6 +11,7 @@ private:
 	vector<RowVectorXd> grad;
 	vector<MatrixXd> dJ_dX;
 	vector<MatrixXd> Hessian;
+	vector<vector<int>> OneRingVertices;
 
 	vector<int> get_one_ring_vertices(const vector<int>& OneRingFaces);
 	virtual void init_hessian() override;
