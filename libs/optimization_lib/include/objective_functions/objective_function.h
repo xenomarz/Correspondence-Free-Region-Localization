@@ -17,8 +17,6 @@
 // Optimization Lib Includes
 #include "../utils/objective_function_data_provider.h"
 
-// We two phase dynamic-binding-during-initialization idiom for initializing gradient and hessian in base class
-// More info: https://isocpp.org/wiki/faq/strange-inheritance#calling-virtuals-from-ctor-idiom
 class ObjectiveFunction
 {
 public:
@@ -87,14 +85,24 @@ protected:
 	const Eigen::DenseIndex variables_count_;
 
 private:
+
+	/**
+	 * Private methods
+	 */
+
 	// Gradient and hessian initializers
 	virtual void InitializeGradient(Eigen::VectorXd& g);
 	virtual void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss) = 0;
 
 	// Value, gradient and hessian calculation functions
+	// TODO: Remove input argument 'const Eigen::VectorXd& x' from value, gradient and hessian calculation. This argument should be processed in PreUpdate().
 	virtual void CalculateValue(const Eigen::VectorXd& x, double& f) = 0;
 	virtual void CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g) = 0;
 	virtual void CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss) = 0;
+
+	/**
+	 * Private fields
+	 */
 
 	// Value
 	double f_;

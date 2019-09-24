@@ -17,6 +17,8 @@
 #include <libs/optimization_lib/include/iterative_methods/newton_method.h>
 #include <libs/optimization_lib/include/objective_functions/composite_objective.h>
 #include <libs/optimization_lib/include/objective_functions/position.h>
+#include <libs/optimization_lib/include/objective_functions/separation.h>
+#include <libs/optimization_lib/include/objective_functions/symmetric_dirichlet.h>
 
 class Engine : public Napi::ObjectWrap<Engine> {
 public:
@@ -146,6 +148,8 @@ private:
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
 	std::shared_ptr<CompositeObjective> composite_objective_;
 	std::shared_ptr<Position> position_;
+	std::shared_ptr<Separation> separation_;
+	std::shared_ptr<SymmetricDirichlet> symmetric_dirichlet_;
 	std::unique_ptr<NewtonMethod<EigenSparseSolver>> newton_method_;
 	std::vector<Eigen::DenseIndex> constrained_faces_indices;
 };

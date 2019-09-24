@@ -683,17 +683,9 @@ export class MeshView extends LitElement {
                 if (this._selectedFaces[this._faceIntersection.face.id]) {
                     this._unselectFace(this._faceIntersection.face);
                     this._publishFaceMessage('mesh-view-face-unselected', this._faceIntersection.face);  
-                    // PubSub.publish('mesh-view-face-unselected', {
-                    //     face: this._faceIntersection.face,
-                    //     meshViewId: this.id
-                    // });
                 } else {
                     this._selectFace(this._faceIntersection.face);
                     this._publishFaceMessage('mesh-view-face-selected', this._faceIntersection.face);  
-                    // PubSub.publish('mesh-view-face-selected', {
-                    //     face: this._faceIntersection.face,
-                    //     meshViewId: this.id
-                    // });
                 }
             }
         }
@@ -704,10 +696,6 @@ export class MeshView extends LitElement {
         if (this._interactionService.state.value === 'faceDragging') {
             this._selectFace(this._faceIntersection.face);
             this._publishFaceMessage('mesh-view-face-selected', this._faceIntersection.face);  
-            // PubSub.publish('mesh-view-face-selected', {
-            //     face: this._faceIntersection.face,
-            //     meshViewId: this.id
-            // });
             setTimeout(0, () => {
                 this._interactionService.send('END_FACE_DRAGGING');
             });
@@ -715,12 +703,11 @@ export class MeshView extends LitElement {
     }
 
     _keyDownHandler(e) {
-        e.preventDefault();
-        if (e.keyCode === 16) {
+        if (e.keyCode === 192) {
             if (this.enableVertexSelection) {
                 this._interactionService.send('BEGIN_VERTEX_SELECTION');
             }
-        } else if (e.keyCode === 17) {
+        } else if (e.keyCode === 16) {
             if (this.enableMeshRotation) {
                 this._interactionService.send('BEGIN_MESH_ROTATION');
             }
@@ -730,12 +717,11 @@ export class MeshView extends LitElement {
     }
 
     _keyUpHandler(e) {
-        e.preventDefault();
-        if (e.keyCode === 16) {
+        if (e.keyCode === 192) {
             if (this.enableVertexSelection) {
                 this._interactionService.send('END_VERTEX_SELECTION');
             }
-        } else if (e.keyCode === 17) {
+        } else if (e.keyCode === 16) {
             if (this.enableMeshRotation) {
                 this._interactionService.send('END_MESH_ROTATION');
             }
@@ -788,10 +774,6 @@ export class MeshView extends LitElement {
         this._publishFaceMessage('mesh-view-face-dragging', this._faceIntersection.face, {
             offset: this._faceIntersection.offset
         });  
-        // PubSub.publish('mesh-view-face-dragging', {
-        //     face: this._faceIntersection.face,
-        //     offset: this._faceIntersection.offset
-        // });
     }    
 
     /**
@@ -1000,16 +982,9 @@ export class MeshView extends LitElement {
             if (this._faceIntersection) {
                 this._setHighlightedFace(this._faceIntersection.face);
                 this._publishFaceMessage('mesh-view-face-highlighted', this._faceIntersection.face);  
-                // PubSub.publish('mesh-view-face-highlighted', {
-                //     face: this._faceIntersection.face,
-                //     meshViewId: this.id
-                // });
             } else {
                 this._resetHighlightedFace();
                 this._publishFaceMessage('mesh-view-face-unhighlighted');        
-                // PubSub.publish('mesh-view-face-unhighlighted', {
-                //     meshViewId: this.id
-                // });
             }
         }
 
@@ -1057,17 +1032,11 @@ export class MeshView extends LitElement {
     beginFaceDragging() {
         this._setDraggedFace(this._faceIntersection.face);
         this._publishFaceMessage('mesh-view-face-dragging-begin', this._draggedFace);        
-        // PubSub.publish('mesh-view-face-dragging-begin', {
-        //     face: this._draggedFace
-        // });
         this._controls.enablePan = false;
     }
 
     endFaceDragging() {
         this._publishFaceMessage('mesh-view-face-dragging-end', this._draggedFace);
-        // PubSub.publish('mesh-view-face-dragging-end', {
-        //     face: this._draggedFace
-        // });
         this._resetDraggedFace();
         this._controls.enablePan = true;
     }    

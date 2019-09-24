@@ -16,6 +16,8 @@ public:
 	virtual const Eigen::DenseIndex GetImageVerticesCount() const = 0;
 	virtual const Eigen::MatrixX3d& GetD1() const = 0;
 	virtual const Eigen::MatrixX3d& GetD2() const = 0;
+
+	// Relevant for objective functions that operate on triangle soups
 	virtual const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const = 0;
 	virtual const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const = 0;
 };

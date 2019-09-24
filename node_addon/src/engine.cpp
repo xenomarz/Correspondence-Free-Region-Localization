@@ -242,9 +242,9 @@ Napi::Value Engine::GetPositionWeight(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	Napi::Number delta = Napi::Number::New(env, position_->GetWeight());
+	Napi::Number position_weight = Napi::Number::New(env, position_->GetWeight());
 
-	return delta;
+	return position_weight;
 }
 
 void Engine::SetSeamlessWeight(const Napi::CallbackInfo& info, const Napi::Value& value)
@@ -295,6 +295,9 @@ void Engine::SetLambda(const Napi::CallbackInfo& info, const Napi::Value& value)
 	 */
 	Napi::Number number = value.As<Napi::Number>();
 	double lambda = number.DoubleValue();
+
+	separation_->SetWeight(lambda);
+	symmetric_dirichlet_->SetWeight(1.0 - lambda);
 }
 
 Napi::Value Engine::GetLambda(const Napi::CallbackInfo& info)
@@ -302,7 +305,9 @@ Napi::Value Engine::GetLambda(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return env.Null();
+	Napi::Number lambda = Napi::Number::New(env, separation_->GetWeight());
+
+	return lambda;
 }
 
 void Engine::SetDelta(const Napi::CallbackInfo& info, const Napi::Value& value)
@@ -324,6 +329,7 @@ void Engine::SetDelta(const Napi::CallbackInfo& info, const Napi::Value& value)
 	 */
 	Napi::Number number = value.As<Napi::Number>();
 	double delta = number.DoubleValue();
+	separation_->SetDelta(delta);
 }
 
 Napi::Value Engine::GetDelta(const Napi::CallbackInfo& info)
@@ -331,7 +337,9 @@ Napi::Value Engine::GetDelta(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return env.Null();
+	Napi::Number delta = Napi::Number::New(env, separation_->GetDelta());
+
+	return delta;
 }
 
 Napi::Value Engine::ResumeSolver(const Napi::CallbackInfo& info)

@@ -17,7 +17,7 @@ export class SideBarParameterInput extends LitElement {
                 margin-bottom: 10px;
             }
 
-            /* HACK - check why vaadin-number-field has 'width: 8em' property on its host element */
+            /* HACK: check why vaadin-number-field has 'width: 8em' property on its host element */
             vaadin-number-field {
                 width: 90%;
             } 
@@ -107,16 +107,18 @@ export class SideBarParameterInput extends LitElement {
 
     set value(value) {
         const oldValue = this._value;
-        this._value = value;
-        let valueChangedEvent = new CustomEvent('value-changed', { 
-            detail: { 
-                value: value
-            },
-            bubbles: true, 
-            composed: true 
-        });
-        this.dispatchEvent(valueChangedEvent);
-        this.requestUpdate('value', oldValue);
+        if(value !== oldValue) {
+            this._value = value;
+            let valueChangedEvent = new CustomEvent('value-changed', { 
+                detail: { 
+                    value: value
+                },
+                bubbles: true, 
+                composed: true 
+            });
+            this.dispatchEvent(valueChangedEvent);
+            this.requestUpdate('value', oldValue);
+        }
     }
 
     get value() {
@@ -150,11 +152,11 @@ export class SideBarParameterInput extends LitElement {
     }
 
     _handleNumberFieldChange(e) {
-        this.value = e.srcElement.value;
+        this.value = parseFloat(e.srcElement.value);
     }
 
     _handleSliderChange(e) {
-        this.value = e.srcElement.immediateValue;
+        this.value = parseFloat(e.srcElement.immediateValue);
     }
 
     _minInputChanged(e) {
