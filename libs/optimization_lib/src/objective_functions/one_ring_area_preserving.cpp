@@ -133,7 +133,6 @@ void one_ring_area_preserving::hessian()
 		for (int i = 0; i < OneRingFaces.size(); i++) {
 			int fi = OneRingFaces[i];
 			int base_column = 4 * i;
-			cout << fi << endl;
 			dE_dJ[vi].block<1, 4>(0, base_column) = Area(fi)*Vector4d(d(fi), -c(fi), -b(fi), a(fi));
 		}
 		MatrixXd d2E_dJ2(J_size, J_size);
