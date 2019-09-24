@@ -2,7 +2,7 @@
 
 symmetric_dirichlet_composite_majorization::symmetric_dirichlet_composite_majorization()
 {
-    name = "symmetric dirichlet optimized";
+    name = "symmetric dirichlet composite majorization";
 	w = 0;
 }
 
@@ -166,10 +166,7 @@ void symmetric_dirichlet_composite_majorization::hessian()
 bool symmetric_dirichlet_composite_majorization::update_variables(const VectorXd& X)
 {
 	Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
-	// 	a = D1*U;
-	// 	b = D2*U;
-	// 	c = D1*V;
-	// 	d = D2*V;
+	
 	for (int i = 0; i < F.rows(); i++)
 	{
 		Vector3d X1i, X2i;

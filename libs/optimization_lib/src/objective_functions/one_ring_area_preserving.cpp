@@ -28,6 +28,7 @@ void one_ring_area_preserving::init()
 	Hessian.resize(V.rows());
 	dJ_dX.resize(V.rows());
 	OneRingVertices.resize(V.rows());
+	dE_dJ.resize(V.rows());
 
 	for (int vi = 0; vi < V.rows(); vi++) {
 		vector<int> OneRingFaces = VF[vi];
@@ -93,7 +94,19 @@ void one_ring_area_preserving::gradient(VectorXd& g)
 	g.setZero();
 
 	for (int vi = 0; vi < V.rows(); ++vi) {
-		int X_size = 2 * OneRingVertices[vi].size();
+		vector<int> OneRingFaces = VF[vi];
+		int J_size = 4 * OneRingFaces.size();
+
+		dE_dJ[vi].resize(1, J_size);
+		dE_dJ[vi].setZero();
+
+		//prepare gradient
+		for (int i = 0; i < OneRingFaces.size(); i++) {
+			int fi = OneRingFaces[i];
+			int base_column = 4 * i;
+			dE_dJ[vi].block<1, 4>(0, base_column) = Area(fi)*Vector4d(d(fi), -c(fi), -b(fi), a(fi));
+		}
+		grad[vi] = OneRingSum(vi)*dE_dJ[vi] * dJ_dX[vi];
 
 		for (int xi = 0; xi < OneRingVertices[vi].size(); xi++) {
 			int global_xi = OneRingVertices[vi][xi];
@@ -109,8 +122,43 @@ void one_ring_area_preserving::hessian()
 #pragma omp parallel for num_threads(24)
 	int index2 = 0;
 	for (int vi = 0; vi < V.rows(); ++vi) {
+		vector<int> OneRingFaces = VF[vi];
+		int J_size = 4 * OneRingFaces.size();
 		int X_size = 2 * OneRingVertices[vi].size();
 
+		dE_dJ[vi].resize(1, J_size);
+		dE_dJ[vi].setZero();
+
+		//prepare dE_dJ
+		for (int i = 0; i < OneRingFaces.size(); i++) {
+			int fi = OneRingFaces[i];
+			int base_column = 4 * i;
+			cout << fi << endl;
+			dE_dJ[vi].block<1, 4>(0, base_column) = Area(fi)*Vector4d(d(fi), -c(fi), -b(fi), a(fi));
+		}
+		MatrixXd d2E_dJ2(J_size, J_size);
+		d2E_dJ2.setZero();
+
+		//prepare hessian
+		for (int i = 0; i < OneRingFaces.size(); i++) {
+			int fi = OneRingFaces[i];
+			int base_row = 4 * i;
+
+			d2E_dJ2.block(base_row + 0, 0, 1, J_size) = dE_dJ[vi] * Area(fi)*d(fi);
+			d2E_dJ2(base_row + 0, base_row + 3) += OneRingSum(vi)*Area(fi);
+
+			d2E_dJ2.block(base_row + 1, 0, 1, J_size) = -1 * dE_dJ[vi] * Area(fi)*c(fi);
+			d2E_dJ2(base_row + 1, base_row + 2) -= OneRingSum(vi)*Area(fi);
+
+			d2E_dJ2.block(base_row + 2, 0, 1, J_size) = -1 * dE_dJ[vi] * Area(fi)*b(fi);
+			d2E_dJ2(base_row + 2, base_row + 1) -= OneRingSum(vi)*Area(fi);
+
+			d2E_dJ2.block(base_row + 3, 0, 1, J_size) = dE_dJ[vi] * Area(fi)*a(fi);
+			d2E_dJ2(base_row + 3, base_row + 0) += OneRingSum(vi)*Area(fi);
+		}
+		Hessian[vi] = dJ_dX[vi].transpose() * d2E_dJ2 * dJ_dX[vi];
+		
+		//update the global matrix
 		for (int a = 0; a < X_size; ++a)
 		{
 			for (int b = 0; b <= a; ++b)
@@ -146,46 +194,6 @@ bool one_ring_area_preserving::update_variables(const VectorXd& X)
 		for (int fi : OneRing) {
 			OneRingSum(vi) += Area(fi)*detJ(fi) - Area(fi);
 		}
-	}
-
-	//for each one-ring
-	for (int vi = 0; vi < VF.size(); vi++) {
-		vector<int> OneRingFaces = VF[vi];
-		int J_size = 4 * OneRingFaces.size();
-
-		MatrixXd dE_dJ(1, J_size);
-		dE_dJ.setZero();
-
-		MatrixXd d2E_dJ2(J_size, J_size);
-		d2E_dJ2.setZero();
-		
-		//prepare gradient
-		for (int i = 0; i < OneRingFaces.size(); i++) {
-			int fi = OneRingFaces[i];
-			int base_column = 4 * i;
-			dE_dJ.block<1, 4>(0, base_column) = Area(fi)*Vector4d(d(fi), -c(fi), -b(fi), a(fi));
-		}
-		
-		//prepare hessian
-		for (int i = 0; i < OneRingFaces.size(); i++) {
-			int fi = OneRingFaces[i];
-			int base_row = 4 * i;
-
-			d2E_dJ2.block(base_row + 0, 0, 1, J_size) = dE_dJ * Area(fi)*d(fi);
-			d2E_dJ2(base_row + 0, base_row + 3) += OneRingSum(vi)*Area(fi);
-			
-			d2E_dJ2.block(base_row + 1, 0, 1, J_size) = -1 * dE_dJ * Area(fi)*c(fi);
-			d2E_dJ2(base_row + 1, base_row + 2) -= OneRingSum(vi)*Area(fi);
-
-			d2E_dJ2.block(base_row + 2, 0, 1, J_size) = -1 * dE_dJ * Area(fi)*b(fi);
-			d2E_dJ2(base_row + 2, base_row + 1) -= OneRingSum(vi)*Area(fi);
-
-			d2E_dJ2.block(base_row + 3, 0, 1, J_size) = dE_dJ * Area(fi)*a(fi);
-			d2E_dJ2(base_row + 3, base_row + 0) += OneRingSum(vi)*Area(fi);
-		}
-		dE_dJ *= OneRingSum(vi);
-		grad[vi] = dE_dJ * dJ_dX[vi];
-		Hessian[vi] = dJ_dX[vi].transpose() * d2E_dJ2 * dJ_dX[vi];
 	}
 	return ((detJ.array() < 0).any());
 }
