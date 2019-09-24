@@ -6,18 +6,18 @@
 #include <igl/flip_avoiding_line_search.h>
 #include <Eigen/SparseCholesky>
 
-class Solver
+class solver
 {
 public:
-	Solver();
+	solver();
 	int run();
 	void stop();
 	void get_data(VectorXd& X);
-	void init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0);
+	void init(shared_ptr<objective_function> objective, const VectorXd& X0);
 	void setFlipAvoidingLineSearch(MatrixX3i& F);
 
 	// Pointer to the energy class
-	shared_ptr<ObjectiveFunction> objective;
+	shared_ptr<objective_function> objective;
 
 	// Activity flags
 	atomic_bool is_running = {false};

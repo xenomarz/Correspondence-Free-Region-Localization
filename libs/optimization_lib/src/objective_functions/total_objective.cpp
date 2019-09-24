@@ -1,11 +1,11 @@
 #include <objective_functions/total_objective.h>
 
-TotalObjective::TotalObjective()
+total_objective::total_objective()
 {
 	name = "Total objective";
 }
 
-void TotalObjective::init()
+void total_objective::init()
 {
 	//assume that each objective's member have been set outside
 	for (auto &objective : objectiveList) {
@@ -14,13 +14,13 @@ void TotalObjective::init()
 	init_hessian();
 }
 
-void TotalObjective::updateX(const VectorXd& X)
+void total_objective::updateX(const VectorXd& X)
 {
 	for (auto &objective : objectiveList)
 		objective->updateX(X);
 }
 
-double TotalObjective::value(bool update)
+double total_objective::value(bool update)
 {
 	double f=0;
     for (auto &objective : objectiveList)
@@ -33,7 +33,7 @@ double TotalObjective::value(bool update)
 	return f;
 }
 
-void TotalObjective::gradient(VectorXd& g)
+void total_objective::gradient(VectorXd& g)
 {
 	VectorXd gi;
 	g.setZero();
@@ -47,7 +47,7 @@ void TotalObjective::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void TotalObjective::hessian()
+void total_objective::hessian()
 {
 	SS.clear();
 	for (auto const &objective : objectiveList)
@@ -69,7 +69,7 @@ void TotalObjective::hessian()
 	}
 }
 
-void TotalObjective::init_hessian()
+void total_objective::init_hessian()
 {
 	//assume that each subobjective already prepared its hessian
 	II.clear(); JJ.clear(); SS.clear();

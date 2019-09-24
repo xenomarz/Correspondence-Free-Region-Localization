@@ -57,7 +57,7 @@ using namespace opengl;
 using namespace glfw;
 using namespace imgui;
 
-class MenuUtils : public ImGuiMenu
+class app_utils : public ImGuiMenu
 {
 public:
 	// Expose an enumeration type

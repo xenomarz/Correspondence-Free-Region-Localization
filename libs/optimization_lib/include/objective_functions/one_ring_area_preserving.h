@@ -1,7 +1,7 @@
 #pragma once
 #include <libs/optimization_lib/include/objective_functions/objective_function.h>
 
-class OneRingAreaPreserving : public ObjectiveFunction
+class one_ring_area_preserving : public objective_function
 {	
 private:
 	// adjacency matrix (vertex to face)
@@ -18,7 +18,7 @@ private:
 	bool update_variables(const VectorXd& X);
 
 public:
-	OneRingAreaPreserving();
+	one_ring_area_preserving();
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
 	virtual double value(const bool update = true) override;

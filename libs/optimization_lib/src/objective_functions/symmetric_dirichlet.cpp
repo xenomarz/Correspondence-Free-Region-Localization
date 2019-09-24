@@ -1,12 +1,12 @@
 #include <objective_functions/symmetric_dirichlet.h>
 
-SymmetricDirichlet::SymmetricDirichlet()
+symmetric_dirichlet::symmetric_dirichlet()
 {
 	name = "symmetric dirichlet";
 	w = 0.1;
 }
 
-void SymmetricDirichlet::init()
+void symmetric_dirichlet::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw name + " must define members V,F before init()!";
@@ -29,7 +29,7 @@ void SymmetricDirichlet::init()
 
 	MatrixX3d D1cols, D2cols;
 
-	Utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
+	utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
 	D1d = D1cols.transpose();
 	D2d = D2cols.transpose();
 
@@ -48,7 +48,7 @@ void SymmetricDirichlet::init()
 	init_hessian();
 }
 
-void SymmetricDirichlet::updateX(const VectorXd& X)
+void symmetric_dirichlet::updateX(const VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
@@ -56,7 +56,7 @@ void SymmetricDirichlet::updateX(const VectorXd& X)
 	}
 }
 
-double SymmetricDirichlet::value(bool update)
+double symmetric_dirichlet::value(bool update)
 {
 	VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
 	VectorXd E = dirichlet + invDirichlet;
@@ -69,7 +69,7 @@ double SymmetricDirichlet::value(bool update)
 	return value;
 }
 
-void SymmetricDirichlet::gradient(VectorXd& g)
+void symmetric_dirichlet::gradient(VectorXd& g)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
@@ -91,7 +91,7 @@ void SymmetricDirichlet::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void SymmetricDirichlet::hessian()
+void symmetric_dirichlet::hessian()
 {
 #pragma omp parallel for num_threads(24)
 	for (int i = 0; i < F.rows(); ++i) {
@@ -109,7 +109,7 @@ void SymmetricDirichlet::hessian()
 	}
 }
 
-bool SymmetricDirichlet::update_variables(const VectorXd& X)
+bool symmetric_dirichlet::update_variables(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	

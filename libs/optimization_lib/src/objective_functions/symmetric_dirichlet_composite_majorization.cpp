@@ -1,14 +1,15 @@
-#include <objective_functions/symmetric_dirichlet_optimized.h>
+#include <objective_functions/symmetric_dirichlet_composite_majorization.h>
 
-SymmetricDirichletOptimized::SymmetricDirichletOptimized()
+symmetric_dirichlet_composite_majorization::symmetric_dirichlet_composite_majorization()
 {
-    name = "symmetric dirichlet old";
+    name = "symmetric dirichlet optimized";
+	w = 0;
 }
 
-void SymmetricDirichletOptimized::init()
+void symmetric_dirichlet_composite_majorization::init()
 {
 	if (V.size() == 0 || F.size() == 0)
-		throw "DistortionSymmetricDirichletOld must define members V,F before init()!";
+		throw name + " must define members V,F before init()!";
 		
 	a.resize(F.rows());
 	b.resize(F.rows());
@@ -33,7 +34,7 @@ void SymmetricDirichletOptimized::init()
 	igl::doublearea(V, F, Area);
 	Area /= 2;
 	
-	Utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
+	utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
 	D1d=D1cols.transpose();
 	D2d=D2cols.transpose();
 
@@ -55,32 +56,18 @@ void SymmetricDirichletOptimized::init()
 	b2d.topRows(3) = 0.5*D2d;
 	b2d.bottomRows(3) = 0.5*D1d;
 
-	prepare_hessian();
-	w = 0.01;
+	init_hessian();
 }
 
-void SymmetricDirichletOptimized::updateX(const VectorXd& X)
+void symmetric_dirichlet_composite_majorization::updateX(const VectorXd& X)
 {
-	bool inversions_exist = updateJ(X);
+	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
 		cout << name << " Error! inversion exists." << endl;
 	}
 }
 
-void SymmetricDirichletOptimized::setVF(MatrixXd& V, MatrixX3i& F) {
-	MatrixXd V3d(V.rows(), 3);
-	if (V.cols() == 2) {
-		V3d.leftCols(2) = V;
-		V3d.col(2).setZero();
-	}
-	else if (V.cols() == 3) {
-		V3d = V;
-	}
-	this->V = V3d;
-	this->F = F;
-}
-
-double SymmetricDirichletOptimized::value(bool update)
+double symmetric_dirichlet_composite_majorization::value(bool update)
 {
 	// E = ||J||^2+||J^-1||^2 = ||J||^2+||J||^2/det(J)^2
 	VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
@@ -96,7 +83,7 @@ double SymmetricDirichletOptimized::value(bool update)
 	return value;
 }
 
-void SymmetricDirichletOptimized::gradient(VectorXd& g)
+void symmetric_dirichlet_composite_majorization::gradient(VectorXd& g)
 {
     // Energy is h(S(x),s(x)), then grad_x h = grad_(S,s) h * [grad(S); grad(s)]
     MatrixX2d S(alpha);
@@ -128,7 +115,7 @@ void SymmetricDirichletOptimized::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void SymmetricDirichletOptimized::hessian()
+void symmetric_dirichlet_composite_majorization::hessian()
 {
     UpdateSSVDFunction();
     ComputeDenseSSVDDerivatives();
@@ -176,7 +163,7 @@ void SymmetricDirichletOptimized::hessian()
 	}
 }
 
-bool SymmetricDirichletOptimized::updateJ(const VectorXd& X)
+bool symmetric_dirichlet_composite_majorization::update_variables(const VectorXd& X)
 {
 	Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	// 	a = D1*U;
@@ -200,7 +187,7 @@ bool SymmetricDirichletOptimized::updateJ(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 };
 
-void SymmetricDirichletOptimized::UpdateSSVDFunction()
+void symmetric_dirichlet_composite_majorization::UpdateSSVDFunction()
 {
 	#pragma omp parallel for num_threads(24)
 	for (int i = 0; i < a.size(); i++)
@@ -208,14 +195,14 @@ void SymmetricDirichletOptimized::UpdateSSVDFunction()
 		Matrix2d A;
 		Matrix2d U, S, V;
 		A << a[i], b[i], c[i], d[i];
-		Utils::SSVD2x2(A, U, S, V);
+		utils::SSVD2x2(A, U, S, V);
 		u.row(i) << U(0), U(1), U(2), U(3);
 		v.row(i) << V(0), V(1), V(2), V(3);
 		s.row(i) << S(0), S(3);
 	}
 }
 
-void SymmetricDirichletOptimized::ComputeDenseSSVDDerivatives()
+void symmetric_dirichlet_composite_majorization::ComputeDenseSSVDDerivatives()
 {
 	// Different columns belong to diferent faces
 	MatrixXd B(D1d*v.col(0).asDiagonal() + D2d*v.col(1).asDiagonal());
@@ -231,7 +218,7 @@ void SymmetricDirichletOptimized::ComputeDenseSSVDDerivatives()
 	Dsd[1].bottomRows(t1.rows()) = t2;
 }
 
-inline Matrix6d SymmetricDirichletOptimized::ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x)
+inline Matrix6d symmetric_dirichlet_composite_majorization::ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x)
 {
 	double f2 = a1x*a1x + a2x*a2x;
 	double invf = 1.0/sqrt(f2);
@@ -249,7 +236,7 @@ inline Matrix6d SymmetricDirichletOptimized::ComputeFaceConeHessian(const Vector
 	return  (invf - invf3*a2) * A1A1t + (invf - invf3*b2) * A2A2t - invf3 * ab*(A1A2t + A2A1t);
 }
 
-inline Matrix6d SymmetricDirichletOptimized::ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs)
+inline Matrix6d symmetric_dirichlet_composite_majorization::ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs)
 {
 	// No multiplying by area in this function
 	Matrix6d H = HS*dSi*dSi.transpose() + Hs*dsi*dsi.transpose(); //generalized gauss newton
@@ -261,51 +248,4 @@ inline Matrix6d SymmetricDirichletOptimized::ComputeConvexConcaveFaceHessian(con
 	if (wbeta > 1e-7)
 		H += wbeta*ComputeFaceConeHessian(b1, b2, cY, dY);
 	return H;
-}
-
-void SymmetricDirichletOptimized::prepare_hessian()
-{
-	II.clear();
-	JJ.clear();
-	auto PushPair = [&](int i, int j) { if (i > j) swap(i, j); II.push_back(i); JJ.push_back(j); };
-	for (int i = 0; i < F.rows(); ++i)
-	{
-		// For every face there is a 6x6 local hessian.
-		// We only need the 21 values contained in the upper triangle.
-		// They are access and also put into the big hessian in column order. 
-
-		// First column
-		PushPair(F(i, 0)			, F(i, 0));
-
-		// Second column
-		PushPair(F(i, 0)			, F(i, 1));
-		PushPair(F(i, 1)			, F(i, 1));
-
-		// Third column
-		PushPair(F(i, 0)			, F(i, 2));
-		PushPair(F(i, 1)			, F(i, 2));
-		PushPair(F(i, 2)			, F(i, 2));
-
-		// Fourth column
-		PushPair(F(i, 0)			, F(i, 0) + V.rows());
-		PushPair(F(i, 1)			, F(i, 0) + V.rows());
-		PushPair(F(i, 2)			, F(i, 0) + V.rows());
-		PushPair(F(i, 0) + V.rows()	, F(i, 0) + V.rows());
-
-		// Fifth column
-		PushPair(F(i, 0)			, F(i, 1) + V.rows());
-		PushPair(F(i, 1)			, F(i, 1) + V.rows());
-		PushPair(F(i, 2)			, F(i, 1) + V.rows());
-		PushPair(F(i, 0) + V.rows()	, F(i, 1) + V.rows());
-		PushPair(F(i, 1) + V.rows()	, F(i, 1) + V.rows());
-
-		// Sixth column
-		PushPair(F(i, 0)			, F(i, 2) + V.rows());
-		PushPair(F(i, 1)			, F(i, 2) + V.rows());
-		PushPair(F(i, 2)			, F(i, 2) + V.rows());
-		PushPair(F(i, 0) + V.rows()	, F(i, 2) + V.rows());
-		PushPair(F(i, 1) + V.rows()	, F(i, 2) + V.rows());
-		PushPair(F(i, 2) + V.rows()	, F(i, 2) + V.rows());
-	}
-	SS = vector<double>(II.size(), 0.);
 }

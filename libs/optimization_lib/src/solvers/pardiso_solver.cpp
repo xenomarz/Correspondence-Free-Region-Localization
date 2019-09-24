@@ -17,12 +17,12 @@ using namespace std;
 
 
 template <typename vectorTypeI, typename vectorTypeS>
-PardisoSolver<vectorTypeI,vectorTypeS>::PardisoSolver():
+pardiso_solver<vectorTypeI,vectorTypeS>::pardiso_solver():
 mtype(-1)
 {}
 
 template <typename vectorTypeI, typename vectorTypeS>
-void PardisoSolver<vectorTypeI,vectorTypeS>::set_type(int _mtype , bool is_upper_half)
+void pardiso_solver<vectorTypeI,vectorTypeS>::set_type(int _mtype , bool is_upper_half)
 {
   if ((_mtype !=-2) && (_mtype !=2) && (_mtype !=1) && (_mtype !=11))
 	  throw std::runtime_error(std::string("Pardiso mtype not supported. mtype = ")+std::to_string( _mtype));
@@ -41,7 +41,7 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::set_type(int _mtype , bool is_upper
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-void PardisoSolver<vectorTypeI,vectorTypeS>::init()
+void pardiso_solver<vectorTypeI,vectorTypeS>::init()
 {
    if (mtype ==-1)
      throw std::runtime_error("Pardiso mtype not set.");
@@ -96,7 +96,7 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::init()
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-void PardisoSolver<vectorTypeI,vectorTypeS>::update_a(const vectorTypeS &SS_)
+void pardiso_solver<vectorTypeI,vectorTypeS>::update_a(const vectorTypeS &SS_)
  {
    if (mtype ==-1)
 	   throw std::runtime_error("Pardiso mtype not set.");
@@ -128,7 +128,7 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::update_a(const vectorTypeS &SS_)
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-void PardisoSolver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
+void pardiso_solver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
                                                          const vectorTypeI &JJ_,
                                                          const vectorTypeS &SS_)
 
@@ -269,7 +269,7 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-void PardisoSolver<vectorTypeI,vectorTypeS>::analyze_pattern()
+void pardiso_solver<vectorTypeI,vectorTypeS>::analyze_pattern()
 {
   if (mtype ==-1)
   	throw std::runtime_error("Pardiso mtype not set.");
@@ -306,7 +306,7 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::analyze_pattern()
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-bool PardisoSolver<vectorTypeI,vectorTypeS>::factorize()
+bool pardiso_solver<vectorTypeI,vectorTypeS>::factorize()
 {
   if (mtype ==-1)
   	throw std::runtime_error("Pardiso mtype not set.");
@@ -329,7 +329,7 @@ bool PardisoSolver<vectorTypeI,vectorTypeS>::factorize()
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-void PardisoSolver<vectorTypeI,vectorTypeS>::solve(Eigen::VectorXd &rhs,
+void pardiso_solver<vectorTypeI,vectorTypeS>::solve(Eigen::VectorXd &rhs,
                                                    Eigen::VectorXd &result)
 {
   if (mtype ==-1)
@@ -388,7 +388,7 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::solve(Eigen::VectorXd &rhs,
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-PardisoSolver<vectorTypeI,vectorTypeS>::~PardisoSolver()
+pardiso_solver<vectorTypeI,vectorTypeS>::~pardiso_solver()
 {
   if (mtype == -1)
     return;
@@ -402,9 +402,9 @@ PardisoSolver<vectorTypeI,vectorTypeS>::~PardisoSolver()
            iparm, &msglvl, &ddum, &ddum, &error,  dparm);
 }
 
-template class PardisoSolver<std::vector<int, std::allocator<int> >, std::vector<double, std::allocator<double> > >;
+template class pardiso_solver<std::vector<int, std::allocator<int> >, std::vector<double, std::allocator<double> > >;
 
-template class PardisoSolver<Eigen::Matrix<int, -1, 1, 0, -1, 1>, Eigen::Matrix<double, -1, 1, 0, -1, 1> >;
+template class pardiso_solver<Eigen::Matrix<int, -1, 1, 0, -1, 1>, Eigen::Matrix<double, -1, 1, 0, -1, 1> >;
 
 //extract II,JJ,SS (row,column and value vectors) from sparse matrix, Eigen version 
 //Olga Diamanti's method for PARDISO

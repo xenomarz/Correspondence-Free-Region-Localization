@@ -3,16 +3,16 @@
 #ifndef RDS_PLUGINS_BASIC_MENU_H
 #define RDS_PLUGINS_BASIC_MENU_H
 
-#include "menu_utils.h"
+#include "app_utils.h"
 
-class BasicMenu : public ImGuiMenu
+class basic_app : public ImGuiMenu
 {
 private:
 	//Basic (necessary) parameteres
 	int input_view_id, output_view_id;
-	MenuUtils::View view;
-	MenuUtils::MouseMode mouse_mode;
-	MenuUtils::Parametrization param_type;
+	app_utils::View view;
+	app_utils::MouseMode mouse_mode;
+	app_utils::Parametrization param_type;
 	float texture_scaling_input, texture_scaling_output;
 	Vector3f Highlighted_face_color, Fixed_face_color, Fixed_vertex_color;
 	bool Highlighted_face;
@@ -29,16 +29,16 @@ private:
 
 	//Solver Button Parameters
 	bool solver_on, solverInitialized, show_text;
-	MenuUtils::Distortion distortion_type;
-	MenuUtils::SolverType solver_type;
+	app_utils::Distortion distortion_type;
+	app_utils::SolverType solver_type;
 	float Max_Distortion;
 	
 	// Solver thread
 	thread solver_thread;
-	shared_ptr<Newton> newton;
-	shared_ptr<GradientDescent> gradient_descent;
-	shared_ptr<Solver> solver;
-	shared_ptr<TotalObjective> totalObjective;
+	shared_ptr<newton_solver> newton;
+	shared_ptr<gradient_descent_solver> gradient_descent;
+	shared_ptr<solver> Solver;
+	shared_ptr<total_objective> totalObjective;
 
 protected:
 	//Basic (necessary) parameteres
@@ -46,8 +46,8 @@ protected:
 
 public:
 	//Constructor & initialization
-	BasicMenu();
-	~BasicMenu(){}
+	basic_app();
+	~basic_app(){}
 
 	// callbacks
 	IGL_INLINE virtual void draw_viewer_menu() override;
@@ -69,8 +69,8 @@ public:
 	void Draw_menu_for_text_results();
 
 	//Pick faces & vertices and highlight them
-	int pick_face(MatrixXd& V, MatrixXi& F, MenuUtils::View LR);
-	int pick_vertex(MatrixXd& V, MatrixXi& F, MenuUtils::View LR);
+	int pick_face(MatrixXd& V, MatrixXi& F, app_utils::View LR);
+	int pick_vertex(MatrixXd& V, MatrixXi& F, app_utils::View LR);
 	void follow_and_mark_selected_faces();
 	RowVector3d get_face_avg();
 	void UpdateHandles();

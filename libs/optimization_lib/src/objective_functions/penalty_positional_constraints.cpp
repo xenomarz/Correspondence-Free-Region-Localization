@@ -1,19 +1,19 @@
 #include <objective_functions/penalty_positional_constraints.h>
 
-PenaltyPositionalConstraints::PenaltyPositionalConstraints()
+penalty_positional_constraints::penalty_positional_constraints()
 {
     name = "Positional Constraints";
 	w = 10000;
 }
 
-void PenaltyPositionalConstraints::init()
+void penalty_positional_constraints::init()
 {
 	if(numV==0)
 		throw name + " must define members numV before init()!";
 	init_hessian();
 }
 
-void PenaltyPositionalConstraints::updateX(const VectorXd& X)
+void penalty_positional_constraints::updateX(const VectorXd& X)
 {
 	CurrConstrainedVerticesPos.resizeLike(ConstrainedVerticesPos);
 	for (int i = 0; i < ConstrainedVerticesInd.size(); i++)
@@ -22,7 +22,7 @@ void PenaltyPositionalConstraints::updateX(const VectorXd& X)
 	}
 }
 
-double PenaltyPositionalConstraints::value(bool update)
+double penalty_positional_constraints::value(bool update)
 {
 	if (CurrConstrainedVerticesPos.rows() != ConstrainedVerticesPos.rows()) {
 		return 0;
@@ -35,7 +35,7 @@ double PenaltyPositionalConstraints::value(bool update)
 	return E;
 }
 
-void PenaltyPositionalConstraints::gradient(VectorXd& g)
+void penalty_positional_constraints::gradient(VectorXd& g)
 {
 	g.conservativeResize(numV * 2);
 	g.setZero();
@@ -51,7 +51,7 @@ void PenaltyPositionalConstraints::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void PenaltyPositionalConstraints::hessian()
+void penalty_positional_constraints::hessian()
 {
 	fill(SS.begin(), SS.end(), 0);
 	for (int i = 0; i < ConstrainedVerticesInd.size(); i++)
@@ -60,7 +60,7 @@ void PenaltyPositionalConstraints::hessian()
 	}
 }
 
-void PenaltyPositionalConstraints::init_hessian()
+void penalty_positional_constraints::init_hessian()
 {
 	II.resize(2*numV);
 	JJ.resize(2*numV);

@@ -1,8 +1,7 @@
 #pragma once
-
 #include <libs/optimization_lib/include/utils.h>
 
-class ObjectiveFunction
+class objective_function
 {
 protected:
 	// mesh vertices and faces
@@ -24,8 +23,8 @@ protected:
 	virtual void init_hessian();
 
 public:
-	ObjectiveFunction() {}
-	virtual ~ObjectiveFunction(){}
+	objective_function() {}
+	virtual ~objective_function(){}
 	virtual void init() = 0;
 	virtual void updateX(const VectorXd& X) = 0;
 	virtual double value(const bool update = true) = 0;

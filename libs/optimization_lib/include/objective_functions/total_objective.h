@@ -2,12 +2,12 @@
 
 #include <libs/optimization_lib/include/objective_functions/objective_function.h>
 
-class TotalObjective : public ObjectiveFunction
+class total_objective : public objective_function
 {
 private:
 	virtual void init_hessian() override;
 public:
-	TotalObjective();
+	total_objective();
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
 	virtual double value(bool update = true) override;
@@ -16,5 +16,5 @@ public:
 	
 	// sub objectives
 	float Shift_eigen_values = 1e-6;
-	vector<shared_ptr<ObjectiveFunction>> objectiveList;
+	vector<shared_ptr<objective_function>> objectiveList;
 };

@@ -1,12 +1,12 @@
 #include <objective_functions/angle_preserving.h>
 
-AnglePreserving::AnglePreserving()
+angle_preserving::angle_preserving()
 {
 	name = "Angle Preserving";
 	w = 0;
 }
 
-void AnglePreserving::init()
+void angle_preserving::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw name + " must define members V,F before init()!";
@@ -28,7 +28,7 @@ void AnglePreserving::init()
 
 	MatrixX3d D1cols, D2cols;
 
-	Utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
+	utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
 	D1d = D1cols.transpose();
 	D2d = D2cols.transpose();
 
@@ -47,7 +47,7 @@ void AnglePreserving::init()
 	init_hessian();
 }
 
-void AnglePreserving::updateX(const VectorXd& X)
+void angle_preserving::updateX(const VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
@@ -55,7 +55,7 @@ void AnglePreserving::updateX(const VectorXd& X)
 	}
 }
 
-double AnglePreserving::value(bool update)
+double angle_preserving::value(bool update)
 {
 	VectorXd E = 2*(d.cwiseAbs2()) + (b+c).cwiseAbs2() + 2 * (a.cwiseAbs2());
 	double value = (Area.asDiagonal() * E).sum();
@@ -68,7 +68,7 @@ double AnglePreserving::value(bool update)
 	return value;
 }
 
-void AnglePreserving::gradient(VectorXd& g)
+void angle_preserving::gradient(VectorXd& g)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
@@ -90,7 +90,7 @@ void AnglePreserving::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void AnglePreserving::hessian()
+void angle_preserving::hessian()
 {
 #pragma omp parallel for num_threads(24)
 	for (int i = 0; i < F.rows(); ++i) {
@@ -108,7 +108,7 @@ void AnglePreserving::hessian()
 	}
 }
 
-bool AnglePreserving::update_variables(const VectorXd& X)
+bool angle_preserving::update_variables(const VectorXd& X)
 {
 	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	

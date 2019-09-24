@@ -1,6 +1,6 @@
 #include <solvers/solver.h>
 
-Solver::Solver()
+solver::solver()
 	:
 	parameters_mutex(make_unique<mutex>()),
 	data_mutex(make_unique<shared_timed_mutex>()),
@@ -8,7 +8,7 @@ Solver::Solver()
 	num_steps(2147483647)
 {}
 
-void Solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
+void solver::init(shared_ptr<objective_function> objective, const VectorXd& X0)
 {
 	this->objective = objective;
 	X = X0;
@@ -16,13 +16,13 @@ void Solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
 	internal_init();
 }
 
-void Solver::setFlipAvoidingLineSearch(MatrixX3i & F)
+void solver::setFlipAvoidingLineSearch(MatrixX3i & F)
 {
 	FlipAvoidingLineSearch = true;
 	this->F = F;
 }
 
-int Solver::run()
+int solver::run()
 {
 	is_running = true;
 	halt = false;
@@ -40,7 +40,7 @@ int Solver::run()
 	return 0;
 }
 
-void Solver::linesearch()
+void solver::linesearch()
 {
 	double step_size;
 	if (FlipAvoidingLineSearch)
@@ -76,14 +76,14 @@ void Solver::linesearch()
 	}
 }
 
-void Solver::stop()
+void solver::stop()
 {
 	wait_for_parameter_update_slot();
 	halt = true;
 	release_parameter_update_slot();
 }
 
-void Solver::update_external_data()
+void solver::update_external_data()
 {
 	give_parameter_update_slot();
 	unique_lock<shared_timed_mutex> lock(*data_mutex);
@@ -91,14 +91,14 @@ void Solver::update_external_data()
 	progressed = true;
 }
 
-void Solver::get_data(VectorXd& X)
+void solver::get_data(VectorXd& X)
 {
 	unique_lock<shared_timed_mutex> lock(*data_mutex);
 	X = ext_x;
 	progressed = false;
 }
 
-void Solver::give_parameter_update_slot()
+void solver::give_parameter_update_slot()
 {
 	a_parameter_was_updated = false;
 	unique_lock<mutex> lock(*parameters_mutex);
@@ -112,7 +112,7 @@ void Solver::give_parameter_update_slot()
 	params_ready_to_update = false;
 }
 
-void Solver::wait_for_parameter_update_slot()
+void solver::wait_for_parameter_update_slot()
 {
 	unique_lock<mutex> lock(*parameters_mutex);
 	wait_for_param_update = true;
@@ -120,7 +120,7 @@ void Solver::wait_for_parameter_update_slot()
 		param_cv->wait_for(lock, chrono::milliseconds(50));
 }
 
-void Solver::release_parameter_update_slot()
+void solver::release_parameter_update_slot()
 {
 	wait_for_param_update = false;
 	param_cv->notify_one();

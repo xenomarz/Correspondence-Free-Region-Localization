@@ -1,6 +1,6 @@
 #include <solvers/gradient_descent_solver.h>
 
-double GradientDescent::step()
+double gradient_descent_solver::step()
 {
 	objective->updateX(X);
 	f = objective->value();
@@ -9,12 +9,12 @@ double GradientDescent::step()
 	return f;
 }
 
-bool GradientDescent::test_progress()
+bool gradient_descent_solver::test_progress()
 {
 	return true;
 }
 
-void GradientDescent::internal_init()
+void gradient_descent_solver::internal_init()
 {
 	objective->updateX(X);
 	g.resize(X.size());

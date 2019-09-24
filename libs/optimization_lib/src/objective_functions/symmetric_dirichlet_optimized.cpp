@@ -1,12 +1,12 @@
-#include <objective_functions/symmetric_dirichlet_optimized.h>
+#include <objective_functions/symmetric_dirichlet_composite_majorization.h>
 
-SymmetricDirichletOptimized::SymmetricDirichletOptimized()
+symmetric_dirichlet_composite_majorization::symmetric_dirichlet_composite_majorization()
 {
     name = "symmetric dirichlet optimized";
 	w = 0;
 }
 
-void SymmetricDirichletOptimized::init()
+void symmetric_dirichlet_composite_majorization::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw name + " must define members V,F before init()!";
@@ -59,7 +59,7 @@ void SymmetricDirichletOptimized::init()
 	init_hessian();
 }
 
-void SymmetricDirichletOptimized::updateX(const VectorXd& X)
+void symmetric_dirichlet_composite_majorization::updateX(const VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
@@ -67,7 +67,7 @@ void SymmetricDirichletOptimized::updateX(const VectorXd& X)
 	}
 }
 
-double SymmetricDirichletOptimized::value(bool update)
+double symmetric_dirichlet_composite_majorization::value(bool update)
 {
 	// E = ||J||^2+||J^-1||^2 = ||J||^2+||J||^2/det(J)^2
 	VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
@@ -83,7 +83,7 @@ double SymmetricDirichletOptimized::value(bool update)
 	return value;
 }
 
-void SymmetricDirichletOptimized::gradient(VectorXd& g)
+void symmetric_dirichlet_composite_majorization::gradient(VectorXd& g)
 {
     // Energy is h(S(x),s(x)), then grad_x h = grad_(S,s) h * [grad(S); grad(s)]
     MatrixX2d S(alpha);
@@ -115,7 +115,7 @@ void SymmetricDirichletOptimized::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void SymmetricDirichletOptimized::hessian()
+void symmetric_dirichlet_composite_majorization::hessian()
 {
     UpdateSSVDFunction();
     ComputeDenseSSVDDerivatives();
@@ -163,7 +163,7 @@ void SymmetricDirichletOptimized::hessian()
 	}
 }
 
-bool SymmetricDirichletOptimized::update_variables(const VectorXd& X)
+bool symmetric_dirichlet_composite_majorization::update_variables(const VectorXd& X)
 {
 	Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
 	// 	a = D1*U;
@@ -187,7 +187,7 @@ bool SymmetricDirichletOptimized::update_variables(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 };
 
-void SymmetricDirichletOptimized::UpdateSSVDFunction()
+void symmetric_dirichlet_composite_majorization::UpdateSSVDFunction()
 {
 	#pragma omp parallel for num_threads(24)
 	for (int i = 0; i < a.size(); i++)
@@ -202,7 +202,7 @@ void SymmetricDirichletOptimized::UpdateSSVDFunction()
 	}
 }
 
-void SymmetricDirichletOptimized::ComputeDenseSSVDDerivatives()
+void symmetric_dirichlet_composite_majorization::ComputeDenseSSVDDerivatives()
 {
 	// Different columns belong to diferent faces
 	MatrixXd B(D1d*v.col(0).asDiagonal() + D2d*v.col(1).asDiagonal());
@@ -218,7 +218,7 @@ void SymmetricDirichletOptimized::ComputeDenseSSVDDerivatives()
 	Dsd[1].bottomRows(t1.rows()) = t2;
 }
 
-inline Matrix6d SymmetricDirichletOptimized::ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x)
+inline Matrix6d symmetric_dirichlet_composite_majorization::ComputeFaceConeHessian(const Vector6d& A1, const Vector6d& A2, double a1x, double a2x)
 {
 	double f2 = a1x*a1x + a2x*a2x;
 	double invf = 1.0/sqrt(f2);
@@ -236,7 +236,7 @@ inline Matrix6d SymmetricDirichletOptimized::ComputeFaceConeHessian(const Vector
 	return  (invf - invf3*a2) * A1A1t + (invf - invf3*b2) * A2A2t - invf3 * ab*(A1A2t + A2A1t);
 }
 
-inline Matrix6d SymmetricDirichletOptimized::ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs)
+inline Matrix6d symmetric_dirichlet_composite_majorization::ComputeConvexConcaveFaceHessian(const Vector6d& a1, const Vector6d& a2, const Vector6d& b1, const Vector6d& b2, double aY, double bY, double cY, double dY, const Vector6d& dSi, const Vector6d& dsi, double gradfS, double gradfs, double HS, double Hs)
 {
 	// No multiplying by area in this function
 	Matrix6d H = HS*dSi*dSi.transpose() + Hs*dsi*dsi.transpose(); //generalized gauss newton
