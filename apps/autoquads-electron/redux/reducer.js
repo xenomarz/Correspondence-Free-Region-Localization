@@ -47,7 +47,7 @@ const INITIAL_STATE = {
     delta: 0.9,
     lambda: 0.1,
     seamlessWeight: 0,
-    positionWeight: 0,
+    positionWeight: 10000,
     gridHorizontalColor: 'rgb(0,0,0)',
     gridVerticalColor: 'rgb(0,0,0)',
     gridBackgroundColor1: 'rgb(0,0,200)',

@@ -20,7 +20,6 @@ import * as ActionsExports from '../../redux/actions.js';
 import * as EnumsExports from '../../redux/enums.js';
 import * as HelpersExports from '../../redux/helpers.js';
 import { store } from '../../redux/store.js';
-import { P } from '../../web_modules/common/paper-ripple-behavior-a07b40e2.js';
 
 export class AutoquadsSideBar extends SideBar {
     static get styles() {

@@ -10,6 +10,7 @@
 #include <utility>
 #include <algorithm>
 #include <functional>
+#include <string>
 
 // Eigen Includes
 #include <Eigen/Core>
@@ -64,6 +65,11 @@ private:
 	using EI2EIsMap = std::unordered_map<EdgeIndex, std::vector<EdgeIndex>>;
 	using EI2EIMap = std::unordered_map<EdgeIndex, EdgeIndex>;
 
+	/**
+	 * Private functions
+	 */
+	void Initialize();
+
 public:
 
 	/**
@@ -79,6 +85,7 @@ public:
 	 */
 	MeshWrapper();
 	MeshWrapper(const Eigen::MatrixX3d& v, const Eigen::MatrixX3i& f);
+	MeshWrapper(const std::string& modelFilename);
 	virtual ~MeshWrapper();
 
 	/**
@@ -105,8 +112,18 @@ public:
 	 */
 	Eigen::VectorXi GetImageFaceVerticesIndices(FaceIndex face_index);
 	Eigen::MatrixXd GetImageVertices(const Eigen::VectorXi& vertex_indices);
+	void LoadModel(const std::string& model_file_path);
 
 private:
+	/**
+	* Private enums
+	*/
+	enum class ModelFileType
+	{
+		OBJ,
+		OFF,
+		UNKNOWN
+	};
 
 	/**
 	 * General use mesh methods
@@ -141,6 +158,11 @@ private:
 	void ComputeCorrespondingPairs();
 	void ComputeCorrespondingVertexPairsCoefficients();
 	void ComputeCorrespondingVertexPairsEdgeLength();
+
+	/**
+	 * Private methods
+	 */
+	ModelFileType GetModelFileType(const std::string& modelFilePath);
 
 	/**
 	 * Fields

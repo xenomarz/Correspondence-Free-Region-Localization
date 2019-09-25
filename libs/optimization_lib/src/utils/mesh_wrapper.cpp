@@ -10,6 +10,8 @@
 #include <igl/doublearea.h>
 #include <igl/per_face_normals.h>
 #include <igl/adjacency_matrix.h>
+#include <igl/readOFF.h>
+#include <igl/readOBJ.h>
 
 MeshWrapper::MeshWrapper()
 {
@@ -20,22 +22,12 @@ MeshWrapper::MeshWrapper(const Eigen::MatrixX3d& v, const Eigen::MatrixX3i& f) :
 	v_dom_(v),
 	f_dom_(f)
 {
-	NormalizeVertices(v_dom_);
-	GenerateRandom2DSoup(f_dom_, f_im_, v_im_);
+	Initialize();
+}
 
-	ComputeEdges(f_dom_, e_dom_);
-	ComputeEdges(f_im_, e_im_);
-
-	ComputeEdgeDescriptorMap(e_dom_, ed_dom_2_ei_dom_);
-	ComputeEdgeDescriptorMap(e_im_, ed_im_2_ei_im_);
-
-	ComputeVertexIndexMaps();
-	ComputeEdgeIndexMaps();
-
-	ComputeCorrespondingPairs();
-
-	ComputeCorrespondingVertexPairsCoefficients();
-	ComputeCorrespondingVertexPairsEdgeLength();
+MeshWrapper::MeshWrapper(const std::string& modelFilePath)
+{
+	LoadModel(modelFilePath);
 }
 
 MeshWrapper::~MeshWrapper()
@@ -92,6 +84,59 @@ const Eigen::VectorXd& MeshWrapper::GetCorrespondingVertexPairsEdgeLength() cons
 {
 	return cv_pairs_edge_length_;
 }
+
+void MeshWrapper::LoadModel(const std::string& model_file_path)
+{
+	/**
+	 * Get file type
+	 */
+	MeshWrapper::ModelFileType modelFileType = GetModelFileType(model_file_path);
+	if (modelFileType == MeshWrapper::ModelFileType::UNKNOWN)
+	{
+		return;
+	}
+
+	/**
+	 * Read file
+	 */
+	Eigen::MatrixXd v;
+	Eigen::MatrixXi f;
+	switch (modelFileType)
+	{
+	case MeshWrapper::ModelFileType::OFF:
+		igl::readOFF(model_file_path, v, f);
+		break;
+	case MeshWrapper::ModelFileType::OBJ:
+		igl::readOBJ(model_file_path, v, f);
+		break;
+	}
+
+	/**
+	 * Triangulate (if faces were received as quads)
+	 */
+	if (f.cols() == 4)
+	{
+		auto f_triangulated = Eigen::MatrixXi(f.rows() * 2, 3);
+		for (Eigen::DenseIndex i = 0; i < f.rows(); ++i)
+		{
+			auto face = f.row(i);
+			auto triangle_index = 2 * i;
+			f_triangulated.row(triangle_index) << face[0], face[1], face[3];
+			f_triangulated.row(triangle_index + 1) << face[1], face[2], face[3];
+		}
+
+		f = f_triangulated;
+	}
+
+	v_dom_ = v;
+	f_dom_ = f;
+
+	Initialize();
+}
+
+
+
+
 
 void MeshWrapper::GenerateSoupFaces(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out)
 {
@@ -350,4 +395,40 @@ Eigen::VectorXi MeshWrapper::GetImageFaceVerticesIndices(FaceIndex face_index)
 Eigen::MatrixXd MeshWrapper::GetImageVertices(const Eigen::VectorXi& vertex_indices)
 {
 	return igl::slice(v_im_, vertex_indices, 1);
+}
+
+MeshWrapper::ModelFileType MeshWrapper::GetModelFileType(const std::string& modelFilePath)
+{
+	std::string fileExtension = modelFilePath.substr(modelFilePath.find_last_of(".") + 1);
+	transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
+	if (fileExtension == "obj")
+	{
+		return MeshWrapper::ModelFileType::OBJ;
+	}
+	else if (fileExtension == "off")
+	{
+		return MeshWrapper::ModelFileType::OFF;
+	}
+
+	return MeshWrapper::ModelFileType::UNKNOWN;
+}
+
+void MeshWrapper::Initialize()
+{
+	NormalizeVertices(v_dom_);
+	GenerateRandom2DSoup(f_dom_, f_im_, v_im_);
+
+	ComputeEdges(f_dom_, e_dom_);
+	ComputeEdges(f_im_, e_im_);
+
+	ComputeEdgeDescriptorMap(e_dom_, ed_dom_2_ei_dom_);
+	ComputeEdgeDescriptorMap(e_im_, ed_im_2_ei_im_);
+
+	ComputeVertexIndexMaps();
+	ComputeEdgeIndexMaps();
+
+	ComputeCorrespondingPairs();
+
+	ComputeCorrespondingVertexPairsCoefficients();
+	ComputeCorrespondingVertexPairsEdgeLength();
 }

@@ -40,7 +40,15 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	Napi::ObjectWrap<Engine>(info),
 	mesh_wrapper_(std::make_shared<MeshWrapper>())
 {
-
+	position_ = std::make_shared<Position>(mesh_wrapper_);
+	separation_ = std::make_shared<Separation>(mesh_wrapper_);
+	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet>(mesh_wrapper_);
+	position_ = std::make_shared<Position>(mesh_wrapper_);
+	std::vector<std::shared_ptr<ObjectiveFunction>> objective_functions;
+	objective_functions.push_back(position_);
+	objective_functions.push_back(separation_);
+	objective_functions.push_back(symmetric_dirichlet_);
+	composite_objective_ = std::make_shared<CompositeObjective>(mesh_wrapper_, objective_functions);
 }
 
 Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
@@ -58,58 +66,75 @@ Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
 	}
 
 	/**
-	 * Get file type
+	 * Load model
 	 */
-	Napi::String value = info[0].As<Napi::String>();
-	std::string modelFilePath = std::string(value);
-	Engine::ModelFileType modelFileType = GetModelFileType(modelFilePath);
-	if (modelFileType == Engine::ModelFileType::UNKNOWN)
-	{
-		Napi::TypeError::New(env, "Unknown file type").ThrowAsJavaScriptException();
-		return env.Null();
-	}
+	 Napi::String value = info[0].As<Napi::String>();
+	 std::string model_file_path = std::string(value);
+	 mesh_wrapper_->LoadModel(model_file_path);
 
-	/**
-	 * Read file
-	 */
-	Eigen::MatrixXd V;
-	Eigen::MatrixXi F;
-	switch (modelFileType)
-	{
-	case Engine::ModelFileType::OFF:
-		igl::readOFF(modelFilePath, V, F);
-		break;
-	case Engine::ModelFileType::OBJ:
-		igl::readOBJ(modelFilePath, V, F);
-		break;
-	}
-
-	/**
-	 * Triangulate (if faces were received as quads)
-	 */
-	if (F.cols() == 4)
-	{
-		auto F_triangulated = Eigen::MatrixXi(F.rows() * 2, 3);
-		for (Eigen::DenseIndex i = 0; i < F.rows(); ++i)
-		{
-			auto face = F.row(i);
-			auto triangle_index = 2 * i;
-			F_triangulated.row(triangle_index) << face[0], face[1], face[3];
-			F_triangulated.row(triangle_index + 1) << face[1], face[2], face[3];
-		}
-
-		F = F_triangulated;
-	}
-
-	/**
-	 * Initialize MeshWrapper with loaded mesh model (faces and vertices)
-	 */
-	mesh_wrapper_ = std::make_shared<MeshWrapper>(V, F);
+	 /**
+	  * Create newton method iterator
+	  */
 	auto& x = mesh_wrapper_->GetImageVertices();
 	auto x0 = Eigen::Map<const Eigen::VectorXd>(x.data(), x.cols() * x.rows());
-	position_ = std::make_shared<Position>(mesh_wrapper_);
-	composite_objective_ = std::make_shared<CompositeObjective>(mesh_wrapper_, position_);
 	newton_method_ = std::make_unique<NewtonMethod<EigenSparseSolver>>(composite_objective_, x0);
+
+	// TODO: Determine if to delete the commented-out code or revert
+	///**
+	// * Get file type
+	// */
+	//Napi::String value = info[0].As<Napi::String>();
+	//std::string modelFilePath = std::string(value);
+	//Engine::ModelFileType modelFileType = GetModelFileType(modelFilePath);
+	//if (modelFileType == Engine::ModelFileType::UNKNOWN)
+	//{
+	//	Napi::TypeError::New(env, "Unknown file type").ThrowAsJavaScriptException();
+	//	return env.Null();
+	//}
+
+	///**
+	// * Read file
+	// */
+	//Eigen::MatrixXd V;
+	//Eigen::MatrixXi F;
+	//switch (modelFileType)
+	//{
+	//case Engine::ModelFileType::OFF:
+	//	igl::readOFF(modelFilePath, V, F);
+	//	break;
+	//case Engine::ModelFileType::OBJ:
+	//	igl::readOBJ(modelFilePath, V, F);
+	//	break;
+	//}
+
+	///**
+	// * Triangulate (if faces were received as quads)
+	// */
+	//if (F.cols() == 4)
+	//{
+	//	auto F_triangulated = Eigen::MatrixXi(F.rows() * 2, 3);
+	//	for (Eigen::DenseIndex i = 0; i < F.rows(); ++i)
+	//	{
+	//		auto face = F.row(i);
+	//		auto triangle_index = 2 * i;
+	//		F_triangulated.row(triangle_index) << face[0], face[1], face[3];
+	//		F_triangulated.row(triangle_index + 1) << face[1], face[2], face[3];
+	//	}
+
+	//	F = F_triangulated;
+	//}
+
+	///**
+	// * Initialize MeshWrapper with loaded mesh model (faces and vertices)
+	// */
+	//mesh_wrapper_ = std::make_shared<MeshWrapper>(V, F);
+	//auto& x = mesh_wrapper_->GetImageVertices();
+	//auto x0 = Eigen::Map<const Eigen::VectorXd>(x.data(), x.cols() * x.rows());
+	//position_ = std::make_shared<Position>(mesh_wrapper_);
+	//composite_objective_ = std::make_shared<CompositeObjective>(mesh_wrapper_, position_);
+	//newton_method_ = std::make_unique<NewtonMethod<EigenSparseSolver>>(composite_objective_, x0);
+
+
 
 	return env.Null();
 }

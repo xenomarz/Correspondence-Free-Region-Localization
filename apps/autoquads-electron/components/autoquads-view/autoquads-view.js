@@ -374,9 +374,12 @@ export class AutoquadsView extends connect(store)(LitElement) {
     }
 
     set delta(value) {
-        const oldValue = this._delta;
-        this._delta = value;
-        this.requestUpdate('delta', oldValue);
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            const oldValue = this._delta;
+            this._delta = value;
+            this._engine.delta = value;
+            this.requestUpdate('delta', oldValue);
+        }
     }
 
     get delta() {
@@ -384,9 +387,12 @@ export class AutoquadsView extends connect(store)(LitElement) {
     }
 
     set lambda(value) {
-        const oldValue = this._lambda;
-        this._lambda = value;
-        this.requestUpdate('lambda', oldValue);
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            const oldValue = this._lambda;
+            this._lambda = value;
+            this._engine.lambda = value;
+            this.requestUpdate('lambda', oldValue);
+        }
     }
 
     get lambda() {
@@ -404,9 +410,12 @@ export class AutoquadsView extends connect(store)(LitElement) {
     }
     
     set positionWeight(value) {
-        const oldValue = this._positionWeight;
-        this._positionWeight = value;
-        this.requestUpdate('positionWeight', oldValue);
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            const oldValue = this._positionWeight;
+            this._positionWeight = value;
+            this._engine.positionWeight = value;
+            this.requestUpdate('positionWeight', oldValue);
+        }
     }
 
     get positionWeight() {
