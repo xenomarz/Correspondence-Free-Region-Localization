@@ -66,9 +66,10 @@ public:
 	// Expose an enumeration type
 	static enum View {
 		Horizontal = 0,
-		Vertical, 
-		InputOnly, 
-		OutputOnly 
+		Vertical,
+		InputOnly,
+		OutputOnly0, 
+		OutputOnly1 
 	};
 	static enum MouseMode { 
 		NONE = 0, 
@@ -137,7 +138,7 @@ public:
 		return translation;
 	}
 	
-	static string filename(const string& str)
+	static string ExtractMeshName(const string& str)
 	{
 		size_t head, tail;
 		head = str.find_last_of("/\\");

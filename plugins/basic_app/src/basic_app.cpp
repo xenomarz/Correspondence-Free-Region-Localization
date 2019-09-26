@@ -9,10 +9,10 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 
 	if (_viewer)
 	{
-		//Basic (necessary) parameteres
-		core_percentage_size = 0.5;
+		cores.push_back(Core(0));
+		cores.push_back(Core(1));
 		param_type = app_utils::None;
-		Max_Distortion = 5;
+		cores[0].Max_Distortion = 5;
 		Highlighted_face_color = RED_COLOR;
 		Fixed_face_color = BLUE_COLOR;
 		Dragged_face_color = GREEN_COLOR;
@@ -21,49 +21,48 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		Fixed_vertex_color = BLUE_COLOR;
 		model_color = GREY_COLOR;
 		text_color = BLACK_COLOR;
-		mouse_mode = app_utils::VERTEX_SELECT;
-		view = app_utils::Horizontal;
 		IsTranslate = false;
 		Highlighted_face = false;
-		show_text = true;
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
-		solverInitialized = false;
+		
+		mouse_mode = app_utils::VERTEX_SELECT;
+		view = app_utils::Horizontal;
 		down_mouse_x = down_mouse_y = -1;
 		texture_scaling_input = texture_scaling_output = 1;
 
-		//Solver Parameters
-		solver_on = false;
-		
-		//Load two views
+		//Load multiple views
 		viewer->core().viewport = Vector4f(0, 0, 640, 800);
 		input_view_id = viewer->core(0).id;
 		viewer->core(input_view_id).background_color = Vector4f(0.9, 0.9, 0.9, 0);
 
-		output_view_id = viewer->append_core(Vector4f(640, 0, 640, 800));
-		viewer->core(output_view_id).background_color = Vector4f(0.9, 0.9, 0.9 ,0);
+		output_view_id.push_back(viewer->append_core(Vector4f(640, 0, 640, 800)));
+		viewer->core(output_view_id[0]).background_color = Vector4f(0.9, 0, 0.9 ,0);
+
+		output_view_id.push_back(viewer->append_core(Vector4f(640, 0, 640, 800)));
+		viewer->core(output_view_id[1]).background_color = Vector4f(0, 0.9, 0.9, 0);
 
 		//set rotation type to 2D mode
-		viewer->core(output_view_id).trackball_angle = Quaternionf::Identity();
-		viewer->core(output_view_id).orthographic = true;
-		viewer->core(output_view_id).set_rotation_type(ViewerCore::RotationType(2));
+		viewer->core(output_view_id[0]).trackball_angle = Quaternionf::Identity();
+		viewer->core(output_view_id[0]).orthographic = true;
+		viewer->core(output_view_id[0]).set_rotation_type(ViewerCore::RotationType(2));
 		
 		//Update scene
 		Update_view();
 		viewer->core(input_view_id).align_camera_center(InputModel().V, InputModel().F);
-		viewer->core(output_view_id).align_camera_center(OutputModel().V, OutputModel().F);
+		viewer->core(output_view_id[0]).align_camera_center(OutputModel().V, OutputModel().F);
 
 		viewer->core(input_view_id).is_animating = true;
-		viewer->core(output_view_id).is_animating = true;
+		viewer->core(output_view_id[0]).is_animating = true;
 
 		viewer->core(input_view_id).lighting_factor = 0.2;
-		viewer->core(output_view_id).lighting_factor = 0;
+		viewer->core(output_view_id[0]).lighting_factor = 0;
 		
 		// Initialize solver thread
 		newton = make_shared<NewtonSolver>();
 		gradient_descent = make_shared<GradientDescentSolver>();
 		solver = newton;
-		totalObjective = make_shared<TotalObjective>();	
+		totalObjective = make_shared<TotalObjective>();
 
 		//maximize window
 		glfwMaximizeWindow(viewer->window);
@@ -77,19 +76,21 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	if (ImGui::Button("Load##Mesh", ImVec2((w - p) / 2.f, 0)))
 	{
 		//Load new model that has two copies
-		string fname = file_dialog_open();
-		if (fname.length() != 0)
+		string mesh_Path = file_dialog_open();
+		if (mesh_Path.length() != 0)
 		{
 			stop_solver_thread();
 			
-			set_name_mapping(0, app_utils::filename(fname));
-			viewer->load_mesh_from_file(fname.c_str());
-			viewer->load_mesh_from_file(fname.c_str());
+			cores[0].setName(app_utils::ExtractMeshName(mesh_Path));
+			viewer->load_mesh_from_file(mesh_Path.c_str());
+			viewer->load_mesh_from_file(mesh_Path.c_str());
 			
+
+
 			initializeSolver();
 			Update_view();
 			viewer->core(input_view_id).align_camera_center(InputModel().V, InputModel().F);
-			viewer->core(output_view_id).align_camera_center(OutputModel().V, OutputModel().F);
+			viewer->core(output_view_id[0]).align_camera_center(OutputModel().V, OutputModel().F);
 		}
 	}
 	ImGui::SameLine(0, p);
@@ -102,7 +103,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	ImGui::Checkbox("Show text", &show_text);
 
 	if ((view == Horizontal) || (view == Vertical)) {
-		if(ImGui::SliderFloat("Core Size", &core_percentage_size, 0, 1, to_string(core_percentage_size).c_str(), 1)){
+		if(ImGui::SliderFloat("Core Size", &cores[0].core_size, 0, 0.5, to_string(cores[0].core_size).c_str(), 1)){
 			int frameBufferWidth, frameBufferHeight;
 			glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
 			post_resize(frameBufferWidth, frameBufferHeight);
@@ -139,20 +140,35 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 	if (viewer)
 	{
 		if (view == app_utils::Horizontal) {
-			viewer->core(input_view_id).viewport = Vector4f(0, 0, w * core_percentage_size, h);
-			viewer->core(output_view_id).viewport = Vector4f(w * core_percentage_size, 0, w - (w * core_percentage_size), h);
+			viewer->core(input_view_id).viewport = 
+				Vector4f(0, 0, w - w * 2 * cores[0].core_size, h);
+			viewer->core(output_view_id[0]).viewport = 
+				Vector4f(w - w * 2 * cores[0].core_size, 0, w * cores[0].core_size, h);
+			viewer->core(output_view_id[1]).viewport = 
+				Vector4f(w - w * cores[0].core_size, 0, w * cores[0].core_size, h);
 		}
 		if (view == app_utils::Vertical) {
-			viewer->core(input_view_id).viewport = Vector4f(0, h * core_percentage_size, w, h - (h * core_percentage_size));
-			viewer->core(output_view_id).viewport = Vector4f(0, 0, w, h * core_percentage_size);
+			viewer->core(input_view_id).viewport =
+				Vector4f(0, 0, w, h - h * 2 * cores[0].core_size);
+			viewer->core(output_view_id[0]).viewport =
+				Vector4f(0, h - h * 2 * cores[0].core_size, w , h* cores[0].core_size);
+			viewer->core(output_view_id[1]).viewport =
+				Vector4f(0, h - h * cores[0].core_size, w, h * cores[0].core_size);
 		}
 		if (view == app_utils::InputOnly) {
 			viewer->core(input_view_id).viewport = Vector4f(0, 0, w, h);
-			viewer->core(output_view_id).viewport = Vector4f(w + 1, h + 1, w + 2, h + 2);
+			viewer->core(output_view_id[0]).viewport = Vector4f(0, 0, 0, 0);
+			viewer->core(output_view_id[1]).viewport = Vector4f(0, 0, 0, 0);
 		}
-		if (view == app_utils::OutputOnly) {
-			viewer->core(input_view_id).viewport = Vector4f(w + 1, h + 1, w + 2, h + 2);
-			viewer->core(output_view_id).viewport = Vector4f(0, 0, w, h);
+		if (view == app_utils::OutputOnly0) {
+			viewer->core(input_view_id).viewport = Vector4f(0, 0, 0, 0);
+			viewer->core(output_view_id[0]).viewport = Vector4f(0, 0, w, h); 
+			viewer->core(output_view_id[1]).viewport = Vector4f(0, 0, 0, 0);
+		}
+		if (view == app_utils::OutputOnly1) {
+			viewer->core(input_view_id).viewport = Vector4f(0, 0, 0, 0);
+			viewer->core(output_view_id[0]).viewport = Vector4f(0, 0, 0, 0);
+			viewer->core(output_view_id[1]).viewport = Vector4f(0, 0, w, h);
 		}
 	}
 }
@@ -216,7 +232,7 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 		int f = pick_face(InputModel().V, InputModel().F, app_utils::InputOnly);
 		if (f == -1) {
 			//check if there faces which is selected on the right screen
-			f = pick_face(OutputModel().V, OutputModel().F, app_utils::OutputOnly);
+			f = pick_face(OutputModel().V, OutputModel().F, app_utils::OutputOnly0);
 		}
 
 		if (f != -1)
@@ -239,7 +255,7 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 		int v = pick_vertex(InputModel().V, InputModel().F, app_utils::InputOnly);
 		if (v == -1) {
 			//check if there faces which is selected on the right screen
-			v = pick_vertex(OutputModel().V, OutputModel().F, app_utils::OutputOnly);
+			v = pick_vertex(OutputModel().V, OutputModel().F, app_utils::OutputOnly0);
 		}
 
 		if (v != -1)
@@ -266,9 +282,9 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 			Core_Translate_ID = input_view_id;
 			if (f == -1) {
 				//check if there faces which is selected on the right screen
-				f = pick_face(OutputModel().V, OutputModel().F, app_utils::OutputOnly);
+				f = pick_face(OutputModel().V, OutputModel().F, app_utils::OutputOnly0);
 				Model_Translate_ID = OutputModelID();
-				Core_Translate_ID = output_view_id;
+				Core_Translate_ID = output_view_id[0];
 			}
 
 			if (find(selected_faces.begin(), selected_faces.end(), f) != selected_faces.end())
@@ -288,9 +304,9 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 		Core_Translate_ID = input_view_id;
 		if (v == -1) {
 			//check if there faces which is selected on the right screen
-			v = pick_vertex(OutputModel().V, OutputModel().F, app_utils::OutputOnly);
+			v = pick_vertex(OutputModel().V, OutputModel().F, app_utils::OutputOnly0);
 			Model_Translate_ID = OutputModelID();
-			Core_Translate_ID = output_view_id;
+			Core_Translate_ID = output_view_id[0];
 		}
 
 		if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
@@ -449,7 +465,7 @@ void basic_app::Draw_menu_for_Solver() {
 			checkHessians();
 		}
 		
-		ImGui::DragFloat("Max Distortion", &(Max_Distortion), 0.05f, 0.1f, 20.0f);
+		ImGui::DragFloat("Max Distortion", &(cores[0].Max_Distortion), 0.05f, 0.1f, 20.0f);
 		
 		ImGui::PushItemWidth(80 * menu_scaling());
 		ImGui::DragFloat("shift eigen values", &(totalObjective->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
@@ -548,14 +564,10 @@ void basic_app::Draw_menu_for_models() {
 		ImGui::PushID(data.id);
 		stringstream ss;
 
-		if (data_id_to_name.count(data.id) > 0)
-		{
-			ss << data_id_to_name[data.id];
-		}
-		else
-		{
-			ss << "Data " << data.id;
-		}
+		
+		ss << cores[0].name.c_str();
+		
+		
 
 		if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 		{
@@ -607,19 +619,19 @@ void basic_app::Draw_menu_for_text_results() {
 
 	int w, h;
 	if (view == app_utils::Horizontal) {
-		w = frameBufferWidth * core_percentage_size + shift;
+		w = frameBufferWidth * cores[0].core_size + shift;
 		h = shift;
 	}
 	if (view == app_utils::Vertical) {
 		w = shift;
-		h = frameBufferHeight - frameBufferHeight * core_percentage_size + shift;
+		h = frameBufferHeight - frameBufferHeight * cores[0].core_size + shift;
 	}
 	if (view == app_utils::InputOnly) {
-		w = frameBufferWidth * core_percentage_size + shift;
+		w = frameBufferWidth * cores[0].core_size + shift;
 		h = shift;
 	}
-	if (view == app_utils::OutputOnly) {
-		w = frameBufferWidth * core_percentage_size + shift;
+	if (view == app_utils::OutputOnly0) {
+		w = frameBufferWidth * cores[0].core_size + shift;
 		h = shift;
 	}
 
@@ -706,7 +718,7 @@ void basic_app::Update_view() {
 		}
 	}
 	InputModel().set_visible(true, input_view_id);
-	OutputModel().set_visible(true, output_view_id);
+	OutputModel().set_visible(true, output_view_id[0]);
 }
 
 void basic_app::follow_and_mark_selected_faces() {
@@ -714,7 +726,7 @@ void basic_app::follow_and_mark_selected_faces() {
 	int f = pick_face(InputModel().V, InputModel().F, app_utils::InputOnly);
 	if (f == -1) {
 		//check if there faces which is selected on the right screen
-		f = pick_face(OutputModel().V, OutputModel().F, app_utils::OutputOnly);
+		f = pick_face(OutputModel().V, OutputModel().F, app_utils::OutputOnly0);
 	}
 	
 	if(InputModel().F.size()){
@@ -758,11 +770,6 @@ void basic_app::follow_and_mark_selected_faces() {
 	}
 }
 	
-void basic_app::set_name_mapping(unsigned int data_id, string name)
-{
-	data_id_to_name[data_id] = name;
-	data_id_to_name[data_id+1] = name + " (Param.)";
-}
 
 ViewerData& basic_app::InputModel() {
 	return viewer->data(InputModelID());
@@ -795,8 +802,8 @@ RowVector3d basic_app::get_face_avg() {
 int basic_app::pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, app_utils::View LR) {
 	// Cast a ray in the view direction starting from the mouse position
 	int core_index;
-	if (LR == app_utils::OutputOnly) {
-		core_index = output_view_id;
+	if (LR == app_utils::OutputOnly0) {
+		core_index = output_view_id[0];
 	}
 	else if (LR == app_utils::InputOnly) {
 		core_index = input_view_id;
@@ -804,7 +811,7 @@ int basic_app::pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, app_utils::View
 	double x = viewer->current_mouse_x;
 	double y = viewer->core(core_index).viewport(3) - viewer->current_mouse_y;
 	if (view == app_utils::Vertical) {
-		y = (viewer->core(input_view_id).viewport(3) / core_percentage_size) - viewer->current_mouse_y;
+		y = (viewer->core(input_view_id).viewport(3) / cores[0].core_size) - viewer->current_mouse_y;
 	}
 
 
@@ -828,8 +835,8 @@ int basic_app::pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, app_utils::View
 int basic_app::pick_vertex(MatrixXd& V, MatrixXi& F, app_utils::View LR) {
 	// Cast a ray in the view direction starting from the mouse position
 	int core_index;
-	if (LR == app_utils::OutputOnly) {
-		core_index = output_view_id;
+	if (LR == app_utils::OutputOnly0) {
+		core_index = output_view_id[0];
 	}
 	else if (LR == app_utils::InputOnly) {
 		core_index = input_view_id;
@@ -838,7 +845,7 @@ int basic_app::pick_vertex(MatrixXd& V, MatrixXi& F, app_utils::View LR) {
 	double x = viewer->current_mouse_x;
 	double y = viewer->core(core_index).viewport(3) - viewer->current_mouse_y;
 	if (view == app_utils::Vertical) {
-		y = (viewer->core(input_view_id).viewport(3) / core_percentage_size) - viewer->current_mouse_y;
+		y = (viewer->core(input_view_id).viewport(3) / cores[0].core_size) - viewer->current_mouse_y;
 	}
 
 	RowVector3d pt;
@@ -1039,12 +1046,12 @@ void basic_app::UpdateEnergyColors() {
 	}
 	else if (distortion_type == app_utils::TOTAL_DISTORTION) {
 		// calculate the distortion over all the energies
-		for (auto& obj : totalObjective->objectiveList) 
+		for (auto& obj : totalObjective->objectiveList)
 			if ((obj->Efi.size() != 0) && (obj->w != 0)) 
 				DistortionPerFace += obj->Efi * obj->w;
 	}
 
-	VectorXd alpha_vec = DistortionPerFace / (Max_Distortion+1e-8);
+	VectorXd alpha_vec = DistortionPerFace / (cores[0].Max_Distortion+1e-8);
 	VectorXd beta_vec = VectorXd::Ones(numF) - alpha_vec;
 	MatrixXd alpha(numF, 3), beta(numF, 3);
 	alpha = alpha_vec.replicate(1, 3);

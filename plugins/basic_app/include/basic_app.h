@@ -4,12 +4,15 @@
 #define RDS_PLUGINS_BASIC_MENU_H
 
 #include "app_utils.h"
+#include "core.h"
 
 class basic_app : public ImGuiMenu
 {
 private:
+	vector<Core> cores;
 	//Basic (necessary) parameteres
-	int input_view_id, output_view_id;
+	vector<int> output_view_id;
+	int input_view_id;
 	app_utils::View view;
 	app_utils::MouseMode mouse_mode;
 	app_utils::Parametrization param_type;
@@ -19,7 +22,7 @@ private:
 	Vector3f model_color, Dragged_face_color, Dragged_vertex_color, Vertex_Energy_color, text_color;
 	MatrixXd color_per_face, Vertices_Input, Vertices_output, color_per_vertex;
 	set<int> selected_faces, selected_vertices;
-	float core_percentage_size;
+	
 	bool IsTranslate;
 	int Translate_Index, Model_Translate_ID, Core_Translate_ID, down_mouse_x, down_mouse_y;
 	ImGuiMenu menu;
@@ -31,7 +34,7 @@ private:
 	bool solver_on, solverInitialized, show_text;
 	app_utils::Distortion distortion_type;
 	app_utils::SolverType solver_type;
-	float Max_Distortion;
+	
 	
 	// Solver thread
 	thread solver_thread;
@@ -84,6 +87,7 @@ public:
 	ViewerData& InputModel();
 	ViewerData& OutputModel();
 	int OutputModelID();
+
 	void Update_view();
 	void update_mesh();
 	void update_texture(MatrixXd& V_uv);
