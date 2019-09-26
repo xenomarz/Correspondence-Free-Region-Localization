@@ -11,13 +11,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 	{
 		cores.push_back(Core(0));
 		cores.push_back(Core(1));
-		
-		
 		IsTranslate = false;
-		
-		distortion_type = app_utils::TOTAL_DISTORTION;
-		solver_type = app_utils::NEWTON;
-		
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
 		down_mouse_x = down_mouse_y = -1;
@@ -51,10 +45,10 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		viewer->core(output_view_id[0]).lighting_factor = 0;
 		
 		// Initialize solver thread
-		newton = make_shared<NewtonSolver>();
-		gradient_descent = make_shared<GradientDescentSolver>();
-		solver = newton;
-		totalObjective = make_shared<TotalObjective>();
+		cores[0].newton = make_shared<NewtonSolver>();
+		cores[0].gradient_descent = make_shared<GradientDescentSolver>();
+		cores[0].solver = cores[0].newton;
+		cores[0].totalObjective = make_shared<TotalObjective>();
 
 		//maximize window
 		glfwMaximizeWindow(viewer->window);
@@ -92,7 +86,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	}
 			
 	ImGui::Checkbox("Highlight faces", &cores[0].Highlighted_face);
-	ImGui::Checkbox("Show text", &show_text);
+	ImGui::Checkbox("Show text", &cores[0].show_text);
 
 	if ((view == Horizontal) || (view == Vertical)) {
 		if(ImGui::SliderFloat("Core Size", &cores[0].core_size, 0, 0.5, to_string(cores[0].core_size).c_str(), 1)){
@@ -327,7 +321,7 @@ IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 		UpdateHandles();
 	}
 	if (key == ' ') 
-		solver_on ? stop_solver_thread() : start_solver_thread();
+		cores[0].solver_on ? stop_solver_thread() : start_solver_thread();
 
 	return ImGuiMenu::key_pressed(key, modifiers);
 }
@@ -342,7 +336,7 @@ IGL_INLINE bool basic_app::pre_draw() {
 	//call parent function
 	ImGuiMenu::pre_draw();
 
-	if (solver->progressed)
+	if (cores[0].solver->progressed)
 		update_mesh();
 
 	//Update the model's faces colors in the two screens
@@ -378,30 +372,30 @@ void basic_app::Draw_menu_for_colors() {
 void basic_app::Draw_menu_for_Solver() {
 	if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		if (ImGui::Checkbox(solver_on ? "On" : "Off", &solver_on)) {
-			if (solver_on) {
+		if (ImGui::Checkbox(cores[0].solver_on ? "On" : "Off", &cores[0].solver_on)) {
+			if (cores[0].solver_on) {
 				start_solver_thread();
 			}
 			else {
 				stop_solver_thread();
 			}
 		}
-		if (ImGui::Combo("step", (int *)(&solver_type), "Newton\0Gradient Descent\0\0")) {
+		if (ImGui::Combo("step", (int *)(&cores[0].solver_type), "cores[0].newton\0Gradient Descent\0\0")) {
 			stop_solver_thread();
-			if (solver_type == app_utils::NEWTON) {
-				solver = newton;
+			if (cores[0].solver_type == app_utils::NEWTON) {
+				cores[0].solver = cores[0].newton;
 			}
 			else {
-				solver = gradient_descent;
+				cores[0].solver = cores[0].gradient_descent;
 			}
 			VectorXd initialguessXX = Map<const VectorXd>(OutputModel().V.leftCols(2).data(), OutputModel().V.leftCols(2).rows() * 2);
-			solver->init(totalObjective, initialguessXX);
+			cores[0].solver->init(cores[0].totalObjective, initialguessXX);
 			MatrixX3i F = OutputModel().F;
-			solver->setFlipAvoidingLineSearch(F);
+			cores[0].solver->setFlipAvoidingLineSearch(F);
 			start_solver_thread();
 		}
 
-		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");
+		ImGui::Combo("Dist check", (int *)(&cores[0].distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");
 		
 		app_utils::Parametrization prev_type = cores[0].param_type;
 		if (ImGui::Combo("Initial Guess", (int *)(&cores[0].param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
@@ -419,8 +413,8 @@ void basic_app::Draw_menu_for_Solver() {
 					update_texture(initialguess);
 					Update_view();
 					VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-					solver->init(totalObjective, initialguessXX);
-					solver->setFlipAvoidingLineSearch(F);
+					cores[0].solver->init(cores[0].totalObjective, initialguessXX);
+					cores[0].solver->setFlipAvoidingLineSearch(F);
 				}
 			}
 			else {
@@ -441,8 +435,8 @@ void basic_app::Draw_menu_for_Solver() {
 				update_texture(initialguess);
 				Update_view();
 				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-				solver->init(totalObjective, initialguessXX);
-				solver->setFlipAvoidingLineSearch(F);
+				cores[0].solver->init(cores[0].totalObjective, initialguessXX);
+				cores[0].solver->setFlipAvoidingLineSearch(F);
 			}
 			
 		}
@@ -460,11 +454,11 @@ void basic_app::Draw_menu_for_Solver() {
 		ImGui::DragFloat("Max Distortion", &(cores[0].Max_Distortion), 0.05f, 0.1f, 20.0f);
 		
 		ImGui::PushItemWidth(80 * menu_scaling());
-		ImGui::DragFloat("shift eigen values", &(totalObjective->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
+		ImGui::DragFloat("shift eigen values", &(cores[0].totalObjective->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
 
 		// objective functions wieghts
 		int id = 0;
-		for (auto& obj : totalObjective->objectiveList) {
+		for (auto& obj : cores[0].totalObjective->objectiveList) {
 			ImGui::PushID(id++);
 			ImGui::Text(obj->name.c_str());
 			ImGui::PushItemWidth(80 * menu_scaling());
@@ -601,7 +595,7 @@ void basic_app::Draw_menu_for_models() {
 }
 
 void basic_app::Draw_menu_for_text_results() {
-	if (!show_text) {
+	if (!cores[0].show_text) {
 		return;
 	}
 
@@ -637,12 +631,12 @@ void basic_app::Draw_menu_for_text_results() {
 	ImColor c(cores[0].text_color[0], cores[0].text_color[1], cores[0].text_color[2], 1.0f);
 
 	//add text...
-	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string(" energy ") + std::to_string(totalObjective->energy_value)).c_str());
+	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(cores[0].totalObjective->name) + std::string(" energy ") + std::to_string(cores[0].totalObjective->energy_value)).c_str());
 	h += shift;
-	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string(" gradient ") + std::to_string(totalObjective->gradient_norm)).c_str());
+	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(cores[0].totalObjective->name) + std::string(" gradient ") + std::to_string(cores[0].totalObjective->gradient_norm)).c_str());
 	h += shift;
 
-	for (auto& obj : totalObjective->objectiveList) {
+	for (auto& obj : cores[0].totalObjective->objectiveList) {
 		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
 		h += shift;
 		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
@@ -694,9 +688,9 @@ void basic_app::UpdateHandles() {
 	update_texture(OutputModel().V);
 
 	//Finally, we update the handles in the constraints positional object
-	if (solverInitialized) {
-		(*HandlesInd) = CurrHandlesInd;
-		(*HandlesPosDeformed) = CurrHandlesPosDeformed;
+	if (cores[0].solverInitialized) {
+		(*cores[0].HandlesInd) = CurrHandlesInd;
+		(*cores[0].HandlesPosDeformed) = CurrHandlesPosDeformed;
 	}
 }
 
@@ -882,54 +876,54 @@ void basic_app::update_texture(MatrixXd& V_uv) {
 	
 void basic_app::checkGradients()
 {
-	if (!solverInitialized) {
-		solver_on = false;
+	if (!cores[0].solverInitialized) {
+		cores[0].solver_on = false;
 		return;
 	}
 	stop_solver_thread();
-	for (auto const &objective : totalObjective->objectiveList) {
-		objective->checkGradient(solver->ext_x);
+	for (auto const &objective : cores[0].totalObjective->objectiveList) {
+		objective->checkGradient(cores[0].solver->ext_x);
 	}
 	start_solver_thread();
 }
 
 void basic_app::checkHessians()
 {
-	if (!solverInitialized) {
-		solver_on = false;
+	if (!cores[0].solverInitialized) {
+		cores[0].solver_on = false;
 		return;
 	}
 	stop_solver_thread();
-	for (auto const &objective : totalObjective->objectiveList) {
-		objective->checkHessian(solver->ext_x);
+	for (auto const &objective : cores[0].totalObjective->objectiveList) {
+		objective->checkHessian(cores[0].solver->ext_x);
 	}
 	start_solver_thread();
 }
 
 void basic_app::start_solver_thread() {
-	if(!solverInitialized){
-		solver_on = false;
+	if(!cores[0].solverInitialized){
+		cores[0].solver_on = false;
 		return;
 	}
 	cout << ">> start new solver" << endl;
-	solver_on = true;
+	cores[0].solver_on = true;
 	
-	solver_thread = thread(&solver::run, solver.get());
+	solver_thread = thread(&solver::run, cores[0].solver.get());
 	solver_thread.detach();
 }
 
 void basic_app::stop_solver_thread() {
-	solver_on = false;
-	if (solver->is_running) {
-		solver->stop();
+	cores[0].solver_on = false;
+	if (cores[0].solver->is_running) {
+		cores[0].solver->stop();
 	}
-	while (solver->is_running);
+	while (cores[0].solver->is_running);
 }
 
 void basic_app::update_mesh()
 {
 	VectorXd X;
-	solver->get_data(X);
+	cores[0].solver->get_data(X);
 	MatrixXd V(X.rows() / 2, 2);
 	V = Map<MatrixXd>(X.data(), X.rows() / 2, 2);
 	
@@ -963,16 +957,16 @@ void basic_app::initializeSolver()
 	auto constraintsPositional = make_shared<PenaltyPositionalConstraints>();
 	constraintsPositional->numV = V.rows();
 	constraintsPositional->init();
-	HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
-	HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
+	cores[0].HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
+	cores[0].HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
 
-	totalObjective->objectiveList.clear();
-	totalObjective->objectiveList.push_back(move(areaPreserving));
-	totalObjective->objectiveList.push_back(move(anglePreserving));
-	totalObjective->objectiveList.push_back(move(symDirichlet));
-	totalObjective->objectiveList.push_back(move(constraintsPositional));
+	cores[0].totalObjective->objectiveList.clear();
+	cores[0].totalObjective->objectiveList.push_back(move(areaPreserving));
+	cores[0].totalObjective->objectiveList.push_back(move(anglePreserving));
+	cores[0].totalObjective->objectiveList.push_back(move(symDirichlet));
+	cores[0].totalObjective->objectiveList.push_back(move(constraintsPositional));
 
-	totalObjective->init();
+	cores[0].totalObjective->init();
 
 	// initialize the solver
 	MatrixXd initialguess;
@@ -988,13 +982,13 @@ void basic_app::initializeSolver()
 		Update_view();
 	}
 	VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-	newton->init(totalObjective, initialguessXX);
-	newton->setFlipAvoidingLineSearch(F);
-	gradient_descent->init(totalObjective, initialguessXX);
-	gradient_descent->setFlipAvoidingLineSearch(F);
+	cores[0].newton->init(cores[0].totalObjective, initialguessXX);
+	cores[0].newton->setFlipAvoidingLineSearch(F);
+	cores[0].gradient_descent->init(cores[0].totalObjective, initialguessXX);
+	cores[0].gradient_descent->setFlipAvoidingLineSearch(F);
 	
 	cout << "Solver is initialized!" << endl;
-	solverInitialized = true;
+	cores[0].solverInitialized = true;
 }
 
 void basic_app::UpdateEnergyColors() {
@@ -1002,7 +996,7 @@ void basic_app::UpdateEnergyColors() {
 	VectorXd DistortionPerFace(numF);
 	DistortionPerFace.setZero();
 	
-	if (distortion_type == app_utils::ANGLE_DISTORTION) {	//distortion according to area preserving
+	if (cores[0].distortion_type == app_utils::ANGLE_DISTORTION) {	//distortion according to area preserving
 		MatrixXd angle_input, angle_output, angle_ratio;
 		app_utils::angle_degree(OutputModel().V, OutputModel().F, angle_output);
 		app_utils::angle_degree(InputModel().V, InputModel().F, angle_input);
@@ -1015,7 +1009,7 @@ void basic_app::UpdateEnergyColors() {
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
 		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
 	}
-	else if (distortion_type == app_utils::LENGTH_DISTORTION) {	//distortion according to area preserving
+	else if (cores[0].distortion_type == app_utils::LENGTH_DISTORTION) {	//distortion according to area preserving
 		MatrixXd Length_output, Length_input, Length_ratio;
 		igl::edge_lengths(OutputModel().V, OutputModel().F, Length_output);
 		igl::edge_lengths(InputModel().V, InputModel().F, Length_input);
@@ -1026,7 +1020,7 @@ void basic_app::UpdateEnergyColors() {
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
 		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
 	}
-	else if (distortion_type == app_utils::AREA_DISTORTION) {
+	else if (cores[0].distortion_type == app_utils::AREA_DISTORTION) {
 		//distortion according to area preserving
 		VectorXd Area_output, Area_input;
 		igl::doublearea(OutputModel().V, OutputModel().F, Area_output);
@@ -1036,9 +1030,9 @@ void basic_app::UpdateEnergyColors() {
 		// Because we want  DistortionPerFace to be as close as possible to zero instead of one!
 		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
 	}
-	else if (distortion_type == app_utils::TOTAL_DISTORTION) {
+	else if (cores[0].distortion_type == app_utils::TOTAL_DISTORTION) {
 		// calculate the distortion over all the energies
-		for (auto& obj : totalObjective->objectiveList)
+		for (auto& obj : cores[0].totalObjective->objectiveList)
 			if ((obj->Efi.size() != 0) && (obj->w != 0)) 
 				DistortionPerFace += obj->Efi * obj->w;
 	}

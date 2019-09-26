@@ -18,28 +18,14 @@ private:
 	
 	float texture_scaling_input;
 	
-	
-	
-	
 	bool IsTranslate;
 	int Translate_Index, Model_Translate_ID, Core_Translate_ID, down_mouse_x, down_mouse_y;
 	ImGuiMenu menu;
 
-	vector<int> *HandlesInd; //pointer to indices in constraitPositional
-	MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
+	
 
-	//Solver Button Parameters
-	bool solver_on, solverInitialized, show_text;
-	app_utils::Distortion distortion_type;
-	app_utils::SolverType solver_type;
-	
-	
 	// Solver thread
 	thread solver_thread;
-	shared_ptr<NewtonSolver> newton;
-	shared_ptr<GradientDescentSolver> gradient_descent;
-	shared_ptr<solver> solver;
-	shared_ptr<TotalObjective> totalObjective;
 
 public:
 	//Constructor & initialization

@@ -17,6 +17,16 @@ Core::Core(int index) {
 	param_type = app_utils::None;
 	Highlighted_face = false;
 	texture_scaling_output = 1;
+
+
+	distortion_type = app_utils::TOTAL_DISTORTION;
+	solver_type = app_utils::GRADIENT_DESCENT;
+
+	// Initialize solver thread
+	newton = make_shared<NewtonSolver>();
+	gradient_descent = make_shared<GradientDescentSolver>();
+	solver = newton;
+	totalObjective = make_shared<TotalObjective>();
 }
 
 void Core::setName(string mesh_name) {

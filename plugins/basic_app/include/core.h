@@ -28,12 +28,26 @@ public:
 	float texture_scaling_output;
 	bool Highlighted_face;
 
+	vector<int> *HandlesInd; //pointer to indices in constraitPositional
+	MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
+
+	//Solver Button Parameters
+	bool solver_on, solverInitialized, show_text;
+	app_utils::Distortion distortion_type;
+	app_utils::SolverType solver_type;
 
 	//regular
 	MatrixXd color_per_face, Vertices_Input, Vertices_output, color_per_vertex;
 	string name;
 	int index;
 	float core_size;
+
+	// Solver thread
+	shared_ptr<NewtonSolver> newton;
+	shared_ptr<GradientDescentSolver> gradient_descent;
+	shared_ptr<solver> solver;
+	shared_ptr<TotalObjective> totalObjective;
+
 
 	//Constructor & initialization
 	Core(int index);
