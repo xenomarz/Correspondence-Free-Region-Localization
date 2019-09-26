@@ -12,15 +12,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		cores.push_back(Core(0));
 		cores.push_back(Core(1));
 		param_type = app_utils::None;
-		cores[0].Max_Distortion = 5;
-		Highlighted_face_color = RED_COLOR;
-		Fixed_face_color = BLUE_COLOR;
-		Dragged_face_color = GREEN_COLOR;
-		Vertex_Energy_color = RED_COLOR;
-		Dragged_vertex_color = GREEN_COLOR;
-		Fixed_vertex_color = BLUE_COLOR;
-		model_color = GREY_COLOR;
-		text_color = BLACK_COLOR;
+		
 		IsTranslate = false;
 		Highlighted_face = false;
 		distortion_type = app_utils::TOTAL_DISTORTION;
@@ -119,8 +111,8 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 
 	if(ImGui::Combo("Mouse Mode", (int *)(&mouse_mode), "NONE\0FACE_SELECT\0VERTEX_SELECT\0CLEAR\0\0")) {
 		if (mouse_mode == app_utils::CLEAR) {
-			selected_faces.clear();
-			selected_vertices.clear();
+			cores[0].selected_faces.clear();
+			cores[0].selected_vertices.clear();
 			UpdateHandles();
 		}
 	}
@@ -181,7 +173,7 @@ IGL_INLINE bool basic_app::mouse_move(int mouse_x, int mouse_y)
 	}
 	if (mouse_mode == app_utils::FACE_SELECT)
 	{
-		if (!selected_faces.empty())
+		if (!cores[0].selected_faces.empty())
 		{
 			RowVector3d face_avg_pt = get_face_avg();
 			RowVector3i face = viewer->data(Model_Translate_ID).F.row(Translate_Index);
@@ -200,7 +192,7 @@ IGL_INLINE bool basic_app::mouse_move(int mouse_x, int mouse_y)
 	}
 	else if (mouse_mode == app_utils::VERTEX_SELECT)
 	{
-		if (!selected_vertices.empty())
+		if (!cores[0].selected_vertices.empty())
 		{
 			RowVector3d vertex_pos = viewer->data(Model_Translate_ID).V.row(Translate_Index);
 			Vector3f translation = app_utils::computeTranslation(mouse_x, down_mouse_x, mouse_y, down_mouse_y, vertex_pos, viewer->core(Core_Translate_ID));
@@ -237,13 +229,13 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 
 		if (f != -1)
 		{
-			if (find(selected_faces.begin(), selected_faces.end(), f) != selected_faces.end())
+			if (find(cores[0].selected_faces.begin(), cores[0].selected_faces.end(), f) != cores[0].selected_faces.end())
 			{
-				selected_faces.erase(f);
+				cores[0].selected_faces.erase(f);
 				UpdateHandles();
 			}
 			else {
-				selected_faces.insert(f);
+				cores[0].selected_faces.insert(f);
 				UpdateHandles();
 			}
 		}
@@ -260,13 +252,13 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 
 		if (v != -1)
 		{
-			if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
+			if (find(cores[0].selected_vertices.begin(), cores[0].selected_vertices.end(), v) != cores[0].selected_vertices.end())
 			{
-				selected_vertices.erase(v);
+				cores[0].selected_vertices.erase(v);
 				UpdateHandles();
 			}
 			else {
-				selected_vertices.insert(v);
+				cores[0].selected_vertices.insert(v);
 				UpdateHandles();
 			}
 					
@@ -274,7 +266,7 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 	}
 	else if (mouse_mode == app_utils::FACE_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
 	{
-		if (!selected_faces.empty())
+		if (!cores[0].selected_faces.empty())
 		{
 			//check if there faces which is selected on the left screen
 			int f = pick_face(InputModel().V, InputModel().F, app_utils::InputOnly);
@@ -287,7 +279,7 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 				Core_Translate_ID = output_view_id[0];
 			}
 
-			if (find(selected_faces.begin(), selected_faces.end(), f) != selected_faces.end())
+			if (find(cores[0].selected_faces.begin(), cores[0].selected_faces.end(), f) != cores[0].selected_faces.end())
 			{
 				IsTranslate = true;
 				Translate_Index = f;
@@ -296,7 +288,7 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 	}
 	else if (mouse_mode == app_utils::VERTEX_SELECT && button == GLFW_MOUSE_BUTTON_MIDDLE)
 	{
-	if (!selected_vertices.empty())
+	if (!cores[0].selected_vertices.empty())
 	{
 		//check if there faces which is selected on the left screen
 		int v = pick_vertex(InputModel().V, InputModel().F, app_utils::InputOnly);
@@ -309,7 +301,7 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 			Core_Translate_ID = output_view_id[0];
 		}
 
-		if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
+		if (find(cores[0].selected_vertices.begin(), cores[0].selected_vertices.end(), v) != cores[0].selected_vertices.end())
 		{
 			IsTranslate = true;
 			Translate_Index = v;
@@ -330,8 +322,8 @@ IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 	}
 	if (key == 'C' || key == 'c') {
 		mouse_mode = app_utils::CLEAR;
-		selected_faces.clear();
-		selected_vertices.clear();
+		cores[0].selected_faces.clear();
+		cores[0].selected_vertices.clear();
 		UpdateHandles();
 	}
 	if (key == ' ') 
@@ -354,17 +346,17 @@ IGL_INLINE bool basic_app::pre_draw() {
 		update_mesh();
 
 	//Update the model's faces colors in the two screens
-	if (color_per_face.size()) {
-		InputModel().set_colors(color_per_face);
-		OutputModel().set_colors(color_per_face);
+	if (cores[0].color_per_face.size()) {
+		InputModel().set_colors(cores[0].color_per_face);
+		OutputModel().set_colors(cores[0].color_per_face);
 	}
 
 	//Update the model's vertex colors in the two screens
 	InputModel().point_size = 10;
 	OutputModel().point_size = 10;
 
-	InputModel().set_points(Vertices_Input, color_per_vertex);
-	OutputModel().set_points(Vertices_output, color_per_vertex);
+	InputModel().set_points(cores[0].Vertices_Input, cores[0].color_per_vertex);
+	OutputModel().set_points(cores[0].Vertices_output, cores[0].color_per_vertex);
 
 	return false;
 }
@@ -372,14 +364,14 @@ IGL_INLINE bool basic_app::pre_draw() {
 void basic_app::Draw_menu_for_colors() {
 	if (!ImGui::CollapsingHeader("colors", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		ImGui::ColorEdit3("Highlighted face color", Highlighted_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-		ImGui::ColorEdit3("Fixed face color", Fixed_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-		ImGui::ColorEdit3("Dragged face color", Dragged_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-		ImGui::ColorEdit3("Fixed vertex color", Fixed_vertex_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-		ImGui::ColorEdit3("Dragged vertex color", Dragged_vertex_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-		ImGui::ColorEdit3("Model color", model_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-		ImGui::ColorEdit3("Vertex Energy color", Vertex_Energy_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-		ImGui::ColorEdit4("text color", text_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Highlighted face color", cores[0].Highlighted_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Fixed face color", cores[0].Fixed_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Dragged face color", cores[0].Dragged_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Fixed vertex color", cores[0].Fixed_vertex_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Dragged vertex color", cores[0].Dragged_vertex_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Model color", cores[0].model_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit3("Vertex Energy color", cores[0].Vertex_Energy_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::ColorEdit4("text color", cores[0].text_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 	}
 }
 
@@ -642,7 +634,7 @@ void basic_app::Draw_menu_for_text_results() {
 	ImGui::SetWindowPos(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
 	ImGui::SetWindowSize(ImGui::GetIO().DisplaySize);
 	ImGui::SetWindowCollapsed(false);
-	ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
+	ImColor c(cores[0].text_color[0], cores[0].text_color[1], cores[0].text_color[2], 1.0f);
 
 	//add text...
 	ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(totalObjective->name) + std::string(" energy ") + std::to_string(totalObjective->energy_value)).c_str());
@@ -667,11 +659,11 @@ void basic_app::UpdateHandles() {
 	CurrHandlesInd.clear();
 
 	//First, we push each vertices index to the handles
-	for (auto vi : selected_vertices) {
+	for (auto vi : cores[0].selected_vertices) {
 		CurrHandlesInd.push_back(vi);
 	}
 	//Then, we push each face vertices index to the handle (3 vertices)
-	for (auto fi : selected_faces) {
+	for (auto fi : cores[0].selected_faces) {
 		//Here we get the 3 vertice's index that build each face
 		int v0 = OutputModel().F(fi,0);
 		int v1 = OutputModel().F(fi,1);
@@ -731,41 +723,41 @@ void basic_app::follow_and_mark_selected_faces() {
 	
 	if(InputModel().F.size()){
 		//Mark the faces
-		color_per_face.resize(InputModel().F.rows(), 3);
+		cores[0].color_per_face.resize(InputModel().F.rows(), 3);
 		UpdateEnergyColors();
 		//Mark the fixed faces
 		if (f != -1 && Highlighted_face)
 		{
-			color_per_face.row(f) = Highlighted_face_color.cast<double>();
+			cores[0].color_per_face.row(f) = cores[0].Highlighted_face_color.cast<double>();
 		}
-		for (auto fi : selected_faces) { color_per_face.row(fi) = Fixed_face_color.cast<double>(); }
+		for (auto fi : cores[0].selected_faces) { cores[0].color_per_face.row(fi) = cores[0].Fixed_face_color.cast<double>(); }
 		//Mark the Dragged face
 		if (IsTranslate && (mouse_mode == app_utils::FACE_SELECT)) {
-			color_per_face.row(Translate_Index) = Dragged_face_color.cast<double>();
+			cores[0].color_per_face.row(Translate_Index) = cores[0].Dragged_face_color.cast<double>();
 		}
 		
 		//Mark the vertices
 		int idx = 0;
-		Vertices_Input.resize(selected_vertices.size(), 3);
-		Vertices_output.resize(selected_vertices.size(), 3);
-		color_per_vertex.resize(selected_vertices.size(), 3);
+		cores[0].Vertices_Input.resize(cores[0].selected_vertices.size(), 3);
+		cores[0].Vertices_output.resize(cores[0].selected_vertices.size(), 3);
+		cores[0].color_per_vertex.resize(cores[0].selected_vertices.size(), 3);
 		//Mark the dragged vertex
 		if (IsTranslate && (mouse_mode == app_utils::VERTEX_SELECT)) {
-			Vertices_Input.resize(selected_vertices.size()+1, 3);
-			Vertices_output.resize(selected_vertices.size()+1, 3);
-			color_per_vertex.resize(selected_vertices.size()+1, 3);
+			cores[0].Vertices_Input.resize(cores[0].selected_vertices.size()+1, 3);
+			cores[0].Vertices_output.resize(cores[0].selected_vertices.size()+1, 3);
+			cores[0].color_per_vertex.resize(cores[0].selected_vertices.size()+1, 3);
 
-			Vertices_Input.row(idx) = InputModel().V.row(Translate_Index);
-			color_per_vertex.row(idx) = Dragged_vertex_color.cast<double>();
-			Vertices_output.row(idx) = OutputModel().V.row(Translate_Index);
+			cores[0].Vertices_Input.row(idx) = InputModel().V.row(Translate_Index);
+			cores[0].color_per_vertex.row(idx) = cores[0].Dragged_vertex_color.cast<double>();
+			cores[0].Vertices_output.row(idx) = OutputModel().V.row(Translate_Index);
 			idx++;
 		}
 				
 		//Mark the fixed vertices
-		for (auto vi : selected_vertices) {
-			Vertices_Input.row(idx) = InputModel().V.row(vi);
-			Vertices_output.row(idx) = OutputModel().V.row(vi);
-			color_per_vertex.row(idx++) = Fixed_vertex_color.cast<double>();
+		for (auto vi : cores[0].selected_vertices) {
+			cores[0].Vertices_Input.row(idx) = InputModel().V.row(vi);
+			cores[0].Vertices_output.row(idx) = OutputModel().V.row(vi);
+			cores[0].color_per_vertex.row(idx++) = cores[0].Fixed_vertex_color.cast<double>();
 		}
 	}
 }
@@ -1058,9 +1050,9 @@ void basic_app::UpdateEnergyColors() {
 	beta = beta_vec.replicate(1, 3);
 
 	//calculate low distortion color matrix
-	MatrixXd LowDistCol = model_color.cast <double>().replicate(1, numF).transpose();
+	MatrixXd LowDistCol = cores[0].model_color.cast <double>().replicate(1, numF).transpose();
 	//calculate high distortion color matrix
-	MatrixXd HighDistCol = Vertex_Energy_color.cast <double>().replicate(1, numF).transpose();
+	MatrixXd HighDistCol = cores[0].Vertex_Energy_color.cast <double>().replicate(1, numF).transpose();
 	
-	color_per_face = beta.cwiseProduct(LowDistCol) + alpha.cwiseProduct(HighDistCol);
+	cores[0].color_per_face = beta.cwiseProduct(LowDistCol) + alpha.cwiseProduct(HighDistCol);
 }

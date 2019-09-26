@@ -17,11 +17,9 @@ private:
 	app_utils::MouseMode mouse_mode;
 	app_utils::Parametrization param_type;
 	float texture_scaling_input, texture_scaling_output;
-	Vector3f Highlighted_face_color, Fixed_face_color, Fixed_vertex_color;
 	bool Highlighted_face;
-	Vector3f model_color, Dragged_face_color, Dragged_vertex_color, Vertex_Energy_color, text_color;
-	MatrixXd color_per_face, Vertices_Input, Vertices_output, color_per_vertex;
-	set<int> selected_faces, selected_vertices;
+	
+	
 	
 	bool IsTranslate;
 	int Translate_Index, Model_Translate_ID, Core_Translate_ID, down_mouse_x, down_mouse_y;
@@ -42,10 +40,6 @@ private:
 	shared_ptr<GradientDescentSolver> gradient_descent;
 	shared_ptr<solver> solver;
 	shared_ptr<TotalObjective> totalObjective;
-
-protected:
-	//Basic (necessary) parameteres
-	map<unsigned int, string> data_id_to_name;
 
 public:
 	//Constructor & initialization
@@ -79,9 +73,6 @@ public:
 	void UpdateHandles();
 	void UpdateEnergyColors();
 
-	//Name
-	void set_name_mapping(unsigned int data_id, string name);
-	
 	//Basic Methods
 	int InputModelID();
 	ViewerData& InputModel();
