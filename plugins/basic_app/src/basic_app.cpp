@@ -11,17 +11,17 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 	{
 		cores.push_back(Core(0));
 		cores.push_back(Core(1));
-		param_type = app_utils::None;
+		
 		
 		IsTranslate = false;
-		Highlighted_face = false;
+		
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
 		
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
 		down_mouse_x = down_mouse_y = -1;
-		texture_scaling_input = texture_scaling_output = 1;
+		texture_scaling_input = 1;
 
 		//Load multiple views
 		viewer->core().viewport = Vector4f(0, 0, 640, 800);
@@ -91,7 +91,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		viewer->open_dialog_save_mesh();
 	}
 			
-	ImGui::Checkbox("Highlight faces", &Highlighted_face);
+	ImGui::Checkbox("Highlight faces", &cores[0].Highlighted_face);
 	ImGui::Checkbox("Show text", &show_text);
 
 	if ((view == Horizontal) || (view == Vertical)) {
@@ -403,19 +403,19 @@ void basic_app::Draw_menu_for_Solver() {
 
 		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");
 		
-		app_utils::Parametrization prev_type = param_type;
-		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
+		app_utils::Parametrization prev_type = cores[0].param_type;
+		if (ImGui::Combo("Initial Guess", (int *)(&cores[0].param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
 			MatrixXd initialguess;
 			MatrixX3i F = OutputModel().F;
-			app_utils::Parametrization temp = param_type;
-			param_type = prev_type;
+			app_utils::Parametrization temp = cores[0].param_type;
+			cores[0].param_type = prev_type;
 			if (temp == app_utils::None || !F.size()) {
-				param_type = app_utils::None;
+				cores[0].param_type = app_utils::None;
 			}
 			else if (app_utils::IsMesh2D(InputModel().V)) {
 				if (temp == app_utils::RANDOM) {
 					app_utils::random_param(InputModel().V, initialguess);
-					param_type = temp;
+					cores[0].param_type = temp;
 					update_texture(initialguess);
 					Update_view();
 					VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
@@ -437,7 +437,7 @@ void basic_app::Draw_menu_for_Solver() {
 				if (temp == app_utils::RANDOM) {
 					app_utils::random_param(InputModel().V, initialguess);
 				}
-				param_type = temp;
+				cores[0].param_type = temp;
 				update_texture(initialguess);
 				Update_view();
 				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
@@ -570,7 +570,7 @@ void basic_app::Draw_menu_for_models() {
 				ImGui::SliderFloat("texture", &texture_scaling_input, 0.01, 100, to_string(texture_scaling_input).c_str(), 1);
 			}
 			else {
-				ImGui::SliderFloat("texture", &texture_scaling_output, 0.01, 100, to_string(texture_scaling_output).c_str(), 1);
+				ImGui::SliderFloat("texture", &cores[0].texture_scaling_output, 0.01, 100, to_string(cores[0].texture_scaling_output).c_str(), 1);
 			}
 			
 
@@ -726,7 +726,7 @@ void basic_app::follow_and_mark_selected_faces() {
 		cores[0].color_per_face.resize(InputModel().F.rows(), 3);
 		UpdateEnergyColors();
 		//Mark the fixed faces
-		if (f != -1 && Highlighted_face)
+		if (f != -1 && cores[0].Highlighted_face)
 		{
 			cores[0].color_per_face.row(f) = cores[0].Highlighted_face_color.cast<double>();
 		}
@@ -876,7 +876,7 @@ void basic_app::update_texture(MatrixXd& V_uv) {
 	// Plot the mesh
 	InputModel().set_uv(V_uv_2D * texture_scaling_input);
 	OutputModel().set_vertices(V_uv_3D);
-	OutputModel().set_uv(V_uv_2D * texture_scaling_output);
+	OutputModel().set_uv(V_uv_2D * cores[0].texture_scaling_output);
 	OutputModel().compute_normals();
 }
 	
@@ -983,7 +983,7 @@ void basic_app::initializeSolver()
 	else {
 		//the mesh is 3D
 		app_utils::harmonic_param(InputModel().V, InputModel().F, initialguess);
-		param_type = app_utils::HARMONIC;
+		cores[0].param_type = app_utils::HARMONIC;
 		update_texture(initialguess);
 		Update_view();
 	}

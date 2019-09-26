@@ -15,9 +15,9 @@ private:
 	int input_view_id;
 	app_utils::View view;
 	app_utils::MouseMode mouse_mode;
-	app_utils::Parametrization param_type;
-	float texture_scaling_input, texture_scaling_output;
-	bool Highlighted_face;
+	
+	float texture_scaling_input;
+	
 	
 	
 	

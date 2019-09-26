@@ -13,6 +13,10 @@ Core::Core(int index) {
 	Fixed_vertex_color = BLUE_COLOR;
 	model_color = GREY_COLOR;
 	text_color = BLACK_COLOR;
+
+	param_type = app_utils::None;
+	Highlighted_face = false;
+	texture_scaling_output = 1;
 }
 
 void Core::setName(string mesh_name) {

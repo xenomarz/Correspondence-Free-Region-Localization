@@ -24,7 +24,9 @@ public:
 		Vertex_Energy_color, 
 		text_color;
 	set<int> selected_faces, selected_vertices;
-
+	app_utils::Parametrization param_type;
+	float texture_scaling_output;
+	bool Highlighted_face;
 
 
 	//regular
