@@ -22,8 +22,6 @@ private:
 	int Translate_Index, Model_Translate_ID, Core_Translate_ID, down_mouse_x, down_mouse_y;
 	ImGuiMenu menu;
 
-	
-
 	// Solver thread
 	thread solver_thread;
 
@@ -70,8 +68,6 @@ public:
 	void update_texture(MatrixXd& V_uv);
 
 	//Start/Stop the solver Thread
-	void start_solver_thread();
-	void stop_solver_thread();
 	void initializeSolver();
 
 	//FD check

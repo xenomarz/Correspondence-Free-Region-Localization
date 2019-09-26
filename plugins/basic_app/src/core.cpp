@@ -32,3 +32,23 @@ Core::Core(int index) {
 void Core::setName(string mesh_name) {
 	name = mesh_name + " (Param. " + std::to_string(index) + ")";
 }
+
+void Core::stop_solver_thread() {
+	solver_on = false;
+	if (solver->is_running) {
+		solver->stop();
+	}
+	while (solver->is_running);
+}
+
+void Core::start_solver_thread(thread& t) {
+	if (!solverInitialized) {
+		solver_on = false;
+		return;
+	}
+	cout << ">> start new solver" << endl;
+	solver_on = true;
+
+	t = thread(&solver::run, solver.get());
+	t.detach();
+}

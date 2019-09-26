@@ -65,14 +65,12 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		string mesh_Path = file_dialog_open();
 		if (mesh_Path.length() != 0)
 		{
-			stop_solver_thread();
+			cores[0].stop_solver_thread();
 			
 			cores[0].setName(app_utils::ExtractMeshName(mesh_Path));
 			viewer->load_mesh_from_file(mesh_Path.c_str());
 			viewer->load_mesh_from_file(mesh_Path.c_str());
 			
-
-
 			initializeSolver();
 			Update_view();
 			viewer->core(input_view_id).align_camera_center(InputModel().V, InputModel().F);
@@ -96,7 +94,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		}
 	}
 
-	if (ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0InputOnly\0OutputOnly\0\0")) {
+	if (ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0InputOnly\0OutputOnly0\0OutputOnly1\0\0")) {
 		// That's how you get the current width/height of the frame buffer (for example, after the window was resized)
 		int frameBufferWidth, frameBufferHeight;
 		glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
@@ -321,14 +319,14 @@ IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 		UpdateHandles();
 	}
 	if (key == ' ') 
-		cores[0].solver_on ? stop_solver_thread() : start_solver_thread();
+		cores[0].solver_on ? cores[0].stop_solver_thread() : cores[0].start_solver_thread(solver_thread);
 
 	return ImGuiMenu::key_pressed(key, modifiers);
 }
 
 IGL_INLINE void basic_app::shutdown()
 {
-	stop_solver_thread();
+	cores[0].stop_solver_thread();
 	ImGuiMenu::shutdown();
 }
 
@@ -374,14 +372,14 @@ void basic_app::Draw_menu_for_Solver() {
 	{
 		if (ImGui::Checkbox(cores[0].solver_on ? "On" : "Off", &cores[0].solver_on)) {
 			if (cores[0].solver_on) {
-				start_solver_thread();
+				cores[0].start_solver_thread(solver_thread);
 			}
 			else {
-				stop_solver_thread();
+				cores[0].stop_solver_thread();
 			}
 		}
 		if (ImGui::Combo("step", (int *)(&cores[0].solver_type), "cores[0].newton\0Gradient Descent\0\0")) {
-			stop_solver_thread();
+			cores[0].stop_solver_thread();
 			if (cores[0].solver_type == app_utils::NEWTON) {
 				cores[0].solver = cores[0].newton;
 			}
@@ -392,7 +390,7 @@ void basic_app::Draw_menu_for_Solver() {
 			cores[0].solver->init(cores[0].totalObjective, initialguessXX);
 			MatrixX3i F = OutputModel().F;
 			cores[0].solver->setFlipAvoidingLineSearch(F);
-			start_solver_thread();
+			cores[0].start_solver_thread(solver_thread);
 		}
 
 		ImGui::Combo("Dist check", (int *)(&cores[0].distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");
@@ -880,11 +878,11 @@ void basic_app::checkGradients()
 		cores[0].solver_on = false;
 		return;
 	}
-	stop_solver_thread();
+	cores[0].stop_solver_thread();
 	for (auto const &objective : cores[0].totalObjective->objectiveList) {
 		objective->checkGradient(cores[0].solver->ext_x);
 	}
-	start_solver_thread();
+	cores[0].start_solver_thread(solver_thread);
 }
 
 void basic_app::checkHessians()
@@ -893,31 +891,11 @@ void basic_app::checkHessians()
 		cores[0].solver_on = false;
 		return;
 	}
-	stop_solver_thread();
+	cores[0].stop_solver_thread();
 	for (auto const &objective : cores[0].totalObjective->objectiveList) {
 		objective->checkHessian(cores[0].solver->ext_x);
 	}
-	start_solver_thread();
-}
-
-void basic_app::start_solver_thread() {
-	if(!cores[0].solverInitialized){
-		cores[0].solver_on = false;
-		return;
-	}
-	cout << ">> start new solver" << endl;
-	cores[0].solver_on = true;
-	
-	solver_thread = thread(&solver::run, cores[0].solver.get());
-	solver_thread.detach();
-}
-
-void basic_app::stop_solver_thread() {
-	cores[0].solver_on = false;
-	if (cores[0].solver->is_running) {
-		cores[0].solver->stop();
-	}
-	while (cores[0].solver->is_running);
+	cores[0].start_solver_thread(solver_thread);
 }
 
 void basic_app::update_mesh()
@@ -939,7 +917,7 @@ void basic_app::initializeSolver()
 	MatrixXd V = OutputModel().V;
 	MatrixX3i F = OutputModel().F;
 	
-	stop_solver_thread();
+	cores[0].stop_solver_thread();
 
 	if (V.rows() == 0 || F.rows() == 0)
 		return;

@@ -53,6 +53,8 @@ public:
 	Core(int index);
 	~Core(){}
 
+	void stop_solver_thread();
+	void start_solver_thread(thread& thread);
 	void setName(string mesh_name);
 	
 };
