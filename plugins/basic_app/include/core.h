@@ -5,7 +5,7 @@
 
 #include "app_utils.h"
 
-class Core
+class Output
 {
 private:
 	
@@ -30,6 +30,7 @@ public:
 
 	vector<int> *HandlesInd; //pointer to indices in constraitPositional
 	MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
+	
 
 	//Solver Button Parameters
 	bool solver_on, solverInitialized, show_text;
@@ -38,8 +39,8 @@ public:
 
 	//regular
 	MatrixXd color_per_face, Vertices_Input, Vertices_output, color_per_vertex;
-	string name;
-	int index;
+	string mesh_name;
+	int ModelID, CoreID;
 	float core_size;
 
 	// Solver thread
@@ -50,13 +51,14 @@ public:
 
 
 	//Constructor & initialization
-	Core(int index);
-	~Core(){}
+	Output();
+	~Output(){}
 
 	void stop_solver_thread();
 	void start_solver_thread(thread& thread);
-	void setName(string mesh_name);
-	
+	string ModelName();
+	string CoreName();
+
 };
 
 #endif

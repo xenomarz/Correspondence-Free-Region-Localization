@@ -9,10 +9,10 @@
 class basic_app : public ImGuiMenu
 {
 private:
-	vector<Core> cores;
+	vector<Output> Outputs;
 	//Basic (necessary) parameteres
-	vector<int> output_view_id;
-	int input_view_id;
+	
+	int inputCoreID, inputModelID;
 	app_utils::View view;
 	app_utils::MouseMode mouse_mode;
 	
@@ -45,7 +45,6 @@ public:
 	void Draw_menu_for_cores();
 	void Draw_menu_for_models();
 	void Draw_menu_for_Solver();
-	void Draw_menu_for_Energies();
 	void Draw_menu_for_colors();
 	void Draw_menu_for_text_results();
 
@@ -58,10 +57,8 @@ public:
 	void UpdateEnergyColors();
 
 	//Basic Methods
-	int InputModelID();
 	ViewerData& InputModel();
-	ViewerData& OutputModel();
-	int OutputModelID();
+	ViewerData& OutputModel(const int index);
 
 	void Update_view();
 	void update_mesh();

@@ -138,7 +138,7 @@ public:
 		return translation;
 	}
 	
-	static string ExtractMeshName(const string& str)
+	static string ExtractModelName(const string& str)
 	{
 		size_t head, tail;
 		head = str.find_last_of("/\\");

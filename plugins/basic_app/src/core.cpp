@@ -1,7 +1,6 @@
 #include <basic_app/include/core.h>
 
-Core::Core(int index) {
-	this->index = index;
+Output::Output() {
 	core_size = 1.0 / 3.0;
 	Max_Distortion = 5;
 
@@ -29,11 +28,15 @@ Core::Core(int index) {
 	totalObjective = make_shared<TotalObjective>();
 }
 
-void Core::setName(string mesh_name) {
-	name = mesh_name + " (Param. " + std::to_string(index) + ")";
+string Output::ModelName() {
+	return mesh_name + " (Param. " + std::to_string(ModelID) + ")";
 }
 
-void Core::stop_solver_thread() {
+string Output::CoreName() {
+	return "Output Core " + std::to_string(CoreID);
+}
+
+void Output::stop_solver_thread() {
 	solver_on = false;
 	if (solver->is_running) {
 		solver->stop();
@@ -41,7 +44,7 @@ void Core::stop_solver_thread() {
 	while (solver->is_running);
 }
 
-void Core::start_solver_thread(thread& t) {
+void Output::start_solver_thread(thread& t) {
 	if (!solverInitialized) {
 		solver_on = false;
 		return;
