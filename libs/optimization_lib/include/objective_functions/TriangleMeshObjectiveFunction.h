@@ -20,11 +20,12 @@ protected:
 
 	//dense mesh derivative matrices
 	Matrix3Xd D1d, D2d;		
+	vector<Matrix<double, 4, 6>> dJ_dX;
 
 public:
 	TriangleMeshObjectiveFunction() {}
 	virtual ~TriangleMeshObjectiveFunction(){}
-	
+	void init();
 	void init_mesh(const MatrixXd& V, const MatrixX3i& F);
 
 	void AddElementToHessian(std::vector<int> ind);
