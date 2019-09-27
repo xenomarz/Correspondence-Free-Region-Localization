@@ -71,8 +71,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 			Outputs[0].stop_solver_thread();
 			Outputs[1].stop_solver_thread();
 			
-			Outputs[0].mesh_name =  app_utils::ExtractModelName(model_Path);
-			Outputs[1].mesh_name =  app_utils::ExtractModelName(model_Path);
+			modelName =  app_utils::ExtractModelName(model_Path);
 			viewer->load_mesh_from_file(model_Path.c_str());
 			viewer->load_mesh_from_file(model_Path.c_str());
 			viewer->load_mesh_from_file(model_Path.c_str());
@@ -480,7 +479,7 @@ void basic_app::Draw_menu_for_cores() {
 	{
 		ImGui::PushID(core.id);
 		stringstream ss;
-		string name = (core.id == inputCoreID) ? "Input Core" : "Output Core";
+		string name = (core.id == inputCoreID) ? "Input Core" : "Output Core " + std::to_string(core.id);
 		ss << name;
 		if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 		{
@@ -555,7 +554,7 @@ void basic_app::Draw_menu_for_models() {
 
 		ImGui::PushID(data.id);
 		stringstream ss;
-		ss << Outputs[0].ModelID;
+		ss << modelName + " " + std::to_string(data.id) + " (Param.)";
 		
 		if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 		{

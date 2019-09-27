@@ -13,6 +13,7 @@ private:
 	
 public:
 	//static
+	
 	float Max_Distortion;
 	Vector3f 
 		Highlighted_face_color, 
@@ -39,7 +40,6 @@ public:
 
 	//regular
 	MatrixXd color_per_face, Vertices_Input, Vertices_output, color_per_vertex;
-	string mesh_name;
 	int ModelID, CoreID;
 	float core_size;
 
@@ -56,9 +56,6 @@ public:
 
 	void stop_solver_thread();
 	void start_solver_thread(thread& thread);
-	string ModelName();
-	string CoreName();
-
 };
 
 #endif

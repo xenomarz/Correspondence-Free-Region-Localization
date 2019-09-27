@@ -11,7 +11,7 @@ class basic_app : public ImGuiMenu
 private:
 	vector<Output> Outputs;
 	//Basic (necessary) parameteres
-	
+	string modelName;
 	int inputCoreID, inputModelID;
 	app_utils::View view;
 	app_utils::MouseMode mouse_mode;

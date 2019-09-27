@@ -28,14 +28,6 @@ Output::Output() {
 	totalObjective = make_shared<TotalObjective>();
 }
 
-string Output::ModelName() {
-	return mesh_name + " (Param. " + std::to_string(ModelID) + ")";
-}
-
-string Output::CoreName() {
-	return "Output Core " + std::to_string(CoreID);
-}
-
 void Output::stop_solver_thread() {
 	solver_on = false;
 	if (solver->is_running) {
