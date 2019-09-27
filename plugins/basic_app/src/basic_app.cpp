@@ -935,8 +935,7 @@ void basic_app::update_mesh()
 	V = Map<MatrixXd>(X.data(), X.rows() / 2, 2);
 	
 	if (IsTranslate) {
-		Vector2d temp = OutputModel().V.row(Translate_Index);
-		V.row(Translate_Index) = temp;
+		V.row(Translate_Index) = OutputModel().V.row(Translate_Index).head(2);
 	}
 	update_texture(V);
 }
