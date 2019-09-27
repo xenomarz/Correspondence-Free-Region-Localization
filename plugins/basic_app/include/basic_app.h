@@ -9,6 +9,25 @@
 class basic_app : public ImGuiMenu
 {
 private:
+	float Max_Distortion;
+	bool solver_on;
+	app_utils::Distortion distortion_type;
+	app_utils::SolverType solver_type;
+	Vector3f
+		Highlighted_face_color,
+		Fixed_face_color,
+		Fixed_vertex_color,
+		model_color,
+		Dragged_face_color,
+		Dragged_vertex_color,
+		Vertex_Energy_color,
+		text_color;
+	bool show_text;
+	float core_size;
+	float texture_scaling_output;
+	bool Highlighted_face;
+	app_utils::Parametrization param_type;
+	set<int> selected_faces, selected_vertices;
 	vector<Output> Outputs;
 	//Basic (necessary) parameteres
 	string modelName;
@@ -54,7 +73,7 @@ public:
 	void follow_and_mark_selected_faces();
 	RowVector3d get_face_avg();
 	void UpdateHandles();
-	void UpdateEnergyColors();
+	void UpdateEnergyColors(const int index);
 
 	//Basic Methods
 	ViewerData& InputModel();
@@ -62,10 +81,10 @@ public:
 
 	void Update_view();
 	void update_mesh();
-	void update_texture(MatrixXd& V_uv);
+	void update_texture(MatrixXd& V_uv, const int index);
 
 	//Start/Stop the solver Thread
-	void initializeSolver();
+	void initializeSolver(const int index);
 
 	//FD check
 	void checkGradients();
