@@ -9,10 +9,11 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 
 	if (_viewer)
 	{
+		solverInitialized = false;
 		solver_on = false;
 		core_size = 1.0 / 3.0;
 		distortion_type = app_utils::TOTAL_DISTORTION;
-		solver_type = app_utils::GRADIENT_DESCENT;
+		solver_type = app_utils::NEWTON;
 		param_type = app_utils::None;
 		IsTranslate = false;
 		Max_Distortion = 5;
@@ -40,12 +41,15 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		viewer->core().viewport = Vector4f(0, 0, 640, 800);
 		inputCoreID = viewer->core(0).id;
 		viewer->core(inputCoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
-
-		Outputs[0].CoreID = viewer->append_core(Vector4f(640, 0, 640, 800));
-		viewer->core(Outputs[0].CoreID).background_color = Vector4f(0.9, 0, 0.9 ,0);
-
-		Outputs[1].CoreID = viewer->append_core(Vector4f(640, 0, 640, 800));
-		viewer->core(Outputs[1].CoreID).background_color = Vector4f(0, 0.9, 0.9, 0);
+		
+		Outputs[0].CoreID = viewer->append_core(Vector4f::Zero());
+		viewer->core(Outputs[0].CoreID).background_color = Vector4f(0, 0.9, 0.9, 0);
+		Outputs[1].CoreID = viewer->append_core(Vector4f::Zero());
+		viewer->core(Outputs[1].CoreID).background_color = Vector4f(0.9, 0, 0.9, 0);
+		/*for (auto& out : Outputs) {
+			out.CoreID = viewer->append_core(Vector4f::Zero());
+			viewer->core(out.CoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
+		}*/
 
 		//set rotation type to 2D mode
 		for (auto& out : Outputs) {
@@ -54,21 +58,20 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 			viewer->core(out.CoreID).set_rotation_type(ViewerCore::RotationType(2));
 		}
 		
-		
 		//Update scene
 		Update_view();
 		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
-		viewer->core(Outputs[0].CoreID).align_camera_center(OutputModel(0).V, OutputModel(0).F);
-		viewer->core(Outputs[1].CoreID).align_camera_center(OutputModel(1).V, OutputModel(1).F);
+		for(int i=0;i<Outputs.size();i++)
+			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
 
 		viewer->core(inputCoreID).is_animating = true;
-		viewer->core(Outputs[0].CoreID).is_animating = true;
-		viewer->core(Outputs[1].CoreID).is_animating = true;
+		for (auto& out:Outputs)
+			viewer->core(out.CoreID).is_animating = true;
 
 		viewer->core(inputCoreID).lighting_factor = 0.2;
-		viewer->core(Outputs[0].CoreID).lighting_factor = 0;
-		viewer->core(Outputs[1].CoreID).lighting_factor = 0;
-		
+		for (auto& out : Outputs)
+			viewer->core(out.CoreID).lighting_factor = 0;
+				
 		// Initialize solver thread
 		for (auto& out : Outputs) {
 			out.newton = make_shared<NewtonSolver>();
@@ -93,8 +96,8 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		if (model_Path.length() != 0)
 		{
 			modelName = app_utils::ExtractModelName(model_Path);
-			for (auto& out : Outputs)
-				out.stop_solver_thread(solver_on);
+			for (int i = 0; i < Outputs.size(); i++) 
+				stop_solver_thread(i);
 
 			viewer->load_mesh_from_file(model_Path.c_str());
 			for (int i = 0; i < Outputs.size(); i++)
@@ -103,7 +106,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 				Outputs[i].ModelID = viewer->data_list[i+1].id;
 				initializeSolver(i);
 			}
-		
+			solverInitialized = true;
 			
 			Update_view();
 			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
@@ -143,7 +146,8 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		}
 	}
 
-	Draw_menu_for_Solver();
+	if(solverInitialized)
+		Draw_menu_for_Solver();
 	Draw_menu_for_cores();
 	Draw_menu_for_models();
 	Draw_menu_for_colors();
@@ -158,36 +162,42 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 	if (viewer)
 	{
 		if (view == app_utils::Horizontal) {
-			viewer->core(inputCoreID).viewport = 
-				Vector4f(0, 0, w - w * 2 * core_size, h);
-			viewer->core(Outputs[0].CoreID).viewport =
-				Vector4f(w - w * 2 * core_size, 0, w * core_size, h);
-			viewer->core(Outputs[1].CoreID).viewport =
-				Vector4f(w - w * core_size, 0, w * core_size, h);
+			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * 2 * core_size, h);
+			Outputs[0].window_position = ImVec2(w - w * 2 * core_size, 0);
+			Outputs[0].window_size = ImVec2(w * core_size, h);
+			Outputs[1].window_position = ImVec2(w - w * core_size, 0);
+			Outputs[1].window_size = ImVec2(w * core_size, h);
 		}
 		if (view == app_utils::Vertical) {
-			viewer->core(inputCoreID).viewport =
-				Vector4f(0, 0, w, h - h * 2 * core_size);
-			viewer->core(Outputs[0].CoreID).viewport =
-				Vector4f(0, h - h * 2 * core_size, w , h* core_size);
-			viewer->core(Outputs[1].CoreID).viewport =
-				Vector4f(0, h - h * core_size, w, h * core_size);
+			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w, h - h * 2 * core_size);
+			Outputs[0].window_position = ImVec2(0, h - h * 2 * core_size);
+			Outputs[0].window_size = ImVec2(w, h* core_size);
+			Outputs[1].window_position = ImVec2(0, h - h * core_size);
+			Outputs[1].window_size = ImVec2(w, h * core_size);
 		}
 		if (view == app_utils::InputOnly) {
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w, h);
-			viewer->core(Outputs[0].CoreID).viewport = Vector4f(0, 0, 0, 0);
-			viewer->core(Outputs[1].CoreID).viewport = Vector4f(0, 0, 0, 0);
+			Outputs[0].window_position = ImVec2(0,0);
+			Outputs[0].window_size = ImVec2(0,0);
+			Outputs[1].window_position = ImVec2(0,0);
+			Outputs[1].window_size = ImVec2(0,0);
 		}
 		if (view == app_utils::OutputOnly0) {
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
-			viewer->core(Outputs[0].CoreID).viewport = Vector4f(0, 0, w, h);
-			viewer->core(Outputs[1].CoreID).viewport = Vector4f(0, 0, 0, 0);
+			Outputs[0].window_position = ImVec2(0, 0);
+			Outputs[0].window_size = ImVec2(w, h);
+			Outputs[1].window_position = ImVec2(0, 0);
+			Outputs[1].window_size = ImVec2(0, 0);
 		}
 		if (view == app_utils::OutputOnly1) {
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
-			viewer->core(Outputs[0].CoreID).viewport = Vector4f(0, 0, 0, 0);
-			viewer->core(Outputs[1].CoreID).viewport = Vector4f(0, 0, w, h);
+			Outputs[0].window_position = ImVec2(0, 0);
+			Outputs[0].window_size = ImVec2(w, h);
+			Outputs[1].window_position = ImVec2(0, 0);
+			Outputs[1].window_size = ImVec2(w, h);
 		}
+		for (auto& o : Outputs)
+			viewer->core(o.CoreID).viewport = Vector4f(o.window_position[0], o.window_position[1], o.window_size[0], o.window_size[1]);
 	}
 }
 
@@ -379,16 +389,16 @@ IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 		UpdateHandles();
 	}
 	if (key == ' ') 
-		for(auto& out:Outputs)
-			solver_on ? out.stop_solver_thread(solver_on) : out.start_solver_thread(solver_thread, solver_on);
+		for (int i = 0; i < Outputs.size(); i++) 
+			solver_on ? stop_solver_thread(i) : start_solver_thread(i);
 
 	return ImGuiMenu::key_pressed(key, modifiers);
 }
 
 IGL_INLINE void basic_app::shutdown()
 {
-	for (auto& out : Outputs)
-		out.stop_solver_thread(solver_on);
+	for (int i = 0; i < Outputs.size(); i++)
+		stop_solver_thread(i);
 	ImGuiMenu::shutdown();
 }
 
@@ -436,18 +446,18 @@ void basic_app::Draw_menu_for_Solver() {
 	if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		if (ImGui::Checkbox(solver_on ? "On" : "Off", &solver_on)) {
-			for (auto& out : Outputs) {
+			for (int i = 0; i < Outputs.size(); i++) {
 				if (solver_on) {
-					out.start_solver_thread(solver_thread, solver_on);
+					start_solver_thread(i);
 				}
 				else {
-					out.stop_solver_thread(solver_on);
+					stop_solver_thread(i);
 				}
 			}
 		}
 		if (ImGui::Combo("step", (int *)(&solver_type), "NEWTON\0Gradient Descent\0\0")) {
 			for (int i = 0; i < Outputs.size(); i++) {
-				Outputs[i].stop_solver_thread(solver_on);
+				stop_solver_thread(i);
 				if (solver_type == app_utils::NEWTON) {
 					Outputs[i].solver = Outputs[i].newton;
 				}
@@ -458,7 +468,7 @@ void basic_app::Draw_menu_for_Solver() {
 				Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
 				MatrixX3i F = OutputModel(i).F;
 				Outputs[i].solver->setFlipAvoidingLineSearch(F);
-				Outputs[i].start_solver_thread(solver_thread, solver_on);
+				start_solver_thread(i);
 			}
 		}
 
@@ -542,7 +552,6 @@ void basic_app::Draw_menu_for_Solver() {
 		}
 		
 		// objective functions wieghts
-
 		int id = 0;
 		for (auto& out : Outputs) {
 			for (auto& obj : out.totalObjective->objectiveList) {
@@ -698,76 +707,41 @@ void basic_app::Draw_menu_for_text_results() {
 	float shift = ImGui::GetTextLineHeightWithSpacing();
 	glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
 
-	int w0 = -1, h0 = -1, w1 = -1, h1 = -1;;
-	if (view == app_utils::Horizontal) {
-		w0 = frameBufferWidth - frameBufferWidth * 2 * core_size + shift;
-		h0 = shift;
-		w1 = frameBufferWidth - frameBufferWidth * core_size + shift;
-		h1 = shift;
-	}
-	if (view == app_utils::Vertical) {
-		w0 = frameBufferWidth * 0.8 + shift;;
-		h0 = shift;
-		w1 = frameBufferWidth * 0.8 + shift;;
-		h1 = frameBufferHeight * core_size + shift;
-	}
-	if (view == app_utils::InputOnly) {
-		return;
-	}
-	if (view == app_utils::OutputOnly0) {
-		w0 = frameBufferWidth * 0.8 + shift;
-		h0 = shift;
-	}
-	if (view == app_utils::OutputOnly1) {
-		w1 = frameBufferWidth * 0.8 + shift;
-		h1 = shift;
-	}
+	for (int i = 0; i < Outputs.size(); i++) {
+		bool bOpened(true);
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
+		ImGui::Begin("BCKGND" + i, &bOpened, 
+			
+			ImGuiWindowFlags_NoMove |
+			ImGuiWindowFlags_NoTitleBar |
+			
+			ImGuiWindowFlags_NoCollapse | 
+			ImGuiWindowFlags_NoSavedSettings | 
+			ImGuiWindowFlags_NoBackground |
+			ImGuiWindowFlags_NoFocusOnAppearing | 
+			ImGuiWindowFlags_NoBringToFrontOnFocus);
+		float w= Outputs[i].window_position[0] + shift, 
+			h = Outputs[i].window_position[1] + shift;
 
-	if (w0 != -1 && h0 != -1) {
-		bool bOpened(true);
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
-		ImGui::Begin("BCKGND0", &bOpened, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
-		ImGui::SetWindowPos(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
-		ImGui::SetWindowSize(ImGui::GetIO().DisplaySize);
+		ImGui::SetWindowPos(Outputs[i].window_position);
+		ImGui::SetWindowSize(Outputs[i].window_size);
 		ImGui::SetWindowCollapsed(false);
 		ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
+		ImGui::CollapsingHeader("colors", ImGuiTreeNodeFlags_DefaultOpen);
 		//add text...
-		ImGui::GetWindowDrawList()->AddText(ImVec2(w0, h0), c, (std::string(Outputs[0].totalObjective->name) + std::string(" energy ") + std::to_string(Outputs[0].totalObjective->energy_value)).c_str());
-		h0 += shift;
-		ImGui::GetWindowDrawList()->AddText(ImVec2(w0, h0), c, (std::string(Outputs[0].totalObjective->name) + std::string(" gradient ") + std::to_string(Outputs[0].totalObjective->gradient_norm)).c_str());
-		h0 += shift;
-		for (auto& obj : Outputs[0].totalObjective->objectiveList) {
-			ImGui::GetWindowDrawList()->AddText(ImVec2(w0, h0), c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
-			h0 += shift;
-			ImGui::GetWindowDrawList()->AddText(ImVec2(w0, h0), c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
-			h0 += shift;
+		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(Outputs[i].totalObjective->name) + std::string(" energy ") + std::to_string(Outputs[i].totalObjective->energy_value)).c_str());
+		h += shift;
+		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(Outputs[i].totalObjective->name) + std::string(" gradient ") + std::to_string(Outputs[i].totalObjective->gradient_norm)).c_str());
+		h += shift;
+		for (auto& obj : Outputs[i].totalObjective->objectiveList) {
+			ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
+			h += shift;
+			ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
+			h += shift;
 		}
 		ImGui::End();
 		ImGui::PopStyleColor();
 	}
-	if (w1 != -1 && h1 != -1) {
-		bool bOpened(true);
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
-		ImGui::Begin("BCKGND1", &bOpened, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
-		ImGui::SetWindowPos(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
-		ImGui::SetWindowSize(ImGui::GetIO().DisplaySize);
-		ImGui::SetWindowCollapsed(false);
-		ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
-		//add text...
-		ImGui::GetWindowDrawList()->AddText(ImVec2(w1, h1), c, (std::string(Outputs[1].totalObjective->name) + std::string(" energy ") + std::to_string(Outputs[1].totalObjective->energy_value)).c_str());
-		h1 += shift;
-		ImGui::GetWindowDrawList()->AddText(ImVec2(w1, h1), c, (std::string(Outputs[1].totalObjective->name) + std::string(" gradient ") + std::to_string(Outputs[1].totalObjective->gradient_norm)).c_str());
-		h1 += shift;
-		for (auto& obj : Outputs[1].totalObjective->objectiveList) {
-			ImGui::GetWindowDrawList()->AddText(ImVec2(w1, h1), c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
-			h1 += shift;
-			ImGui::GetWindowDrawList()->AddText(ImVec2(w1, h1), c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
-			h1 += shift;
-		}
-		ImGui::End();
-		ImGui::PopStyleColor();
-	}
-	
 }
 
 void basic_app::UpdateHandles() {
@@ -807,7 +781,7 @@ void basic_app::UpdateHandles() {
 	}
 	//Finally, we update the handles in the constraints positional object
 	for (int i = 0; i < Outputs.size();i++) {
-		if (Outputs[i].solverInitialized) {
+		if (solverInitialized) {
 			(*Outputs[i].HandlesInd) = CurrHandlesInd;
 			(*Outputs[i].HandlesPosDeformed) = CurrHandlesPosDeformed[i];
 		}
@@ -994,33 +968,33 @@ void basic_app::update_texture(MatrixXd& V_uv, const int index) {
 	
 void basic_app::checkGradients()
 {
-	for (auto& out : Outputs) {
-		cout << "Core " + std::to_string(out.CoreID) + ":" << endl;
-		if (!out.solverInitialized) {
+	for (int i = 0; i < Outputs.size(); i++) {
+		cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << endl;
+		if (!solverInitialized) {
 			solver_on = false;
 			return;
 		}
-		out.stop_solver_thread(solver_on);
-		for (auto const &objective : out.totalObjective->objectiveList) {
-			objective->checkGradient(out.solver->ext_x);
+		stop_solver_thread(i);
+		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
+			objective->checkGradient(Outputs[i].solver->ext_x);
 		}
-		out.start_solver_thread(solver_thread, solver_on);
+		start_solver_thread(i);
 	}
 }
 
 void basic_app::checkHessians()
 {
-	for (auto& out : Outputs) {
-		cout << "Core " + std::to_string(out.CoreID) + ":" << endl;
-		if (!out.solverInitialized) {
+	for (int i = 0; i < Outputs.size(); i++) {
+		cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << endl;
+		if (!solverInitialized) {
 			solver_on = false;
 			return;
 		}
-		out.stop_solver_thread(solver_on);
-		for (auto const &objective : out.totalObjective->objectiveList) {
-			objective->checkHessian(out.solver->ext_x);
+		stop_solver_thread(i);
+		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
+			objective->checkHessian(Outputs[i].solver->ext_x);
 		}
-		out.start_solver_thread(solver_thread, solver_on);
+		start_solver_thread(i);
 	}
 }
 
@@ -1041,12 +1015,32 @@ void basic_app::update_mesh()
 	}
 }
 
+void basic_app::stop_solver_thread(const int index) {
+	solver_on = false;
+	if (Outputs[index].solver->is_running) {
+		Outputs[index].solver->stop();
+	}
+	while (Outputs[index].solver->is_running);
+}
+
+void basic_app::start_solver_thread(const int index) {
+	if (!solverInitialized) {
+		solver_on = false;
+		return;
+	}
+	cout << ">> start new solver" << endl;
+	solver_on = true;
+
+	solver_thread = thread(&solver::run, Outputs[index].solver.get());
+	solver_thread.detach();
+}
+
 void basic_app::initializeSolver(const int index)
 {
 	MatrixXd V = OutputModel(index).V;
 	MatrixX3i F = OutputModel(index).F;
 	
-	Outputs[index].stop_solver_thread(solver_on);
+	stop_solver_thread(index);
 
 	if (V.rows() == 0 || F.rows() == 0)
 		return;
@@ -1094,7 +1088,6 @@ void basic_app::initializeSolver(const int index)
 	Outputs[index].gradient_descent->setFlipAvoidingLineSearch(F);
 	
 	cout << "Solver is initialized!" << endl;
-	Outputs[index].solverInitialized = true;
 }
 
 void basic_app::UpdateEnergyColors(const int index) {

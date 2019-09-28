@@ -9,6 +9,7 @@
 class basic_app : public ImGuiMenu
 {
 private:
+	bool solverInitialized;
 	float Max_Distortion;
 	bool solver_on;
 	app_utils::Distortion distortion_type;
@@ -85,6 +86,8 @@ public:
 
 	//Start/Stop the solver Thread
 	void initializeSolver(const int index);
+	void stop_solver_thread(const int index);
+	void start_solver_thread(const int index);
 
 	//FD check
 	void checkGradients();

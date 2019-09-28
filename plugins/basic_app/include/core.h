@@ -6,39 +6,29 @@
 #include "app_utils.h"
 
 class Output
-{
-private:
-	
-	
-	
+{	
 public:
-	//static
 	vector<int> *HandlesInd; //pointer to indices in constraitPositional
 	MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
-	
-
-	//Solver Button Parameters
-	bool solverInitialized;
-	
-
-	//regular
 	MatrixXd color_per_face, Vertices_Input, Vertices_output, color_per_vertex;
 	int ModelID, CoreID;
+	ImVec2 window_position, window_size;
 	
-
 	// Solver thread
 	shared_ptr<NewtonSolver> newton;
 	shared_ptr<GradientDescentSolver> gradient_descent;
 	shared_ptr<solver> solver;
 	shared_ptr<TotalObjective> totalObjective;
 
-
 	//Constructor & initialization
-	Output();
+	Output() {
+		// Initialize solver thread
+		newton = make_shared<NewtonSolver>();
+		gradient_descent = make_shared<GradientDescentSolver>();
+		solver = newton;
+		totalObjective = make_shared<TotalObjective>();
+	}
 	~Output(){}
-
-	void stop_solver_thread(bool& solver_on);
-	void start_solver_thread(thread& thread, bool& solver_on);
 };
 
 #endif
