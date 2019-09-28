@@ -960,7 +960,7 @@ void basic_app::initializeSolver()
 	auto anglePreserving = make_unique<LeastSquaresConformal>();
 	anglePreserving->init_mesh(V, F);
 	anglePreserving->init();
-	auto constraintsPositional = make_shared<PenaltyPositionalConstraints>();
+	auto constraintsPositional = make_shared<VertexPositionObjective>();
 	constraintsPositional->numV = V.rows();
 	constraintsPositional->init();
 	HandlesInd = &constraintsPositional->ConstrainedVerticesInd;

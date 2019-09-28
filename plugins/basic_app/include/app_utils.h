@@ -42,7 +42,7 @@
 #include "../../libs/optimization_lib/include/objective_functions/AreaDistortion.h"
 #include "../../libs/optimization_lib/include/objective_functions/AreaDistortionOneRing.h"
 #include "../../libs/optimization_lib/include/objective_functions/LeastSquaresConformal.h"
-#include "../../libs/optimization_lib/include/objective_functions/PenaltyPositionalConstraints.h"
+#include "../../libs/optimization_lib/include/objective_functions/VertexPositionObjective.h"
 #include <atomic>
 
 #define RED_COLOR Vector3f(1, 0, 0)

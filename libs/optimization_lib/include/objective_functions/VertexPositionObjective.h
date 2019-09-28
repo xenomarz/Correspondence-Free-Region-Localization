@@ -1,12 +1,12 @@
 #pragma once
 #include <libs/optimization_lib/include/objective_functions/ObjectiveFunction.h>
 
-class PenaltyPositionalConstraints : public ObjectiveFunction
+class VertexPositionObjective : public ObjectiveFunction
 {
 private:
 	virtual void init_hessian() override;
 public:
-	PenaltyPositionalConstraints();
+	VertexPositionObjective();
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
 	virtual double value(const bool update = true) override;
