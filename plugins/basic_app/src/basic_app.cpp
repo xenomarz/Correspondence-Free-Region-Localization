@@ -42,14 +42,14 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		inputCoreID = viewer->core(0).id;
 		viewer->core(inputCoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
 		
-		Outputs[0].CoreID = viewer->append_core(Vector4f::Zero());
+		/*Outputs[0].CoreID = viewer->append_core(Vector4f::Zero());
 		viewer->core(Outputs[0].CoreID).background_color = Vector4f(0, 0.9, 0.9, 0);
 		Outputs[1].CoreID = viewer->append_core(Vector4f::Zero());
-		viewer->core(Outputs[1].CoreID).background_color = Vector4f(0.9, 0, 0.9, 0);
-		/*for (auto& out : Outputs) {
+		viewer->core(Outputs[1].CoreID).background_color = Vector4f(0.9, 0, 0.9, 0);*/
+		for (auto& out : Outputs) {
 			out.CoreID = viewer->append_core(Vector4f::Zero());
 			viewer->core(out.CoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
-		}*/
+		}
 
 		//set rotation type to 2D mode
 		for (auto& out : Outputs) {
@@ -167,34 +167,49 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 			Outputs[0].window_size = ImVec2(w * core_size, h);
 			Outputs[1].window_position = ImVec2(w - w * core_size, 0);
 			Outputs[1].window_size = ImVec2(w * core_size, h);
+
+			Outputs[0].text_position = Outputs[0].window_position;
+			Outputs[1].text_position = Outputs[1].window_position;
 		}
 		if (view == app_utils::Vertical) {
-			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w, h - h * 2 * core_size);
-			Outputs[0].window_position = ImVec2(0, h - h * 2 * core_size);
-			Outputs[0].window_size = ImVec2(w, h* core_size);
-			Outputs[1].window_position = ImVec2(0, h - h * core_size);
+			viewer->core(inputCoreID).viewport = Vector4f(0,2* h * core_size, w, h - 2 * h * core_size);
+			Outputs[0].window_position = ImVec2(0,h * core_size);
+			Outputs[0].window_size = ImVec2(w, h * core_size);
+			Outputs[1].window_position = ImVec2(0, 0);
 			Outputs[1].window_size = ImVec2(w, h * core_size);
+
+			Outputs[0].text_position = ImVec2(w*0.8, h - Outputs[0].window_position[1] - Outputs[0].window_size[1]);
+			Outputs[1].text_position = ImVec2(w*0.8, h - Outputs[1].window_position[1] - Outputs[0].window_size[1]);
 		}
 		if (view == app_utils::InputOnly) {
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w, h);
-			Outputs[0].window_position = ImVec2(0,0);
+			Outputs[0].window_position = ImVec2(w,h);
 			Outputs[0].window_size = ImVec2(0,0);
-			Outputs[1].window_position = ImVec2(0,0);
+			Outputs[1].window_position = ImVec2(w,h);
 			Outputs[1].window_size = ImVec2(0,0);
+
+			Outputs[0].text_position = Outputs[0].window_position;
+			Outputs[1].text_position = Outputs[1].window_position;
 		}
 		if (view == app_utils::OutputOnly0) {
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
 			Outputs[0].window_position = ImVec2(0, 0);
 			Outputs[0].window_size = ImVec2(w, h);
-			Outputs[1].window_position = ImVec2(0, 0);
+			Outputs[1].window_position = ImVec2(w, h);
 			Outputs[1].window_size = ImVec2(0, 0);
+
+			Outputs[0].text_position = ImVec2(w*0.8, 0);
+			Outputs[1].text_position = ImVec2(Outputs[1].window_position[0], Outputs[1].window_position[1]);
 		}
 		if (view == app_utils::OutputOnly1) {
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
-			Outputs[0].window_position = ImVec2(0, 0);
+			Outputs[0].window_position = ImVec2(w, h);
 			Outputs[0].window_size = ImVec2(w, h);
 			Outputs[1].window_position = ImVec2(0, 0);
 			Outputs[1].window_size = ImVec2(w, h);
+
+			Outputs[0].text_position = ImVec2(Outputs[0].window_position[0], Outputs[0].window_position[1]);
+			Outputs[1].text_position = ImVec2(w*0.8, 0);
 		}
 		for (auto& o : Outputs)
 			viewer->core(o.CoreID).viewport = Vector4f(o.window_position[0], o.window_position[1], o.window_size[0], o.window_size[1]);
@@ -274,10 +289,10 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 	{
 		//check if there faces which is selected on the left screen
 		int f = pick_face(InputModel().V, InputModel().F, app_utils::InputOnly);
-		if (f == -1)
-			f = pick_face(OutputModel(0).V, OutputModel(0).F, app_utils::OutputOnly0);
-		if (f == -1)
-			f = pick_face(OutputModel(1).V, OutputModel(1).F, app_utils::OutputOnly1);
+		for(int i=0;i<Outputs.size();i++)
+			if (f == -1)
+				f = pick_face(OutputModel(i).V, OutputModel(i).F, app_utils::OutputOnly0+i);
+		
 		
 
 		if (f != -1)
@@ -298,10 +313,10 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 	{
 		//check if there faces which is selected on the left screen
 		int v = pick_vertex(InputModel().V, InputModel().F, app_utils::InputOnly);
-		if (v == -1) 
-			v = pick_vertex(OutputModel(0).V, OutputModel(0).F, app_utils::OutputOnly0);
-		if (v == -1)
-			v = pick_vertex(OutputModel(1).V, OutputModel(1).F, app_utils::OutputOnly1);
+		for(int i=0;i<Outputs.size();i++)
+			if(v == -1) 
+				v = pick_vertex(OutputModel(i).V, OutputModel(i).F, app_utils::OutputOnly0+i);
+		
 		
 
 		if (v != -1)
@@ -326,15 +341,12 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 			int f = pick_face(InputModel().V, InputModel().F, app_utils::InputOnly);
 			Model_Translate_ID = inputModelID;
 			Core_Translate_ID = inputCoreID;
-			if (f == -1) {
-				f = pick_face(OutputModel(0).V, OutputModel(0).F, app_utils::OutputOnly0);
-				Model_Translate_ID = Outputs[0].ModelID;
-				Core_Translate_ID = Outputs[0].CoreID;
-			}
-			if (f == -1) {
-				f = pick_face(OutputModel(1).V, OutputModel(1).F, app_utils::OutputOnly1);
-				Model_Translate_ID = Outputs[1].ModelID;
-				Core_Translate_ID = Outputs[1].CoreID;
+			for (int i = 0; i < Outputs.size(); i++) {
+				if (f == -1) {
+					f = pick_face(OutputModel(i).V, OutputModel(i).F, app_utils::OutputOnly0 + i);
+					Model_Translate_ID = Outputs[i].ModelID;
+					Core_Translate_ID = Outputs[i].CoreID;
+				}
 			}
 
 			if (find(selected_faces.begin(), selected_faces.end(), f) != selected_faces.end())
@@ -352,16 +364,14 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 		int v = pick_vertex(InputModel().V, InputModel().F, app_utils::InputOnly);
 		Model_Translate_ID = inputModelID;
 		Core_Translate_ID = inputCoreID;
-		if (v == -1) {
-			v = pick_vertex(OutputModel(0).V, OutputModel(0).F, app_utils::OutputOnly0);
-			Model_Translate_ID = Outputs[0].ModelID;
-			Core_Translate_ID = Outputs[0].CoreID;
+		for (int i = 0; i < Outputs.size(); i++) {
+			if (v == -1) {
+				v = pick_vertex(OutputModel(i).V, OutputModel(i).F, app_utils::OutputOnly0+i);
+				Model_Translate_ID = Outputs[i].ModelID;
+				Core_Translate_ID = Outputs[i].CoreID;
+			}
 		}
-		if (v == -1) {
-			v = pick_vertex(OutputModel(1).V, OutputModel(1).F, app_utils::OutputOnly1);
-			Model_Translate_ID = Outputs[1].ModelID;
-			Core_Translate_ID = Outputs[1].CoreID;
-		}
+		
 
 		if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
 		{
@@ -420,10 +430,10 @@ IGL_INLINE bool basic_app::pre_draw() {
 	
 	//Update the model's vertex colors in the two screens
 	InputModel().point_size = 10;
-	InputModel().set_points(Outputs[0].Vertices_Input, Outputs[0].color_per_vertex);
+	InputModel().set_points(Vertices_Input, color_per_vertex);
 	for (int i = 0; i < Outputs.size(); i++) {
 		OutputModel(i).point_size = 10;
-		OutputModel(i).set_points(Outputs[i].Vertices_output, Outputs[i].color_per_vertex);
+		OutputModel(i).set_points(Vertices_output, color_per_vertex);
 	}
 	return false;
 }
@@ -477,11 +487,13 @@ void basic_app::Draw_menu_for_Solver() {
 		app_utils::Parametrization prev_type = param_type;
 		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
 			MatrixXd initialguess;
-			MatrixX3i F0 = OutputModel(0).F;
-			MatrixX3i F1 = OutputModel(1).F;
+			vector<MatrixX3i> F;
+			for (auto& out : Outputs)
+				F.push_back(OutputModel(out.ModelID).F);
+			
 			app_utils::Parametrization temp = param_type;
 			param_type = prev_type;
-			if (temp == app_utils::None || !F0.size() || !F1.size()) {
+			if (temp == app_utils::None || !InputModel().F.size()) {
 				param_type = app_utils::None;
 			}
 			else if (app_utils::IsMesh2D(InputModel().V)) {
@@ -494,11 +506,8 @@ void basic_app::Draw_menu_for_Solver() {
 					VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
 					for (int i = 0; i < Outputs.size(); i++)
 					{
-						MatrixX3i F = F0;
-						if (i == 1)
-							F = F1;
 						Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
-						Outputs[i].solver->setFlipAvoidingLineSearch(F);
+						Outputs[i].solver->setFlipAvoidingLineSearch(F[i]);
 					}
 					
 				}
@@ -524,11 +533,8 @@ void basic_app::Draw_menu_for_Solver() {
 				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
 				for (int i = 0; i < Outputs.size(); i++)
 				{
-					MatrixX3i F = F0;
-					if (i == 1)
-						F = F1;
 					Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
-					Outputs[i].solver->setFlipAvoidingLineSearch(F);
+					Outputs[i].solver->setFlipAvoidingLineSearch(F[i]);
 				}
 			}
 			
@@ -703,41 +709,31 @@ void basic_app::Draw_menu_for_text_results() {
 		return;
 	}
 
-	int frameBufferWidth, frameBufferHeight;
-	float shift = ImGui::GetTextLineHeightWithSpacing();
-	glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
-
 	for (int i = 0; i < Outputs.size(); i++) {
 		bool bOpened(true);
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
 		ImGui::Begin("BCKGND" + i, &bOpened, 
-			
-			ImGuiWindowFlags_NoMove |
-			ImGuiWindowFlags_NoTitleBar |
-			
+			ImGuiWindowFlags_NoTitleBar | 
+			ImGuiWindowFlags_NoResize | 
+			ImGuiWindowFlags_NoMove | 
+			ImGuiWindowFlags_NoScrollbar | 
+			ImGuiWindowFlags_NoScrollWithMouse | 
+			ImGuiWindowFlags_NoBackground |
 			ImGuiWindowFlags_NoCollapse | 
 			ImGuiWindowFlags_NoSavedSettings | 
-			ImGuiWindowFlags_NoBackground |
+			ImGuiWindowFlags_NoInputs | 
 			ImGuiWindowFlags_NoFocusOnAppearing | 
 			ImGuiWindowFlags_NoBringToFrontOnFocus);
-		float w= Outputs[i].window_position[0] + shift, 
-			h = Outputs[i].window_position[1] + shift;
-
-		ImGui::SetWindowPos(Outputs[i].window_position);
+		ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
+		ImGui::SetWindowPos(Outputs[i].text_position);
 		ImGui::SetWindowSize(Outputs[i].window_size);
 		ImGui::SetWindowCollapsed(false);
-		ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
-		ImGui::CollapsingHeader("colors", ImGuiTreeNodeFlags_DefaultOpen);
 		//add text...
-		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(Outputs[i].totalObjective->name) + std::string(" energy ") + std::to_string(Outputs[i].totalObjective->energy_value)).c_str());
-		h += shift;
-		ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(Outputs[i].totalObjective->name) + std::string(" gradient ") + std::to_string(Outputs[i].totalObjective->gradient_norm)).c_str());
-		h += shift;
+		ImGui::TextColored(c,(std::string(Outputs[i].totalObjective->name) + std::string(" energy ") + std::to_string(Outputs[i].totalObjective->energy_value)).c_str());
+		ImGui::TextColored(c,(std::string(Outputs[i].totalObjective->name) + std::string(" gradient ") + std::to_string(Outputs[i].totalObjective->gradient_norm)).c_str());
 		for (auto& obj : Outputs[i].totalObjective->objectiveList) {
-			ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
-			h += shift;
-			ImGui::GetWindowDrawList()->AddText(ImVec2(w, h), c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
-			h += shift;
+			ImGui::TextColored(c,(std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
+			ImGui::TextColored(c,(std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
 		}
 		ImGui::End();
 		ImGui::PopStyleColor();
@@ -805,10 +801,10 @@ void basic_app::Update_view() {
 void basic_app::follow_and_mark_selected_faces() {
 	//check if there faces which is selected on the left screen
 	int f = pick_face(InputModel().V, InputModel().F, app_utils::InputOnly);
-	if (f == -1) 
-		f = pick_face(OutputModel(0).V, OutputModel(0).F, app_utils::OutputOnly0);
-	if (f == -1)
-		f = pick_face(OutputModel(1).V, OutputModel(1).F, app_utils::OutputOnly1);
+	for(int i=0;i<Outputs.size();i++)
+		if (f == -1) 
+			f = pick_face(OutputModel(i).V, OutputModel(i).F, app_utils::OutputOnly0+i);
+	
 	
 	if(InputModel().F.size()){
 		//Mark the faces
@@ -827,25 +823,25 @@ void basic_app::follow_and_mark_selected_faces() {
 			}
 			//Mark the vertices
 			int idx = 0;
-			Outputs[i].Vertices_Input.resize(selected_vertices.size(), 3);
-			Outputs[i].Vertices_output.resize(selected_vertices.size(), 3);
-			Outputs[i].color_per_vertex.resize(selected_vertices.size(), 3);
+			Vertices_Input.resize(selected_vertices.size(), 3);
+			Vertices_output.resize(selected_vertices.size(), 3);
+			color_per_vertex.resize(selected_vertices.size(), 3);
 			//Mark the dragged vertex
 			if (IsTranslate && (mouse_mode == app_utils::VERTEX_SELECT)) {
-				Outputs[i].Vertices_Input.resize(selected_vertices.size() + 1, 3);
-				Outputs[i].Vertices_output.resize(selected_vertices.size() + 1, 3);
-				Outputs[i].color_per_vertex.resize(selected_vertices.size() + 1, 3);
+				Vertices_Input.resize(selected_vertices.size() + 1, 3);
+				Vertices_output.resize(selected_vertices.size() + 1, 3);
+				color_per_vertex.resize(selected_vertices.size() + 1, 3);
 
-				Outputs[i].Vertices_Input.row(idx) = InputModel().V.row(Translate_Index);
-				Outputs[i].color_per_vertex.row(idx) = Dragged_vertex_color.cast<double>();
-				Outputs[i].Vertices_output.row(idx) = OutputModel(i).V.row(Translate_Index);
+				Vertices_Input.row(idx) = InputModel().V.row(Translate_Index);
+				color_per_vertex.row(idx) = Dragged_vertex_color.cast<double>();
+				Vertices_output.row(idx) = OutputModel(i).V.row(Translate_Index);
 				idx++;
 			}
 			//Mark the fixed vertices
 			for (auto vi : selected_vertices) {
-				Outputs[i].Vertices_Input.row(idx) = InputModel().V.row(vi);
-				Outputs[i].Vertices_output.row(idx) = OutputModel(i).V.row(vi);
-				Outputs[i].color_per_vertex.row(idx++) = Fixed_vertex_color.cast<double>();
+				Vertices_Input.row(idx) = InputModel().V.row(vi);
+				Vertices_output.row(idx) = OutputModel(i).V.row(vi);
+				color_per_vertex.row(idx++) = Fixed_vertex_color.cast<double>();
 			}
 		}
 	}
@@ -871,33 +867,29 @@ RowVector3d basic_app::get_face_avg() {
 	return avg;
 }
 
-int basic_app::pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, app_utils::View LR) {
+int basic_app::pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, int CoreIndex) {
 	// Cast a ray in the view direction starting from the mouse position
-	int core_index;
-	if (LR == app_utils::OutputOnly0) {
-		core_index = Outputs[0].CoreID;
-	}
-	else if (LR == app_utils::OutputOnly1) {
-		core_index = Outputs[1].CoreID;
-	}
-	else if (LR == app_utils::InputOnly) {
-		core_index = inputCoreID;
-	}
+	int CoreID;
+	if (CoreIndex == app_utils::InputOnly)
+		CoreID = inputCoreID;
+	else
+		CoreID = Outputs[CoreIndex - app_utils::OutputOnly0].CoreID;
+	 
 	double x = viewer->current_mouse_x;
-	double y = viewer->core(core_index).viewport(3) - viewer->current_mouse_y;
+	double y = viewer->core(CoreID).viewport(3) - viewer->current_mouse_y;
 	if (view == app_utils::Vertical) {
 		y = (viewer->core(inputCoreID).viewport(3) / core_size) - viewer->current_mouse_y;
 	}
 
 	Eigen::RowVector3d pt;
 
-	Eigen::Matrix4f modelview = viewer->core(core_index).view;
+	Eigen::Matrix4f modelview = viewer->core(CoreID).view;
 	int vi = -1;
 
 	std::vector<igl::Hit> hits;
 
-	igl::unproject_in_mesh(Eigen::Vector2f(x, y), viewer->core(core_index).view,
-		viewer->core(core_index).proj, viewer->core(core_index).viewport, V, F, pt, hits);
+	igl::unproject_in_mesh(Eigen::Vector2f(x, y), viewer->core(CoreID).view,
+		viewer->core(CoreID).proj, viewer->core(CoreID).viewport, V, F, pt, hits);
 
 	int fi = -1;
 	if (hits.size() > 0) {
@@ -906,34 +898,30 @@ int basic_app::pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, app_utils::View
 	return fi;
 }
 
-int basic_app::pick_vertex(MatrixXd& V, MatrixXi& F, app_utils::View LR) {
+int basic_app::pick_vertex(MatrixXd& V, MatrixXi& F, int CoreIndex) {
 	// Cast a ray in the view direction starting from the mouse position
-	int core_index;
-	if (LR == app_utils::OutputOnly0) {
-		core_index = Outputs[0].CoreID;
-	}
-	else if (LR == app_utils::OutputOnly1) {
-		core_index = Outputs[1].CoreID;
-	}
-	else if (LR == app_utils::InputOnly) {
-		core_index = inputCoreID;
-	}
+	int CoreID;
+	if (CoreIndex == app_utils::InputOnly)
+		CoreID = inputCoreID;
+	else
+		CoreID = Outputs[CoreIndex - app_utils::OutputOnly0].CoreID;
+	
 
 	double x = viewer->current_mouse_x;
-	double y = viewer->core(core_index).viewport(3) - viewer->current_mouse_y;
+	double y = viewer->core(CoreID).viewport(3) - viewer->current_mouse_y;
 	if (view == app_utils::Vertical) {
 		y = (viewer->core(inputCoreID).viewport(3) / core_size) - viewer->current_mouse_y;
 	}
 
 	RowVector3d pt;
 
-	Matrix4f modelview = viewer->core(core_index).view;
+	Matrix4f modelview = viewer->core(CoreID).view;
 	int vi = -1;
 
 	vector<Hit> hits;
 			
-	unproject_in_mesh(Vector2f(x, y), viewer->core(core_index).view,
-		viewer->core(core_index).proj, viewer->core(core_index).viewport, V, F, pt, hits);
+	unproject_in_mesh(Vector2f(x, y), viewer->core(CoreID).view,
+		viewer->core(CoreID).proj, viewer->core(CoreID).viewport, V, F, pt, hits);
 
 	if (hits.size() > 0) {
 		int fi = hits[0].id;

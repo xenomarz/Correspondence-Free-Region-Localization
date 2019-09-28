@@ -14,6 +14,7 @@ private:
 	bool solver_on;
 	app_utils::Distortion distortion_type;
 	app_utils::SolverType solver_type;
+	MatrixXd Vertices_Input, Vertices_output, color_per_vertex;
 	Vector3f
 		Highlighted_face_color,
 		Fixed_face_color,
@@ -69,8 +70,8 @@ public:
 	void Draw_menu_for_text_results();
 
 	//Pick faces & vertices and highlight them
-	int pick_face(MatrixXd& V, MatrixXi& F, app_utils::View LR);
-	int pick_vertex(MatrixXd& V, MatrixXi& F, app_utils::View LR);
+	int pick_face(MatrixXd& V, MatrixXi& F, int LR);
+	int pick_vertex(MatrixXd& V, MatrixXi& F, int LR);
 	void follow_and_mark_selected_faces();
 	RowVector3d get_face_avg();
 	void UpdateHandles();

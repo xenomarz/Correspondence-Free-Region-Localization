@@ -66,10 +66,10 @@ public:
 	// Expose an enumeration type
 	static enum View {
 		Horizontal = 0,
-		Vertical,
-		InputOnly,
-		OutputOnly0, 
-		OutputOnly1 
+		Vertical = 1,
+		InputOnly = 2,
+		OutputOnly0 = 3, 
+		OutputOnly1 = 4 
 	};
 	static enum MouseMode { 
 		NONE = 0, 

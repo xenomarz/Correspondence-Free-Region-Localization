@@ -10,9 +10,9 @@ class Output
 public:
 	vector<int> *HandlesInd; //pointer to indices in constraitPositional
 	MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
-	MatrixXd color_per_face, Vertices_Input, Vertices_output, color_per_vertex;
-	int ModelID, CoreID;
-	ImVec2 window_position, window_size;
+	MatrixXd color_per_face;
+	int ModelID, CoreID, index;
+	ImVec2 window_position, window_size, text_position;
 	
 	// Solver thread
 	shared_ptr<NewtonSolver> newton;
