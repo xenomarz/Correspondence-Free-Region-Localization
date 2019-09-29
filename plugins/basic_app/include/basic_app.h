@@ -12,6 +12,7 @@ private:
 	bool solverInitialized;
 	float Max_Distortion;
 	bool solver_on;
+	app_utils::outputCores num_0f_outputs;
 	app_utils::Distortion distortion_type;
 	app_utils::SolverType solver_type;
 	MatrixXd Vertices_Input, Vertices_output, color_per_vertex;

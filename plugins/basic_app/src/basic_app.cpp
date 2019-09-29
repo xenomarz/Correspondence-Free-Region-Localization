@@ -11,7 +11,6 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 	{
 		solverInitialized = false;
 		solver_on = false;
-		core_size = 1.0 / 3.0;
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
 		param_type = app_utils::None;
@@ -28,17 +27,20 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		text_color = BLACK_COLOR;
 		Highlighted_face = false;
 		texture_scaling_output = 1;
+		num_0f_outputs = app_utils::THREE;
 
 		Outputs.push_back(Output());
 		Outputs.push_back(Output());
+		Outputs.push_back(Output());
 		
+		core_size = 1.0 / (Outputs.size()+1.0);
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
 		down_mouse_x = down_mouse_y = -1;
 		texture_scaling_input = 1;
 
 		//Load multiple views
-		viewer->core().viewport = Vector4f(0, 0, 640, 800);
+		viewer->core().viewport = Vector4f::Zero();
 		inputCoreID = viewer->core(0).id;
 		viewer->core(inputCoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
 		
@@ -124,14 +126,21 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	ImGui::Checkbox("Show text", &show_text);
 
 	if ((view == Horizontal) || (view == Vertical)) {
-		if(ImGui::SliderFloat("Core Size", &core_size, 0, 0.5, to_string(core_size).c_str(), 1)){
+		if(ImGui::SliderFloat("Core Size", &core_size, 0, 1.0/ (num_0f_outputs+1.0), to_string(core_size).c_str(), 1)){
 			int frameBufferWidth, frameBufferHeight;
 			glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
 			post_resize(frameBufferWidth, frameBufferHeight);
 		}
 	}
 
-	if (ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0InputOnly\0OutputOnly0\0OutputOnly1\0\0")) {
+	if (ImGui::Combo("Num Of Outputs", (int *)(&num_0f_outputs), "One\0Two\0Three\0\0")) {
+		int frameBufferWidth, frameBufferHeight;
+		glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
+		post_resize(frameBufferWidth, frameBufferHeight);
+	}
+		
+
+	if (ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0InputOnly\0OutputOnly0\0OutputOnly1\0OutputOnly2\0\0")) {
 		// That's how you get the current width/height of the frame buffer (for example, after the window was resized)
 		int frameBufferWidth, frameBufferHeight;
 		glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
@@ -159,60 +168,140 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 
 IGL_INLINE void basic_app::post_resize(int w, int h)
 {
+	//Single Core
 	if (viewer)
 	{
-		if (view == app_utils::Horizontal) {
-			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * 2 * core_size, h);
-			Outputs[0].window_position = ImVec2(w - w * 2 * core_size, 0);
-			Outputs[0].window_size = ImVec2(w * core_size, h);
-			Outputs[1].window_position = ImVec2(w - w * core_size, 0);
-			Outputs[1].window_size = ImVec2(w * core_size, h);
-
-			Outputs[0].text_position = Outputs[0].window_position;
-			Outputs[1].text_position = Outputs[1].window_position;
-		}
-		if (view == app_utils::Vertical) {
-			viewer->core(inputCoreID).viewport = Vector4f(0,2* h * core_size, w, h - 2 * h * core_size);
-			Outputs[0].window_position = ImVec2(0,h * core_size);
-			Outputs[0].window_size = ImVec2(w, h * core_size);
-			Outputs[1].window_position = ImVec2(0, 0);
-			Outputs[1].window_size = ImVec2(w, h * core_size);
-
-			Outputs[0].text_position = ImVec2(w*0.8, h - Outputs[0].window_position[1] - Outputs[0].window_size[1]);
-			Outputs[1].text_position = ImVec2(w*0.8, h - Outputs[1].window_position[1] - Outputs[0].window_size[1]);
-		}
 		if (view == app_utils::InputOnly) {
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w, h);
-			Outputs[0].window_position = ImVec2(w,h);
-			Outputs[0].window_size = ImVec2(0,0);
-			Outputs[1].window_position = ImVec2(w,h);
-			Outputs[1].window_size = ImVec2(0,0);
-
-			Outputs[0].text_position = Outputs[0].window_position;
-			Outputs[1].text_position = Outputs[1].window_position;
+			for (auto&o : Outputs) {
+				o.window_position = ImVec2(w, h);
+				o.window_size = ImVec2(0, 0);
+				o.text_position = o.window_position;
+			}
 		}
-		if (view == app_utils::OutputOnly0) {
+		else if (view == app_utils::OutputOnly0) {
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
 			Outputs[0].window_position = ImVec2(0, 0);
 			Outputs[0].window_size = ImVec2(w, h);
 			Outputs[1].window_position = ImVec2(w, h);
 			Outputs[1].window_size = ImVec2(0, 0);
+			Outputs[2].window_position = ImVec2(w, h);
+			Outputs[2].window_size = ImVec2(0, 0);
 
 			Outputs[0].text_position = ImVec2(w*0.8, 0);
-			Outputs[1].text_position = ImVec2(Outputs[1].window_position[0], Outputs[1].window_position[1]);
+			Outputs[1].text_position = Outputs[1].window_position;
+			Outputs[2].text_position = Outputs[2].window_position;
 		}
-		if (view == app_utils::OutputOnly1) {
+		else if (view == app_utils::OutputOnly1) {
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
 			Outputs[0].window_position = ImVec2(w, h);
 			Outputs[0].window_size = ImVec2(w, h);
 			Outputs[1].window_position = ImVec2(0, 0);
 			Outputs[1].window_size = ImVec2(w, h);
+			Outputs[2].window_position = ImVec2(w, h);
+			Outputs[2].window_size = ImVec2(w, h);
 
-			Outputs[0].text_position = ImVec2(Outputs[0].window_position[0], Outputs[0].window_position[1]);
+			Outputs[0].text_position = Outputs[0].window_position;
 			Outputs[1].text_position = ImVec2(w*0.8, 0);
+			Outputs[2].text_position = Outputs[2].window_position;
+		}
+		else if (view == app_utils::OutputOnly2) {
+			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
+			Outputs[0].window_position = ImVec2(w, h);
+			Outputs[0].window_size = ImVec2(w, h);
+			Outputs[1].window_position = ImVec2(w, h);
+			Outputs[1].window_size = ImVec2(w, h);
+			Outputs[2].window_position = ImVec2(0, 0);
+			Outputs[2].window_size = ImVec2(w, h);
+
+			Outputs[0].text_position = Outputs[0].window_position;
+			Outputs[1].text_position = Outputs[1].window_position;
+			Outputs[2].text_position = ImVec2(w*0.8, 0);
+		}
+		
+		else if (num_0f_outputs == app_utils::ONE) {
+			if (view == app_utils::Horizontal) {
+				viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * core_size, h);
+				Outputs[0].window_position = ImVec2(w - w * core_size, 0);
+				Outputs[0].window_size = ImVec2(w * core_size, h);
+				Outputs[1].window_position = ImVec2(w, h);
+				Outputs[1].window_size = ImVec2(w, h);
+				Outputs[2].window_position = ImVec2(w, h);
+				Outputs[2].window_size = ImVec2(w, h);
+
+				for (auto& o : Outputs)
+					o.text_position = o.window_position;
+			}
+			if (view == app_utils::Vertical) {
+				viewer->core(inputCoreID).viewport = Vector4f(0, h * core_size, w, h - h * core_size);
+				Outputs[0].window_position = ImVec2(0, 0);
+				Outputs[0].window_size = ImVec2(w, h * core_size);
+				Outputs[1].window_position = ImVec2(w, h);
+				Outputs[1].window_size = ImVec2(w, h);
+				Outputs[2].window_position = ImVec2(w, h);
+				Outputs[2].window_size = ImVec2(w, h);
+
+				Outputs[0].text_position = ImVec2(w*0.8, h - Outputs[0].window_position[1] - Outputs[0].window_size[1]);
+				Outputs[1].text_position = Outputs[1].window_position;;
+				Outputs[2].text_position = Outputs[2].window_position;
+			}
+		}
+		else if (num_0f_outputs == app_utils::TWO) {
+			if (view == app_utils::Horizontal) {
+				viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * 2 * core_size, h);
+				Outputs[0].window_position = ImVec2(w - w * 2 * core_size, 0);
+				Outputs[0].window_size = ImVec2(w * core_size, h);
+				Outputs[1].window_position = ImVec2(w - w * core_size, 0);
+				Outputs[1].window_size = ImVec2(w * core_size, h);
+				Outputs[2].window_position = ImVec2(w, h);
+				Outputs[2].window_size = ImVec2(w, h);
+
+				for (auto& o : Outputs)
+					o.text_position = o.window_position;
+			}
+			if (view == app_utils::Vertical) {
+				viewer->core(inputCoreID).viewport = Vector4f(0, 2 * h * core_size, w, h - 2 * h * core_size);
+				Outputs[0].window_position = ImVec2(0, h * core_size);
+				Outputs[0].window_size = ImVec2(w, h * core_size);
+				Outputs[1].window_position = ImVec2(0, 0);
+				Outputs[1].window_size = ImVec2(w, h * core_size);
+				Outputs[2].window_position = ImVec2(w, h);
+				Outputs[2].window_size = ImVec2(w, h);
+
+				Outputs[0].text_position = ImVec2(w*0.8, h - Outputs[0].window_position[1] - Outputs[0].window_size[1]);
+				Outputs[1].text_position = ImVec2(w*0.8, h - Outputs[1].window_position[1] - Outputs[0].window_size[1]);
+				Outputs[2].text_position = Outputs[2].window_position;
+			}
+		}
+		else if (num_0f_outputs == app_utils::THREE) {
+			if (view == app_utils::Horizontal) {
+				viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * 3 * core_size, h);
+				Outputs[0].window_position = ImVec2(w - w * 3 * core_size, 0);
+				Outputs[0].window_size = ImVec2(w * core_size, h);
+				Outputs[1].window_position = ImVec2(w - w * 2 * core_size, 0);
+				Outputs[1].window_size = ImVec2(w * core_size, h);
+				Outputs[2].window_position = ImVec2(w - w * core_size, 0);
+				Outputs[2].window_size = ImVec2(w * core_size, h);
+
+				for (auto& o:Outputs)
+					o.text_position = o.window_position;
+			}
+			if (view == app_utils::Vertical) {
+				viewer->core(inputCoreID).viewport = Vector4f(0, 3 * h * core_size, w, h - 3 * h * core_size);
+				Outputs[0].window_position = ImVec2(0, 2 * h * core_size);
+				Outputs[0].window_size = ImVec2(w, h * core_size);
+				Outputs[1].window_position = ImVec2(0, h * core_size);
+				Outputs[1].window_size = ImVec2(w, h * core_size);
+				Outputs[2].window_position = ImVec2(0, 0);
+				Outputs[2].window_size = ImVec2(w, h * core_size);
+
+				for (auto& o : Outputs)
+					o.text_position = ImVec2(w*0.8, h - o.window_position[1] - o.window_size[1]);
+			}
 		}
 		for (auto& o : Outputs)
 			viewer->core(o.CoreID).viewport = Vector4f(o.window_position[0], o.window_position[1], o.window_size[0], o.window_size[1]);
+
 	}
 }
 
@@ -989,7 +1078,7 @@ void basic_app::checkHessians()
 void basic_app::update_mesh()
 {
 	vector<MatrixXd> V;
-	vector<VectorXd> X; X.resize(2);
+	vector<VectorXd> X; X.resize(Outputs.size());
 	
 	for (int i = 0; i < Outputs.size(); i++){
 		Outputs[i].solver->get_data(X[i]);

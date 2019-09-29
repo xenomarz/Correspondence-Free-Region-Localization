@@ -69,7 +69,13 @@ public:
 		Vertical = 1,
 		InputOnly = 2,
 		OutputOnly0 = 3, 
-		OutputOnly1 = 4 
+		OutputOnly1 = 4,
+		OutputOnly2 = 5,
+	};
+	static enum outputCores {
+		ONE,
+		TWO,
+		THREE
 	};
 	static enum MouseMode { 
 		NONE = 0, 
