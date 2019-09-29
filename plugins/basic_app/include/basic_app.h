@@ -88,8 +88,8 @@ public:
 
 	//Start/Stop the solver Thread
 	void initializeSolver(const int index);
-	void stop_solver_thread(const int index);
-	void start_solver_thread(const int index);
+	void stop_solver_thread();
+	void start_solver_thread();
 
 	//FD check
 	void checkGradients();

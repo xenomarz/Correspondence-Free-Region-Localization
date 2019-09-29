@@ -96,8 +96,8 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 			modelName = app_utils::ExtractModelName(model_Path);
 			cout << model_Path << endl;
 			cout << modelName << endl;
-			for (int i = 0; i < Outputs.size(); i++) 
-				stop_solver_thread(i);
+			
+			stop_solver_thread();
 
 			viewer->load_mesh_from_file(model_Path.c_str());
 			for (int i = 0; i < Outputs.size(); i++)
@@ -486,17 +486,16 @@ IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 		selected_vertices.clear();
 		UpdateHandles();
 	}
-	if (key == ' ') 
-		for (int i = 0; i < Outputs.size(); i++) 
-			solver_on ? stop_solver_thread(i) : start_solver_thread(i);
+	if (key == ' ')
+		solver_on ? stop_solver_thread() : start_solver_thread();
+			
 
 	return ImGuiMenu::key_pressed(key, modifiers);
 }
 
 IGL_INLINE void basic_app::shutdown()
 {
-	for (int i = 0; i < Outputs.size(); i++)
-		stop_solver_thread(i);
+	stop_solver_thread();
 	ImGuiMenu::shutdown();
 }
 
@@ -544,18 +543,11 @@ void basic_app::Draw_menu_for_Solver() {
 	if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		if (ImGui::Checkbox(solver_on ? "On" : "Off", &solver_on)) {
-			for (int i = 0; i < Outputs.size(); i++) {
-				if (solver_on) {
-					start_solver_thread(i);
-				}
-				else {
-					stop_solver_thread(i);
-				}
-			}
+			solver_on ? start_solver_thread() : stop_solver_thread();
 		}
 		if (ImGui::Combo("step", (int *)(&solver_type), "NEWTON\0Gradient Descent\0\0")) {
+			stop_solver_thread();
 			for (int i = 0; i < Outputs.size(); i++) {
-				stop_solver_thread(i);
 				if (solver_type == app_utils::NEWTON) {
 					Outputs[i].solver = Outputs[i].newton;
 				}
@@ -566,8 +558,8 @@ void basic_app::Draw_menu_for_Solver() {
 				Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
 				MatrixX3i F = OutputModel(i).F;
 				Outputs[i].solver->setFlipAvoidingLineSearch(F);
-				start_solver_thread(i);
 			}
+			start_solver_thread();
 		}
 
 		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");
@@ -1044,34 +1036,35 @@ void basic_app::update_texture(MatrixXd& V_uv, const int index) {
 	
 void basic_app::checkGradients()
 {
+	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
 		cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << endl;
 		if (!solverInitialized) {
 			solver_on = false;
 			return;
 		}
-		stop_solver_thread(i);
+		
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
 			objective->checkGradient(Outputs[i].solver->ext_x);
 		}
-		start_solver_thread(i);
 	}
+	start_solver_thread();
 }
 
 void basic_app::checkHessians()
 {
+	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
 		cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << endl;
 		if (!solverInitialized) {
 			solver_on = false;
 			return;
 		}
-		stop_solver_thread(i);
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
 			objective->checkHessian(Outputs[i].solver->ext_x);
 		}
-		start_solver_thread(i);
 	}
+	start_solver_thread();
 }
 
 void basic_app::update_mesh()
@@ -1095,24 +1088,27 @@ void basic_app::update_mesh()
 	}
 }
 
-void basic_app::stop_solver_thread(const int index) {
+void basic_app::stop_solver_thread() {
 	solver_on = false;
-	if (Outputs[index].solver->is_running) {
-		Outputs[index].solver->stop();
+	for (auto&o : Outputs) {
+		if (o.solver->is_running) {
+			o.solver->stop();
+		}
+		while (o.solver->is_running);
 	}
-	while (Outputs[index].solver->is_running);
 }
 
-void basic_app::start_solver_thread(const int index) {
+void basic_app::start_solver_thread() {
 	if (!solverInitialized) {
 		solver_on = false;
 		return;
 	}
-	cout << ">> start new solver" << endl;
-	solver_on = true;
-
-	solver_thread = thread(&solver::run, Outputs[index].solver.get());
-	solver_thread.detach();
+	for (auto&o : Outputs) {
+		cout << ">> start new solver" << endl;
+		solver_on = true;
+		solver_thread = thread(&solver::run, o.solver.get());
+		solver_thread.detach();
+	}
 }
 
 void basic_app::initializeSolver(const int index)
@@ -1120,12 +1116,15 @@ void basic_app::initializeSolver(const int index)
 	MatrixXd V = OutputModel(index).V;
 	MatrixX3i F = OutputModel(index).F;
 	
-	stop_solver_thread(index);
+	stop_solver_thread();
 
 	if (V.rows() == 0 || F.rows() == 0)
 		return;
 
 	// initialize the energy
+	auto areapreservingOneRing = make_unique<AreaDistortionOneRing>();
+	areapreservingOneRing->init_mesh(V, F);
+	areapreservingOneRing->init();
 	auto symDirichlet = make_unique<SymmetricDirichlet>();
 	symDirichlet->init_mesh(V, F);
 	symDirichlet->init();
@@ -1138,10 +1137,32 @@ void basic_app::initializeSolver(const int index)
 	auto constraintsPositional = make_shared<PenaltyPositionalConstraints>();
 	constraintsPositional->numV = V.rows();
 	constraintsPositional->init();
+
+	//weights
+	if (index == 0) {
+		areapreservingOneRing->w = 1;
+		areaPreserving->w = 0;
+		anglePreserving->w = 0.1;
+		symDirichlet->w = 0;
+	}
+	else if (index == 1) {
+		areapreservingOneRing->w = 0;
+		areaPreserving->w = 1;
+		anglePreserving->w = 0.1;
+		symDirichlet->w = 0;
+	}
+	else if (index == 2) {
+		areapreservingOneRing->w = 0;
+		areaPreserving->w = 0;
+		anglePreserving->w = 0;
+		symDirichlet->w = 1;
+	}
+
 	Outputs[index].HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
 	Outputs[index].HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
 
 	Outputs[index].totalObjective->objectiveList.clear();
+	Outputs[index].totalObjective->objectiveList.push_back(move(areapreservingOneRing));
 	Outputs[index].totalObjective->objectiveList.push_back(move(areaPreserving));
 	Outputs[index].totalObjective->objectiveList.push_back(move(anglePreserving));
 	Outputs[index].totalObjective->objectiveList.push_back(move(symDirichlet));
