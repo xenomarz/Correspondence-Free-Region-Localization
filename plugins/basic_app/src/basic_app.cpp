@@ -27,13 +27,13 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		text_color = BLACK_COLOR;
 		Highlighted_face = false;
 		texture_scaling_output = 1;
-		num_0f_outputs = app_utils::THREE;
+		num_0f_outputs = app_utils::ONE;
 
 		Outputs.push_back(Output());
 		Outputs.push_back(Output());
 		Outputs.push_back(Output());
 		
-		core_size = 1.0 / (Outputs.size()+1.0);
+		core_size = 1.0 / (num_0f_outputs +2.0);
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
 		down_mouse_x = down_mouse_y = -1;
@@ -44,10 +44,6 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		inputCoreID = viewer->core(0).id;
 		viewer->core(inputCoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
 		
-		/*Outputs[0].CoreID = viewer->append_core(Vector4f::Zero());
-		viewer->core(Outputs[0].CoreID).background_color = Vector4f(0, 0.9, 0.9, 0);
-		Outputs[1].CoreID = viewer->append_core(Vector4f::Zero());
-		viewer->core(Outputs[1].CoreID).background_color = Vector4f(0.9, 0, 0.9, 0);*/
 		for (auto& out : Outputs) {
 			out.CoreID = viewer->append_core(Vector4f::Zero());
 			viewer->core(out.CoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
@@ -98,6 +94,8 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		if (model_Path.length() != 0)
 		{
 			modelName = app_utils::ExtractModelName(model_Path);
+			cout << model_Path << endl;
+			cout << modelName << endl;
 			for (int i = 0; i < Outputs.size(); i++) 
 				stop_solver_thread(i);
 
