@@ -15,7 +15,7 @@ private:
 	app_utils::outputCores num_0f_outputs;
 	app_utils::Distortion distortion_type;
 	app_utils::SolverType solver_type;
-	MatrixXd Vertices_Input, Vertices_output, color_per_vertex;
+	MatrixXd Vertices_Input, color_per_vertex;
 	Vector3f
 		Highlighted_face_color,
 		Fixed_face_color,

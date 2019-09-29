@@ -132,6 +132,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	}
 
 	if (ImGui::Combo("Num Of Outputs", (int *)(&num_0f_outputs), "One\0Two\0Three\0\0")) {
+		core_size = 1.0 / (num_0f_outputs + 2.0);
 		int frameBufferWidth, frameBufferHeight;
 		glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
 		post_resize(frameBufferWidth, frameBufferHeight);
@@ -520,7 +521,7 @@ IGL_INLINE bool basic_app::pre_draw() {
 	InputModel().set_points(Vertices_Input, color_per_vertex);
 	for (int i = 0; i < Outputs.size(); i++) {
 		OutputModel(i).point_size = 10;
-		OutputModel(i).set_points(Vertices_output, color_per_vertex);
+		OutputModel(i).set_points(Outputs[i].Vertices_output, color_per_vertex);
 	}
 	return false;
 }
@@ -911,23 +912,23 @@ void basic_app::follow_and_mark_selected_faces() {
 			//Mark the vertices
 			int idx = 0;
 			Vertices_Input.resize(selected_vertices.size(), 3);
-			Vertices_output.resize(selected_vertices.size(), 3);
+			Outputs[i].Vertices_output.resize(selected_vertices.size(), 3);
 			color_per_vertex.resize(selected_vertices.size(), 3);
 			//Mark the dragged vertex
 			if (IsTranslate && (mouse_mode == app_utils::VERTEX_SELECT)) {
 				Vertices_Input.resize(selected_vertices.size() + 1, 3);
-				Vertices_output.resize(selected_vertices.size() + 1, 3);
+				Outputs[i].Vertices_output.resize(selected_vertices.size() + 1, 3);
 				color_per_vertex.resize(selected_vertices.size() + 1, 3);
 
 				Vertices_Input.row(idx) = InputModel().V.row(Translate_Index);
 				color_per_vertex.row(idx) = Dragged_vertex_color.cast<double>();
-				Vertices_output.row(idx) = OutputModel(i).V.row(Translate_Index);
+				Outputs[i].Vertices_output.row(idx) = OutputModel(i).V.row(Translate_Index);
 				idx++;
 			}
 			//Mark the fixed vertices
 			for (auto vi : selected_vertices) {
 				Vertices_Input.row(idx) = InputModel().V.row(vi);
-				Vertices_output.row(idx) = OutputModel(i).V.row(vi);
+				Outputs[i].Vertices_output.row(idx) = OutputModel(i).V.row(vi);
 				color_per_vertex.row(idx++) = Fixed_vertex_color.cast<double>();
 			}
 		}

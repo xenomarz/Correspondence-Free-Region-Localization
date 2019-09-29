@@ -4,7 +4,6 @@ project(plugins)
 set(SOURCES
 	basic_app/src/basic_app.cpp
 	basic_app/include/basic_app.h
-	basic_app/include/core.h
 	basic_app/include/app_utils.h)
 
 add_library(${PROJECT_NAME} ${SOURCES})
