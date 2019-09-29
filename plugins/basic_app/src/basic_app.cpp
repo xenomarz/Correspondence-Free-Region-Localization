@@ -159,6 +159,8 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 
 IGL_INLINE bool basic_app::mouse_move(int mouse_x, int mouse_y)
 {
+	if (ImGui::GetIO().WantCaptureMouse)
+		return true;
 	if (!IsTranslate)
 	{
 		return false;
