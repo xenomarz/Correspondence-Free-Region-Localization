@@ -33,7 +33,7 @@ private:
 	set<int> selected_faces, selected_vertices;
 	vector<Output> Outputs;
 	//Basic (necessary) parameteres
-	string modelName;
+	string modelName, modelPath;
 	int inputCoreID, inputModelID;
 	app_utils::View view;
 	app_utils::MouseMode mouse_mode;

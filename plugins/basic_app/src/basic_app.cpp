@@ -27,57 +27,39 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		text_color = BLACK_COLOR;
 		Highlighted_face = false;
 		texture_scaling_output = 1;
-		num_0f_outputs = app_utils::ONE;
-
-		Outputs.push_back(Output());
-		Outputs.push_back(Output());
-		Outputs.push_back(Output());
-		
-		core_size = 1.0 / (num_0f_outputs +2.0);
+		num_0f_outputs = app_utils::THREE;
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
 		down_mouse_x = down_mouse_y = -1;
 		texture_scaling_input = 1;
 
+
+
+
+		Outputs.push_back(Output());
+		Outputs.push_back(Output());
+		Outputs.push_back(Output());
+		
+		core_size = 1.0 / (Outputs.size() + 1.0);
+		
 		//Load multiple views
-		viewer->core().viewport = Vector4f::Zero();
-		inputCoreID = viewer->core(0).id;
+		inputCoreID = viewer->core_list[0].id;
 		viewer->core(inputCoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
-		
-		for (auto& out : Outputs) {
-			out.CoreID = viewer->append_core(Vector4f::Zero());
-			viewer->core(out.CoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
-		}
-
-		//set rotation type to 2D mode
-		for (auto& out : Outputs) {
-			viewer->core(out.CoreID).trackball_angle = Quaternionf::Identity();
-			viewer->core(out.CoreID).orthographic = true;
-			viewer->core(out.CoreID).set_rotation_type(ViewerCore::RotationType(2));
-		}
-		
-		//Update scene
-		Update_view();
 		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
-		for(int i=0;i<Outputs.size();i++)
-			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
-
 		viewer->core(inputCoreID).is_animating = true;
-		for (auto& out:Outputs)
-			viewer->core(out.CoreID).is_animating = true;
-
 		viewer->core(inputCoreID).lighting_factor = 0.2;
-		for (auto& out : Outputs)
-			viewer->core(out.CoreID).lighting_factor = 0;
-				
-		// Initialize solver thread
-		for (auto& out : Outputs) {
-			out.newton = make_shared<NewtonSolver>();
-			out.gradient_descent = make_shared<GradientDescentSolver>();
-			out.solver = out.newton;
-			out.totalObjective = make_shared<TotalObjective>();
+		for (int i = 0; i < Outputs.size(); i++) {
+			Outputs[i].CoreID = viewer->append_core(Vector4f::Zero());
+			viewer->core(Outputs[i].CoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
+			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+			viewer->core(Outputs[i].CoreID).is_animating = true;
+			viewer->core(Outputs[i].CoreID).lighting_factor = 0;
+			//set rotation type to 2D mode
+			viewer->core(Outputs[i].CoreID).trackball_angle = Quaternionf::Identity();
+			viewer->core(Outputs[i].CoreID).orthographic = true;
+			viewer->core(Outputs[i].CoreID).set_rotation_type(ViewerCore::RotationType(2));
 		}
-		
+			
 		//maximize window
 		glfwMaximizeWindow(viewer->window);
 	}
@@ -90,19 +72,17 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	if (ImGui::Button("Load##Mesh", ImVec2((w - p) / 2.f, 0)))
 	{
 		//Load new model that has two copies
-		string model_Path = file_dialog_open();
-		if (model_Path.length() != 0)
+		modelPath = file_dialog_open();
+		if (modelPath.length() != 0)
 		{
-			modelName = app_utils::ExtractModelName(model_Path);
-			cout << model_Path << endl;
-			cout << modelName << endl;
+			modelName = app_utils::ExtractModelName(modelPath);
 			
 			stop_solver_thread();
 
-			viewer->load_mesh_from_file(model_Path.c_str());
+			viewer->load_mesh_from_file(modelPath.c_str());
 			for (int i = 0; i < Outputs.size(); i++)
 			{
-				viewer->load_mesh_from_file(model_Path.c_str());
+				viewer->load_mesh_from_file(modelPath.c_str());
 				Outputs[i].ModelID = viewer->data_list[i+1].id;
 				initializeSolver(i);
 			}
@@ -124,20 +104,43 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	ImGui::Checkbox("Show text", &show_text);
 
 	if ((view == Horizontal) || (view == Vertical)) {
-		if(ImGui::SliderFloat("Core Size", &core_size, 0, 1.0/ (num_0f_outputs+1.0), to_string(core_size).c_str(), 1)){
+		if(ImGui::SliderFloat("Core Size", &core_size, 0, 1.0/ Outputs.size(), to_string(core_size).c_str(), 1)){
 			int frameBufferWidth, frameBufferHeight;
 			glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
 			post_resize(frameBufferWidth, frameBufferHeight);
 		}
 	}
+	
+	if (ImGui::Button("Add Output", ImVec2((w - p) / 2.f, 0)))
+	{
+		/*stop_solver_thread();
+		viewer->load_mesh_from_file(modelPath.c_str());
+		Outputs[i].ModelID = viewer->data_list[i + 1].id;
+		initializeSolver(i);
+		
+		solverInitialized = true;
 
-	if (ImGui::Combo("Num Of Outputs", (int *)(&num_0f_outputs), "One\0Two\0Three\0\0")) {
-		core_size = 1.0 / (num_0f_outputs + 2.0);
+		Update_view();
+		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
+		for (int i = 0; i < Outputs.size(); i++)
+			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);*/
+		//TODO: add output
+		core_size = 1.0 / (Outputs.size() + 1.0);
 		int frameBufferWidth, frameBufferHeight;
 		glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
 		post_resize(frameBufferWidth, frameBufferHeight);
 	}
-		
+	ImGui::SameLine(0, p);
+	if (ImGui::Button("Remove Output", ImVec2((w - p) / 2.f, 0)))
+	{
+		//TODO: remove output
+		core_size = 1.0 / (Outputs.size() + 1.0);
+		int frameBufferWidth, frameBufferHeight;
+		glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
+		post_resize(frameBufferWidth, frameBufferHeight);
+	}
+	
+	
 
 	if (ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0InputOnly\0OutputOnly0\0OutputOnly1\0OutputOnly2\0\0")) {
 		// That's how you get the current width/height of the frame buffer (for example, after the window was resized)
@@ -274,28 +277,20 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 		}
 		else if (num_0f_outputs == app_utils::THREE) {
 			if (view == app_utils::Horizontal) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * 3 * core_size, h);
-				Outputs[0].window_position = ImVec2(w - w * 3 * core_size, 0);
-				Outputs[0].window_size = ImVec2(w * core_size, h);
-				Outputs[1].window_position = ImVec2(w - w * 2 * core_size, 0);
-				Outputs[1].window_size = ImVec2(w * core_size, h);
-				Outputs[2].window_position = ImVec2(w - w * core_size, 0);
-				Outputs[2].window_size = ImVec2(w * core_size, h);
-
-				for (auto& o:Outputs)
-					o.text_position = o.window_position;
+				viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * Outputs.size() * core_size, h);
+				for (int i = 0; i < Outputs.size();i++) {
+					Outputs[i].window_position = ImVec2(w - w * (Outputs.size() - i) * core_size, 0);
+					Outputs[i].window_size = ImVec2(w * core_size, h);
+					Outputs[i].text_position = Outputs[i].window_position;
+				}	
 			}
 			if (view == app_utils::Vertical) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, 3 * h * core_size, w, h - 3 * h * core_size);
-				Outputs[0].window_position = ImVec2(0, 2 * h * core_size);
-				Outputs[0].window_size = ImVec2(w, h * core_size);
-				Outputs[1].window_position = ImVec2(0, h * core_size);
-				Outputs[1].window_size = ImVec2(w, h * core_size);
-				Outputs[2].window_position = ImVec2(0, 0);
-				Outputs[2].window_size = ImVec2(w, h * core_size);
-
-				for (auto& o : Outputs)
-					o.text_position = ImVec2(w*0.8, h - o.window_position[1] - o.window_size[1]);
+				viewer->core(inputCoreID).viewport = Vector4f(0, Outputs.size() * h * core_size, w, h - Outputs.size() * h * core_size);
+				for (int i = 0; i < Outputs.size(); i++) {
+					Outputs[i].window_position = ImVec2(0, (Outputs.size() - i - 1) * h * core_size);
+					Outputs[i].window_size = ImVec2(w, h * core_size);
+					Outputs[i].text_position = ImVec2(w*0.8, h - Outputs[i].window_position[1] - Outputs[i].window_size[1]);
+				}
 			}
 		}
 		for (auto& o : Outputs)

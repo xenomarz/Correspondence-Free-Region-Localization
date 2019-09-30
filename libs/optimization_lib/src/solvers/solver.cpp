@@ -49,6 +49,7 @@ void solver::linesearch()
 		MatrixXd MatP = Map<const MatrixX2d>(p.data(), p.rows() / 2, 2);
 		double min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(MatX, F, MatP);
 		step_size = min(1., min_step_to_singularity*0.8);
+		cout << step_size << endl;
 	}
 	else
 		step_size = 1;
