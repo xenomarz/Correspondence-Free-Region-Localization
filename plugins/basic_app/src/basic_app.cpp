@@ -65,15 +65,14 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 			stop_solver_thread();
 
 			viewer->load_mesh_from_file(modelPath.c_str());
+			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
 			for (int i = 0; i < Outputs.size(); i++)
 			{
 				viewer->load_mesh_from_file(modelPath.c_str());
 				Outputs[i].ModelID = viewer->data_list[i+1].id;
 				initializeSolver(i);
+				
 			}
-			
-			
-			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
 			for (int i = 0; i < Outputs.size(); i++)
 				viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
 			model_loaded = true;
@@ -98,17 +97,15 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	
 	if (ImGui::Button("Add Output", ImVec2((w - p) / 2.f, 0)))
 	{
-		/*stop_solver_thread();
-		viewer->load_mesh_from_file(modelPath.c_str());
-		Outputs[i].ModelID = viewer->data_list[i + 1].id;
-		initializeSolver(i);
-		
-		model_loaded = true;
+		stop_solver_thread();
+		Outputs.push_back(Output(viewer, 2));
+		core_size = 1.0 / (Outputs.size() + 1.0);
 
-		Update_view();
-		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
-		for (int i = 0; i < Outputs.size(); i++)
-			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);*/
+		viewer->load_mesh_from_file(modelPath.c_str());
+		Outputs[Outputs.size()-1].ModelID = viewer->data_list[Outputs.size()].id;
+		initializeSolver(Outputs.size()-1);
+		viewer->core(Outputs[Outputs.size()-1].CoreID).align_camera_center(OutputModel(Outputs.size()-1).V, OutputModel(Outputs.size()-1).F);
+		
 		//TODO: add output
 		core_size = 1.0 / (Outputs.size() + 1.0);
 		int frameBufferWidth, frameBufferHeight;
