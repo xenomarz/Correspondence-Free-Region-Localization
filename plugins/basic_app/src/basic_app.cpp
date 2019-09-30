@@ -27,7 +27,6 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		text_color = BLACK_COLOR;
 		Highlighted_face = false;
 		texture_scaling_output = 1;
-		num_0f_outputs = app_utils::THREE;
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
 		down_mouse_x = down_mouse_y = -1;
@@ -40,9 +39,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		viewer->core(inputCoreID).lighting_factor = 0.2;
 
 		//Load multiple views
-		Outputs.push_back(Output(viewer,0));
-		Outputs.push_back(Output(viewer,1));
-		Outputs.push_back(Output(viewer,2));
+		Outputs.push_back(Output(viewer, Outputs.size()));
 		core_size = 1.0 / (Outputs.size() + 1.0);
 		
 		//maximize window
@@ -65,7 +62,6 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 			stop_solver_thread();
 
 			viewer->load_mesh_from_file(modelPath.c_str());
-			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
 			for (int i = 0; i < Outputs.size(); i++)
 			{
 				viewer->load_mesh_from_file(modelPath.c_str());
@@ -73,6 +69,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 				initializeSolver(i);
 				
 			}
+			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
 			for (int i = 0; i < Outputs.size(); i++)
 				viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
 			model_loaded = true;
@@ -98,14 +95,17 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	if (ImGui::Button("Add Output", ImVec2((w - p) / 2.f, 0)))
 	{
 		stop_solver_thread();
-		Outputs.push_back(Output(viewer, 2));
+		Outputs.push_back(Output(viewer, Outputs.size()));
 		core_size = 1.0 / (Outputs.size() + 1.0);
 
 		viewer->load_mesh_from_file(modelPath.c_str());
 		Outputs[Outputs.size()-1].ModelID = viewer->data_list[Outputs.size()].id;
 		initializeSolver(Outputs.size()-1);
-		viewer->core(Outputs[Outputs.size()-1].CoreID).align_camera_center(OutputModel(Outputs.size()-1).V, OutputModel(Outputs.size()-1).F);
 		
+		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
+		for (int i = 0; i < Outputs.size(); i++)
+			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+
 		//TODO: add output
 		core_size = 1.0 / (Outputs.size() + 1.0);
 		int frameBufferWidth, frameBufferHeight;
@@ -115,6 +115,18 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	ImGui::SameLine(0, p);
 	if (ImGui::Button("Remove Output", ImVec2((w - p) / 2.f, 0)))
 	{
+		stop_solver_thread();
+		
+		viewer->core_list.pop_back();
+		viewer->data_list.pop_back();
+		Outputs.pop_back();
+
+		core_size = 1.0 / (Outputs.size() + 1.0);
+
+		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
+		for (int i = 0; i < Outputs.size(); i++)
+			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+
 		//TODO: remove output
 		core_size = 1.0 / (Outputs.size() + 1.0);
 		int frameBufferWidth, frameBufferHeight;
@@ -122,9 +134,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		post_resize(frameBufferWidth, frameBufferHeight);
 	}
 	
-	
-
-	if (ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0InputOnly\0OutputOnly0\0OutputOnly1\0OutputOnly2\0\0")) {
+	if (ImGui::Combo("View", (int *)(&view), app_utils::build_view_names_list(Outputs.size()))) {
 		// That's how you get the current width/height of the frame buffer (for example, after the window was resized)
 		int frameBufferWidth, frameBufferHeight;
 		glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
@@ -155,7 +165,23 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 	//Single Core
 	if (viewer)
 	{
-		if (view == app_utils::InputOnly) {
+		if (view == app_utils::Horizontal) {
+			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * Outputs.size() * core_size, h);
+			for (int i = 0; i < Outputs.size(); i++) {
+				Outputs[i].window_position = ImVec2(w - w * (Outputs.size() - i) * core_size, 0);
+				Outputs[i].window_size = ImVec2(w * core_size, h);
+				Outputs[i].text_position = Outputs[i].window_position;
+			}
+		}
+		if (view == app_utils::Vertical) {
+			viewer->core(inputCoreID).viewport = Vector4f(0, Outputs.size() * h * core_size, w, h - Outputs.size() * h * core_size);
+			for (int i = 0; i < Outputs.size(); i++) {
+				Outputs[i].window_position = ImVec2(0, (Outputs.size() - i - 1) * h * core_size);
+				Outputs[i].window_size = ImVec2(w, h * core_size);
+				Outputs[i].text_position = ImVec2(w*0.8, h - Outputs[i].window_position[1] - Outputs[i].window_size[1]);
+			}
+		}
+		if (view == app_utils::InputOnly) { 
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w, h);
 			for (auto&o : Outputs) {
 				o.window_position = ImVec2(w, h);
@@ -163,121 +189,19 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 				o.text_position = o.window_position;
 			}
 		}
-		else if (view == app_utils::OutputOnly0) {
+		if (view >= app_utils::OutputOnly0) {
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
-			Outputs[0].window_position = ImVec2(0, 0);
-			Outputs[0].window_size = ImVec2(w, h);
-			Outputs[1].window_position = ImVec2(w, h);
-			Outputs[1].window_size = ImVec2(0, 0);
-			Outputs[2].window_position = ImVec2(w, h);
-			Outputs[2].window_size = ImVec2(0, 0);
-
-			Outputs[0].text_position = ImVec2(w*0.8, 0);
-			Outputs[1].text_position = Outputs[1].window_position;
-			Outputs[2].text_position = Outputs[2].window_position;
-		}
-		else if (view == app_utils::OutputOnly1) {
-			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
-			Outputs[0].window_position = ImVec2(w, h);
-			Outputs[0].window_size = ImVec2(w, h);
-			Outputs[1].window_position = ImVec2(0, 0);
-			Outputs[1].window_size = ImVec2(w, h);
-			Outputs[2].window_position = ImVec2(w, h);
-			Outputs[2].window_size = ImVec2(w, h);
-
-			Outputs[0].text_position = Outputs[0].window_position;
-			Outputs[1].text_position = ImVec2(w*0.8, 0);
-			Outputs[2].text_position = Outputs[2].window_position;
-		}
-		else if (view == app_utils::OutputOnly2) {
-			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
-			Outputs[0].window_position = ImVec2(w, h);
-			Outputs[0].window_size = ImVec2(w, h);
-			Outputs[1].window_position = ImVec2(w, h);
-			Outputs[1].window_size = ImVec2(w, h);
-			Outputs[2].window_position = ImVec2(0, 0);
-			Outputs[2].window_size = ImVec2(w, h);
-
-			Outputs[0].text_position = Outputs[0].window_position;
-			Outputs[1].text_position = Outputs[1].window_position;
-			Outputs[2].text_position = ImVec2(w*0.8, 0);
-		}
-		
-		else if (num_0f_outputs == app_utils::ONE) {
-			if (view == app_utils::Horizontal) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * core_size, h);
-				Outputs[0].window_position = ImVec2(w - w * core_size, 0);
-				Outputs[0].window_size = ImVec2(w * core_size, h);
-				Outputs[1].window_position = ImVec2(w, h);
-				Outputs[1].window_size = ImVec2(w, h);
-				Outputs[2].window_position = ImVec2(w, h);
-				Outputs[2].window_size = ImVec2(w, h);
-
-				for (auto& o : Outputs)
-					o.text_position = o.window_position;
+			for (auto&o : Outputs) {
+				o.window_position = ImVec2(w, h);
+				o.window_size = ImVec2(0, 0);
+				o.text_position = o.window_position;
 			}
-			if (view == app_utils::Vertical) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, h * core_size, w, h - h * core_size);
-				Outputs[0].window_position = ImVec2(0, 0);
-				Outputs[0].window_size = ImVec2(w, h * core_size);
-				Outputs[1].window_position = ImVec2(w, h);
-				Outputs[1].window_size = ImVec2(w, h);
-				Outputs[2].window_position = ImVec2(w, h);
-				Outputs[2].window_size = ImVec2(w, h);
-
-				Outputs[0].text_position = ImVec2(w*0.8, h - Outputs[0].window_position[1] - Outputs[0].window_size[1]);
-				Outputs[1].text_position = Outputs[1].window_position;;
-				Outputs[2].text_position = Outputs[2].window_position;
-			}
-		}
-		else if (num_0f_outputs == app_utils::TWO) {
-			if (view == app_utils::Horizontal) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * 2 * core_size, h);
-				Outputs[0].window_position = ImVec2(w - w * 2 * core_size, 0);
-				Outputs[0].window_size = ImVec2(w * core_size, h);
-				Outputs[1].window_position = ImVec2(w - w * core_size, 0);
-				Outputs[1].window_size = ImVec2(w * core_size, h);
-				Outputs[2].window_position = ImVec2(w, h);
-				Outputs[2].window_size = ImVec2(w, h);
-
-				for (auto& o : Outputs)
-					o.text_position = o.window_position;
-			}
-			if (view == app_utils::Vertical) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, 2 * h * core_size, w, h - 2 * h * core_size);
-				Outputs[0].window_position = ImVec2(0, h * core_size);
-				Outputs[0].window_size = ImVec2(w, h * core_size);
-				Outputs[1].window_position = ImVec2(0, 0);
-				Outputs[1].window_size = ImVec2(w, h * core_size);
-				Outputs[2].window_position = ImVec2(w, h);
-				Outputs[2].window_size = ImVec2(w, h);
-
-				Outputs[0].text_position = ImVec2(w*0.8, h - Outputs[0].window_position[1] - Outputs[0].window_size[1]);
-				Outputs[1].text_position = ImVec2(w*0.8, h - Outputs[1].window_position[1] - Outputs[0].window_size[1]);
-				Outputs[2].text_position = Outputs[2].window_position;
-			}
-		}
-		else if (num_0f_outputs == app_utils::THREE) {
-			if (view == app_utils::Horizontal) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * Outputs.size() * core_size, h);
-				for (int i = 0; i < Outputs.size();i++) {
-					Outputs[i].window_position = ImVec2(w - w * (Outputs.size() - i) * core_size, 0);
-					Outputs[i].window_size = ImVec2(w * core_size, h);
-					Outputs[i].text_position = Outputs[i].window_position;
-				}	
-			}
-			if (view == app_utils::Vertical) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, Outputs.size() * h * core_size, w, h - Outputs.size() * h * core_size);
-				for (int i = 0; i < Outputs.size(); i++) {
-					Outputs[i].window_position = ImVec2(0, (Outputs.size() - i - 1) * h * core_size);
-					Outputs[i].window_size = ImVec2(w, h * core_size);
-					Outputs[i].text_position = ImVec2(w*0.8, h - Outputs[i].window_position[1] - Outputs[i].window_size[1]);
-				}
-			}
-		}
+			Outputs[view - app_utils::OutputOnly0].window_position = ImVec2(0, 0);
+			Outputs[view - app_utils::OutputOnly0].window_size = ImVec2(w, h);
+			Outputs[view - app_utils::OutputOnly0].text_position = ImVec2(w*0.8, 0);
+		}		
 		for (auto& o : Outputs)
 			viewer->core(o.CoreID).viewport = Vector4f(o.window_position[0], o.window_position[1], o.window_size[0], o.window_size[1]);
-
 	}
 }
 

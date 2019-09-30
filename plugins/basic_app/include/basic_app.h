@@ -12,7 +12,6 @@ private:
 	bool model_loaded;
 	float Max_Distortion;
 	bool solver_on;
-	app_utils::outputCores num_0f_outputs;
 	app_utils::Distortion distortion_type;
 	app_utils::SolverType solver_type;
 	MatrixXd Vertices_Input, color_per_vertex;
@@ -35,7 +34,7 @@ private:
 	//Basic (necessary) parameteres
 	string modelName, modelPath;
 	int inputCoreID, inputModelID;
-	app_utils::View view;
+	int view;
 	app_utils::MouseMode mouse_mode;
 	
 	float texture_scaling_input;

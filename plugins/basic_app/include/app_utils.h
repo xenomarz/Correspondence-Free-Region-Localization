@@ -68,14 +68,7 @@ public:
 		Horizontal = 0,
 		Vertical = 1,
 		InputOnly = 2,
-		OutputOnly0 = 3, 
-		OutputOnly1 = 4,
-		OutputOnly2 = 5,
-	};
-	static enum outputCores {
-		ONE,
-		TWO,
-		THREE
+		OutputOnly0 = 3
 	};
 	static enum MouseMode { 
 		NONE = 0, 
@@ -154,6 +147,35 @@ public:
 
 	static bool IsMesh2D(const MatrixXd& V) {
 		return (V.col(2).array() == 0).all();
+	}
+
+	static char* build_view_names_list(const int size) {
+		std::string cStr("");
+		cStr += "Horizontal";
+		cStr += '\0';
+		cStr += "Vertical";
+		cStr += '\0';
+		cStr += "InputOnly";
+		cStr += '\0';
+		for (int i = 0; i < size; i++) {
+			std::string sts;
+			sts = "OutputOnly " + std::to_string(i);
+			cStr += sts.c_str();
+			cStr += '\0';
+			
+		}
+		cStr += '\0';
+
+		int listLength = cStr.length();
+		char* comboList = new char[listLength];
+
+		if (listLength == 1)
+			comboList[0] = cStr.at(0);
+
+		for (unsigned int i = 0; i < listLength; i++)
+			comboList[i] = cStr.at(i);
+
+		return comboList;
 	}
 
 	//Parametrizations
