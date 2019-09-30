@@ -317,12 +317,24 @@ public:
 	shared_ptr<TotalObjective> totalObjective;
 
 	//Constructor & initialization
-	Output() {
+	Output(igl::opengl::glfw::Viewer* viewer, const int index) {
+		this->index = index;
 		// Initialize solver thread
 		newton = make_shared<NewtonSolver>();
 		gradient_descent = make_shared<GradientDescentSolver>();
 		solver = newton;
 		totalObjective = make_shared<TotalObjective>();
+
+		//update viewer
+		CoreID = viewer->append_core(Vector4f::Zero());
+		viewer->core(CoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
+		viewer->core(CoreID).is_animating = true;
+		viewer->core(CoreID).lighting_factor = 0;
+		//set rotation type to 2D mode
+		viewer->core(CoreID).trackball_angle = Quaternionf::Identity();
+		viewer->core(CoreID).orthographic = true;
+		viewer->core(CoreID).set_rotation_type(ViewerCore::RotationType(2));
+
 	}
 	~Output() {}
 };

@@ -9,7 +9,7 @@
 class basic_app : public ImGuiMenu
 {
 private:
-	bool solverInitialized;
+	bool model_loaded;
 	float Max_Distortion;
 	bool solver_on;
 	app_utils::outputCores num_0f_outputs;

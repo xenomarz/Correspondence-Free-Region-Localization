@@ -9,7 +9,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 
 	if (_viewer)
 	{
-		solverInitialized = false;
+		model_loaded = false;
 		solver_on = false;
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
@@ -33,33 +33,18 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		down_mouse_x = down_mouse_y = -1;
 		texture_scaling_input = 1;
 
-
-
-
-		Outputs.push_back(Output());
-		Outputs.push_back(Output());
-		Outputs.push_back(Output());
-		
-		core_size = 1.0 / (Outputs.size() + 1.0);
-		
-		//Load multiple views
+		//update input viewer
 		inputCoreID = viewer->core_list[0].id;
 		viewer->core(inputCoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
-		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
 		viewer->core(inputCoreID).is_animating = true;
 		viewer->core(inputCoreID).lighting_factor = 0.2;
-		for (int i = 0; i < Outputs.size(); i++) {
-			Outputs[i].CoreID = viewer->append_core(Vector4f::Zero());
-			viewer->core(Outputs[i].CoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
-			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
-			viewer->core(Outputs[i].CoreID).is_animating = true;
-			viewer->core(Outputs[i].CoreID).lighting_factor = 0;
-			//set rotation type to 2D mode
-			viewer->core(Outputs[i].CoreID).trackball_angle = Quaternionf::Identity();
-			viewer->core(Outputs[i].CoreID).orthographic = true;
-			viewer->core(Outputs[i].CoreID).set_rotation_type(ViewerCore::RotationType(2));
-		}
-			
+
+		//Load multiple views
+		Outputs.push_back(Output(viewer,0));
+		Outputs.push_back(Output(viewer,1));
+		Outputs.push_back(Output(viewer,2));
+		core_size = 1.0 / (Outputs.size() + 1.0);
+		
 		//maximize window
 		glfwMaximizeWindow(viewer->window);
 	}
@@ -86,12 +71,12 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 				Outputs[i].ModelID = viewer->data_list[i+1].id;
 				initializeSolver(i);
 			}
-			solverInitialized = true;
 			
-			Update_view();
+			
 			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
 			for (int i = 0; i < Outputs.size(); i++)
 				viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+			model_loaded = true;
 		}
 	}
 	ImGui::SameLine(0, p);
@@ -118,7 +103,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		Outputs[i].ModelID = viewer->data_list[i + 1].id;
 		initializeSolver(i);
 		
-		solverInitialized = true;
+		model_loaded = true;
 
 		Update_view();
 		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
@@ -157,7 +142,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		}
 	}
 
-	if(solverInitialized)
+	if(model_loaded)
 		Draw_menu_for_Solver();
 	Draw_menu_for_cores();
 	Draw_menu_for_models();
@@ -852,7 +837,7 @@ void basic_app::UpdateHandles() {
 	}
 	//Finally, we update the handles in the constraints positional object
 	for (int i = 0; i < Outputs.size();i++) {
-		if (solverInitialized) {
+		if (model_loaded) {
 			(*Outputs[i].HandlesInd) = CurrHandlesInd;
 			(*Outputs[i].HandlesPosDeformed) = CurrHandlesPosDeformed[i];
 		}
@@ -1034,7 +1019,7 @@ void basic_app::checkGradients()
 	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
 		cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << endl;
-		if (!solverInitialized) {
+		if (!model_loaded) {
 			solver_on = false;
 			return;
 		}
@@ -1051,7 +1036,7 @@ void basic_app::checkHessians()
 	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
 		cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << endl;
-		if (!solverInitialized) {
+		if (!model_loaded) {
 			solver_on = false;
 			return;
 		}
@@ -1094,7 +1079,7 @@ void basic_app::stop_solver_thread() {
 }
 
 void basic_app::start_solver_thread() {
-	if (!solverInitialized) {
+	if (!model_loaded) {
 		solver_on = false;
 		return;
 	}
