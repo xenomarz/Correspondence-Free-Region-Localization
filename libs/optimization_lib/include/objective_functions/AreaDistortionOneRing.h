@@ -1,7 +1,7 @@
 #pragma once
-#include <libs/optimization_lib/include/objective_functions/ObjectiveFunction.h>
+#include <libs/optimization_lib/include/objective_functions/TriangleMeshObjectiveFunction.h>
 
-class AreaDistortionOneRing : public ObjectiveFunction
+class AreaDistortionOneRing : public TriangleMeshObjectiveFunction
 {	
 private:
 	// adjacency matrix (vertex to face)

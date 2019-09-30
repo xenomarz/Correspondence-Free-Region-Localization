@@ -66,9 +66,16 @@ public:
 	// Expose an enumeration type
 	static enum View {
 		Horizontal = 0,
-		Vertical, 
-		InputOnly, 
-		OutputOnly 
+		Vertical = 1,
+		InputOnly = 2,
+		OutputOnly0 = 3, 
+		OutputOnly1 = 4,
+		OutputOnly2 = 5,
+	};
+	static enum outputCores {
+		ONE,
+		TWO,
+		THREE
 	};
 	static enum MouseMode { 
 		NONE = 0, 
@@ -137,7 +144,7 @@ public:
 		return translation;
 	}
 	
-	static string filename(const string& str)
+	static string ExtractModelName(const string& str)
 	{
 		size_t head, tail;
 		head = str.find_last_of("/\\");
@@ -292,6 +299,32 @@ public:
 		//}
 	}
 
+};
+
+class Output
+{
+public:
+	vector<int> *HandlesInd; //pointer to indices in constraitPositional
+	MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
+	MatrixXd color_per_face, Vertices_output;
+	int ModelID, CoreID, index;
+	ImVec2 window_position, window_size, text_position;
+
+	// Solver thread
+	shared_ptr<NewtonSolver> newton;
+	shared_ptr<GradientDescentSolver> gradient_descent;
+	shared_ptr<solver> solver;
+	shared_ptr<TotalObjective> totalObjective;
+
+	//Constructor & initialization
+	Output() {
+		// Initialize solver thread
+		newton = make_shared<NewtonSolver>();
+		gradient_descent = make_shared<GradientDescentSolver>();
+		solver = newton;
+		totalObjective = make_shared<TotalObjective>();
+	}
+	~Output() {}
 };
 
 #endif
