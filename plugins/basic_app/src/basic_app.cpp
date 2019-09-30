@@ -39,7 +39,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		viewer->core(inputCoreID).lighting_factor = 0.2;
 
 		//Load multiple views
-		Outputs.push_back(Output(viewer, Outputs.size()));
+		Outputs.push_back(Output(viewer));
 		core_size = 1.0 / (Outputs.size() + 1.0);
 		
 		//maximize window
@@ -60,6 +60,14 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 			modelName = app_utils::ExtractModelName(modelPath);
 			
 			stop_solver_thread();
+
+			if (model_loaded) {
+				while(viewer->core_list.size() > 1)
+					viewer->core_list.pop_back();
+				viewer->data_list.clear();
+				Outputs.clear();
+				init(viewer);
+			}
 
 			viewer->load_mesh_from_file(modelPath.c_str());
 			for (int i = 0; i < Outputs.size(); i++)
@@ -92,47 +100,49 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		}
 	}
 	
-	if (ImGui::Button("Add Output", ImVec2((w - p) / 2.f, 0)))
-	{
-		stop_solver_thread();
-		Outputs.push_back(Output(viewer, Outputs.size()));
-		core_size = 1.0 / (Outputs.size() + 1.0);
+	if (model_loaded) {
+		if (ImGui::Button("Add Output", ImVec2((w - p) / 2.f, 0)))
+		{
+			stop_solver_thread();
+			Outputs.push_back(Output(viewer));
+			core_size = 1.0 / (Outputs.size() + 1.0);
 
-		viewer->load_mesh_from_file(modelPath.c_str());
-		Outputs[Outputs.size()-1].ModelID = viewer->data_list[Outputs.size()].id;
-		initializeSolver(Outputs.size()-1);
-		
-		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
-		for (int i = 0; i < Outputs.size(); i++)
-			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+			viewer->load_mesh_from_file(modelPath.c_str());
+			Outputs[Outputs.size() - 1].ModelID = viewer->data_list[Outputs.size()].id;
+			initializeSolver(Outputs.size() - 1);
 
-		//TODO: add output
-		core_size = 1.0 / (Outputs.size() + 1.0);
-		int frameBufferWidth, frameBufferHeight;
-		glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
-		post_resize(frameBufferWidth, frameBufferHeight);
+			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
+			for (int i = 0; i < Outputs.size(); i++)
+				viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+
+			//TODO: add output
+			core_size = 1.0 / (Outputs.size() + 1.0);
+			int frameBufferWidth, frameBufferHeight;
+			glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
+			post_resize(frameBufferWidth, frameBufferHeight);
+		}
+		ImGui::SameLine(0, p);
+		if (ImGui::Button("Remove Output", ImVec2((w - p) / 2.f, 0)) && Outputs.size()>1)
+		{
+			stop_solver_thread();
+			viewer->core_list.pop_back();
+			viewer->data_list.pop_back();
+			Outputs.pop_back();
+
+			core_size = 1.0 / (Outputs.size() + 1.0);
+
+			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
+			for (int i = 0; i < Outputs.size(); i++)
+				viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+
+			//TODO: remove output
+			core_size = 1.0 / (Outputs.size() + 1.0);
+			int frameBufferWidth, frameBufferHeight;
+			glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
+			post_resize(frameBufferWidth, frameBufferHeight);
+		}
 	}
-	ImGui::SameLine(0, p);
-	if (ImGui::Button("Remove Output", ImVec2((w - p) / 2.f, 0)))
-	{
-		stop_solver_thread();
-		
-		viewer->core_list.pop_back();
-		viewer->data_list.pop_back();
-		Outputs.pop_back();
-
-		core_size = 1.0 / (Outputs.size() + 1.0);
-
-		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
-		for (int i = 0; i < Outputs.size(); i++)
-			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
-
-		//TODO: remove output
-		core_size = 1.0 / (Outputs.size() + 1.0);
-		int frameBufferWidth, frameBufferHeight;
-		glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
-		post_resize(frameBufferWidth, frameBufferHeight);
-	}
+	
 	
 	if (ImGui::Combo("View", (int *)(&view), app_utils::build_view_names_list(Outputs.size()))) {
 		// That's how you get the current width/height of the frame buffer (for example, after the window was resized)

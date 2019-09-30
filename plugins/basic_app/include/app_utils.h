@@ -329,7 +329,7 @@ public:
 	vector<int> *HandlesInd; //pointer to indices in constraitPositional
 	MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
 	MatrixXd color_per_face, Vertices_output;
-	int ModelID, CoreID, index;
+	int ModelID, CoreID;
 	ImVec2 window_position, window_size, text_position;
 
 	// Solver thread
@@ -339,8 +339,7 @@ public:
 	shared_ptr<TotalObjective> totalObjective;
 
 	//Constructor & initialization
-	Output(igl::opengl::glfw::Viewer* viewer, const int index) {
-		this->index = index;
+	Output(igl::opengl::glfw::Viewer* viewer) {
 		// Initialize solver thread
 		newton = make_shared<NewtonSolver>();
 		gradient_descent = make_shared<GradientDescentSolver>();
