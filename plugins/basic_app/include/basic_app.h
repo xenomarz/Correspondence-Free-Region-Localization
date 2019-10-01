@@ -93,6 +93,10 @@ public:
 	//FD check
 	void checkGradients();
 	void checkHessians();
+
+	//outputs
+	void add_output();
+	void remove_output();
 };
 
 #endif

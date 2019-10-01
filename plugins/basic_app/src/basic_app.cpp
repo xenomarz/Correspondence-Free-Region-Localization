@@ -62,21 +62,27 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 			stop_solver_thread();
 
 			if (model_loaded) {
-				while(viewer->core_list.size() > 1)
-					viewer->core_list.pop_back();
+				//remove previous data
+				while (Outputs.size() > 0)
+					remove_output();
 				viewer->data_list.clear();
-				Outputs.clear();
-				init(viewer);
 			}
 
 			viewer->load_mesh_from_file(modelPath.c_str());
+			inputModelID = viewer->data_list[0].id;
+
 			for (int i = 0; i < Outputs.size(); i++)
 			{
 				viewer->load_mesh_from_file(modelPath.c_str());
 				Outputs[i].ModelID = viewer->data_list[i+1].id;
 				initializeSolver(i);
-				
 			}
+
+			if (model_loaded) {
+				//add new data
+				add_output();
+			}
+
 			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
 			for (int i = 0; i < Outputs.size(); i++)
 				viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
@@ -102,45 +108,10 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	
 	if (model_loaded) {
 		if (ImGui::Button("Add Output", ImVec2((w - p) / 2.f, 0)))
-		{
-			stop_solver_thread();
-			Outputs.push_back(Output(viewer));
-			core_size = 1.0 / (Outputs.size() + 1.0);
-
-			viewer->load_mesh_from_file(modelPath.c_str());
-			Outputs[Outputs.size() - 1].ModelID = viewer->data_list[Outputs.size()].id;
-			initializeSolver(Outputs.size() - 1);
-
-			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
-			for (int i = 0; i < Outputs.size(); i++)
-				viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
-
-			//TODO: add output
-			core_size = 1.0 / (Outputs.size() + 1.0);
-			int frameBufferWidth, frameBufferHeight;
-			glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
-			post_resize(frameBufferWidth, frameBufferHeight);
-		}
+			add_output();
 		ImGui::SameLine(0, p);
 		if (ImGui::Button("Remove Output", ImVec2((w - p) / 2.f, 0)) && Outputs.size()>1)
-		{
-			stop_solver_thread();
-			viewer->core_list.pop_back();
-			viewer->data_list.pop_back();
-			Outputs.pop_back();
-
-			core_size = 1.0 / (Outputs.size() + 1.0);
-
-			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
-			for (int i = 0; i < Outputs.size(); i++)
-				viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
-
-			//TODO: remove output
-			core_size = 1.0 / (Outputs.size() + 1.0);
-			int frameBufferWidth, frameBufferHeight;
-			glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
-			post_resize(frameBufferWidth, frameBufferHeight);
-		}
+			remove_output();
 	}
 	
 	
@@ -168,6 +139,45 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 
 	follow_and_mark_selected_faces();
 	Update_view();
+}
+
+void basic_app::remove_output() {
+	stop_solver_thread();
+	viewer->core_list.pop_back();
+	viewer->data_list.pop_back();
+	Outputs.pop_back();
+
+	core_size = 1.0 / (Outputs.size() + 1.0);
+
+	viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
+	for (int i = 0; i < Outputs.size(); i++)
+		viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+
+	//TODO: remove output
+	core_size = 1.0 / (Outputs.size() + 1.0);
+	int frameBufferWidth, frameBufferHeight;
+	glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
+	post_resize(frameBufferWidth, frameBufferHeight);
+}
+
+void basic_app::add_output() {
+	stop_solver_thread();
+	Outputs.push_back(Output(viewer));
+	core_size = 1.0 / (Outputs.size() + 1.0);
+
+	viewer->load_mesh_from_file(modelPath.c_str());
+	Outputs[Outputs.size() - 1].ModelID = viewer->data_list[Outputs.size()].id;
+	initializeSolver(Outputs.size() - 1);
+
+	viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
+	for (int i = 0; i < Outputs.size(); i++)
+		viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+
+	//TODO: add output
+	core_size = 1.0 / (Outputs.size() + 1.0);
+	int frameBufferWidth, frameBufferHeight;
+	glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
+	post_resize(frameBufferWidth, frameBufferHeight);
 }
 
 IGL_INLINE void basic_app::post_resize(int w, int h)
