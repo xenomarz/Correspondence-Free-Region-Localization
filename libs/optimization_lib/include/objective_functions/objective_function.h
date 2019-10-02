@@ -78,11 +78,11 @@ protected:
 	mutable std::mutex m_;
 
 	// Elements count
-	const Eigen::DenseIndex domain_faces_count_;
-	const Eigen::DenseIndex domain_vertices_count_;
-	const Eigen::DenseIndex image_faces_count_;
-	const Eigen::DenseIndex image_vertices_count_;
-	const Eigen::DenseIndex variables_count_;
+	Eigen::DenseIndex domain_faces_count_;
+	Eigen::DenseIndex domain_vertices_count_;
+	Eigen::DenseIndex image_faces_count_;
+	Eigen::DenseIndex image_vertices_count_;
+	Eigen::DenseIndex variables_count_;
 
 private:
 
@@ -111,6 +111,7 @@ private:
 	Eigen::VectorXd g_;
 
 	// Hessian (sparse representation)
+	// TODO: remove ii_, jj_ and ss_ and use vector of triplets
 	std::vector<int> ii_; 
 	std::vector<int> jj_;
 	std::vector<double> ss_;

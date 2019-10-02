@@ -52,7 +52,9 @@ void CompositeObjective::CalculateValue(const Eigen::VectorXd& x, double& f)
 	for (auto objective_function : objective_functions_)
 	{
 		auto w = objective_function->GetWeight();
-		if (objective_function->IsValid() && w != 0)
+		// TODO: uncomment line below, after switching to use vector of triplets instead of ii_, jj_ and ss_
+		// if (objective_function->IsValid() && w != 0)
+		if (w != 0)
 		{
 			f += w * objective_function->GetValue();
 		}
@@ -65,7 +67,9 @@ void CompositeObjective::CalculateGradient(const Eigen::VectorXd& x, Eigen::Vect
 	for (auto objective_function : objective_functions_)
 	{
 		auto w = objective_function->GetWeight();
-		if (objective_function->IsValid() && w != 0)
+		// TODO: uncomment line below, after switching to use vector of triplets instead of ii_, jj_ and ss_
+		// if (objective_function->IsValid() && w != 0)
+		if (w != 0)
 		{
 			g += w * objective_function->GetGradient();
 		}
@@ -78,7 +82,9 @@ void CompositeObjective::CalculateHessian(const Eigen::VectorXd& x, std::vector<
 	for (auto objective_function : objective_functions_)
 	{
 		auto w = objective_function->GetWeight();
-		if (objective_function->IsValid() && w != 0)
+		// TODO: uncomment line below, after switching to use vector of triplets instead of ii_, jj_ and ss_
+		// if (objective_function->IsValid() && w != 0)
+		if (w != 0)
 		{
 			auto current_ss = objective_function->GetSS();
 			for (int i = 0; i < current_ss.size(); i++)
@@ -110,4 +116,14 @@ bool CompositeObjective::IsValid()
 	}
 
 	return false;
+}
+
+void CompositeObjective::PreInitialize()
+{
+	ObjectiveFunction::PreInitialize();
+
+	for (auto objective_function : objective_functions_)
+	{
+		objective_function->Initialize();
+	}
 }

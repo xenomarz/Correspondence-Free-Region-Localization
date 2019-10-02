@@ -6,12 +6,7 @@ ObjectiveFunction::ObjectiveFunction(const std::shared_ptr<ObjectiveFunctionData
 	f_(0),
 	w_(1),
 	name_(name),
-	objective_function_data_provider_(objective_function_data_provider),
-	domain_faces_count_(objective_function_data_provider->GetDomainFaces().rows()),
-	domain_vertices_count_(objective_function_data_provider->GetDomainVertices().rows()),
-	image_faces_count_(objective_function_data_provider->GetImageFaces().rows()),
-	image_vertices_count_(objective_function_data_provider->GetImageVerticesCount()),
-	variables_count_(2 * image_vertices_count_)
+	objective_function_data_provider_(objective_function_data_provider)
 {
 
 }
@@ -23,7 +18,11 @@ ObjectiveFunction::~ObjectiveFunction()
 
 void ObjectiveFunction::PreInitialize()
 {
-	// Empty implementation
+	domain_faces_count_ = objective_function_data_provider_->GetDomainFaces().rows();
+	domain_vertices_count_ = objective_function_data_provider_->GetDomainVertices().rows();
+	image_faces_count_ = objective_function_data_provider_->GetImageFaces().rows();
+	image_vertices_count_ = objective_function_data_provider_->GetImageVerticesCount();
+	variables_count_ = 2 * image_vertices_count_;
 }
 
 void ObjectiveFunction::Initialize()
@@ -41,7 +40,7 @@ void ObjectiveFunction::PostInitialize()
 
 void ObjectiveFunction::InitializeGradient(Eigen::VectorXd& g)
 {
-	g.conservativeResize(image_vertices_count_);
+	g.conservativeResize(variables_count_);
 }
 
 void ObjectiveFunction::PreUpdate(const Eigen::VectorXd& x)
@@ -58,7 +57,7 @@ void ObjectiveFunction::Update(const Eigen::VectorXd& x)
 		CalculateValue(x, f_);
 		CalculateGradient(x, g_);
 		CalculateHessian(x, ss_);
-		Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, image_vertices_count_, image_vertices_count_, H_);
+		Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_);
 		PostUpdate(x);
 	}
 }

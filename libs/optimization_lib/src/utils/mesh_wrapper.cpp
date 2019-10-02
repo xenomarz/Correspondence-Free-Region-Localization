@@ -13,8 +13,6 @@
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
 
-const std::string MeshWrapper::LoadModelEventName = "load-model";
-
 MeshWrapper::MeshWrapper()
 {
 
@@ -135,7 +133,7 @@ void MeshWrapper::LoadModel(const std::string& model_file_path)
 
 	Initialize();
 
-	Publish(MeshWrapper::LoadModelEventName);
+	model_loaded_signal_();
 }
 
 void MeshWrapper::GenerateSoupFaces(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out)
@@ -431,4 +429,11 @@ void MeshWrapper::Initialize()
 
 	ComputeCorrespondingVertexPairsCoefficients();
 	ComputeCorrespondingVertexPairsEdgeLength();
+
+	ComputeSurfaceGradientPerFace(v_dom_, f_dom_, d1_, d2_);
+}
+
+void MeshWrapper::RegisterModelLoadedCallback(std::function<ModelLoadedCallback> model_loaded_callback)
+{
+	model_loaded_signal_.connect(model_loaded_callback);
 }

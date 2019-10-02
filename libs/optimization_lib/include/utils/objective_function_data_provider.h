@@ -9,8 +9,6 @@
 class ObjectiveFunctionDataProvider
 {
 public:
-	using ObjectiveFunctionDataProviderEventHandler = std::function<void(std::string)>;
-
 	virtual const Eigen::MatrixX3i& GetDomainFaces() const = 0;
 	virtual const Eigen::MatrixX3d& GetDomainVertices() const = 0;
 	virtual const Eigen::MatrixX2i& GetDomainEdges() const = 0;
@@ -22,14 +20,6 @@ public:
 	// Relevant for objective functions that operate on triangle soups
 	virtual const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const = 0;
 	virtual const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const = 0;
-
-	// Event handling
-	void Subscribe(const std::string& event_name, const ObjectiveFunctionDataProviderEventHandler& event_handler);
-
-protected:
-	void Publish(const std::string& event_name);
-
-	std::unordered_map<std::string, std::vector<ObjectiveFunctionDataProviderEventHandler>> event_handlers;
 };
 
 #endif

@@ -12,6 +12,10 @@
 #include <functional>
 #include <string>
 
+// Boost includes
+#include <boost/signals2/signal.hpp>
+
+
 // Eigen Includes
 #include <Eigen/Core>
 #include <Eigen/Sparse>
@@ -80,8 +84,7 @@ public:
 		ISOMETRIC
 	};
 
-	// TODO: Use enum-to-string insted
-	static const std::string LoadModelEventName;
+	using ModelLoadedCallback = void();
 
 	/**
 	 * Constructors and destructor
@@ -116,6 +119,7 @@ public:
 	Eigen::VectorXi GetImageFaceVerticesIndices(FaceIndex face_index);
 	Eigen::MatrixXd GetImageVertices(const Eigen::VectorXi& vertex_indices);
 	void LoadModel(const std::string& model_file_path);
+	void RegisterModelLoadedCallback(std::function<ModelLoadedCallback> model_loaded_callback);
 
 private:
 	/**
@@ -198,6 +202,9 @@ private:
 	VI2VIMap v_im_2_v_dom_;
 	EI2EIsMap e_dom_2_e_im_;
 	EI2EIMap e_im_2_e_dom_;
+
+	// Boost signals
+	boost::signals2::signal<ModelLoadedCallback> model_loaded_signal_;
 };
 
 // https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values/35991300#35991300

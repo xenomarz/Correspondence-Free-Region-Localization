@@ -36,6 +36,7 @@ private:
 	void CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g);
 	void CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss);
 	void PreUpdate(const Eigen::VectorXd& x);
+	void PreInitialize();
 
 	/**
 	 * Methods

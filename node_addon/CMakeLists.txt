@@ -28,7 +28,8 @@ target_include_directories(${PROJECT_NAME}
 	PRIVATE
 		${CMAKE_JS_INC}
 		${CMAKE_SOURCE_DIR}
-		${NODE_ADDON_API_DIR})
+		${NODE_ADDON_API_DIR}
+		${Boost_INCLUDE_DIRS})
 
 # Link Libraries
 target_link_libraries(${PROJECT_NAME}

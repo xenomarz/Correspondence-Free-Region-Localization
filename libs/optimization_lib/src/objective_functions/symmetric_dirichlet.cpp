@@ -7,64 +7,6 @@ SymmetricDirichlet::SymmetricDirichlet(const std::shared_ptr<ObjectiveFunctionDa
 	: ObjectiveFunction(objective_function_data_provider, "Symmetric Dirichlet")
 {
 	Initialize();
-
-	auto F = objective_function_data_provider_->GetDomainFaces();
-	auto V = objective_function_data_provider_->GetDomainVertices();
-
-	auto D1 = objective_function_data_provider_->GetD1();
-	auto D2 = objective_function_data_provider_->GetD2();
-
-	auto Fs = objective_function_data_provider_->GetImageFaces();
-
-	numF = Fs.rows();
-	numV = objective_function_data_provider_->GetImageVerticesCount();
-
-	Fuv.resize(6, numF);
-	Fuv.topRows(3) = Fs.transpose();
-	Fuv.bottomRows(3) = Fuv.topRows(3) + Eigen::MatrixXi::Constant(3, numF, static_cast<int>(numV));
-
-	a.resize(numF);
-	b.resize(numF);
-	c.resize(numF);
-	d.resize(numF);
-	s.resize(numF, 2);
-	v.resize(numF, 4);
-	u.resize(numF, 4);
-
-	Dsd[0].resize(6, numF);
-	Dsd[1].resize(6, numF);
-
-	//Parameterization J mats resize
-	detJuv.resize(numF);
-	invdetJuv.resize(numF);
-	DdetJuv_DUV.resize(static_cast<int>(numF), static_cast<int>(numV * 2));
-
-	// compute init energy matrices
-	igl::doublearea(V, F, Area);
-	Area /= 2;
-
-	D1d = D1.transpose();
-	D2d = D2.transpose();
-
-	//columns belong to different faces
-	a1d.resize(6, numF);
-	a2d.resize(6, numF);
-	b1d.resize(6, numF);
-	b2d.resize(6, numF);
-
-	a1d.topRows(3) = 0.5 * D1d;
-	a1d.bottomRows(3) = 0.5 * D2d;
-
-	a2d.topRows(3) = -0.5 * D2d;
-	a2d.bottomRows(3) = 0.5 * D1d;
-
-	b1d.topRows(3) = 0.5 * D1d;
-	b1d.bottomRows(3) = -0.5 * D2d;
-
-	b2d.topRows(3) = 0.5 * D2d;
-	b2d.bottomRows(3) = 0.5 * D1d;
-
-	Hi.resize(numF);
 }
 
 SymmetricDirichlet::~SymmetricDirichlet()
@@ -354,4 +296,68 @@ inline Eigen::Matrix<double, 6, 6> SymmetricDirichlet::ComputeConvexConcaveFaceH
 	}
 
 	return H;
+}
+
+void SymmetricDirichlet::PreInitialize()
+{
+	ObjectiveFunction::PreInitialize();
+
+	auto F = objective_function_data_provider_->GetDomainFaces();
+	auto V = objective_function_data_provider_->GetDomainVertices();
+
+	auto D1 = objective_function_data_provider_->GetD1();
+	auto D2 = objective_function_data_provider_->GetD2();
+
+	auto Fs = objective_function_data_provider_->GetImageFaces();
+	this->F = objective_function_data_provider_->GetImageFaces();
+
+	numF = Fs.rows();
+	numV = objective_function_data_provider_->GetImageVerticesCount();
+
+	Fuv.resize(6, numF);
+	Fuv.topRows(3) = Fs.transpose();
+	Fuv.bottomRows(3) = Fuv.topRows(3) + Eigen::MatrixXi::Constant(3, numF, static_cast<int>(numV));
+
+	a.resize(numF);
+	b.resize(numF);
+	c.resize(numF);
+	d.resize(numF);
+	s.resize(numF, 2);
+	v.resize(numF, 4);
+	u.resize(numF, 4);
+
+	Dsd[0].resize(6, numF);
+	Dsd[1].resize(6, numF);
+
+	//Parameterization J mats resize
+	detJuv.resize(numF);
+	invdetJuv.resize(numF);
+	DdetJuv_DUV.resize(static_cast<int>(numF), static_cast<int>(numV * 2));
+
+	// compute init energy matrices
+	igl::doublearea(V, F, Area);
+	Area /= 2;
+
+	D1d = D1.transpose();
+	D2d = D2.transpose();
+
+	//columns belong to different faces
+	a1d.resize(6, numF);
+	a2d.resize(6, numF);
+	b1d.resize(6, numF);
+	b2d.resize(6, numF);
+
+	a1d.topRows(3) = 0.5 * D1d;
+	a1d.bottomRows(3) = 0.5 * D2d;
+
+	a2d.topRows(3) = -0.5 * D2d;
+	a2d.bottomRows(3) = 0.5 * D1d;
+
+	b1d.topRows(3) = 0.5 * D1d;
+	b1d.bottomRows(3) = -0.5 * D2d;
+
+	b2d.topRows(3) = 0.5 * D2d;
+	b2d.bottomRows(3) = 0.5 * D1d;
+
+	Hi.resize(numF);
 }

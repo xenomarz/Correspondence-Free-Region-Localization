@@ -39,6 +39,7 @@ add_library(rds::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 # Include Directories
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
+		${Boost_INCLUDE_DIRS}
 		${PROJECT_SOURCE_DIR}/include)
 
 # Link Libraries

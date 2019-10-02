@@ -3,6 +3,10 @@ project(RDS)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+# boost
+set(BOOST_ROOT "./boost")
+find_package(Boost REQUIRED QUIET)
+
 # libigl
 option(LIBIGL_WITH_OPENGL            "Use OpenGL"                   ON)
 option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"                     ON)

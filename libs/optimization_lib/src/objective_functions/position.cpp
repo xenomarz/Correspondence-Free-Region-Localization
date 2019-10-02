@@ -88,40 +88,52 @@ void Position::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std
 
 void Position::CalculateValue(const Eigen::VectorXd& x, double& f)
 {
-	f = x_diff_.squaredNorm();
+	if (im_vi_2_ci_.size() > 0)
+	{
+		f = x_diff_.squaredNorm();
+	}
 }
 
 void Position::CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g)
 {
-	g.setZero();
-	Eigen::DenseIndex current_vertex_index;
-	for (const auto& [image_vertex_index, constrained_index] : im_vi_2_ci_)
+	if (im_vi_2_ci_.size() > 0)
 	{
-		g(image_vertex_index) = 2 * x_diff_(constrained_index, 0);
-		g(image_vertex_index + image_vertices_count_) = 2 * x_diff_(constrained_index, 1);
+		g.setZero();
+		Eigen::DenseIndex current_vertex_index;
+		for (const auto& [image_vertex_index, constrained_index] : im_vi_2_ci_)
+		{
+			g(image_vertex_index) = 2 * x_diff_(constrained_index, 0);
+			g(image_vertex_index + image_vertices_count_) = 2 * x_diff_(constrained_index, 1);
+		}
 	}
 }
 
 void Position::CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss)
 {
-	std::fill(ss.begin(), ss.end(), 0);
-	Eigen::DenseIndex current_vertex_index;
-	for (const auto& [image_vertex_index, constrained_index] : im_vi_2_ci_)
+	if (im_vi_2_ci_.size() > 0)
 	{
-		ss[image_vertex_index] = 2;
-		ss[image_vertex_index + image_vertices_count_] = 2;
+		std::fill(ss.begin(), ss.end(), 0);
+		Eigen::DenseIndex current_vertex_index;
+		for (const auto& [image_vertex_index, constrained_index] : im_vi_2_ci_)
+		{
+			ss[image_vertex_index] = 2;
+			ss[image_vertex_index + image_vertices_count_] = 2;
+		}
 	}
 }
 
 void Position::PreUpdate(const Eigen::VectorXd& x)
 {
-	x_current_.resize(2, constrained_vertices_count_);
-	Eigen::DenseIndex current_vertex_index;
-	for (const auto& [image_vertex_index, constrained_index] : im_vi_2_ci_)
+	if (im_vi_2_ci_.size() > 0)
 	{
-		x_current_(constrained_index, 0) = x(image_vertex_index);
-		x_current_(constrained_index, 1) = x(image_vertex_index + image_vertices_count_);
-	}
+		x_current_.resize(2, constrained_vertices_count_);
+		Eigen::DenseIndex current_vertex_index;
+		for (const auto& [image_vertex_index, constrained_index] : im_vi_2_ci_)
+		{
+			x_current_(constrained_index, 0) = x(image_vertex_index);
+			x_current_(constrained_index, 1) = x(image_vertex_index + image_vertices_count_);
+		}
 
-	x_diff_ = x_constrained_ - x_current_;
+		x_diff_ = x_constrained_ - x_current_;
+	}
 }
