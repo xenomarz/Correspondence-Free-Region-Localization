@@ -80,6 +80,9 @@ public:
 		ISOMETRIC
 	};
 
+	// TODO: Use enum-to-string insted
+	static const std::string LoadModelEventName;
+
 	/**
 	 * Constructors and destructor
 	 */

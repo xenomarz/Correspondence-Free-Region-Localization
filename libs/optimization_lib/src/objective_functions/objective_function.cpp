@@ -16,7 +16,6 @@ ObjectiveFunction::ObjectiveFunction(const std::shared_ptr<ObjectiveFunctionData
 
 }
 
-
 ObjectiveFunction::~ObjectiveFunction()
 {
 	// Empty implementation

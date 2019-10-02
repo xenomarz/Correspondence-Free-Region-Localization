@@ -13,6 +13,8 @@
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
 
+const std::string MeshWrapper::LoadModelEventName = "load-model";
+
 MeshWrapper::MeshWrapper()
 {
 
@@ -132,11 +134,9 @@ void MeshWrapper::LoadModel(const std::string& model_file_path)
 	f_dom_ = f;
 
 	Initialize();
+
+	Publish(MeshWrapper::LoadModelEventName);
 }
-
-
-
-
 
 void MeshWrapper::GenerateSoupFaces(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out)
 {
