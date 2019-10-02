@@ -231,26 +231,6 @@ export class MeshView extends LitElement {
         this._createScene();
         this._createOrbitControl();
         this._createRaycaster();
-
-        // this.meshProvider = new MeshProvider();
-        // this.backgroundColor = 'rgb(0, 0, 0)';
-        // this.meshColor = 'rgb(255, 255, 255)';
-        // this.useGridTexture = false;
-        // this.showWireframe = false;
-        // this.showGrid = false;
-        // this.syncFaceSelection = true;
-        // this.syncVertexSelection = true;
-        // this.enableVertexSelection = false;
-        // this.enableMeshRotation = false;
-        // this.enableFaceDragging = false;
-        // this.gridHorizontalColor = 'rgb(0, 0, 255)';
-        // this.gridVerticalColor = 'rgb(0, 0, 255)';
-        // this.gridBackgroundColor1 = 'rgb(255, 255, 255)';
-        // this.gridBackgroundColor2 = 'rgb(255, 255, 255)';
-        // this.gridSize = 3;
-        // this.gridTextureSize = 8;
-        // this.gridLineWidth = 0;
-        // this.useLights = false;
     }
     
     /**
@@ -599,9 +579,6 @@ export class MeshView extends LitElement {
             if (this._interactionService.state.value === 'idle' && this.enableFaceDragging) {
                 if (this._faceIntersection) {
                     this._publishFaceMessage('mesh-view-face-down', this._faceIntersection.face);  
-                    // PubSub.publish('mesh-view-face-down', {
-                    //     face: this._faceIntersection.face
-                    // });
                 }
             }
         }
@@ -624,9 +601,6 @@ export class MeshView extends LitElement {
         if (this._faceIntersection) {
             this._resetHighlightedFace();
             this._publishFaceMessage('mesh-view-face-unhighlighted');  
-            // PubSub.publish('mesh-view-face-unhighlighted', {
-            //     meshViewId: this.id
-            // });
         }
 
         this._faceIntersection = null;
@@ -989,6 +963,8 @@ export class MeshView extends LitElement {
         }
 
         let bufferedMeshVertices = this.meshProvider.bufferedMeshVertices;
+        this._resetAttributeArray(bufferedMeshVertices, this._mesh.geometry.attributes.position.array);
+        this._resetAttributeArray(this.meshProvider.bufferedVertices, this._pointcloud.geometry.attributes.position.array);
 
         this._updateVertexColors();
         this._resetAttributeArray(this._getBufferedColors(bufferedMeshVertices.length / 3), this._mesh.geometry.attributes.color.array);

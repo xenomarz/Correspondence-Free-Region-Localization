@@ -58,8 +58,8 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 		/**
 		 * Create newton method iterator
 		 */
-		auto& x = mesh_wrapper_->GetImageVertices();
-		auto x0 = Eigen::Map<const Eigen::VectorXd>(x.data(), x.cols() * x.rows());
+		image_vertices_ = mesh_wrapper_->GetImageVertices();
+		auto x0 = Eigen::Map<const Eigen::VectorXd>(image_vertices_.data(), image_vertices_.cols() * image_vertices_.rows());
 		newton_method_ = std::make_unique<NewtonMethod<EigenSparseSolver>>(composite_objective_, x0);
 	});
 }
@@ -101,7 +101,9 @@ Napi::Value Engine::GetImageVertices(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateVertices(env, mesh_wrapper_->GetImageVertices());
+	TryUpdateImageVertices();
+
+	return CreateVertices(env, image_vertices_);
 }
 
 Napi::Value Engine::GetDomainFaces(const Napi::CallbackInfo& info)
@@ -133,7 +135,9 @@ Napi::Value Engine::GetImageBufferedVertices(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateBufferedVerticesArray(env, mesh_wrapper_->GetImageVertices());
+	TryUpdateImageVertices();
+
+	return CreateBufferedVerticesArray(env, image_vertices_);
 }
 
 Napi::Value Engine::GetDomainBufferedMeshVertices(const Napi::CallbackInfo& info)
@@ -149,7 +153,9 @@ Napi::Value Engine::GetImageBufferedMeshVertices(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateBufferedMeshVerticesArray(env, mesh_wrapper_->GetImageVertices(), mesh_wrapper_->GetImageFaces());
+	TryUpdateImageVertices();
+
+	return CreateBufferedMeshVerticesArray(env, image_vertices_, mesh_wrapper_->GetImageFaces());
 }
 
 Engine::ModelFileType Engine::GetModelFileType(std::string modelFilePath)
@@ -185,6 +191,15 @@ Napi::Array Engine::CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F)
 	}
 
 	return facesArray;
+}
+
+void Engine::TryUpdateImageVertices()
+{
+	Eigen::VectorXd approximation_vector;
+	if (newton_method_->GetApproximation(approximation_vector))
+	{
+		image_vertices_ = Eigen::Map<const Eigen::MatrixX2d>(approximation_vector.data(), approximation_vector.rows() >> 1, 2);
+	}
 }
 
 void Engine::SetPositionWeight(const Napi::CallbackInfo& info, const Napi::Value& value)

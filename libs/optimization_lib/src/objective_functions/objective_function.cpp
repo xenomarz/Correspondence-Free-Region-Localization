@@ -41,6 +41,7 @@ void ObjectiveFunction::PostInitialize()
 void ObjectiveFunction::InitializeGradient(Eigen::VectorXd& g)
 {
 	g.conservativeResize(variables_count_);
+	g.setZero();
 }
 
 void ObjectiveFunction::PreUpdate(const Eigen::VectorXd& x)

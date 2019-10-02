@@ -36,7 +36,7 @@ private:
 	static Napi::FunctionReference constructor;
 
 	/**
-	 * NAPI Instance Methods
+	 * NAPI private instance methods
 	 */
 	Napi::Value LoadModel(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainVertices(const Napi::CallbackInfo& info);
@@ -62,13 +62,14 @@ private:
 	Napi::Value UnconstrainFacePosition(const Napi::CallbackInfo& info);
 
 	/**
-	 * Regular Instance Methods
+	 * Regular private instance methods
 	 */
 	ModelFileType GetModelFileType(std::string filename);
 	Napi::Array CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F);
+	void TryUpdateImageVertices();
 
 	/**
-	 * Regular Instance Methods (templates)
+	 * Regular private templated instance methods
 	 */
 	template <typename Derived>
 	Napi::Array CreateVertices(Napi::Env env, const Eigen::MatrixBase<Derived>& V)
@@ -152,6 +153,7 @@ private:
 	std::shared_ptr<SymmetricDirichlet> symmetric_dirichlet_;
 	std::unique_ptr<NewtonMethod<EigenSparseSolver>> newton_method_;
 	std::vector<Eigen::DenseIndex> constrained_faces_indices;
+	Eigen::MatrixX2d image_vertices_;
 };
 
 #endif

@@ -9,7 +9,8 @@ IterativeMethod::IterativeMethod(std::shared_ptr<ObjectiveFunction> objective_fu
 	x_(x0),
 	thread_state_(ThreadState::TERMINATED),
 	max_backtracking_iterations_(10),
-	flip_avoiding_line_search_enabled_(false)
+	flip_avoiding_line_search_enabled_(false),
+	approximation_invalidated_(false)
 {
 	objective_function_->Update(x0);
 }
@@ -69,20 +70,22 @@ void IterativeMethod::LineSearch(const Eigen::VectorXd& p)
 		current_iteration++;
 	}
 
+	std::lock_guard<std::mutex> x_lock(x_mutex_);
 	x_ = std::move(current_x);
+	approximation_invalidated_ = true;
 }
 
 void IterativeMethod::Start()
 {
-	std::lock_guard<std::mutex> lock(m_);
+	std::lock_guard<std::mutex> lock(thread_state_mutex_);
 	switch (thread_state_)
 	{
 	case ThreadState::TERMINATED:
 		thread_state_ = ThreadState::RUNNING;
-		thread_ = std::thread([&]() {
+		thread_ = std::thread([&]() {	
 			while (true)
 			{
-				std::unique_lock<std::mutex> lock(m_);
+				std::unique_lock<std::mutex> lock(thread_state_mutex_);
 				cv_.wait(lock, [&] { return thread_state_ != ThreadState::PAUSED; });
 
 				if (thread_state_ == ThreadState::TERMINATING)
@@ -90,12 +93,12 @@ void IterativeMethod::Start()
 					thread_state_ = ThreadState::TERMINATED;
 					break;
 				}
+				lock.unlock();
 
 				if (objective_function_->IsValid())
 				{
 					ComputeDescentDirection(p_);
 					LineSearch(p_);
-					approximations_queue_.push(x_);
 				}
 			}
 		});
@@ -105,7 +108,7 @@ void IterativeMethod::Start()
 
 void IterativeMethod::Pause()
 {
-	std::lock_guard<std::mutex> lock(m_);
+	std::lock_guard<std::mutex> lock(thread_state_mutex_);
 	switch (thread_state_)
 	{
 	case ThreadState::RUNNING:
@@ -116,7 +119,7 @@ void IterativeMethod::Pause()
 
 void IterativeMethod::Resume()
 {
-	std::unique_lock<std::mutex> lock(m_);
+	std::unique_lock<std::mutex> lock(thread_state_mutex_);
 	switch (thread_state_)
 	{
 	case ThreadState::PAUSED:
@@ -132,7 +135,7 @@ void IterativeMethod::Resume()
 
 void IterativeMethod::Terminate()
 {
-	std::unique_lock<std::mutex> lock(m_);
+	std::unique_lock<std::mutex> lock(thread_state_mutex_);
 	switch (thread_state_)
 	{
 	case ThreadState::RUNNING:
@@ -145,7 +148,14 @@ void IterativeMethod::Terminate()
 
 bool IterativeMethod::GetApproximation(Eigen::VectorXd& x)
 {
-	return approximations_queue_.try_pop(x);
+	std::lock_guard<std::mutex> x_lock(x_mutex_);
+	if (approximation_invalidated_)
+	{
+		x = x_;
+		approximation_invalidated_ = false;
+		return true;
+	}
+	return false;
 }
 
 void IterativeMethod::EnableFlipAvoidingLineSearch(Eigen::MatrixX3i& F)
