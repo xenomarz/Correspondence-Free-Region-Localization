@@ -387,7 +387,8 @@ Napi::Value Engine::ConstrainFacePosition(const Napi::CallbackInfo& info)
 	Eigen::MatrixXd face_vertices = mesh_wrapper_->GetImageVertices(face_vertices_indices);
 	for (int i = 0; i < 3; i++)
 	{
-		if (position_) {
+		if (position_) 
+		{
 			position_->AddConstrainedVertex(face_vertices_indices(i), face_vertices.row(i));
 		}
 	}

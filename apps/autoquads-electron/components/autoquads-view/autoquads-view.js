@@ -632,9 +632,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
         });
 
         this._meshViewFaceDraggingSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging', (name, payload) => {
-            console.log('x: ' + payload.offset.x);
-            console.log('y: ' + payload.offset.y);
-            this._engine.updateConstrainedFacePosition(payload.face.id, -payload.offset.x, -payload.offset.y);
+            this._engine.updateConstrainedFacePosition(payload.face.id, payload.offset.x, payload.offset.y);
         });
 
         this._meshViewFaceDraggingEndSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging-end', (name, payload) => {

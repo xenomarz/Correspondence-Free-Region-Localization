@@ -149,6 +149,6 @@ void Position::PreUpdate(const Eigen::VectorXd& x)
 			x_current_(constrained_index, 1) = x(image_vertex_index + image_vertices_count_);
 		}
 
-		x_diff_ = x_constrained_ - x_current_;
+		x_diff_ = x_current_ - x_constrained_;
 	}
 }
