@@ -47,11 +47,22 @@ export class MeshView extends LitElement {
 
             .debug-data {
                 display: flex;
-                flex-direction: row;
+                flex-direction: column;
                 font-family: Consolas;
                 font-size: 16px;
-
                 font-weight: bold;
+            }
+
+            .debug-data-item {
+                display: flex;
+                flex-direction: column;
+                margin-top: 20px;
+            }
+
+            .debug-data-item-fields {
+                display: flex;
+                flex-direction: row;
+                margin-left: 10px;
             }
 
             .debug-data-labels {
@@ -79,18 +90,26 @@ export class MeshView extends LitElement {
                     <div class="canvas-caption">
                         <span>${this.caption}</span>
                     </div>
-                    <!-- <div hidden="[[!showDebugData]]" class="debug-data">
-                        <div class="debug-data-labels">
-                            <template is="dom-repeat" items="[[_debugData]]">
-                                <div>[[item.label]]</div>
-                            </template>
-                        </div>
-                        <div class="debug-data-values">
-                            <template is="dom-repeat" items="[[_debugData]]">
-                                <div>[[item.value]]</div>
-                            </template>
-                        </div>
-                    </div> -->
+                    <!-- TODO: extract the debug-data markup into an external custom element -->
+                    <div class="debug-data">
+                        ${this.meshProvider.debugData.map(item => html`
+                            <div class="debug-data-item">
+                                <div>${item.name}</div>
+                                <div class="debug-data-item-fields">
+                                    <div class="debug-data-labels">
+                                        ${Object.keys(item.data).map((key, index) => html`
+                                            <div>${key}</div>
+                                        `)}
+                                    </div>
+                                    <div class="debug-data-values">
+                                        ${Object.keys(item.data).map((key, index) => html`
+                                        <div>${item.data[key]}</div>
+                                        `)}
+                                    </div>
+                                </div>
+                            </div>
+                        `)}
+                    </div>
                 </div>
             </div>
         `;

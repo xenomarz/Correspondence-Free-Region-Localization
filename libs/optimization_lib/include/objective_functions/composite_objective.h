@@ -18,19 +18,27 @@ public:
 	 */
 	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction> objective_function);
 	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions);
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction> objective_function, const std::string& name);
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions, const std::string& name);
 	virtual ~CompositeObjective();
+
+	/**
+	 * Public overrides
+	 */
+	bool IsValid();
 
 	/**
 	 * Public Methods
 	 */
 	void AddObjectiveFunction(const std::shared_ptr<ObjectiveFunction> objective_function);
 	void AddObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions);
-	bool IsValid();
+	const std::uint32_t GetObjectiveFunctionsCount() const;
+	const std::shared_ptr<ObjectiveFunction> GetObjectiveFunction(std::uint32_t index) const;
 
 private:
 
 	/**
-	 * Overrides
+	 * Private overrides
 	 */
 	void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss);
 	void CalculateValue(const Eigen::VectorXd& X, double& f);

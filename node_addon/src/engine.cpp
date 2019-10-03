@@ -1,6 +1,12 @@
-#include "../include/engine.h"
+// STL includes
+#include <sstream>
+
+// LIBIGL includes
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
+
+// Optimization lib includes
+#include "../include/engine.h"
 
 Napi::FunctionReference Engine::constructor;
 
@@ -26,7 +32,8 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceAccessor("positionWeight", &Engine::GetPositionWeight, &Engine::SetPositionWeight),
 		InstanceAccessor("seamlessWeight", &Engine::GetSeamlessWeight, &Engine::SetSeamlessWeight),
 		InstanceAccessor("lambda", &Engine::GetLambda, &Engine::SetLambda),
-		InstanceAccessor("delta", &Engine::GetDelta, &Engine::SetDelta)
+		InstanceAccessor("delta", &Engine::GetDelta, &Engine::SetDelta),
+		InstanceAccessor("objectiveFunctionsData", &Engine::GetObjectiveFunctionsData, nullptr)
 	});
 
 	constructor = Napi::Persistent(func);
@@ -176,21 +183,21 @@ Engine::ModelFileType Engine::GetModelFileType(std::string modelFilePath)
 
 Napi::Array Engine::CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F)
 {
-	Napi::Array facesArray = Napi::Array::New(env);
-	for (int faceIndex = 0; faceIndex < F.rows(); faceIndex++)
+	Napi::Array faces_array = Napi::Array::New(env);
+	for (int face_index = 0; face_index < F.rows(); face_index++)
 	{
-		Napi::Object faceObject = Napi::Object::New(env);
-		int v0 = F(faceIndex, 0);
-		int v1 = F(faceIndex, 1);
-		int v2 = F(faceIndex, 2);
+		Napi::Object face_object = Napi::Object::New(env);
+		int v0 = F(face_index, 0);
+		int v1 = F(face_index, 1);
+		int v2 = F(face_index, 2);
 
-		faceObject.Set("v0", v0);
-		faceObject.Set("v1", v1);
-		faceObject.Set("v2", v2);
-		facesArray[faceIndex] = faceObject;
+		face_object.Set("v0", v0);
+		face_object.Set("v1", v1);
+		face_object.Set("v2", v2);
+		faces_array[face_index] = face_object;
 	}
 
-	return facesArray;
+	return faces_array;
 }
 
 void Engine::TryUpdateImageVertices()
@@ -330,6 +337,28 @@ Napi::Value Engine::GetDelta(const Napi::CallbackInfo& info)
 	Napi::Number delta = Napi::Number::New(env, separation_->GetDelta());
 
 	return delta;
+}
+
+Napi::Value Engine::GetObjectiveFunctionsData(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	Napi::Array objective_functions_data_array = Napi::Array::New(env);
+	for (std::uint32_t index = 0; index < composite_objective_->GetObjectiveFunctionsCount(); index++)
+	{
+		Napi::Object data_object = Napi::Object::New(env);
+		Napi::Object data_object_internal = Napi::Object::New(env);
+
+		auto current_objective_function = composite_objective_->GetObjectiveFunction(index);
+		data_object.Set("name", current_objective_function->GetName());
+		data_object.Set("data", data_object_internal);
+		data_object_internal.Set("value", current_objective_function->GetValue());
+		data_object_internal.Set("gradientNorm", current_objective_function->GetGradient().norm());
+		objective_functions_data_array[index] = data_object;
+	}
+
+	return objective_functions_data_array;
 }
 
 Napi::Value Engine::ResumeSolver(const Napi::CallbackInfo& info)

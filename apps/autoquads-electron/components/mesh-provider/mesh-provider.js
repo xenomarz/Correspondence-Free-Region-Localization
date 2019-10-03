@@ -53,5 +53,9 @@ export class MeshProvider {
     get texturesFolderRelativePath() {
         const { join } = require('path');
         return join('./', this.texturesFolderName);
-    }      
+    }
+    
+    get debugData() {
+        return [];
+    }    
 }

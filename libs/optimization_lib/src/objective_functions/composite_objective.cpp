@@ -1,15 +1,27 @@
 #include <objective_functions/composite_objective.h>
 
-CompositeObjective::CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction> objective_function) :
-	ObjectiveFunction(objective_function_data_provider, "Composite Objective")
+CompositeObjective::CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions, const std::string& name) :
+	ObjectiveFunction(objective_function_data_provider, name)
 {
-	AddObjectiveFunction(objective_function);
+	AddObjectiveFunctions(objective_functions);
+}
+
+CompositeObjective::CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction> objective_function, const std::string& name) :
+	CompositeObjective(objective_function_data_provider, std::vector<std::shared_ptr<ObjectiveFunction>>{ objective_function }, name)
+{
+
 }
 
 CompositeObjective::CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions) :
-	ObjectiveFunction(objective_function_data_provider, "Composite Objective")
+	CompositeObjective(objective_function_data_provider, objective_functions, "Composite Objective")
 {
-	AddObjectiveFunctions(objective_functions);
+
+}
+
+CompositeObjective::CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction> objective_function) :
+	CompositeObjective(objective_function_data_provider, objective_function, "Composite Objective")
+{
+
 }
 
 CompositeObjective::~CompositeObjective()
@@ -96,8 +108,19 @@ void CompositeObjective::CalculateHessian(const Eigen::VectorXd& x, std::vector<
 	}
 }
 
+void CompositeObjective::PreInitialize()
+{
+	// Preorder scan
+	ObjectiveFunction::PreInitialize();
+	for (auto objective_function : objective_functions_)
+	{
+		objective_function->Initialize();
+	}
+}
+
 void CompositeObjective::Update(const Eigen::VectorXd& x)
 {
+	// Postorder scan
 	for (auto objective_function : objective_functions_)
 	{
 		objective_function->Update(x);
@@ -118,12 +141,12 @@ bool CompositeObjective::IsValid()
 	return false;
 }
 
-void CompositeObjective::PreInitialize()
+const std::uint32_t CompositeObjective::GetObjectiveFunctionsCount() const
 {
-	ObjectiveFunction::PreInitialize();
+	return objective_functions_.size();
+}
 
-	for (auto objective_function : objective_functions_)
-	{
-		objective_function->Initialize();
-	}
+const std::shared_ptr<ObjectiveFunction> CompositeObjective::GetObjectiveFunction(std::uint32_t index) const
+{
+	return objective_functions_.at(index);
 }

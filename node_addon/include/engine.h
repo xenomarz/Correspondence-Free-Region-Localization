@@ -36,9 +36,16 @@ private:
 	static Napi::FunctionReference constructor;
 
 	/**
-	 * NAPI private instance methods
+	 * NAPI private instance setters
 	 */
-	Napi::Value LoadModel(const Napi::CallbackInfo& info);
+	void SetPositionWeight(const Napi::CallbackInfo& info, const Napi::Value& value);
+	void SetSeamlessWeight(const Napi::CallbackInfo& info, const Napi::Value& value);
+	void SetLambda(const Napi::CallbackInfo& info, const Napi::Value& value);
+	void SetDelta(const Napi::CallbackInfo& info, const Napi::Value& value);
+
+	/**
+	 * NAPI private instance getters
+	 */
 	Napi::Value GetDomainVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetImageVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainFaces(const Napi::CallbackInfo& info);
@@ -47,14 +54,16 @@ private:
 	Napi::Value GetImageBufferedVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainBufferedMeshVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetImageBufferedMeshVertices(const Napi::CallbackInfo& info);
-	void SetPositionWeight(const Napi::CallbackInfo& info, const Napi::Value& value);
 	Napi::Value GetPositionWeight(const Napi::CallbackInfo& info);
-	void SetSeamlessWeight(const Napi::CallbackInfo& info, const Napi::Value& value);
 	Napi::Value GetSeamlessWeight(const Napi::CallbackInfo& info);
-	void SetLambda(const Napi::CallbackInfo& info, const Napi::Value& value);
 	Napi::Value GetLambda(const Napi::CallbackInfo& info);
-	void SetDelta(const Napi::CallbackInfo& info, const Napi::Value& value);
 	Napi::Value GetDelta(const Napi::CallbackInfo& info);
+	Napi::Value GetObjectiveFunctionsData(const Napi::CallbackInfo& info);
+
+	/**
+	 * NAPI private instance methods
+	 */
+	Napi::Value LoadModel(const Napi::CallbackInfo& info);
 	Napi::Value ResumeSolver(const Napi::CallbackInfo& info);
 	Napi::Value PauseSolver(const Napi::CallbackInfo& info);
 	Napi::Value ConstrainFacePosition(const Napi::CallbackInfo& info);

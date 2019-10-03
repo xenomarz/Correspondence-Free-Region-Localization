@@ -425,39 +425,6 @@ export class AutoquadsSideBar extends SideBar {
                 this[key] = state[key];
             }
         }  
-
-        // this.splitOrientation = state.splitOrientation;
-        // this.modelViewportColor = state.modelViewportColor;
-        // this.soupViewportColor = state.soupViewportColor;
-        // this.modelColor = state.modelColor;
-        // this.soupColor = state.soupColor;
-        // this.wireframeVisibility = state.wireframeVisibility;
-        // this.modelViewVisibility = state.modelViewVisibility;
-        // this.soupViewVisibility = state.soupViewVisibility;
-        // this.delta = state.delta;
-        // this.lambda = state.lambda;
-        // this.seamlessWeight = state.seamlessWeight;
-        // this.positionWeight = state.positionWeight;
-        // this.gridHorizontalColor = state.gridHorizontalColor;
-        // this.gridVerticalColor = state.gridVerticalColor;
-        // this.gridBackgroundColor1 = state.gridBackgroundColor1;
-        // this.gridBackgroundColor2 = state.gridBackgroundColor2;
-        // this.highlightedFaceColor = state.highlightedFaceColor;
-        // this.draggedFaceColor = state.draggedFaceColor;
-        // this.fixedFaceColor = state.fixedFaceColor;
-        // this.vertexEnergyColor = state.vertexEnergyColor;
-        // this.vertexEnergyType = state.vertexEnergyType;
-        // this.gridSize = state.gridSize;
-        // this.gridTextureSize = state.gridTextureSize;
-        // this.gridLineWidth = state.gridLineWidth;
-        // this.unitGridVisibility = state.unitGridVisibility;
-        // this.soupViewGridTextureVisibility = state.soupViewGridTextureVisibility;
-        // this.optimizationDataMonitorVisibility = state.optimizationDataMonitorVisibility;
-        // this.solverState = state.solverState;
-        // this.modelFilename = state.modelFilename;
-        // this.moduleFilename = state.moduleFilename;
-        // this.modelState = state.modelState;
-        // this.moduleState = state.moduleState;
     }
 
     /**
@@ -799,47 +766,47 @@ export class AutoquadsSideBar extends SideBar {
      firstUpdated() {
         const { join } = require('path');
         let moduleFilename = join(appRoot, 'node-addon.node');
-        store.dispatch(ActionsExports.loadModuleFile(moduleFilename)); 
+        store.dispatch(ActionsExports.loadModuleFile(moduleFilename));
+
+        // TODO: call removeEventListener for the 'focus' events
+        // https://stackoverflow.com/questions/22280139/prevent-space-button-from-triggering-any-other-button-click-in-jquery
+        this.shadowRoot.querySelectorAll('vaadin-button').forEach(function (item) {
+            item.addEventListener('focus', function () {
+                this.blur();
+            })
+        });
+
+        this.shadowRoot.querySelectorAll('vaadin-checkbox').forEach(function (item) {
+            item.addEventListener('focus', function () {
+                this.blur();
+            })
+        });  
      }
 
     connectedCallback() {
         super.connectedCallback();
 
-        this.reloadModelSubscriptionToken = require('pubsub-js').subscribe('reload-model', (name, payload) => {
-            let solverToggleButton = this.root.querySelector(".solver");
-            solverToggleButton.disabled = false;
-            document.addEventListener("keydown", this._documentKeyDown.bind(this));
-        });
-
-        this.addEventListener('side-bar-parameter-input-value-changed', this._sideBarParameterInputValueChanged);
-
-        document.querySelectorAll("vaadin-button").forEach(function (item) {
-            item.addEventListener('focus', function () {
-                this.blur();
-            })
-        });
-
-        document.querySelectorAll("vaadin-checkbox").forEach(function (item) {
-            item.addEventListener('focus', function () {
-                this.blur();
-            })
-        });        
+        this._keyDownBoundHandler = this._keyDownHandler.bind(this);
+        window.addEventListener('keydown', this._keyDownBoundHandler);
     }
     
     disconnectedCallback() {
-        // TODO: Remove event listeners
+        window.removeEventListener('keydown', this._keyDownBoundHandler);
         super.disconnectedCallback();
     }
 
-    _documentKeyDown(e) {
-        if (e.which === 32) {
-            e.stopPropagation();
-            e.preventDefault();
-            this.solver = !this.solver;
-        } else if (e.which === 192) {
-            e.stopPropagation();
-            e.preventDefault();
-            this.showOptimizationDataMonitor = !this.showOptimizationDataMonitor;
+    _keyDownHandler(e) {
+        switch(e.which) {
+            case 32:
+                switch(this.solverState) {
+                    case EnumsExports.SolverState.OFF:
+                        store.dispatch(ActionsExports.resumeSolver());
+                        break;
+                    case EnumsExports.SolverState.ON:
+                        store.dispatch(ActionsExports.pauseSolver());
+                        break;
+                }
+                break;
         }
     }
 
