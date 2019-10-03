@@ -241,40 +241,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
             if(localState[key] !== state[key]) {
                 this[key] = state[key];
             }
-        }  
-
-        // this.splitOrientation = state.splitOrientation;
-        // this.modelViewportColor = state.modelViewportColor;
-        // this.soupViewportColor = state.soupViewportColor;
-        // this.modelColor = state.modelColor;
-        // this.soupColor = state.soupColor;
-        // this.wireframeVisibility = state.wireframeVisibility;
-        // this.modelViewVisibility = state.modelViewVisibility;
-        // this.soupViewVisibility = state.soupViewVisibility;
-        // this.delta = state.delta;
-        // this.lambda = state.lambda;
-        // this.seamlessWeight = state.seamlessWeight;
-        // this.positionWeight = state.positionWeight;
-        // this.gridHorizontalColor = state.gridHorizontalColor;
-        // this.gridVerticalColor = state.gridVerticalColor;
-        // this.gridBackgroundColor1 = state.gridBackgroundColor1;
-        // this.gridBackgroundColor2 = state.gridBackgroundColor2;
-        // this.highlightedFaceColor = state.highlightedFaceColor;
-        // this.draggedFaceColor = state.draggedFaceColor;
-        // this.fixedFaceColor = state.fixedFaceColor;
-        // this.vertexEnergyColor = state.vertexEnergyColor;
-        // this.vertexEnergyType = state.vertexEnergyType;
-        // this.gridSize = state.gridSize;
-        // this.gridTextureSize = state.gridTextureSize;
-        // this.gridLineWidth = state.gridLineWidth;
-        // this.unitGridVisibility = state.unitGridVisibility;
-        // this.soupViewGridTextureVisibility = state.soupViewGridTextureVisibility;
-        // this.optimizationDataMonitorVisibility = state.optimizationDataMonitorVisibility;
-        // this.solverState = state.solverState;
-        // this.modelFilename = state.modelFilename;
-        // this.moduleFilename = state.moduleFilename;
-        // this.modelState = state.modelState;
-        // this.moduleState = state.moduleState;   
+        }    
     }
 
     /**
@@ -665,7 +632,9 @@ export class AutoquadsView extends connect(store)(LitElement) {
         });
 
         this._meshViewFaceDraggingSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging', (name, payload) => {
-            this._engine.updateConstrainedFacePosition(payload.face.id, payload.offset.x, payload.offset.y);
+            console.log('x: ' + payload.offset.x);
+            console.log('y: ' + payload.offset.y);
+            this._engine.updateConstrainedFacePosition(payload.face.id, -payload.offset.x, -payload.offset.y);
         });
 
         this._meshViewFaceDraggingEndSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging-end', (name, payload) => {

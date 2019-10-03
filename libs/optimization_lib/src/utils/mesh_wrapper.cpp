@@ -35,6 +35,11 @@ MeshWrapper::~MeshWrapper()
 
 }
 
+void MeshWrapper::SetImageVertices(const Eigen::MatrixX2d& v_im)
+{
+	v_im_ = v_im;
+}
+
 const Eigen::MatrixX3d& MeshWrapper::GetDomainVertices() const
 {
 	return v_dom_;

@@ -25,12 +25,14 @@ void Position::AddConstrainedVertex(Eigen::DenseIndex vertex_index, const Eigen:
 		auto constrained_index = constrained_vertices_count_;
 		constrained_vertices_count_++;
 		x_constrained_.conservativeResize(constrained_vertices_count_, 2);
+		x_constrained_initial_.conservativeResize(constrained_vertices_count_, 2);
 		im_vi_2_ci_[vertex_index] = constrained_index;
 		x_constrained_.row(constrained_index) = vertex_position;
+		x_constrained_initial_.row(constrained_index) = vertex_position;
 	}
 }
 
-void Position::ResetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position)
+void Position::UpdateConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position)
 {
 	std::lock_guard<std::mutex> lock(m_);
 	if (im_vi_2_ci_.find(vertex_index) != im_vi_2_ci_.end())
@@ -39,12 +41,24 @@ void Position::ResetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, co
 	}
 }
 
-void Position::OffsetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_offset)
+void Position::OffsetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_offset, const OffsetType offset_type)
 {
 	std::lock_guard<std::mutex> lock(m_);
 	if (im_vi_2_ci_.find(vertex_index) != im_vi_2_ci_.end())
 	{
-		x_constrained_.row(im_vi_2_ci_[vertex_index]) += vertex_offset;
+		Eigen::Vector2d relative_position;
+		switch (offset_type)
+		{
+		case OffsetType::RELATIVE_TO_CURRENT:
+			relative_position = x_constrained_.row(im_vi_2_ci_[vertex_index]);
+			break;
+
+		case OffsetType::RELATIVE_TO_INITIAL:
+			relative_position = x_constrained_initial_.row(im_vi_2_ci_[vertex_index]);
+			break;
+		}
+
+		x_constrained_.row(im_vi_2_ci_[vertex_index]) = relative_position + vertex_offset;
 	}
 }
 
@@ -63,6 +77,7 @@ void Position::RemoveConstrainedVertex(Eigen::DenseIndex vertex_index)
 		constrained_vertices_count_--;
 		im_vi_2_ci_.erase(vertex_index);
 		Utils::RemoveRow<Eigen::MatrixX2d>(x_constrained_, constrained_index);
+		Utils::RemoveRow<Eigen::MatrixX2d>(x_constrained_initial_, constrained_index);
 	}
 }
 
@@ -126,7 +141,7 @@ void Position::PreUpdate(const Eigen::VectorXd& x)
 {
 	if (im_vi_2_ci_.size() > 0)
 	{
-		x_current_.resize(2, constrained_vertices_count_);
+		x_current_.resize(constrained_vertices_count_, 2);
 		Eigen::DenseIndex current_vertex_index;
 		for (const auto& [image_vertex_index, constrained_index] : im_vi_2_ci_)
 		{

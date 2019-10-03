@@ -95,6 +95,11 @@ public:
 	virtual ~MeshWrapper();
 
 	/**
+	 * Setters
+	 */
+	void SetImageVertices(const Eigen::MatrixX2d& v_im);
+
+	/**
 	 * Getters
 	 */
 	const Eigen::MatrixX3i& GetImageFaces() const;

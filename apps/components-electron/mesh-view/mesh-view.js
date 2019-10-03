@@ -685,7 +685,7 @@ export class MeshView extends LitElement {
             if (this.enableMeshRotation) {
                 this._interactionService.send('BEGIN_MESH_ROTATION');
             }
-        } else if (e.keyCode === 18) {
+        } else if (e.keyCode === 17) {
             this._interactionService.send('BEGIN_FACE_SELECTION');
         }
     }
@@ -699,7 +699,7 @@ export class MeshView extends LitElement {
             if (this.enableMeshRotation) {
                 this._interactionService.send('END_MESH_ROTATION');
             }
-        } else if (e.keyCode === 18) {
+        } else if (e.keyCode === 17) {
             this._interactionService.send('END_FACE_SELECTION');
         }
     }

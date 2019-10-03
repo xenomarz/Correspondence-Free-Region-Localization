@@ -19,6 +19,14 @@
 class Position : public ObjectiveFunction
 {
 public:
+	/**
+	 * Public type definitions
+	 */
+	enum class OffsetType {
+		RELATIVE_TO_INITIAL,
+		RELATIVE_TO_CURRENT
+	};
+
 
 	/**
 	 * Constructors and destructor
@@ -30,14 +38,13 @@ public:
 	 * Public Methods
 	 */
 	void AddConstrainedVertex(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position);
-	void ResetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position);
-	void OffsetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_offset);
+	void UpdateConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position);
+	void OffsetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_offset, const OffsetType offset_type = OffsetType::RELATIVE_TO_INITIAL);
 	Eigen::Vector2d GetConstrainedVertexPosition(Eigen::DenseIndex vertex_index);
 	void RemoveConstrainedVertex(Eigen::DenseIndex vertex_index);
 	bool IsValid();
 
 private:
-
 	/**
 	 * Private type definitions
 	 */
@@ -57,6 +64,7 @@ private:
 	 */
 	std::unordered_map<Eigen::DenseIndex, Eigen::DenseIndex> im_vi_2_ci_;
 	Eigen::DenseIndex constrained_vertices_count_;
+	Eigen::MatrixX2d x_constrained_initial_;
 	Eigen::MatrixX2d x_constrained_;
 	Eigen::MatrixX2d x_current_;
 	Eigen::MatrixX2d x_diff_;

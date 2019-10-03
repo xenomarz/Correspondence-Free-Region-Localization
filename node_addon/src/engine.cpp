@@ -58,8 +58,8 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 		/**
 		 * Create newton method iterator
 		 */
-		image_vertices_ = mesh_wrapper_->GetImageVertices();
-		auto x0 = Eigen::Map<const Eigen::VectorXd>(image_vertices_.data(), image_vertices_.cols() * image_vertices_.rows());
+		auto image_vertices = mesh_wrapper_->GetImageVertices();
+		auto x0 = Eigen::Map<const Eigen::VectorXd>(image_vertices.data(), image_vertices.cols() * image_vertices.rows());
 		newton_method_ = std::make_unique<NewtonMethod<EigenSparseSolver>>(composite_objective_, x0);
 	});
 }
@@ -103,7 +103,7 @@ Napi::Value Engine::GetImageVertices(const Napi::CallbackInfo& info)
 
 	TryUpdateImageVertices();
 
-	return CreateVertices(env, image_vertices_);
+	return CreateVertices(env, mesh_wrapper_->GetImageVertices());
 }
 
 Napi::Value Engine::GetDomainFaces(const Napi::CallbackInfo& info)
@@ -137,7 +137,7 @@ Napi::Value Engine::GetImageBufferedVertices(const Napi::CallbackInfo& info)
 
 	TryUpdateImageVertices();
 
-	return CreateBufferedVerticesArray(env, image_vertices_);
+	return CreateBufferedVerticesArray(env, mesh_wrapper_->GetImageVertices());
 }
 
 Napi::Value Engine::GetDomainBufferedMeshVertices(const Napi::CallbackInfo& info)
@@ -155,7 +155,7 @@ Napi::Value Engine::GetImageBufferedMeshVertices(const Napi::CallbackInfo& info)
 
 	TryUpdateImageVertices();
 
-	return CreateBufferedMeshVerticesArray(env, image_vertices_, mesh_wrapper_->GetImageFaces());
+	return CreateBufferedMeshVerticesArray(env, mesh_wrapper_->GetImageVertices(), mesh_wrapper_->GetImageFaces());
 }
 
 Engine::ModelFileType Engine::GetModelFileType(std::string modelFilePath)
@@ -198,7 +198,8 @@ void Engine::TryUpdateImageVertices()
 	Eigen::VectorXd approximation_vector;
 	if (newton_method_->GetApproximation(approximation_vector))
 	{
-		image_vertices_ = Eigen::Map<const Eigen::MatrixX2d>(approximation_vector.data(), approximation_vector.rows() >> 1, 2);
+		auto image_vertices = Eigen::Map<const Eigen::MatrixX2d>(approximation_vector.data(), approximation_vector.rows() >> 1, 2);
+		mesh_wrapper_->SetImageVertices(image_vertices);
 	}
 }
 
@@ -441,7 +442,8 @@ Napi::Value Engine::UpdateConstrainedFacePosition(const Napi::CallbackInfo& info
 	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
 	for (int i = 0; i < 3; i++)
 	{
-		if (position_) {
+		if (position_) 
+		{
 			position_->OffsetConstrainedVertexPosition(face_vertices_indices(i), offset);
 		}
 	}
