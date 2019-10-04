@@ -7,6 +7,7 @@
 IterativeMethod::IterativeMethod(std::shared_ptr<ObjectiveFunction> objective_function, const Eigen::VectorXd& x0) :
 	objective_function_(objective_function),
 	x_(x0),
+	p_(Eigen::VectorXd::Zero(x0.size())),
 	thread_state_(ThreadState::TERMINATED),
 	max_backtracking_iterations_(10),
 	flip_avoiding_line_search_enabled_(false),

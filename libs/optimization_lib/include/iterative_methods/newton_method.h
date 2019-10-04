@@ -17,7 +17,7 @@
 #include "../solvers/solver.h"
 
 // https://en.wikipedia.org/wiki/Newton%27s_method_in_optimization
-template <class Derived>
+template <class Derived, Eigen::StorageOptions StorageOptions>
 class NewtonMethod : public IterativeMethod
 {
 public:
@@ -36,7 +36,7 @@ private:
 	void ComputeDescentDirection(Eigen::VectorXd& p)
 	{
 		auto objective_function = GetObjectiveFunction();
-		solver.Solve(objective_function->GetHessian(), -objective_function->GetGradient(), p);
+		solver.Solve(objective_function->GetHessian<StorageOptions>(), -objective_function->GetGradient(), p);
 	}
 
 	std::enable_if_t<std::is_base_of<Solver, Derived>::value, Derived> solver;

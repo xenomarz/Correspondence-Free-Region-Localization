@@ -92,7 +92,7 @@ export class MeshView extends LitElement {
                     </div>
                     <!-- TODO: extract the debug-data markup into an external custom element -->
                     <div class="debug-data">
-                        ${this.meshProvider.debugData.map(item => html`
+                        ${this.debugData.map(item => html`
                             <div class="debug-data-item">
                                 <div>${item.name}</div>
                                 <div class="debug-data-item-fields">
@@ -103,7 +103,7 @@ export class MeshView extends LitElement {
                                     </div>
                                     <div class="debug-data-values">
                                         ${Object.keys(item.data).map((key, index) => html`
-                                        <div>${item.data[key]}</div>
+                                            <div>${item.data[key]}</div>
                                         `)}
                                     </div>
                                 </div>
@@ -224,6 +224,9 @@ export class MeshView extends LitElement {
             useLights: {
                 type: Boolean,
                 attribute: 'use-lights'
+            },
+            debugData: {
+                type: Array
             }
         };
     }
@@ -241,7 +244,7 @@ export class MeshView extends LitElement {
         this._vertexSize = 15;
         this._vertexColors = [];
         this._mouseInCanvas = false;
-        this._debugData = [];
+        this.debugData = [];
         this._needResize = false;
         this._initializeStateMachine();
         this._createCamera();
@@ -589,9 +592,8 @@ export class MeshView extends LitElement {
     }    
 
     /**
-     * Mouse & Keyboard Handlers
+     * Mouse & keyboard handlers
      */
-
     _mouseDownHandler(e) {
         e.preventDefault();
         if (e.button === 0) {
@@ -726,7 +728,6 @@ export class MeshView extends LitElement {
     /**
      * Face and vertex intersection
      */
-
     _getMeshIntersection() {
         let intersections = this._raycaster.intersectObject(this._mesh);
         if (intersections.length > 0) {
@@ -815,9 +816,8 @@ export class MeshView extends LitElement {
     }
 
     /**
-     * Face & Vertex manipulation
+     * Face & vertex manipulation
      */
-
     _colorVertex(vertex, color) {
         this._vertexColors[vertex] = color;
     }
@@ -927,7 +927,6 @@ export class MeshView extends LitElement {
     /**
      * Scene manipulation
      */
-
     _resetAttributeArray(buffer, attributeArray) {
         let bufferLength = buffer.length;
         for (let i = 0; i < bufferLength; i++) {
@@ -961,6 +960,8 @@ export class MeshView extends LitElement {
     }
     
     _renderScene() {
+        this._updateDebugData();
+
         if(this._needResize) {
             this._resizeScene();
             this._needResize = false;
@@ -1007,7 +1008,6 @@ export class MeshView extends LitElement {
     /**
      * State machine actions
      */
-
     beginVertexSelection() {
         this._pointcloud.visible = true;
     }
@@ -1069,7 +1069,6 @@ export class MeshView extends LitElement {
     /**
      * Message publication
      */
-
     _publishFaceMessage(message, face, options) {
         let payload = {
             meshViewId: this.id,
@@ -1086,6 +1085,14 @@ export class MeshView extends LitElement {
 
         PubSub.publish(message, payload);         
     }
+
+    /**
+     * Debug data
+     */
+    _updateDebugData() {
+        this.debugData = this.meshProvider.debugData;
+    }
+
 }
 
 customElements.define('mesh-view', MeshView);

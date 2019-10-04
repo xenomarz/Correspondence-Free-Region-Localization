@@ -35,7 +35,23 @@ public:
 	const std::vector<int>& GetII() const;
 	const std::vector<int>& GetJJ() const;
 	const std::vector<double>& GetSS() const;
-	const Eigen::SparseMatrix<double>& GetHessian() const;
+
+	template<Eigen::StorageOptions StorageOptions>
+	const Eigen::SparseMatrix<double, StorageOptions>& GetHessian() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		switch (StorageOptions)
+		{
+		case Eigen::ColMajor:
+			return H_;
+		case Eigen::RowMajor:
+			return H_rm_;
+		}
+
+		return H_;
+	}
+
+	//const Eigen::SparseMatrix<double>& GetHessian(Eigen::StorageOptions sotrage_options = Eigen::ColMajor) const;
 	double GetWeight() const;
 
 	/**
@@ -115,7 +131,8 @@ private:
 	std::vector<int> ii_; 
 	std::vector<int> jj_;
 	std::vector<double> ss_;
-	Eigen::SparseMatrix<double> H_;
+	Eigen::SparseMatrix<double, Eigen::ColMajor> H_;
+	Eigen::SparseMatrix<double, Eigen::RowMajor> H_rm_;
 
 	// Weight
 	std::atomic<double> w_;

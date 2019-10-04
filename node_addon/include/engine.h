@@ -14,6 +14,7 @@
 // Optimization Lib Includes
 #include <libs/optimization_lib/include/utils/mesh_wrapper.h>
 #include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
+#include <libs/optimization_lib/include/solvers/pardiso_solver.h>
 #include <libs/optimization_lib/include/iterative_methods/newton_method.h>
 #include <libs/optimization_lib/include/objective_functions/composite_objective.h>
 #include <libs/optimization_lib/include/objective_functions/position.h>
@@ -160,7 +161,7 @@ private:
 	std::shared_ptr<Position> position_;
 	std::shared_ptr<Separation> separation_;
 	std::shared_ptr<SymmetricDirichlet> symmetric_dirichlet_;
-	std::unique_ptr<NewtonMethod<EigenSparseSolver>> newton_method_;
+	std::unique_ptr<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>> newton_method_;
 	std::vector<Eigen::DenseIndex> constrained_faces_indices;
 	Eigen::MatrixX2d image_vertices_;
 };

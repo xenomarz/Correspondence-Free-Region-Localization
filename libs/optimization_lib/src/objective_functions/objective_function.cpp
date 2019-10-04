@@ -59,6 +59,7 @@ void ObjectiveFunction::Update(const Eigen::VectorXd& x)
 		CalculateGradient(x, g_);
 		CalculateHessian(x, ss_);
 		Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_);
+		Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_rm_);
 		PostUpdate(x);
 	}
 }
@@ -101,12 +102,6 @@ const std::vector<double>& ObjectiveFunction::GetSS() const
 {
 	std::lock_guard<std::mutex> lock(m_);
 	return ss_;
-}
-
-const Eigen::SparseMatrix<double>& ObjectiveFunction::GetHessian() const
-{
-	std::lock_guard<std::mutex> lock(m_);
-	return H_;
 }
 
 double ObjectiveFunction::GetWeight() const

@@ -67,7 +67,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 		 */
 		auto image_vertices = mesh_wrapper_->GetImageVertices();
 		auto x0 = Eigen::Map<const Eigen::VectorXd>(image_vertices.data(), image_vertices.cols() * image_vertices.rows());
-		newton_method_ = std::make_unique<NewtonMethod<EigenSparseSolver>>(composite_objective_, x0);
+		newton_method_ = std::make_unique<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>>(composite_objective_, x0);
 	});
 }
 

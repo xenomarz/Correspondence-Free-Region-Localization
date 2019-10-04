@@ -49,7 +49,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 	CXX_STANDARD 20
 	PREFIX ""
 	SUFFIX ".node"
-	VS_GLOBAL_UseIntelMKL "Parallel"
+	VS_GLOBAL_UseIntelMKL "Sequential"
 	VS_GLOBAL_UseIntelTBB "Yes")
 
 if (MSVC)
