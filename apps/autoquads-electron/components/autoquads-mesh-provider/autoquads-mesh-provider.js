@@ -1,5 +1,11 @@
 import { MeshProvider } from '../mesh-provider/mesh-provider.js';
 import * as THREE from '../../web_modules/three.js';
+
+export const BufferedPrimitiveType = {
+    VERTEX: 0,
+    TRIANGLE: 1
+};
+
 export class AutoquadsMeshProvider extends MeshProvider {
     constructor(engine, vertexEnergyType, energyColor, meshColor) {
         super();
@@ -31,21 +37,6 @@ export class AutoquadsMeshProvider extends MeshProvider {
 
     get vertexEnergyType() {
         return this._vertexEnergyType;
-    }
-
-    get bufferedMeshUvs() {
-        let bufferedMeshUvs = new Array();
-        let bufferedVertices = this._engine.solverBufferedMeshVertices;
-        let bufferedVerticesLength = bufferedVertices.length;
-        let j = 0;
-        for (let i = 0; i < bufferedVerticesLength; i++) {
-            if (i % 3 !== 2) {
-                bufferedMeshUvs[j] = bufferedVertices[i];
-                j++;
-            }
-        }
-
-        return bufferedMeshUvs;
     }
 
     get bufferedMeshVertexColors() {

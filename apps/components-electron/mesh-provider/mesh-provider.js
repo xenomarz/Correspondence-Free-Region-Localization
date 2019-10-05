@@ -3,28 +3,24 @@ export class MeshProvider {
 
     }
 
-    get vertices() {
+    getFaces() {
         return [];
     }
 
-    get faces() {
+    getVertices() {
         return [];
     }
 
-    get bufferedVertices() {
-        return [];
+    getBufferedVertices() {
+        return new Float32Array();
     }
 
-    get bufferedMeshVertices() {
-        return [];
+    getBufferedUvs() {
+        return new Float32Array();
     }
 
-    get bufferedMeshUvs() {
-        return [];
-    }
-
-    get bufferedMeshVertexColors() {
-        return [];
+    getBufferedColors() {
+        return new Float32Array();
     }
 
     get shadersFolderName() {

@@ -27,11 +27,26 @@ public:
 	Engine(const Napi::CallbackInfo& info);
 
 private:
+	/**
+	 * Private type definitions
+	 */
 	enum class ModelFileType
 	{
 		OBJ,
 		OFF,
 		UNKNOWN
+	};
+
+	enum class BufferedPrimitiveType : uint32_t
+	{
+		VERTEX = 0,
+		TRIANGLE
+	};
+
+	enum class VerticesSource
+	{
+		DOMAIN_VERTICES,
+		IMAGE_VERTICES
 	};
 
 	static Napi::FunctionReference constructor;
@@ -47,14 +62,6 @@ private:
 	/**
 	 * NAPI private instance getters
 	 */
-	Napi::Value GetDomainVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetImageVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetDomainFaces(const Napi::CallbackInfo& info);
-	Napi::Value GetImageFaces(const Napi::CallbackInfo& info);
-	Napi::Value GetDomainBufferedVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetImageBufferedVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetDomainBufferedMeshVertices(const Napi::CallbackInfo& info);
-	Napi::Value GetImageBufferedMeshVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetPositionWeight(const Napi::CallbackInfo& info);
 	Napi::Value GetSeamlessWeight(const Napi::CallbackInfo& info);
 	Napi::Value GetLambda(const Napi::CallbackInfo& info);
@@ -64,6 +71,14 @@ private:
 	/**
 	 * NAPI private instance methods
 	 */
+	Napi::Value GetDomainFaces(const Napi::CallbackInfo& info);
+	Napi::Value GetImageFaces(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetImageVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainBufferedVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetImageBufferedVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainBufferedUvs(const Napi::CallbackInfo& info);
+	Napi::Value GetImageBufferedUvs(const Napi::CallbackInfo& info);
 	Napi::Value LoadModel(const Napi::CallbackInfo& info);
 	Napi::Value ResumeSolver(const Napi::CallbackInfo& info);
 	Napi::Value PauseSolver(const Napi::CallbackInfo& info);
@@ -76,15 +91,16 @@ private:
 	 */
 	ModelFileType GetModelFileType(std::string filename);
 	Napi::Array CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F);
+	Napi::Float32Array GetBufferedVertices(const Napi::CallbackInfo& info, const VerticesSource vertices_source);
 	void TryUpdateImageVertices();
 
 	/**
 	 * Regular private templated instance methods
 	 */
 	template <typename Derived>
-	Napi::Array CreateVertices(Napi::Env env, const Eigen::MatrixBase<Derived>& V)
+	Napi::Array CreateVerticesArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V)
 	{
-		Napi::Array vertices_array = Napi::Array::New(env);
+		Napi::Array vertices_array = Napi::Array::New(env, V.rows());
 		auto entries_per_vertex = V.cols();
 		for (int vertex_index = 0; vertex_index < V.rows(); vertex_index++)
 		{
@@ -108,11 +124,13 @@ private:
 	}
 
 	template <typename Derived>
-	Napi::Array CreateBufferedVerticesArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V)
+	Napi::Float32Array CreateBufferedVerticesArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V)
 	{
-		Napi::Array buffered_vertices_array = Napi::Array::New(env);
-		auto entries_per_vertex = V.cols();
-		for (int vertex_index = 0; vertex_index < V.rows(); vertex_index++)
+		Napi::Float32Array buffered_vertices_array = Napi::Float32Array::New(env, 3 * V.rows());
+		uint32_t entries_per_vertex = V.cols();
+
+		#pragma omp parallel for
+		for (uint32_t vertex_index = 0; vertex_index < V.rows(); vertex_index++)
 		{
 			float x = V(vertex_index, 0);
 			float y = V(vertex_index, 1);
@@ -128,29 +146,57 @@ private:
 	}
 
 	template <typename Derived>
-	Napi::Array CreateBufferedMeshVerticesArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V, const Eigen::MatrixXi& F)
+	Napi::Float32Array CreateBufferedVerticesArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V, const Eigen::MatrixXi& F)
 	{
-		Napi::Array buffered_mesh_vertices_array = Napi::Array::New(env);
-		auto entries_per_vertex = V.cols();
-		auto entries_per_face = 9;
-		for (int face_index = 0; face_index < F.rows(); face_index++)
+		uint32_t entries_per_face = 9;
+		uint32_t entries_per_vertex = V.cols();
+		Napi::Float32Array buffered_vertices_array = Napi::Float32Array::New(env, entries_per_face * F.rows());
+
+		#pragma omp parallel for
+		for (uint32_t face_index = 0; face_index < F.rows(); face_index++)
 		{
 			int base_index = entries_per_face * face_index;
-			for (int i = 0; i < 3; i++)
+			for (uint32_t i = 0; i < 3; i++)
 			{
-				int vertex_index = F(face_index, i);
+				uint32_t vertex_index = F(face_index, i);
 				float x = V(vertex_index, 0);
 				float y = V(vertex_index, 1);
 				float z = entries_per_vertex == 2 ? 0 : V(vertex_index, 2);
 				
 				int base_vertex_index = base_index + 3 * i;
-				buffered_mesh_vertices_array[base_vertex_index] = x;
-				buffered_mesh_vertices_array[base_vertex_index + 1] = y;
-				buffered_mesh_vertices_array[base_vertex_index + 2] = z;
+				buffered_vertices_array[base_vertex_index] = x;
+				buffered_vertices_array[base_vertex_index + 1] = y;
+				buffered_vertices_array[base_vertex_index + 2] = z;
 			}
 		}
 
-		return buffered_mesh_vertices_array;
+		return buffered_vertices_array;
+	}
+
+	template <typename Derived>
+	Napi::Float32Array CreateBufferedUvsArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V, const Eigen::MatrixXi& F)
+	{
+		uint32_t entries_per_face = 6;
+		uint32_t entries_per_vertex = V.cols();
+		Napi::Float32Array buffered_uvs_array = Napi::Float32Array::New(env, entries_per_face * F.rows());
+
+		#pragma omp parallel for
+		for (uint32_t face_index = 0; face_index < F.rows(); face_index++)
+		{
+			int base_index = entries_per_face * face_index;
+			for (uint32_t i = 0; i < 3; i++)
+			{
+				uint32_t vertex_index = F(face_index, i);
+				float x = V(vertex_index, 0);
+				float y = V(vertex_index, 1);
+
+				int base_vertex_index = base_index + 2 * i;
+				buffered_uvs_array[base_vertex_index] = x;
+				buffered_uvs_array[base_vertex_index + 1] = y;
+			}
+		}
+
+		return buffered_uvs_array;
 	}
 
 	/**

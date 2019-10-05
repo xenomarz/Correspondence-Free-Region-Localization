@@ -1,3 +1,12 @@
+/**
+ * Copyright 2004-2019 Intel Corporation.
+ *
+ * The following code is based on examples provided by Intel MKL package.
+ * You may find the examples under "${IntelSWTools_root}\compilers_and_libraries\windows\mkl\examples\examples_core_c.zip".
+ * For further reference and documentation, please see:
+ * https://software.intel.com/en-us/mkl-developer-reference-c-intel-mkl-pardiso-parallel-direct-sparse-solver-interface
+ */
+
 // Optimization lib includes
 #include <solvers/pardiso_solver.h>
 #include <utils/utils.h>
@@ -61,7 +70,7 @@ void PardisoSolver::Solve(const Eigen::SparseMatrix<double, Eigen::StorageOption
 
 void PardisoSolver::Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::RowMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x)
 {
-	// TODO: Verify if the commented-out steps are needed
+	// TODO: Verify if the commented-out steps are still needed in certain cases
 	//auto A_copy = A;
 
 	//#pragma omp parallel for

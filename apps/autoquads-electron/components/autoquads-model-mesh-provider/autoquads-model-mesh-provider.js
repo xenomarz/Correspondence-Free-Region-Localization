@@ -1,22 +1,26 @@
-import { AutoquadsMeshProvider } from '../autoquads-mesh-provider/autoquads-mesh-provider.js';
+import { AutoquadsMeshProvider, BufferedPrimitiveType } from '../autoquads-mesh-provider/autoquads-mesh-provider.js';
 export class AutoquadsModelMeshProvider extends AutoquadsMeshProvider {
     constructor(engine, vertexEnergyType, energyColor, meshColor) {
         super(engine, vertexEnergyType, energyColor, meshColor);
     }
 
-    get vertices() {
-        return this._engine.domainVertices;
+    getFaces() {
+        return this._engine.getDomainFaces();
     }
 
-    get faces() {
-        return this._engine.domainFaces;
+    getVertices() {
+        return this._engine.getDomainVertices();
     }
 
-    get bufferedVertices() {
-        return this._engine.domainBufferedVertices;
+    getBufferedVertices() {
+        return this._engine.getDomainBufferedVertices(BufferedPrimitiveType.TRIANGLE);
     }
 
-    get bufferedMeshVertices() {
-        return this._engine.domainBufferedMeshVertices;
+    getBufferedUvs() {
+        return this._engine.getDomainBufferedUvs();
     }
+
+    getBufferedColors() {
+        return new Float32Array();
+    }    
 }

@@ -21,14 +21,14 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("constrainFacePosition", &Engine::ConstrainFacePosition),
 		InstanceMethod("updateConstrainedFacePosition", &Engine::UpdateConstrainedFacePosition),
 		InstanceMethod("unconstrainFacePosition", &Engine::UnconstrainFacePosition),
-		InstanceAccessor("domainBufferedVertices", &Engine::GetDomainBufferedVertices, nullptr),
-		InstanceAccessor("imageBufferedVertices", &Engine::GetImageBufferedVertices, nullptr),
-		InstanceAccessor("domainBufferedMeshVertices", &Engine::GetDomainBufferedMeshVertices, nullptr),
-		InstanceAccessor("imageBufferedMeshVertices", &Engine::GetImageBufferedMeshVertices, nullptr),
-		InstanceAccessor("domainVertices", &Engine::GetDomainVertices, nullptr),
-		InstanceAccessor("imageVertices", &Engine::GetImageVertices, nullptr),
-		InstanceAccessor("domainFaces", &Engine::GetDomainFaces, nullptr),
-		InstanceAccessor("imageFaces", &Engine::GetImageFaces, nullptr),
+		InstanceMethod("getDomainFaces", &Engine::GetDomainFaces),
+		InstanceMethod("getImageFaces", &Engine::GetImageFaces),
+		InstanceMethod("getDomainVertices", &Engine::GetDomainVertices),
+		InstanceMethod("getImageVertices", &Engine::GetImageVertices),
+		InstanceMethod("getDomainBufferedVertices", &Engine::GetDomainBufferedVertices),
+		InstanceMethod("getImageBufferedVertices", &Engine::GetImageBufferedVertices),
+		InstanceMethod("getDomainBufferedUvs", &Engine::GetDomainBufferedUvs),
+		InstanceMethod("getImageBufferedUvs", &Engine::GetImageBufferedUvs),
 		InstanceAccessor("positionWeight", &Engine::GetPositionWeight, &Engine::SetPositionWeight),
 		InstanceAccessor("seamlessWeight", &Engine::GetSeamlessWeight, &Engine::SetSeamlessWeight),
 		InstanceAccessor("lambda", &Engine::GetLambda, &Engine::SetLambda),
@@ -72,48 +72,6 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	});
 }
 
-Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
-{
-	Napi::Env env = info.Env();
-	Napi::HandleScope scope(env);
-
-	/**
-	 * Validate input arguments
-	 */
-	if (info.Length() <= 0 || !info[0].IsString()) 
-	{
-		Napi::TypeError::New(env, "String expected").ThrowAsJavaScriptException();
-		return env.Null();
-	}
-
-	/**
-	 * Load model
-	 */
-	 Napi::String value = info[0].As<Napi::String>();
-	 std::string model_file_path = std::string(value);
-	 mesh_wrapper_->LoadModel(model_file_path);
-
-	return env.Null();
-}
-
-Napi::Value Engine::GetDomainVertices(const Napi::CallbackInfo& info)
-{
-	Napi::Env env = info.Env();
-	Napi::HandleScope scope(env);
-
-	return CreateVertices(env, mesh_wrapper_->GetDomainVertices());
-}
-
-Napi::Value Engine::GetImageVertices(const Napi::CallbackInfo& info)
-{
-	Napi::Env env = info.Env();
-	Napi::HandleScope scope(env);
-
-	TryUpdateImageVertices();
-
-	return CreateVertices(env, mesh_wrapper_->GetImageVertices());
-}
-
 Napi::Value Engine::GetDomainFaces(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
@@ -130,40 +88,133 @@ Napi::Value Engine::GetImageFaces(const Napi::CallbackInfo& info)
 	return CreateFaces(env, mesh_wrapper_->GetImageFaces());
 }
 
-Napi::Value Engine::GetDomainBufferedVertices(const Napi::CallbackInfo& info)
+Napi::Value Engine::GetDomainVertices(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	return CreateBufferedVerticesArray(env, mesh_wrapper_->GetDomainVertices());
+	return CreateVerticesArray(env, mesh_wrapper_->GetDomainVertices());
+}
+
+Napi::Value Engine::GetImageVertices(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	TryUpdateImageVertices();
+
+	return CreateVerticesArray(env, mesh_wrapper_->GetImageVertices());
+}
+
+Napi::Value Engine::GetDomainBufferedVertices(const Napi::CallbackInfo& info)
+{
+	TryUpdateImageVertices();
+	return GetBufferedVertices(info, VerticesSource::DOMAIN_VERTICES);
 }
 
 Napi::Value Engine::GetImageBufferedVertices(const Napi::CallbackInfo& info)
 {
-	Napi::Env env = info.Env();
-	Napi::HandleScope scope(env);
-
 	TryUpdateImageVertices();
-
-	return CreateBufferedVerticesArray(env, mesh_wrapper_->GetImageVertices());
+	return GetBufferedVertices(info, VerticesSource::IMAGE_VERTICES);
 }
 
-Napi::Value Engine::GetDomainBufferedMeshVertices(const Napi::CallbackInfo& info)
-{
-	Napi::Env env = info.Env();
-	Napi::HandleScope scope(env);
-
-	return CreateBufferedMeshVerticesArray(env, mesh_wrapper_->GetDomainVertices(), mesh_wrapper_->GetDomainFaces());
-}
-
-Napi::Value Engine::GetImageBufferedMeshVertices(const Napi::CallbackInfo& info)
+Napi::Value Engine::GetDomainBufferedUvs(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
 	TryUpdateImageVertices();
 
-	return CreateBufferedMeshVerticesArray(env, mesh_wrapper_->GetImageVertices(), mesh_wrapper_->GetImageFaces());
+	return CreateBufferedUvsArray(env, mesh_wrapper_->GetImageVertices(), mesh_wrapper_->GetImageFaces());
+}
+
+Napi::Value Engine::GetImageBufferedUvs(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	TryUpdateImageVertices();
+
+	return CreateBufferedUvsArray(env, mesh_wrapper_->GetImageVertices(), mesh_wrapper_->GetImageFaces());
+}
+
+Napi::Float32Array Engine::GetBufferedVertices(const Napi::CallbackInfo& info, const VerticesSource vertices_source)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (info.Length() >= 1)
+	{
+		if (!info[0].IsString())
+		{
+			Napi::TypeError::New(env, "First argument is expected to be a String").ThrowAsJavaScriptException();
+			return Napi::Float32Array::New(env, 0);
+		}
+	}
+	else
+	{
+		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
+		return Napi::Float32Array::New(env, 0);
+	}
+
+	/**
+	 * Create buffered vertices array according to the provided primitive type
+	 */
+	Napi::Number argument1 = info[0].As<Napi::Number>();
+	BufferedPrimitiveType buffered_primitive_type = static_cast<BufferedPrimitiveType>(argument1.Uint32Value());
+
+	switch (buffered_primitive_type)
+	{
+	case BufferedPrimitiveType::VERTEX:
+		switch (vertices_source)
+		{
+		case VerticesSource::DOMAIN_VERTICES:
+			return CreateBufferedVerticesArray(env, mesh_wrapper_->GetDomainVertices());
+		case VerticesSource::IMAGE_VERTICES:
+			return CreateBufferedVerticesArray(env, mesh_wrapper_->GetImageVertices());
+		}
+		break;
+
+	case BufferedPrimitiveType::TRIANGLE:
+		switch (vertices_source)
+		{
+		case VerticesSource::DOMAIN_VERTICES:
+			return CreateBufferedVerticesArray(env, mesh_wrapper_->GetDomainVertices(), mesh_wrapper_->GetDomainFaces());
+		case VerticesSource::IMAGE_VERTICES:
+			return CreateBufferedVerticesArray(env, mesh_wrapper_->GetImageVertices(), mesh_wrapper_->GetImageFaces());
+		}
+		break;
+	}
+
+	Napi::TypeError::New(env, "Unknown buffered primitive type").ThrowAsJavaScriptException();
+	return Napi::Float32Array::New(env, 0);
+}
+
+Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (info.Length() <= 0 || !info[0].IsString())
+	{
+		Napi::TypeError::New(env, "String expected").ThrowAsJavaScriptException();
+		return env.Null();
+	}
+
+	/**
+	 * Load model
+	 */
+	Napi::String value = info[0].As<Napi::String>();
+	std::string model_file_path = std::string(value);
+	mesh_wrapper_->LoadModel(model_file_path);
+
+	return env.Null();
 }
 
 Engine::ModelFileType Engine::GetModelFileType(std::string modelFilePath)
@@ -184,7 +235,7 @@ Engine::ModelFileType Engine::GetModelFileType(std::string modelFilePath)
 
 Napi::Array Engine::CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F)
 {
-	Napi::Array faces_array = Napi::Array::New(env);
+	Napi::Array faces_array = Napi::Array::New(env, F.rows());
 	for (int face_index = 0; face_index < F.rows(); face_index++)
 	{
 		Napi::Object face_object = Napi::Object::New(env);
