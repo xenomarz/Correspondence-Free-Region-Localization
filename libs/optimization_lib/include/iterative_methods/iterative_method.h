@@ -31,7 +31,7 @@ public:
 	void Resume();
 	void Terminate();
 	bool GetApproximation(Eigen::VectorXd& x);
-	void EnableFlipAvoidingLineSearch(Eigen::MatrixX3i& f);
+	void EnableFlipAvoidingLineSearch(const Eigen::MatrixX3i& f);
 	void DisableFlipAvoidingLineSearch();
 	const std::shared_ptr<ObjectiveFunction> GetObjectiveFunction() const;
 

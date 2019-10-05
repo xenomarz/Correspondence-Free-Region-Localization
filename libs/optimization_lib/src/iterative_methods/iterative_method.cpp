@@ -9,7 +9,7 @@ IterativeMethod::IterativeMethod(std::shared_ptr<ObjectiveFunction> objective_fu
 	x_(x0),
 	p_(Eigen::VectorXd::Zero(x0.size())),
 	thread_state_(ThreadState::TERMINATED),
-	max_backtracking_iterations_(10),
+	max_backtracking_iterations_(1),
 	flip_avoiding_line_search_enabled_(false),
 	approximation_invalidated_(false)
 {
@@ -159,7 +159,7 @@ bool IterativeMethod::GetApproximation(Eigen::VectorXd& x)
 	return false;
 }
 
-void IterativeMethod::EnableFlipAvoidingLineSearch(Eigen::MatrixX3i& F)
+void IterativeMethod::EnableFlipAvoidingLineSearch(const Eigen::MatrixX3i& F)
 {
 	F_ = F;
 	flip_avoiding_line_search_enabled_ = true;

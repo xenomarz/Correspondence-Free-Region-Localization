@@ -6,6 +6,9 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
+// MKL includes
+#include "mkl_types.h"
+
 // Optimization lib includes
 #include "./solver.h"
 
@@ -13,10 +16,37 @@
 class PardisoSolver : public Solver
 {
 public:
+	/**
+	 * Constructors and destructor
+	 */
 	PardisoSolver();
 	~PardisoSolver();
+
+	/**
+	 * Public overrides
+	 */
 	void Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x);
 	void Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::RowMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x);
+
+private:
+	/**
+	 * Fields
+	 */
+	MKL_INT n_;
+	MKL_INT* ia_;
+	MKL_INT* ja_;
+	MKL_INT mtype_;
+	MKL_INT nrhs_;
+	MKL_INT iparm_[64];
+	MKL_INT maxfct_;
+	MKL_INT mnum_;
+	MKL_INT phase_;
+	MKL_INT error_;
+	MKL_INT msglvl_;
+	MKL_INT idum_;
+	double ddum_;
+	double* a_;
+	void* pt_[64];
 };
 
 #endif

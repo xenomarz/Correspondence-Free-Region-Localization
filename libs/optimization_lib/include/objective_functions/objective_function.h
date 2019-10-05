@@ -16,6 +16,7 @@
 
 // Optimization Lib Includes
 #include "../utils/objective_function_data_provider.h"
+#include "../utils/utils.h"
 
 class ObjectiveFunction
 {
@@ -30,14 +31,38 @@ public:
 	/**
 	 * Getters
 	 */
-	double GetValue() const;
-	const Eigen::VectorXd& GetGradient() const;
-	const std::vector<int>& GetII() const;
-	const std::vector<int>& GetJJ() const;
-	const std::vector<double>& GetSS() const;
+	inline double GetValue() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return f_;
+	}
+
+	inline const Eigen::VectorXd& GetGradient() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return g_;
+	}
+
+	inline const std::vector<int>& GetII() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return ii_;
+	}
+
+	inline const std::vector<int>& GetJJ() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return jj_;
+	}
+
+	inline const std::vector<double>& GetSS() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return ss_;
+	}
 
 	template<Eigen::StorageOptions StorageOptions>
-	const Eigen::SparseMatrix<double, StorageOptions>& GetHessian() const
+	inline const Eigen::SparseMatrix<double, StorageOptions>& GetHessian() const
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		switch (StorageOptions)
@@ -51,8 +76,11 @@ public:
 		return H_;
 	}
 
-	//const Eigen::SparseMatrix<double>& GetHessian(Eigen::StorageOptions sotrage_options = Eigen::ColMajor) const;
-	double GetWeight() const;
+	inline double GetWeight() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return w_;
+	}
 
 	/**
 	 * Setters
@@ -68,7 +96,20 @@ public:
 	void Initialize();
 
 	// Update value, gradient and hessian for a given x
-	virtual void Update(const Eigen::VectorXd& x);
+	inline void Update(const Eigen::VectorXd& x)
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		if (IsValid())
+		{
+			PreUpdate(x);
+			CalculateValue(x, f_);
+			CalculateGradient(x, g_);
+			CalculateHessian(x, ss_);
+			//Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_);
+			Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_rm_);
+			PostUpdate(x);
+		}
+	}
 
 	// Returns true is the objective function's state is valid, false otherwise
 	virtual bool IsValid();

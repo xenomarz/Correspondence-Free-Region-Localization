@@ -140,7 +140,7 @@ void Separation::CalculateHessian(const Eigen::VectorXd& x, std::vector<double>&
 	int threads = omp_get_max_threads();
 
 	// no inner loop because there are only 2 nnz values per col
-	//#pragma omp parallel for num_threads(threads)
+	#pragma omp parallel for num_threads(threads)
 	for (int i = 0; i < Esept.outerSize(); ++i)
 	{
 		int tid = omp_get_thread_num();
@@ -219,6 +219,6 @@ void Separation::PreInitialize()
 	connect_alphas = Eigen::VectorXd::Zero(Esep.rows());
 	disconnect_alphas = Eigen::VectorXd::Ones(Esep.rows());
 
-	edge_lenghts_per_pair = Eigen::VectorXd::Ones(Esept.cols());
+	//edge_lenghts_per_pair = Eigen::VectorXd::Ones(Esept.cols());
 	no_seam_constraints_per_pair = Eigen::VectorXd::Zero(Esept.cols());
 }

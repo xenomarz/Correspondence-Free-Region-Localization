@@ -1,3 +1,5 @@
+#define EIGEN_USE_MKL_ALL
+
 #include <napi.h>
 #include "../include/engine.h"
 

@@ -99,6 +99,8 @@ void CompositeObjective::CalculateHessian(const Eigen::VectorXd& x, std::vector<
 		if (w != 0)
 		{
 			auto current_ss = objective_function->GetSS();
+
+			#pragma omp parallel for
 			for (int i = 0; i < current_ss.size(); i++)
 			{
 				current_ss[i] = w * current_ss[i];
@@ -118,14 +120,13 @@ void CompositeObjective::PreInitialize()
 	}
 }
 
-void CompositeObjective::Update(const Eigen::VectorXd& x)
+void CompositeObjective::PreUpdate(const Eigen::VectorXd& x)
 {
 	// Postorder scan
 	for (auto objective_function : objective_functions_)
 	{
 		objective_function->Update(x);
 	}
-	ObjectiveFunction::Update(x);
 }
 
 bool CompositeObjective::IsValid()
