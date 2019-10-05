@@ -2,6 +2,7 @@
 import { LitElement, html, css } from '../../web_modules/lit-element.js';
 import { Machine, interpret } from '../../web_modules/xstate.js';
 import { PubSub } from '../../web_modules/pubsub-js.js';
+import chroma from '../../web_modules/chroma-js.js';
 import * as THREE from '../../web_modules/three.js';
 import OrbitControls from '../../web_modules/three-orbit-controls.js';
 
@@ -254,9 +255,90 @@ export class MeshView extends LitElement {
         this._createOrbitControl();
         this._createRaycaster();
     }
+
+    /**
+     * Properties
+     */
+
+    set gridHorizontalColor(value) {
+        const oldValue = this._gridHorizontalColor;
+        this._gridHorizontalColor = value;
+        this._reinitializeMeshTexture();
+        this.requestUpdate('gridHorizontalColor', oldValue);
+    }
+
+    get gridHorizontalColor() {
+        return this._gridHorizontalColor;
+    }
+
+    set gridVerticalColor(value) {
+        const oldValue = this._gridVerticalColor;
+        this._gridVerticalColor = value;
+        this._reinitializeMeshTexture();
+        this.requestUpdate('gridVerticalColor', oldValue);
+    }
+
+    get gridVerticalColor() {
+        return this._gridVerticalColor;
+    } 
+
+    set gridBackgroundColor1(value) {
+        const oldValue = this._gridBackgroundColor1;
+        this._gridBackgroundColor1 = value;
+        this._reinitializeMeshTexture();
+        this.requestUpdate('gridBackgroundColor1', oldValue);
+    }
+
+    get gridBackgroundColor1() {
+        return this._gridBackgroundColor1;
+    }
+
+    set gridBackgroundColor2(value) {
+        const oldValue = this._gridBackgroundColor2;
+        this._gridBackgroundColor2 = value;
+        this._reinitializeMeshTexture();
+        this.requestUpdate('gridBackgroundColor2', oldValue);
+    }
+
+    get gridBackgroundColor2() {
+        return this._gridBackgroundColor2;
+    }
+
+    set gridSize(value) {
+        const oldValue = this._gridSize;
+        this._gridSize = value;
+        this._reinitializeMeshTexture();
+        this.requestUpdate('gridSize', oldValue);
+    }
+
+    get gridSize() {
+        return this._gridSize;
+    }     
+
+    set gridTextureSize(value) {
+        const oldValue = this._gridTextureSize;
+        this._gridTextureSize = value;
+        this._reinitializeMeshTexture();
+        this.requestUpdate('gridTextureSize', oldValue);
+    }
+
+    get gridTextureSize() {
+        return this._gridTextureSize;
+    }     
+
+    set gridLineWidth(value) {
+        const oldValue = this._gridLineWidth;
+        this._gridLineWidth = value;
+        this._reinitializeMeshTexture();
+        this.requestUpdate('gridLineWidth', oldValue);
+    }
+
+    get gridLineWidth() {
+        return this._gridLineWidth;
+    } 
     
     /**
-     * Public/Interface Methods
+     * Public methods
      */
 
     firstUpdated() {
@@ -347,6 +429,7 @@ export class MeshView extends LitElement {
         this._initializeMesh();
         this._initializeMeshWireframe();
         this._initializePointcloud();
+        this._initializeTextures();
         this.requestUpdate('meshProvider', oldValue);
     }
 
@@ -396,13 +479,12 @@ export class MeshView extends LitElement {
     }      
 
     /**
-     * Private Methods
+     * Private methods
      */
 
     /**
      * Initialization
      */
-
     _initializeLights() {
         let ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
         this._pointLight = new THREE.PointLight(0xffffff, 0.8, 0);
@@ -773,7 +855,6 @@ export class MeshView extends LitElement {
     /**
      * Three.js objects creation
      */
-
     _createCamera() {
         this._camera = new THREE.PerspectiveCamera(45, 0, 0.1, 10000);
         this._camera.position.x = 0;
@@ -814,6 +895,119 @@ export class MeshView extends LitElement {
         this._raycaster = new THREE.Raycaster();
         this._raycaster.params.Points.threshold = 0.05;
     }
+
+    /**
+     * Textures
+     */
+    _initializeGridTexture(textureSizeExp, gridSizeExp, lineWidthFactor, backgroundColor1, backgroundColor2, horizontalColor, verticalColor) {
+        // let lineWidth = 2 * lineWidthFactor + 1;
+        let gridSize = Math.pow(2, gridSizeExp);
+        let textureSize = Math.pow(2, textureSizeExp);
+
+        let canvas = document.createElement("canvas");
+        let context = canvas.getContext("2d");
+        canvas.width = textureSize;
+        canvas.height = textureSize;
+
+        let setColor = (x, y, color) => {
+            context.fillStyle = chroma(color.r, color.g, color.b).css();
+            context.fillRect(x, y, 1, 1);
+        }
+
+        let paintHorizontalLine = (y) => {
+            for (let x = 0; x < textureSize; x++) {
+                setColor(x, y, horizontalColor);
+            }
+        }
+
+        let paintVerticalLine = (x) => {
+            for (let y = 0; y < textureSize; y++) {
+                setColor(x, y, verticalColor);
+            }
+        }
+
+        let paintRegion = (xStart, yStart, xEnd, yEnd, color) => {
+            for (let x = xStart; x <= xEnd; x++) {
+                for (let y = yStart; y <= yEnd; y++) {
+                    setColor(x, y, new THREE.Color(color));
+                }
+            }
+        }
+
+        let delta = textureSize / gridSize;
+        for (let i = 0; i < delta; i++) {
+            for (let j = 0; j < delta; j++) {
+                let xStart = i * gridSize;
+                let yStart = j * gridSize;
+
+                let xEnd = (i + 1) * gridSize;
+                let yEnd = (j + 1) * gridSize;
+
+                if (i % 2 === 0 && j % 2 === 0) {
+                    paintRegion(xStart, yStart, xEnd, yEnd, backgroundColor1);
+                } else if (i % 2 === 1 && j % 2 === 0) {
+                    paintRegion(xStart, yStart, xEnd, yEnd, backgroundColor2);
+                } else if (i % 2 === 0 && j % 2 === 1) {
+                    paintRegion(xStart, yStart, xEnd, yEnd, backgroundColor2);
+                } else if (i % 2 === 1 && j % 2 === 1) {
+                    paintRegion(xStart, yStart, xEnd, yEnd, backgroundColor1);
+                }
+            }
+        }
+
+        for (let i = 0; i <= delta; i++) {
+            if (i == 0) {
+                for (let y = 0; y < (lineWidthFactor + 1); y++) {
+                    paintHorizontalLine(y);
+                }
+            } else if (i == delta) {
+                for (let y = textureSize - lineWidthFactor; y < textureSize; y++) {
+                    paintHorizontalLine(y);
+                }
+            } else {
+                let xCenter = i * gridSize;
+                for (let y = xCenter - lineWidthFactor; y < xCenter + lineWidthFactor + 1; y++) {
+                    paintHorizontalLine(y);
+                }
+            }
+        }
+
+        for (let i = 0; i <= delta; i++) {
+            if (i == 0) {
+                for (let x = 0; x < (lineWidthFactor + 1); x++) {
+                    paintVerticalLine(x);
+                }
+            } else if (i == delta) {
+                for (let x = textureSize - lineWidthFactor; x < textureSize; x++) {
+                    paintVerticalLine(x);
+                }
+            } else {
+                let xCenter = i * gridSize;
+                for (let x = xCenter - lineWidthFactor; x < xCenter + lineWidthFactor + 1; x++) {
+                    paintVerticalLine(x);
+                }
+            }
+        }
+
+        this._gridTexture = new THREE.CanvasTexture(canvas);
+        this._gridTexture.wrapS = THREE.RepeatWrapping;
+        this._gridTexture.wrapT = THREE.RepeatWrapping;
+        this._gridTexture.needsUpdate = true;
+    }
+
+    _initializeTextures() {
+        this._initializeGridTexture(this.gridTextureSize, this.gridSize, this.gridLineWidth, new THREE.Color(this.gridBackgroundColor1), new THREE.Color(this.gridBackgroundColor2), new THREE.Color(this.gridHorizontalColor), new THREE.Color(this.gridVerticalColor));
+    }
+    
+    _reinitializeMeshTexture() {
+        if(this._mesh) {
+            this._initializeGridTexture(this.gridTextureSize, this.gridSize, this.gridLineWidth, new THREE.Color(this.gridBackgroundColor1), new THREE.Color(this.gridBackgroundColor2), new THREE.Color(this.gridHorizontalColor), new THREE.Color(this.gridVerticalColor));
+            if (this.showGridTexture) {
+                this._mesh.material.map = this._gridTexture;
+            }
+            this._mesh.material.needsUpdate = true;
+        }
+    }    
 
     /**
      * Face & vertex manipulation
