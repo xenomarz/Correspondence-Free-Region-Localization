@@ -61,19 +61,17 @@ public:
 		return ss_;
 	}
 
-	template<Eigen::StorageOptions StorageOptions>
-	inline const Eigen::SparseMatrix<double, StorageOptions>& GetHessian() const
+
+	inline const Eigen::SparseMatrix<double, Eigen::ColMajor>& GetHessianColMajor() const
 	{
 		std::lock_guard<std::mutex> lock(m_);
-		switch (StorageOptions)
-		{
-		case Eigen::ColMajor:
-			return H_;
-		case Eigen::RowMajor:
-			return H_rm_;
-		}
-
 		return H_;
+	}
+
+	inline const Eigen::SparseMatrix<double, Eigen::RowMajor>& GetHessianRowMajor() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return H_rm_;
 	}
 
 	inline double GetWeight() const

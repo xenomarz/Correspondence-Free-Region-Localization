@@ -36,7 +36,15 @@ private:
 	void ComputeDescentDirection(Eigen::VectorXd& p)
 	{
 		auto objective_function = GetObjectiveFunction();
-		solver.Solve(objective_function->GetHessian<StorageOptions>(), -objective_function->GetGradient(), p);
+		switch (StorageOptions)
+		{
+		case Eigen::StorageOptions::ColMajor:
+			solver.Solve(objective_function->GetHessianColMajor(), -objective_function->GetGradient(), p);
+			break;
+		case Eigen::StorageOptions::RowMajor:
+			solver.Solve(objective_function->GetHessianRowMajor(), -objective_function->GetGradient(), p);
+			break;
+		}
 	}
 
 	std::enable_if_t<std::is_base_of<Solver, Derived>::value, Derived> solver;
