@@ -7,7 +7,9 @@ import * as THREE from '../../web_modules/three.js';
 import OrbitControls from '../../web_modules/three-orbit-controls.js';
 
 // Components Imports
-import { MeshProvider } from '../../components/mesh-provider/mesh-provider.js';
+import { 
+    MeshProvider,
+    BufferedPrimitiveType } from '../../components/mesh-provider/mesh-provider.js';
 
 export class MeshView extends LitElement {
     static get styles() {
@@ -259,12 +261,85 @@ export class MeshView extends LitElement {
     /**
      * Properties
      */
+    set meshProvider(value) {
+        const oldValue = this._meshProvider;
+        if(oldValue !== value) {
+            this._meshProvider = value;
+            this._clearSceneSubtree(this._scene);
+            this._initializeTextures();
+            this._initializeLights();
+            this._initializeMesh();
+            this._initializeMeshWireframe();
+            this._initializePointcloud();
+            this.requestUpdate('meshProvider', oldValue);
+        }
+        else {
+            if(!this._mesh.material.color.equals(this._meshProvider.meshColor)) {
+                this._mesh.material.color = this._meshProvider.meshColor;
+            }
+        }
+    }
+
+    get meshProvider() {
+        return this._meshProvider;
+    }
+
+    set backgroundColor(value) {
+        const oldValue = this._backgroundColor;
+        if(oldValue !== value) {
+            this._backgroundColor = new THREE.Color(value);
+            this._renderer.setClearColor(this._backgroundColor, 1.0);
+            this.requestUpdate('backgroundColor', oldValue);
+        }
+    }
+
+    get backgroundColor() {
+        return this._backgroundColor;
+    }
+
+    set highlightedFaceColor(value) {
+        const oldValue = this._highlightedFaceColor;
+        if(oldValue !== value) {
+            this._highlightedFaceColor = new THREE.Color(value);
+            this.requestUpdate('highlightedFaceColor', oldValue);
+        }
+    }
+
+    get highlightedFaceColor() {
+        return this._highlightedFaceColor;
+    }
+
+    set draggedFaceColor(value) {
+        const oldValue = this._draggedFaceColor;
+        if(oldValue !== value) {
+            this._draggedFaceColor = new THREE.Color(value);
+            this.requestUpdate('draggedFaceColor', oldValue);
+        }
+    }
+
+    get draggedFaceColor() {
+        return this._draggedFaceColor;
+    }
+
+    set selectedFaceColor(value) {
+        const oldValue = this._selectedFaceColor;
+        if(oldValue !== value) {
+            this._selectedFaceColor = new THREE.Color(value);
+            this.requestUpdate('selectedFaceColor', oldValue);
+        }
+    }
+
+    get selectedFaceColor() {
+        return this._selectedFaceColor;
+    }     
 
     set gridHorizontalColor(value) {
         const oldValue = this._gridHorizontalColor;
-        this._gridHorizontalColor = value;
-        this._reinitializeMeshTexture();
-        this.requestUpdate('gridHorizontalColor', oldValue);
+        if(oldValue !== value) {
+            this._gridHorizontalColor = new THREE.Color(value);
+            this._reinitializeMeshTexture();
+            this.requestUpdate('gridHorizontalColor', oldValue);
+        }
     }
 
     get gridHorizontalColor() {
@@ -273,9 +348,11 @@ export class MeshView extends LitElement {
 
     set gridVerticalColor(value) {
         const oldValue = this._gridVerticalColor;
-        this._gridVerticalColor = value;
-        this._reinitializeMeshTexture();
-        this.requestUpdate('gridVerticalColor', oldValue);
+        if(oldValue !== value) {
+            this._gridVerticalColor = new THREE.Color(value);
+            this._reinitializeMeshTexture();
+            this.requestUpdate('gridVerticalColor', oldValue);
+        }
     }
 
     get gridVerticalColor() {
@@ -284,9 +361,11 @@ export class MeshView extends LitElement {
 
     set gridBackgroundColor1(value) {
         const oldValue = this._gridBackgroundColor1;
-        this._gridBackgroundColor1 = value;
-        this._reinitializeMeshTexture();
-        this.requestUpdate('gridBackgroundColor1', oldValue);
+        if(oldValue !== value) {
+            this._gridBackgroundColor1 = new THREE.Color(value);
+            this._reinitializeMeshTexture();
+            this.requestUpdate('gridBackgroundColor1', oldValue);
+        }
     }
 
     get gridBackgroundColor1() {
@@ -295,9 +374,11 @@ export class MeshView extends LitElement {
 
     set gridBackgroundColor2(value) {
         const oldValue = this._gridBackgroundColor2;
-        this._gridBackgroundColor2 = value;
-        this._reinitializeMeshTexture();
-        this.requestUpdate('gridBackgroundColor2', oldValue);
+        if(oldValue !== value) {
+            this._gridBackgroundColor2 = new THREE.Color(value);
+            this._reinitializeMeshTexture();
+            this.requestUpdate('gridBackgroundColor2', oldValue);
+        }
     }
 
     get gridBackgroundColor2() {
@@ -306,9 +387,11 @@ export class MeshView extends LitElement {
 
     set gridSize(value) {
         const oldValue = this._gridSize;
-        this._gridSize = value;
-        this._reinitializeMeshTexture();
-        this.requestUpdate('gridSize', oldValue);
+        if(oldValue !== value) {
+            this._gridSize = value;
+            this._reinitializeMeshTexture();
+            this.requestUpdate('gridSize', oldValue);
+        }
     }
 
     get gridSize() {
@@ -317,9 +400,11 @@ export class MeshView extends LitElement {
 
     set gridTextureSize(value) {
         const oldValue = this._gridTextureSize;
-        this._gridTextureSize = value;
-        this._reinitializeMeshTexture();
-        this.requestUpdate('gridTextureSize', oldValue);
+        if(oldValue !== value) {
+            this._gridTextureSize = value;
+            this._reinitializeMeshTexture();
+            this.requestUpdate('gridTextureSize', oldValue);
+        }
     }
 
     get gridTextureSize() {
@@ -328,9 +413,11 @@ export class MeshView extends LitElement {
 
     set gridLineWidth(value) {
         const oldValue = this._gridLineWidth;
-        this._gridLineWidth = value;
-        this._reinitializeMeshTexture();
-        this.requestUpdate('gridLineWidth', oldValue);
+        if(oldValue !== value) {
+            this._gridLineWidth = value;
+            this._reinitializeMeshTexture();
+            this.requestUpdate('gridLineWidth', oldValue);
+        }
     }
 
     get gridLineWidth() {
@@ -340,7 +427,6 @@ export class MeshView extends LitElement {
     /**
      * Public methods
      */
-
     firstUpdated() {
         // https://stackoverflow.com/questions/54512325/getting-width-height-in-a-slotted-lit-element-in-edge
         window.setTimeout(() => {
@@ -418,67 +504,6 @@ export class MeshView extends LitElement {
     }
 
     /**
-     * Properties
-     */
-
-    set meshProvider(value) {
-        const oldValue = this._meshProvider;
-        this._meshProvider = value;
-        this._clearSceneSubtree(this._scene);
-        this._initializeLights();
-        this._initializeMesh();
-        this._initializeMeshWireframe();
-        this._initializePointcloud();
-        this._initializeTextures();
-        this.requestUpdate('meshProvider', oldValue);
-    }
-
-    get meshProvider() {
-        return this._meshProvider;
-    }
-
-    set backgroundColor(value) {
-        const oldValue = this._backgroundColor;
-        this._backgroundColor = new THREE.Color(value);
-        this._renderer.setClearColor(this._backgroundColor, 1.0);
-        this.requestUpdate('backgroundColor', oldValue);
-    }
-
-    get backgroundColor() {
-        return this._backgroundColor;
-    }
-
-    set highlightedFaceColor(value) {
-        const oldValue = this._highlightedFaceColor;
-        this._highlightedFaceColor = new THREE.Color(value);
-        this.requestUpdate('highlightedFaceColor', oldValue);
-    }
-
-    get highlightedFaceColor() {
-        return this._highlightedFaceColor;
-    }
-
-    set draggedFaceColor(value) {
-        const oldValue = this._draggedFaceColor;
-        this._draggedFaceColor = new THREE.Color(value);
-        this.requestUpdate('draggedFaceColor', oldValue);
-    }
-
-    get draggedFaceColor() {
-        return this._draggedFaceColor;
-    }
-
-    set selectedFaceColor(value) {
-        const oldValue = this._selectedFaceColor;
-        this._selectedFaceColor = new THREE.Color(value);
-        this.requestUpdate('selectedFaceColor', oldValue);
-    }
-
-    get selectedFaceColor() {
-        return this._selectedFaceColor;
-    }      
-
-    /**
      * Private methods
      */
 
@@ -497,14 +522,10 @@ export class MeshView extends LitElement {
 
     _initializeMesh() {
         let geometry = new THREE.BufferGeometry();
-        let bufferedMeshVertices = this.meshProvider.bufferedMeshVertices;
-        let bufferedMeshUvs = this._getBufferedUvs(bufferedMeshVertices);
-        let color = new THREE.Color(this.meshColor);
-        let bufferedMeshColors = this._getBufferedColors(bufferedMeshVertices.length / 3);
 
-        geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(bufferedMeshVertices), 3));
-        geometry.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(bufferedMeshUvs), 2));
-        geometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(bufferedMeshColors), 3, true));
+        geometry.addAttribute('position', new THREE.BufferAttribute(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.TRIANGLE), 3));
+        geometry.addAttribute('uv', new THREE.BufferAttribute(this.meshProvider.getBufferedUvs(), 2));
+        geometry.addAttribute('color', new THREE.BufferAttribute(this.meshProvider.getBufferedColors(), 3, true));
 
         let material;
         if (this.useLights) {
@@ -517,7 +538,8 @@ export class MeshView extends LitElement {
             });
         }
 
-        material.color.setHex(color.getHex());
+        material.color = this.meshProvider.meshColor;
+
         if (this.showGridTexture) {
             material.map = this._gridTexture;
         }
@@ -541,13 +563,13 @@ export class MeshView extends LitElement {
 
     _initializePointcloud() {
         let geometry = new THREE.BufferGeometry();
-        geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(this.meshProvider.bufferedVertices), 3));
+        geometry.addAttribute('position', new THREE.BufferAttribute(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.VERTEX), 3));
 
-        let vertices = this.meshProvider.vertices;
-        let sizes = new Float32Array(vertices.length);
-        let selected = new Float32Array(vertices.length);
+        let verticesCount = this.meshProvider.getVerticesCount();
+        let sizes = new Float32Array(verticesCount);
+        let selected = new Float32Array(verticesCount);
 
-        for (let i = 0; i < vertices.length; i++) {
+        for (let i = 0; i < verticesCount; i++) {
             sizes[i] = this._vertexSize;
             selected[i] = this._selectedVerticesPoints[i] !== undefined;
         }
@@ -910,7 +932,7 @@ export class MeshView extends LitElement {
         canvas.height = textureSize;
 
         let setColor = (x, y, color) => {
-            context.fillStyle = chroma(color.r, color.g, color.b).css();
+            context.fillStyle = chroma(color.r * 255, color.g * 255, color.b * 255).css();
             context.fillRect(x, y, 1, 1);
         }
 
@@ -929,7 +951,7 @@ export class MeshView extends LitElement {
         let paintRegion = (xStart, yStart, xEnd, yEnd, color) => {
             for (let x = xStart; x <= xEnd; x++) {
                 for (let y = yStart; y <= yEnd; y++) {
-                    setColor(x, y, new THREE.Color(color));
+                    setColor(x, y, color);
                 }
             }
         }
@@ -996,12 +1018,12 @@ export class MeshView extends LitElement {
     }
 
     _initializeTextures() {
-        this._initializeGridTexture(this.gridTextureSize, this.gridSize, this.gridLineWidth, new THREE.Color(this.gridBackgroundColor1), new THREE.Color(this.gridBackgroundColor2), new THREE.Color(this.gridHorizontalColor), new THREE.Color(this.gridVerticalColor));
+        this._initializeGridTexture(this.gridTextureSize, this.gridSize, this.gridLineWidth, this.gridBackgroundColor1, this.gridBackgroundColor2, this.gridHorizontalColor, this.gridVerticalColor);
     }
     
     _reinitializeMeshTexture() {
         if(this._mesh) {
-            this._initializeGridTexture(this.gridTextureSize, this.gridSize, this.gridLineWidth, new THREE.Color(this.gridBackgroundColor1), new THREE.Color(this.gridBackgroundColor2), new THREE.Color(this.gridHorizontalColor), new THREE.Color(this.gridVerticalColor));
+            this._initializeGridTexture(this.gridTextureSize, this.gridSize, this.gridLineWidth, this.gridBackgroundColor1, this.gridBackgroundColor2, this.gridHorizontalColor, this.gridVerticalColor);
             if (this.showGridTexture) {
                 this._mesh.material.map = this._gridTexture;
             }
@@ -1176,12 +1198,12 @@ export class MeshView extends LitElement {
             }
         }
 
-        let bufferedMeshVertices = this.meshProvider.bufferedMeshVertices;
-        this._resetAttributeArray(bufferedMeshVertices, this._mesh.geometry.attributes.position.array);
-        this._resetAttributeArray(this.meshProvider.bufferedVertices, this._pointcloud.geometry.attributes.position.array);
+        this._resetAttributeArray(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.TRIANGLE), this._mesh.geometry.attributes.position.array);
+        this._resetAttributeArray(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.VERTEX), this._pointcloud.geometry.attributes.position.array);
+        this._resetAttributeArray(this.meshProvider.getBufferedUvs(), this._mesh.geometry.attributes.uv.array);
 
-        this._updateVertexColors();
-        this._resetAttributeArray(this._getBufferedColors(bufferedMeshVertices.length / 3), this._mesh.geometry.attributes.color.array);
+        // this._updateVertexColors();
+        // this._resetAttributeArray(this._getBufferedColors(bufferedMeshVertices.length / 3), this._mesh.geometry.attributes.color.array);
 
         this._mesh.geometry.attributes.position.needsUpdate = true;
         this._mesh.geometry.attributes.uv.needsUpdate = true;
@@ -1229,36 +1251,6 @@ export class MeshView extends LitElement {
         this._resetDraggedFace();
         this._controls.enablePan = true;
     }    
-    
-    _getBufferedUvs(bufferedVertices) {
-        let bufferedUvs = [];
-        let bufferedVerticesLength = bufferedVertices.length;
-        for (let i = 0; i < bufferedVerticesLength; i++) {
-            if (i % 3 !== 2) {
-                bufferedUvs.push(bufferedVertices[i]);
-            }
-        }
-
-        return bufferedUvs;
-    }
-
-    _getBufferedColors(verticesLength) {
-        let bufferedColors = [];
-        for (let i = 0; i < verticesLength; i++) {
-            if (this._vertexColors[i]) {
-                bufferedColors.push(this._vertexColors[i].r);
-                bufferedColors.push(this._vertexColors[i].g);
-                bufferedColors.push(this._vertexColors[i].b);
-            } else {
-                let color = new THREE.Color(this.meshColor);
-                bufferedColors.push(color.r);
-                bufferedColors.push(color.g);
-                bufferedColors.push(color.b);
-            }
-        }
-
-        return bufferedColors;
-    }
 
     /**
      * Message publication

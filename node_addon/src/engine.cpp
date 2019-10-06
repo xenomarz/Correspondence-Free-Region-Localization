@@ -21,6 +21,10 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("constrainFacePosition", &Engine::ConstrainFacePosition),
 		InstanceMethod("updateConstrainedFacePosition", &Engine::UpdateConstrainedFacePosition),
 		InstanceMethod("unconstrainFacePosition", &Engine::UnconstrainFacePosition),
+		InstanceMethod("getDomainFacesCount", &Engine::GetDomainFacesCount),
+		InstanceMethod("getImageFacesCount", &Engine::GetImageFacesCount),
+		InstanceMethod("getDomainVerticesCount", &Engine::GetDomainVerticesCount),
+		InstanceMethod("getImageVerticesCount", &Engine::GetImageVerticesCount),
 		InstanceMethod("getDomainFaces", &Engine::GetDomainFaces),
 		InstanceMethod("getImageFaces", &Engine::GetImageFaces),
 		InstanceMethod("getDomainVertices", &Engine::GetDomainVertices),
@@ -70,6 +74,47 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 		newton_method_ = std::make_unique<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>>(composite_objective_, x0);
 		newton_method_->EnableFlipAvoidingLineSearch(mesh_wrapper_->GetImageFaces());
 	});
+}
+
+
+Napi::Value Engine::GetDomainVerticesCount(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	Napi::Number count = Napi::Number::New(env, mesh_wrapper_->GetDomainVertices().rows());
+
+	return count;
+}
+
+Napi::Value Engine::GetImageVerticesCount(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	Napi::Number count = Napi::Number::New(env, mesh_wrapper_->GetImageVertices().rows());
+
+	return count;
+}
+
+Napi::Value Engine::GetDomainFacesCount(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	Napi::Number count = Napi::Number::New(env, mesh_wrapper_->GetDomainFaces().rows());
+
+	return count;
+}
+
+Napi::Value Engine::GetImageFacesCount(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	Napi::Number count = Napi::Number::New(env, mesh_wrapper_->GetImageVertices().rows());
+
+	return count;
 }
 
 Napi::Value Engine::GetDomainFaces(const Napi::CallbackInfo& info)
@@ -148,9 +193,9 @@ Napi::Float32Array Engine::GetBufferedVertices(const Napi::CallbackInfo& info, c
 	 */
 	if (info.Length() >= 1)
 	{
-		if (!info[0].IsString())
+		if (!info[0].IsNumber())
 		{
-			Napi::TypeError::New(env, "First argument is expected to be a String").ThrowAsJavaScriptException();
+			Napi::TypeError::New(env, "First argument is expected to be a Number").ThrowAsJavaScriptException();
 			return Napi::Float32Array::New(env, 0);
 		}
 	}

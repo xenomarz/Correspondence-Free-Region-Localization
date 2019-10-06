@@ -1,30 +1,39 @@
+export const BufferedPrimitiveType = {
+    VERTEX: 0,
+    TRIANGLE: 1
+};
+
 export class MeshProvider {
     constructor() {
 
     }
 
-    get vertices() {
+    getFaces() {
         return [];
     }
 
-    get faces() {
+    getVertices() {
         return [];
     }
 
-    get bufferedVertices() {
-        return [];
+    getFacesCount() {
+        return 0;
     }
 
-    get bufferedMeshVertices() {
-        return [];
+    getVerticesCount() {
+        return 0;
+    }    
+
+    getBufferedVertices(primitiveType) {
+        return new Float32Array();
     }
 
-    get bufferedMeshUvs() {
-        return [];
+    getBufferedUvs() {
+        return new Float32Array();
     }
 
-    get bufferedMeshVertexColors() {
-        return [];
+    getBufferedColors() {
+        return new Float32Array();
     }
 
     get shadersFolderName() {

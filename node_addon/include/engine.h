@@ -71,6 +71,10 @@ private:
 	/**
 	 * NAPI private instance methods
 	 */
+	Napi::Value GetDomainVerticesCount(const Napi::CallbackInfo& info);
+	Napi::Value GetImageVerticesCount(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainFacesCount(const Napi::CallbackInfo& info);
+	Napi::Value GetImageFacesCount(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainFaces(const Napi::CallbackInfo& info);
 	Napi::Value GetImageFaces(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainVertices(const Napi::CallbackInfo& info);

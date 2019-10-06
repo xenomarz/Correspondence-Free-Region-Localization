@@ -1,3 +1,8 @@
+export const BufferedPrimitiveType = {
+    VERTEX: 0,
+    TRIANGLE: 1
+};
+
 export class MeshProvider {
     constructor() {
 
@@ -11,7 +16,15 @@ export class MeshProvider {
         return [];
     }
 
-    getBufferedVertices() {
+    getFacesCount() {
+        return 0;
+    }
+
+    getVerticesCount() {
+        return 0;
+    }    
+
+    getBufferedVertices(primitiveType) {
         return new Float32Array();
     }
 
