@@ -48,11 +48,6 @@ void ObjectiveFunction::PreUpdate(const Eigen::VectorXd& x)
 	// Empty implementation
 }
 
-bool ObjectiveFunction::IsValid()
-{
-	return true;
-}
-
 void ObjectiveFunction::PostUpdate(const Eigen::VectorXd& x)
 {
 	// Empty implementation

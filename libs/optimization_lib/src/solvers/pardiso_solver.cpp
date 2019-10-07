@@ -63,6 +63,26 @@ PardisoSolver::~PardisoSolver()
 	PARDISO(pt_, &maxfct_, &mnum_, &mtype_, &phase_, &n_, &ddum_, ia_, ja_, &idum_, &nrhs_, iparm_, &msglvl_, &ddum_, &ddum_, &error_);
 }
 
+void PardisoSolver::AnalyzePattern(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A)
+{
+
+}
+
+void PardisoSolver::AnalyzePattern(const Eigen::SparseMatrix<double, Eigen::StorageOptions::RowMajor>& A)
+{
+	n_ = A.rows();
+	ia_ = const_cast<int*>(A.outerIndexPtr());
+	ja_ = const_cast<int*>(A.innerIndexPtr());
+	a_ = const_cast<double*>(A.valuePtr());
+
+	/* --------------------------------------------------------------------*/
+	/* .. Reordering and Symbolic Factorization. This step also allocates  */
+	/*    all memory that is necessary for the factorization.              */
+	/* --------------------------------------------------------------------*/
+	phase_ = 11;
+	pardiso(pt_, &maxfct_, &mnum_, &mtype_, &phase_, &n_, a_, ia_, ja_, &idum_, &nrhs_, iparm_, &msglvl_, &ddum_, &ddum_, &error_);
+}
+
 void PardisoSolver::Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x)
 {
 
@@ -85,13 +105,6 @@ void PardisoSolver::Solve(const Eigen::SparseMatrix<double, Eigen::StorageOption
 	ia_ = const_cast<int*>(A.outerIndexPtr());
 	ja_ = const_cast<int*>(A.innerIndexPtr());
 	a_ = const_cast<double*>(A.valuePtr());
-
-	/* --------------------------------------------------------------------*/
-	/* .. Reordering and Symbolic Factorization. This step also allocates  */
-	/*    all memory that is necessary for the factorization.              */
-	/* --------------------------------------------------------------------*/
-	phase_ = 11;
-	pardiso(pt_, &maxfct_, &mnum_, &mtype_, &phase_, &n_, a_, ia_, ja_, &idum_, &nrhs_, iparm_, &msglvl_, &ddum_, &ddum_, &error_);
 
 	/* ----------------------------*/
 	/* .. Numerical factorization. */

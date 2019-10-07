@@ -45,7 +45,6 @@ public:
 	Eigen::Vector2d GetConstrainedVertexPosition(const Eigen::DenseIndex vertex_index);
 	void RemoveConstrainedVertex(const Eigen::DenseIndex vertex_index);
 	void RemoveConstrainedVertices(const std::vector<Eigen::DenseIndex>& vertices_indices);
-	bool IsValid();
 
 private:
 	/**

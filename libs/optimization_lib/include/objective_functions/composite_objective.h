@@ -23,11 +23,6 @@ public:
 	virtual ~CompositeObjective();
 
 	/**
-	 * Public overrides
-	 */
-	bool IsValid();
-
-	/**
 	 * Public Methods
 	 */
 	void AddObjectiveFunction(const std::shared_ptr<ObjectiveFunction> objective_function);

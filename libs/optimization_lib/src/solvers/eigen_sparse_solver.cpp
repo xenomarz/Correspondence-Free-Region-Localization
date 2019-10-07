@@ -12,11 +12,18 @@ EigenSparseSolver::~EigenSparseSolver()
 
 }
 
+void EigenSparseSolver::AnalyzePattern(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A)
+{
+	solver_.analyzePattern(A);
+}
+
+void EigenSparseSolver::AnalyzePattern(const Eigen::SparseMatrix<double, Eigen::StorageOptions::RowMajor>& A)
+{
+	solver_.analyzePattern(A);
+}
+
 void EigenSparseSolver::Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x)
 {
-	// Compute the ordering permutation vector from the structural pattern of A
-	solver_.analyzePattern(A);
-
 	// Compute the numerical factorization 
 	solver_.factorize(A);
 
@@ -26,9 +33,6 @@ void EigenSparseSolver::Solve(const Eigen::SparseMatrix<double, Eigen::StorageOp
 
 void EigenSparseSolver::Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::RowMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x)
 {
-	// Compute the ordering permutation vector from the structural pattern of A
-	solver_.analyzePattern(A);
-
 	// Compute the numerical factorization 
 	solver_.factorize(A);
 

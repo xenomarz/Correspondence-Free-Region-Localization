@@ -97,20 +97,14 @@ public:
 	inline void Update(const Eigen::VectorXd& x)
 	{
 		std::lock_guard<std::mutex> lock(m_);
-		if (IsValid())
-		{
-			PreUpdate(x);
-			CalculateValue(x, f_);
-			CalculateGradient(x, g_);
-			CalculateHessian(x, ss_);
-			//Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_);
-			Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_rm_);
-			PostUpdate(x);
-		}
+		PreUpdate(x);
+		CalculateValue(x, f_);
+		CalculateGradient(x, g_);
+		CalculateHessian(x, ss_);
+		//Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_);
+		Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_rm_);
+		PostUpdate(x);
 	}
-
-	// Returns true is the objective function's state is valid, false otherwise
-	virtual bool IsValid();
 
 protected:
 

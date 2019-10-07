@@ -24,7 +24,15 @@ public:
 	NewtonMethod(std::shared_ptr<ObjectiveFunction> objective_function, const Eigen::VectorXd& x0) :
 		IterativeMethod(objective_function, x0)
 	{
-
+		switch (StorageOptions)
+		{
+		case Eigen::StorageOptions::ColMajor:
+			solver_.AnalyzePattern(objective_function->GetHessianColMajor());
+			break;
+		case Eigen::StorageOptions::RowMajor:
+			solver_.AnalyzePattern(objective_function->GetHessianRowMajor());
+			break;
+		}
 	}
 
 	virtual ~NewtonMethod()
@@ -39,15 +47,15 @@ private:
 		switch (StorageOptions)
 		{
 		case Eigen::StorageOptions::ColMajor:
-			solver.Solve(objective_function->GetHessianColMajor(), -objective_function->GetGradient(), p);
+			solver_.Solve(objective_function->GetHessianColMajor(), -objective_function->GetGradient(), p);
 			break;
 		case Eigen::StorageOptions::RowMajor:
-			solver.Solve(objective_function->GetHessianRowMajor(), -objective_function->GetGradient(), p);
+			solver_.Solve(objective_function->GetHessianRowMajor(), -objective_function->GetGradient(), p);
 			break;
 		}
 	}
 
-	std::enable_if_t<std::is_base_of<Solver, Derived>::value, Derived> solver;
+	std::enable_if_t<std::is_base_of<Solver, Derived>::value, Derived> solver_;
 };
 
 #endif

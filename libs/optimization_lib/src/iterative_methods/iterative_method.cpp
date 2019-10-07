@@ -96,11 +96,8 @@ void IterativeMethod::Start()
 				}
 				lock.unlock();
 
-				if (objective_function_->IsValid())
-				{
-					ComputeDescentDirection(p_);
-					LineSearch(p_);
-				}
+				ComputeDescentDirection(p_);
+				LineSearch(p_);
 			}
 		});
 		break;
