@@ -718,7 +718,7 @@ export class MeshView extends LitElement {
         e.preventDefault();
         switch (this._interactionService.state.value) {
             case 'faceDragging':
-                    this._interactionService.send('END_FACE_DRAGGING');
+                this._interactionService.send('END_FACE_DRAGGING');
                 break;
         }
 
@@ -1035,7 +1035,12 @@ export class MeshView extends LitElement {
      * Face & vertex manipulation
      */
     _colorVertex(vertex, color) {
-        this._vertexColors[vertex] = color;
+        this._vertexColors.push({
+            baseIndex: 3 * vertex,
+            value0: color.r,
+            value1: color.g,
+            value2: color.b
+        });
     }
 
     _uncolorVertex(face) {
@@ -1093,26 +1098,6 @@ export class MeshView extends LitElement {
         delete this._selectedVerticesPoints[vertexId];
     }
 
-    _colorVertex(vertex, color) {
-        this._vertexColors[vertex] = color;
-    }
-
-    _uncolorVertex(face) {
-        delete this._vertexColors[vertex];
-    }
-
-    _colorFace(face, color) {
-        this._colorVertex(face.a, color);
-        this._colorVertex(face.b, color);
-        this._colorVertex(face.c, color);
-    }
-
-    _uncolorFace(face) {
-        this._uncolorVertex(face.a);
-        this._uncolorVertex(face.b);
-        this._uncolorVertex(face.c);
-    }
-
     _colorFaces() {
         for (let faceId in this._selectedFaces) {
             this._colorFace(this._selectedFaces[faceId], this._selectedFaceColor);
@@ -1143,10 +1128,13 @@ export class MeshView extends LitElement {
     /**
      * Scene manipulation
      */
-    _resetAttributeArray(buffer, attributeArray) {
-        let bufferLength = buffer.length;
-        for (let i = 0; i < bufferLength; i++) {
-            attributeArray[i] = buffer[i];
+    _overrideAttributeArray(entriesArray, attributeArray) {
+        let entriesArrayLength = entriesArray.length;
+        for (let i = 0; i < entriesArrayLength; i++) {
+            let baseIndex = entriesArray[i].baseIndex;
+            attributeArray[baseIndex] = entriesArray[i].value0;
+            attributeArray[baseIndex + 1] = entriesArray[i].value1;
+            attributeArray[baseIndex + 2] = entriesArray[i].value2;
         }
     }
 
@@ -1198,12 +1186,16 @@ export class MeshView extends LitElement {
             }
         }
 
-        this._resetAttributeArray(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.TRIANGLE), this._mesh.geometry.attributes.position.array);
-        this._resetAttributeArray(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.VERTEX), this._pointcloud.geometry.attributes.position.array);
-        this._resetAttributeArray(this.meshProvider.getBufferedUvs(), this._mesh.geometry.attributes.uv.array);
+        this._mesh.geometry.attributes.position.array = this.meshProvider.getBufferedVertices(BufferedPrimitiveType.TRIANGLE);
+        this._mesh.geometry.attributes.uv.array = this.meshProvider.getBufferedUvs();
 
-        // this._updateVertexColors();
-        // this._resetAttributeArray(this._getBufferedColors(bufferedMeshVertices.length / 3), this._mesh.geometry.attributes.color.array);
+        let bufferedColors = this.meshProvider.getBufferedColors();
+        this._updateVertexColors();
+        this._overrideAttributeArray(this._vertexColors, bufferedColors);
+        this._mesh.geometry.attributes.color.array = bufferedColors;
+
+        this._mesh.geometry.applyMatrix(this._mesh.matrix);
+        this._pointcloud.geometry.applyMatrix(this._pointcloud.matrix);
 
         this._mesh.geometry.attributes.position.needsUpdate = true;
         this._mesh.geometry.attributes.uv.needsUpdate = true;

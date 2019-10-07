@@ -17,18 +17,28 @@ Position::~Position()
 
 }
 
-void Position::AddConstrainedVertex(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position)
+void Position::AddConstrainedVertex(const Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position)
+{
+	AddConstrainedVertices(std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>>{std::make_pair(vertex_index, vertex_position)});
+}
+
+void Position::AddConstrainedVertices(const std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>>& index_position_pairs)
 {
 	std::lock_guard<std::mutex> lock(m_);
-	if (im_vi_2_ci_.find(vertex_index) == im_vi_2_ci_.end())
+	for (auto& constrained_vertex : index_position_pairs)
 	{
-		auto constrained_index = constrained_vertices_count_;
-		constrained_vertices_count_++;
-		x_constrained_.conservativeResize(constrained_vertices_count_, 2);
-		x_constrained_initial_.conservativeResize(constrained_vertices_count_, 2);
-		im_vi_2_ci_[vertex_index] = constrained_index;
-		x_constrained_.row(constrained_index) = vertex_position;
-		x_constrained_initial_.row(constrained_index) = vertex_position;
+		auto vertex_index = constrained_vertex.first;
+		auto vertex_position = constrained_vertex.second;
+		if (im_vi_2_ci_.find(vertex_index) == im_vi_2_ci_.end())
+		{
+			auto constrained_index = constrained_vertices_count_;
+			constrained_vertices_count_++;
+			x_constrained_.conservativeResize(constrained_vertices_count_, 2);
+			x_constrained_initial_.conservativeResize(constrained_vertices_count_, 2);
+			im_vi_2_ci_[vertex_index] = constrained_index;
+			x_constrained_.row(constrained_index) = vertex_position;
+			x_constrained_initial_.row(constrained_index) = vertex_position;
+		}
 	}
 }
 
@@ -43,22 +53,32 @@ void Position::UpdateConstrainedVertexPosition(Eigen::DenseIndex vertex_index, c
 
 void Position::OffsetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_offset, const OffsetType offset_type)
 {
+	OffsetConstrainedVerticesPositions(std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>>{std::make_pair(vertex_index, vertex_offset)}, offset_type);
+}
+
+void Position::OffsetConstrainedVerticesPositions(const std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>>& index_offset_pairs, const OffsetType offset_type)
+{
 	std::lock_guard<std::mutex> lock(m_);
-	if (im_vi_2_ci_.find(vertex_index) != im_vi_2_ci_.end())
+	for (auto& constrained_vertex_offset : index_offset_pairs)
 	{
-		Eigen::Vector2d relative_position;
-		switch (offset_type)
+		auto vertex_index = constrained_vertex_offset.first;
+		auto vertex_offset = constrained_vertex_offset.second;
+		if (im_vi_2_ci_.find(vertex_index) != im_vi_2_ci_.end())
 		{
-		case OffsetType::RELATIVE_TO_CURRENT:
-			relative_position = x_constrained_.row(im_vi_2_ci_[vertex_index]);
-			break;
+			Eigen::Vector2d relative_position;
+			switch (offset_type)
+			{
+			case OffsetType::RELATIVE_TO_CURRENT:
+				relative_position = x_constrained_.row(im_vi_2_ci_[vertex_index]);
+				break;
 
-		case OffsetType::RELATIVE_TO_INITIAL:
-			relative_position = x_constrained_initial_.row(im_vi_2_ci_[vertex_index]);
-			break;
+			case OffsetType::RELATIVE_TO_INITIAL:
+				relative_position = x_constrained_initial_.row(im_vi_2_ci_[vertex_index]);
+				break;
+			}
+
+			x_constrained_.row(im_vi_2_ci_[vertex_index]) = relative_position + vertex_offset;
 		}
-
-		x_constrained_.row(im_vi_2_ci_[vertex_index]) = relative_position + vertex_offset;
 	}
 }
 
@@ -70,7 +90,13 @@ Eigen::Vector2d Position::GetConstrainedVertexPosition(Eigen::DenseIndex vertex_
 
 void Position::RemoveConstrainedVertex(Eigen::DenseIndex vertex_index)
 {
+	RemoveConstrainedVertices(std::vector<Eigen::DenseIndex>{vertex_index});
+}
+
+void Position::RemoveConstrainedVertices(const std::vector<Eigen::DenseIndex>& vertices_indices)
+{
 	std::lock_guard<std::mutex> lock(m_);
+	for(auto vertex_index : vertices_indices)
 	if (im_vi_2_ci_.find(vertex_index) != im_vi_2_ci_.end())
 	{
 		auto constrained_index = im_vi_2_ci_[vertex_index];

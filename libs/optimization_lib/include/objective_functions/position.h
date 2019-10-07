@@ -37,11 +37,14 @@ public:
 	/**
 	 * Public Methods
 	 */
-	void AddConstrainedVertex(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position);
-	void UpdateConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position);
-	void OffsetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_offset, const OffsetType offset_type = OffsetType::RELATIVE_TO_INITIAL);
-	Eigen::Vector2d GetConstrainedVertexPosition(Eigen::DenseIndex vertex_index);
-	void RemoveConstrainedVertex(Eigen::DenseIndex vertex_index);
+	void AddConstrainedVertex(const Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position);
+	void AddConstrainedVertices(const std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>>& index_position_pairs);
+	void UpdateConstrainedVertexPosition(const Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position);
+	void OffsetConstrainedVertexPosition(const Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_offset, const OffsetType offset_type = OffsetType::RELATIVE_TO_INITIAL);
+	void OffsetConstrainedVerticesPositions(const std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>>& index_offset_pairs, const OffsetType offset_type = OffsetType::RELATIVE_TO_INITIAL);
+	Eigen::Vector2d GetConstrainedVertexPosition(const Eigen::DenseIndex vertex_index);
+	void RemoveConstrainedVertex(const Eigen::DenseIndex vertex_index);
+	void RemoveConstrainedVertices(const std::vector<Eigen::DenseIndex>& vertices_indices);
 	bool IsValid();
 
 private:

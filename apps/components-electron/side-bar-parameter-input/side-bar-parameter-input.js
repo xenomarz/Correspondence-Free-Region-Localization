@@ -49,7 +49,7 @@ export class SideBarParameterInput extends LitElement {
     render() {
         return html`
             <vaadin-number-field id="valueInput" class="parameter-input" @input="${this._handleNumberFieldChange}" @change="${this._handleNumberFieldChange}" value="${this.value}" always-float-label label="${this.label}" min="${this.min}" max="${this.max}" step="${this.step}" has-controls always-float-label></vaadin-number-field>
-            ${!this.isExponential?html`<paper-slider id="valueSlider" @immediate-value-change="${this._handleSliderChange}" value="${this.value}" min="${this.min}" max="${this.max}" step="${this.step}"></paper-slider>`: ''}
+            ${!this.isExponential?html`<paper-slider id="valueSlider" @immediate-value-change="${this._handleSliderChange}" value="${this.value}" min="${this.min}" max="${this.max}" step="${Number.EPSILON}"></paper-slider>`: ''}
             <side-bar-collapsable-section caption="Options">
                 <vaadin-checkbox on-checked-changed="${this._isExponentialChanged}" checked="${this.isExponential}" disabled>Exponential</vaadin-checkbox>
                 <vaadin-number-field value="${this.min}" @change="${this._minInputChanged}" class="slider-parameter-input" label="Min" step="null" always-float-label></vaadin-number-field>
@@ -136,13 +136,13 @@ export class SideBarParameterInput extends LitElement {
     }
 
     _handleDocumentKeyDown(e) {
-        if (e.key.toUpperCase() === this.increaseKey) {
+        if (e.key.toUpperCase() === this.increaseKey.toUpperCase()) {
             if (this.isExponential) {
                 this.value = Math.min(parseFloat(this.value) * parseFloat(this.step), parseFloat(this.max));
             } else {
                 this.value = Math.min(parseFloat(this.value) + parseFloat(this.step), parseFloat(this.max));
             }
-        } else if (e.key.toUpperCase() === this.decreaseKey) {
+        } else if (e.key.toUpperCase() === this.decreaseKey.toUpperCase()) {
             if (this.isExponential) {
                 this.value = Math.max(parseFloat(this.value) / parseFloat(this.step), parseFloat(this.min));
             } else {

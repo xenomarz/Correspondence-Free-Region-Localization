@@ -511,12 +511,16 @@ Napi::Value Engine::ConstrainFacePosition(const Napi::CallbackInfo& info)
 	Eigen::DenseIndex face_index = argument1.Int64Value();
 	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
 	Eigen::MatrixXd face_vertices = mesh_wrapper_->GetImageVertices(face_vertices_indices);
-	for (int i = 0; i < 3; i++)
+
+	if (position_)
 	{
-		if (position_) 
+		std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>> index_position_pairs;
+		for (int i = 0; i < 3; i++)
 		{
-			position_->AddConstrainedVertex(face_vertices_indices(i), face_vertices.row(i));
+			index_position_pairs.push_back(std::make_pair(face_vertices_indices(i), face_vertices.row(i)));
 		}
+
+		position_->AddConstrainedVertices(index_position_pairs);
 	}
 
 	return env.Null();
@@ -567,12 +571,16 @@ Napi::Value Engine::UpdateConstrainedFacePosition(const Napi::CallbackInfo& info
 	double offset_y = argument3.DoubleValue();
 	Eigen::Vector2d offset = Eigen::Vector2d(offset_x, offset_y);
 	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
-	for (int i = 0; i < 3; i++)
+
+	if (position_)
 	{
-		if (position_) 
+		std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>> index_offset_pairs;
+		for (int i = 0; i < 3; i++)
 		{
-			position_->OffsetConstrainedVertexPosition(face_vertices_indices(i), offset);
+			index_offset_pairs.push_back(std::make_pair(face_vertices_indices(i), offset));
 		}
+
+		position_->OffsetConstrainedVerticesPositions(index_offset_pairs);
 	}
 
 	return env.Null();
@@ -606,11 +614,16 @@ Napi::Value Engine::UnconstrainFacePosition(const Napi::CallbackInfo& info)
 	Napi::Number argument1 = info[0].As<Napi::Number>();
 	Eigen::DenseIndex face_index = argument1.Int64Value();
 	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
-	for (int i = 0; i < 3; i++)
+
+	if (position_)
 	{
-		if (position_) {
-			position_->RemoveConstrainedVertex(face_vertices_indices(i));
+		std::vector<Eigen::DenseIndex> vertices_indices;
+		for (int i = 0; i < 3; i++)
+		{
+			vertices_indices.push_back(face_vertices_indices(i));
 		}
+
+		position_->RemoveConstrainedVertices(vertices_indices);
 	}
 
 	return env.Null();
