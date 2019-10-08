@@ -35,8 +35,8 @@ private:
 	 * Fields
 	 */
 	MKL_INT n_;
-	MKL_INT* ia_;
-	MKL_INT* ja_;
+	std::unique_ptr<MKL_INT[]> ia_;
+	std::unique_ptr<MKL_INT[]> ja_;
 	MKL_INT mtype_;
 	MKL_INT nrhs_;
 	MKL_INT iparm_[64];
@@ -47,7 +47,7 @@ private:
 	MKL_INT msglvl_;
 	MKL_INT idum_;
 	double ddum_;
-	double* a_;
+	std::unique_ptr<double[]> a_;
 	void* pt_[64];
 };
 

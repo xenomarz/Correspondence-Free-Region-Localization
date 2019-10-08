@@ -64,3 +64,28 @@ void ObjectiveFunction::SetWeight(const double w)
 	std::lock_guard<std::mutex> lock(m_);
 	w_ = w;
 }
+
+void ObjectiveFunction::Update(const Eigen::VectorXd& x, const UpdateOptions update_options)
+{
+	std::lock_guard<std::mutex> lock(m_);
+	PreUpdate(x);
+
+	if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
+	{
+		CalculateValue(x, f_);
+	}
+
+	if ((update_options & UpdateOptions::GRADIENT) != UpdateOptions::NONE)
+	{
+		CalculateGradient(x, g_);
+	}
+
+	if ((update_options & UpdateOptions::HESSIAN) != UpdateOptions::NONE)
+	{
+		CalculateHessian(x, ss_);
+		//Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_cm_);
+		Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_rm_);
+	}
+
+	PostUpdate(x);
+}

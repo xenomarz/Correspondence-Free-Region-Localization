@@ -21,6 +21,17 @@
 class ObjectiveFunction
 {
 public:
+	/**
+	 * Public type definitions
+	 */
+	enum class UpdateOptions : uint32_t
+	{
+		NONE = 0,
+		VALUE = 1,
+		GRADIENT = 2,
+		HESSIAN = 4,
+		ALL = 7
+	};
 
 	/**
 	 * Constructor and destructor
@@ -61,11 +72,10 @@ public:
 		return ss_;
 	}
 
-
 	inline const Eigen::SparseMatrix<double, Eigen::ColMajor>& GetHessianColMajor() const
 	{
 		std::lock_guard<std::mutex> lock(m_);
-		return H_;
+		return H_cm_;
 	}
 
 	inline const Eigen::SparseMatrix<double, Eigen::RowMajor>& GetHessianRowMajor() const
@@ -94,17 +104,7 @@ public:
 	void Initialize();
 
 	// Update value, gradient and hessian for a given x
-	inline void Update(const Eigen::VectorXd& x)
-	{
-		std::lock_guard<std::mutex> lock(m_);
-		PreUpdate(x);
-		CalculateValue(x, f_);
-		CalculateGradient(x, g_);
-		CalculateHessian(x, ss_);
-		//Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_);
-		Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_rm_);
-		PostUpdate(x);
-	}
+	void Update(const Eigen::VectorXd& x, const UpdateOptions update_options = UpdateOptions::ALL);
 
 protected:
 
@@ -164,7 +164,7 @@ private:
 	std::vector<int> ii_; 
 	std::vector<int> jj_;
 	std::vector<double> ss_;
-	Eigen::SparseMatrix<double, Eigen::ColMajor> H_;
+	Eigen::SparseMatrix<double, Eigen::ColMajor> H_cm_;
 	Eigen::SparseMatrix<double, Eigen::RowMajor> H_rm_;
 
 	// Weight
@@ -173,5 +173,30 @@ private:
 	// Name
 	const std::string name_;
 };
+
+// http://blog.bitwigglers.org/using-enum-classes-as-type-safe-bitmasks/
+inline ObjectiveFunction::UpdateOptions operator | (const ObjectiveFunction::UpdateOptions lhs, const ObjectiveFunction::UpdateOptions rhs)
+{
+	using T = std::underlying_type_t <ObjectiveFunction::UpdateOptions>;
+	return static_cast<ObjectiveFunction::UpdateOptions>(static_cast<T>(lhs) | static_cast<T>(rhs));
+}
+
+inline ObjectiveFunction::UpdateOptions& operator |= (ObjectiveFunction::UpdateOptions& lhs, ObjectiveFunction::UpdateOptions rhs)
+{
+	lhs = lhs | rhs;
+	return lhs;
+}
+
+inline ObjectiveFunction::UpdateOptions operator & (const ObjectiveFunction::UpdateOptions lhs, const ObjectiveFunction::UpdateOptions rhs)
+{
+	using T = std::underlying_type_t <ObjectiveFunction::UpdateOptions>;
+	return static_cast<ObjectiveFunction::UpdateOptions>(static_cast<T>(lhs) & static_cast<T>(rhs));
+}
+
+inline ObjectiveFunction::UpdateOptions& operator &= (ObjectiveFunction::UpdateOptions& lhs, ObjectiveFunction::UpdateOptions rhs)
+{
+	lhs = lhs & rhs;
+	return lhs;
+}
 
 #endif

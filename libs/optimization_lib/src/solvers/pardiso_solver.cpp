@@ -60,7 +60,7 @@ PardisoSolver::~PardisoSolver()
 
 	/* Release internal memory. */
 	phase_ = -1;
-	PARDISO(pt_, &maxfct_, &mnum_, &mtype_, &phase_, &n_, &ddum_, ia_, ja_, &idum_, &nrhs_, iparm_, &msglvl_, &ddum_, &ddum_, &error_);
+	pardiso(pt_, &maxfct_, &mnum_, &mtype_, &phase_, &n_, &ddum_, ia_.get(), ja_.get(), &idum_, &nrhs_, iparm_, &msglvl_, &ddum_, &ddum_, &error_);
 }
 
 void PardisoSolver::AnalyzePattern(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A)
@@ -71,16 +71,40 @@ void PardisoSolver::AnalyzePattern(const Eigen::SparseMatrix<double, Eigen::Stor
 void PardisoSolver::AnalyzePattern(const Eigen::SparseMatrix<double, Eigen::StorageOptions::RowMajor>& A)
 {
 	n_ = A.rows();
-	ia_ = const_cast<int*>(A.outerIndexPtr());
-	ja_ = const_cast<int*>(A.innerIndexPtr());
-	a_ = const_cast<double*>(A.valuePtr());
+	ia_ = std::make_unique<MKL_INT[]>(A.outerSize() + 1);
+	ja_ = std::make_unique<MKL_INT[]>(A.nonZeros());
+	a_ = std::make_unique<double[]>(A.nonZeros());
+
+	MKL_INT* ia = const_cast<MKL_INT*>(A.outerIndexPtr());
+	MKL_INT* ja = const_cast<MKL_INT*>(A.innerIndexPtr());
+	double* a = const_cast<double*>(A.valuePtr());
+
+	#pragma omp parallel for
+	for (MKL_INT i = 0; i < A.outerSize() + 1; i++)
+	{
+		ia_[i] = ia[i];
+	}
+
+	#pragma omp parallel for
+	for (MKL_INT i = 0; i < A.nonZeros(); i++)
+	{
+		ja_[i] = ja[i];
+	}
+
+	#pragma omp parallel for
+	for (MKL_INT i = 0; i < A.nonZeros(); i++)
+	{
+		a_[i] = 0;
+	}
+
+	// TODO: Make sure that the main diagonal is explicitly specified (even with zeros if needed) and that the lower triangular part is omitted (in case of symmetric matrix)
 
 	/* --------------------------------------------------------------------*/
 	/* .. Reordering and Symbolic Factorization. This step also allocates  */
 	/*    all memory that is necessary for the factorization.              */
 	/* --------------------------------------------------------------------*/
 	phase_ = 11;
-	pardiso(pt_, &maxfct_, &mnum_, &mtype_, &phase_, &n_, a_, ia_, ja_, &idum_, &nrhs_, iparm_, &msglvl_, &ddum_, &ddum_, &error_);
+	pardiso(pt_, &maxfct_, &mnum_, &mtype_, &phase_, &n_, a_.get(), ia_.get(), ja_.get(), &idum_, &nrhs_, iparm_, &msglvl_, &ddum_, &ddum_, &error_);
 }
 
 void PardisoSolver::Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x)
@@ -90,31 +114,23 @@ void PardisoSolver::Solve(const Eigen::SparseMatrix<double, Eigen::StorageOption
 
 void PardisoSolver::Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::RowMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x)
 {
-	// TODO: Verify if the commented-out steps are still needed in certain cases
-	//auto A_copy = A;
+	double* a = const_cast<double*>(A.valuePtr());
 
-	//#pragma omp parallel for
-	//for (Eigen::DenseIndex i = 0; i < A.rows(); i++)
-	//{
-	//	A_copy.coeffRef(i, i) = A_copy.coeffRef(i, i) + 0;
-	//}
-
-	//A_copy.makeCompressed();
-
-	n_ = A.rows();
-	ia_ = const_cast<int*>(A.outerIndexPtr());
-	ja_ = const_cast<int*>(A.innerIndexPtr());
-	a_ = const_cast<double*>(A.valuePtr());
+	#pragma omp parallel for
+	for (MKL_INT i = 0; i < A.nonZeros(); i++)
+	{
+		a_[i] = a[i];
+	}
 
 	/* ----------------------------*/
 	/* .. Numerical factorization. */
 	/* ----------------------------*/
 	phase_ = 22;
-	pardiso(pt_, &maxfct_, &mnum_, &mtype_, &phase_, &n_, a_, ia_, ja_, &idum_, &nrhs_, iparm_, &msglvl_, &ddum_, &ddum_, &error_);
+	pardiso(pt_, &maxfct_, &mnum_, &mtype_, &phase_, &n_, a_.get(), ia_.get(), ja_.get(), &idum_, &nrhs_, iparm_, &msglvl_, &ddum_, &ddum_, &error_);
 
 	/* -----------------------------------------------*/
 	/* .. Back substitution and iterative refinement. */
 	/* -----------------------------------------------*/
 	phase_ = 33;
-	pardiso(pt_, &maxfct_, &mnum_, &mtype_, &phase_, &n_, a_, ia_, ja_, &idum_, &nrhs_, iparm_, &msglvl_, const_cast<double*>(b.data()), const_cast<double*>(x.data()), &error_);
+	pardiso(pt_, &maxfct_, &mnum_, &mtype_, &phase_, &n_, a_.get(), ia_.get(), ja_.get(), &idum_, &nrhs_, iparm_, &msglvl_, const_cast<double*>(b.data()), const_cast<double*>(x.data()), &error_);
 }

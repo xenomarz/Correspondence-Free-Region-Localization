@@ -9,7 +9,7 @@ IterativeMethod::IterativeMethod(std::shared_ptr<ObjectiveFunction> objective_fu
 	x_(x0),
 	p_(Eigen::VectorXd::Zero(x0.size())),
 	thread_state_(ThreadState::TERMINATED),
-	max_backtracking_iterations_(1),
+	max_backtracking_iterations_(2),
 	flip_avoiding_line_search_enabled_(false),
 	approximation_invalidated_(false)
 {
@@ -56,7 +56,7 @@ void IterativeMethod::LineSearch(const Eigen::VectorXd& p)
 	while (current_iteration < max_backtracking_iterations_)
 	{
 		current_x = x_ + step_size * p;
-		objective_function_->Update(current_x);
+		objective_function_->Update(current_x, ObjectiveFunction::UpdateOptions::VALUE);
 		updated_value = objective_function_->GetValue();
 
 		if (updated_value >= current_value)
@@ -96,6 +96,7 @@ void IterativeMethod::Start()
 				}
 				lock.unlock();
 
+				objective_function_->Update(x_, ObjectiveFunction::UpdateOptions::GRADIENT | ObjectiveFunction::UpdateOptions::HESSIAN);
 				ComputeDescentDirection(p_);
 				LineSearch(p_);
 			}
