@@ -56,7 +56,7 @@ private:
 	 * Overrides
 	 */
 	void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss);
-	void CalculateValue(const Eigen::VectorXd& x, double& f);
+	void CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::VectorXd& f_per_vertex);
 	void CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g);
 	void CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss);
 	void PreUpdate(const Eigen::VectorXd& x);

@@ -122,7 +122,7 @@ void Position::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std
 	ss = std::vector<double>(ii.size(), 0);
 }
 
-void Position::CalculateValue(const Eigen::VectorXd& x, double& f)
+void Position::CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::VectorXd& f_per_vertex)
 {
 	if (im_vi_2_ci_.size() > 0)
 	{

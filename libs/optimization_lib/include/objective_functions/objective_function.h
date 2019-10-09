@@ -48,6 +48,12 @@ public:
 		return f_;
 	}
 
+	inline const Eigen::VectorXd& GetValuePerVertex() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return f_per_vertex_;
+	}
+
 	inline const Eigen::VectorXd& GetGradient() const
 	{
 		std::lock_guard<std::mutex> lock(m_);
@@ -140,12 +146,13 @@ private:
 	 */
 
 	// Gradient and hessian initializers
+	virtual void InitializeValue(double& f, Eigen::VectorXd& f_per_vertex);
 	virtual void InitializeGradient(Eigen::VectorXd& g);
 	virtual void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss) = 0;
 
 	// Value, gradient and hessian calculation functions
 	// TODO: Remove input argument 'const Eigen::VectorXd& x' from value, gradient and hessian calculation. This argument should be processed in PreUpdate().
-	virtual void CalculateValue(const Eigen::VectorXd& x, double& f) = 0;
+	virtual void CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::VectorXd& f_per_vertex) = 0;
 	virtual void CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g) = 0;
 	virtual void CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss) = 0;
 
@@ -155,6 +162,7 @@ private:
 
 	// Value
 	double f_;
+	Eigen::VectorXd f_per_vertex_;
 
 	// Gradient
 	Eigen::VectorXd g_;

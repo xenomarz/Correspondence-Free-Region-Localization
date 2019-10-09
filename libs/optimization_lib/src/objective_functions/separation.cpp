@@ -82,7 +82,7 @@ void Separation::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, s
 	ss = std::vector<double>(ii.size(), 0.);
 }
 
-void Separation::CalculateValue(const Eigen::VectorXd& x, double& f)
+void Separation::CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::VectorXd& f_per_vertex)
 {
 	auto n = objective_function_data_provider_->GetImageVerticesCount();
 
@@ -95,6 +95,9 @@ void Separation::CalculateValue(const Eigen::VectorXd& x, double& f)
 		Eigen::SparseMatrix<double>::InnerIterator it(Esept, i);
 		int idx_xi = it.row();
 		int idx_xj = (++it).row();
+
+		f_per_vertex.coeffRef(idx_xi) += EsepP_squared_rowwise_sum[i];
+		f_per_vertex.coeffRef(idx_xj) += EsepP_squared_rowwise_sum[i];
 	}
 
 	EsepP_squared_rowwise_sum_plus_delta = EsepP_squared_rowwise_sum.array() + delta_;

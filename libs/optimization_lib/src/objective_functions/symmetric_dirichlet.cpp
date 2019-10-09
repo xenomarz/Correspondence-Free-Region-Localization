@@ -76,7 +76,7 @@ void SymmetricDirichlet::InitializeHessian(std::vector<int>& ii, std::vector<int
 	ss = std::vector<double>(ii.size(), 0.);
 }
 
-void SymmetricDirichlet::CalculateValue(const Eigen::VectorXd& x, double& f)
+void SymmetricDirichlet::CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::VectorXd& f_per_vertex)
 {
 	bool inversions_exist = updateJ(X);
 

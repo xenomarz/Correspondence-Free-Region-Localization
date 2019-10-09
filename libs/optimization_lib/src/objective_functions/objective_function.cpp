@@ -27,6 +27,7 @@ void ObjectiveFunction::PreInitialize()
 void ObjectiveFunction::Initialize()
 {
 	PreInitialize();
+	InitializeValue(f_, f_per_vertex_);
 	InitializeGradient(g_);
 	InitializeHessian(ii_, jj_, ss_);
 	PostInitialize();
@@ -35,6 +36,13 @@ void ObjectiveFunction::Initialize()
 void ObjectiveFunction::PostInitialize()
 {
 	// Empty implementation
+}
+
+void ObjectiveFunction::InitializeValue(double& f, Eigen::VectorXd& f_per_vertex)
+{
+	f = 0;
+	f_per_vertex.conservativeResize(image_vertices_count_);
+	f_per_vertex.setZero();
 }
 
 void ObjectiveFunction::InitializeGradient(Eigen::VectorXd& g)
@@ -72,7 +80,7 @@ void ObjectiveFunction::Update(const Eigen::VectorXd& x, const UpdateOptions upd
 
 	if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
 	{
-		CalculateValue(x, f_);
+		CalculateValue(x, f_, f_per_vertex_);
 	}
 
 	if ((update_options & UpdateOptions::GRADIENT) != UpdateOptions::NONE)
