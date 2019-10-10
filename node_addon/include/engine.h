@@ -17,9 +17,9 @@
 #include <libs/optimization_lib/include/solvers/pardiso_solver.h>
 #include <libs/optimization_lib/include/iterative_methods/newton_method.h>
 #include <libs/optimization_lib/include/objective_functions/composite_objective.h>
-#include <libs/optimization_lib/include/objective_functions/position.h>
-#include <libs/optimization_lib/include/objective_functions/separation.h>
-#include <libs/optimization_lib/include/objective_functions/symmetric_dirichlet.h>
+#include <libs/optimization_lib/include/objective_functions/position_objective.h>
+#include <libs/optimization_lib/include/objective_functions/separation_objective.h>
+#include <libs/optimization_lib/include/objective_functions/symmetric_dirichlet_objective.h>
 
 class Engine : public Napi::ObjectWrap<Engine> {
 public:
@@ -135,7 +135,7 @@ private:
 		uint32_t entries_per_vertex = V.cols();
 
 		#pragma omp parallel for
-		for (uint32_t vertex_index = 0; vertex_index < V.rows(); vertex_index++)
+		for (int32_t vertex_index = 0; vertex_index < V.rows(); vertex_index++)
 		{
 			float x = V(vertex_index, 0);
 			float y = V(vertex_index, 1);
@@ -158,7 +158,7 @@ private:
 		Napi::Float32Array buffered_vertices_array = Napi::Float32Array::New(env, entries_per_face * F.rows());
 
 		#pragma omp parallel for
-		for (uint32_t face_index = 0; face_index < F.rows(); face_index++)
+		for (int32_t face_index = 0; face_index < F.rows(); face_index++)
 		{
 			int base_index = entries_per_face * face_index;
 			for (uint32_t i = 0; i < 3; i++)
@@ -186,7 +186,7 @@ private:
 		Napi::Float32Array buffered_uvs_array = Napi::Float32Array::New(env, entries_per_face * F.rows());
 
 		#pragma omp parallel for
-		for (uint32_t face_index = 0; face_index < F.rows(); face_index++)
+		for (int32_t face_index = 0; face_index < F.rows(); face_index++)
 		{
 			int base_index = entries_per_face * face_index;
 			for (uint32_t i = 0; i < 3; i++)

@@ -1,6 +1,11 @@
-#include <utils/utils.h>
-#include <objective_functions/symmetric_dirichlet.h>
+// STL includes
 #include <limits>
+
+// Optimization lib includes
+#include <utils/utils.h>
+#include <objective_functions/symmetric_dirichlet_objective.h>
+
+// LIBIGL includes
 #include <igl/doublearea.h>
 
 SymmetricDirichlet::SymmetricDirichlet(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider)
