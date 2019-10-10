@@ -9,7 +9,7 @@ IterativeMethod::IterativeMethod(std::shared_ptr<ObjectiveFunction> objective_fu
 	x_(x0),
 	p_(Eigen::VectorXd::Zero(x0.size())),
 	thread_state_(ThreadState::TERMINATED),
-	max_backtracking_iterations_(2),
+	max_backtracking_iterations_(12),
 	flip_avoiding_line_search_enabled_(false),
 	approximation_invalidated_(false)
 {

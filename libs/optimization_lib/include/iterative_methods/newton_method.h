@@ -41,7 +41,7 @@ public:
 	}
 
 private:
-	void ComputeDescentDirection(Eigen::VectorXd& p)
+	void ComputeDescentDirection(Eigen::VectorXd& p) override
 	{
 		auto objective_function = GetObjectiveFunction();
 		switch (StorageOptions)

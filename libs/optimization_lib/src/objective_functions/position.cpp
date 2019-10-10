@@ -6,8 +6,7 @@
 #include <utils/utils.h>
 
 Position::Position(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider) :
-	ObjectiveFunction(objective_function_data_provider, "Position"),
-	constrained_vertices_count_(0)
+	ObjectiveFunction(objective_function_data_provider, "Position")
 {
 	Initialize();
 }
@@ -25,29 +24,36 @@ void Position::AddConstrainedVertex(const Eigen::DenseIndex vertex_index, const 
 void Position::AddConstrainedVertices(const std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>>& index_position_pairs)
 {
 	std::lock_guard<std::mutex> lock(m_);
-	for (auto& constrained_vertex : index_position_pairs)
+	uint32_t internal_index;
+	uint32_t external_index;
+	for (uint32_t i = 0; i < index_position_pairs.size(); i++)
 	{
-		auto vertex_index = constrained_vertex.first;
-		auto vertex_position = constrained_vertex.second;
-		if (im_vi_2_ci_.find(vertex_index) == im_vi_2_ci_.end())
-		{
-			auto constrained_index = constrained_vertices_count_;
-			constrained_vertices_count_++;
-			x_constrained_.conservativeResize(constrained_vertices_count_, 2);
-			x_constrained_initial_.conservativeResize(constrained_vertices_count_, 2);
-			im_vi_2_ci_[vertex_index] = constrained_index;
-			x_constrained_.row(constrained_index) = vertex_position;
-			x_constrained_initial_.row(constrained_index) = vertex_position;
-		}
+		internal_index = ei_2_cv_data.size();
+		external_index = index_position_pairs[i].first;
+		ei_2_cv_data.insert({ external_index, std::make_unique<ConstrainedVertexData>(internal_index, external_index, index_position_pairs[i].second) });
 	}
+
+	ResetConstraintsMatrices();
 }
 
-void Position::UpdateConstrainedVertexPosition(Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position)
+void Position::UpdateConstrainedVertexPosition(const Eigen::DenseIndex vertex_index, const Eigen::Vector2d& vertex_position)
+{
+	UpdateConstrainedVerticesPositions(std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>>{std::make_pair(vertex_index, vertex_position)});
+}
+
+void Position::UpdateConstrainedVerticesPositions(const std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>>& index_position_pairs)
 {
 	std::lock_guard<std::mutex> lock(m_);
-	if (im_vi_2_ci_.find(vertex_index) != im_vi_2_ci_.end())
+	for (auto& index_position_pair : index_position_pairs)
 	{
-		x_constrained_.row(im_vi_2_ci_[vertex_index]) = vertex_position;
+		auto external_index = index_position_pair.first;
+		if (ei_2_cv_data.contains(external_index))
+		{
+			auto& constrained_vertex_data = ei_2_cv_data[external_index];
+			auto new_position = index_position_pair.second;
+			x_constrained_.row(constrained_vertex_data->GetInternalIndex()) = new_position;
+			constrained_vertex_data->SetCurrentPosition(new_position);
+		}
 	}
 }
 
@@ -59,33 +65,41 @@ void Position::OffsetConstrainedVertexPosition(Eigen::DenseIndex vertex_index, c
 void Position::OffsetConstrainedVerticesPositions(const std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>>& index_offset_pairs, const OffsetType offset_type)
 {
 	std::lock_guard<std::mutex> lock(m_);
-	for (auto& constrained_vertex_offset : index_offset_pairs)
+	for (auto& index_offset_pair : index_offset_pairs)
 	{
-		auto vertex_index = constrained_vertex_offset.first;
-		auto vertex_offset = constrained_vertex_offset.second;
-		if (im_vi_2_ci_.find(vertex_index) != im_vi_2_ci_.end())
+		auto external_index = index_offset_pair.first;
+		if (ei_2_cv_data.contains(external_index))
 		{
+			auto& constrained_vertex_data = ei_2_cv_data[external_index];
 			Eigen::Vector2d relative_position;
 			switch (offset_type)
 			{
 			case OffsetType::RELATIVE_TO_CURRENT:
-				relative_position = x_constrained_.row(im_vi_2_ci_[vertex_index]);
+				relative_position = constrained_vertex_data->GetCurrentPosition();
 				break;
 
 			case OffsetType::RELATIVE_TO_INITIAL:
-				relative_position = x_constrained_initial_.row(im_vi_2_ci_[vertex_index]);
+				relative_position = constrained_vertex_data->GetInitialPosition();
 				break;
 			}
 
-			x_constrained_.row(im_vi_2_ci_[vertex_index]) = relative_position + vertex_offset;
+			auto new_position = relative_position + index_offset_pair.second;
+			x_constrained_.row(constrained_vertex_data->GetInternalIndex()) = new_position;
+			constrained_vertex_data->SetCurrentPosition(new_position);
 		}
 	}
 }
 
-Eigen::Vector2d Position::GetConstrainedVertexPosition(Eigen::DenseIndex vertex_index)
+bool Position::GetConstrainedVertexPosition(const Eigen::DenseIndex vertex_index, Eigen::Vector2d& vertex_position)
 {
 	std::lock_guard<std::mutex> lock(m_);
-	return x_constrained_.row(im_vi_2_ci_[vertex_index]);
+	if (ei_2_cv_data.contains(vertex_index))
+	{
+		vertex_position = ei_2_cv_data[vertex_index]->GetCurrentPosition();
+		return true;
+	}
+
+	return false;
 }
 
 void Position::RemoveConstrainedVertex(Eigen::DenseIndex vertex_index)
@@ -96,15 +110,29 @@ void Position::RemoveConstrainedVertex(Eigen::DenseIndex vertex_index)
 void Position::RemoveConstrainedVertices(const std::vector<Eigen::DenseIndex>& vertices_indices)
 {
 	std::lock_guard<std::mutex> lock(m_);
-	for(auto vertex_index : vertices_indices)
-	if (im_vi_2_ci_.find(vertex_index) != im_vi_2_ci_.end())
+	for (uint32_t i = 0; i < vertices_indices.size(); i++)
 	{
-		auto constrained_index = im_vi_2_ci_[vertex_index];
-		constrained_vertices_count_--;
-		im_vi_2_ci_.erase(vertex_index);
-		Utils::RemoveRow<Eigen::MatrixX2d>(x_constrained_, constrained_index);
-		Utils::RemoveRow<Eigen::MatrixX2d>(x_constrained_initial_, constrained_index);
+		ei_2_cv_data.erase(vertices_indices[i]);
 	}
+
+	ResetConstraintsMatrices();
+}
+
+void Position::ResetConstrainedVertex(const Eigen::DenseIndex vertex_index)
+{
+	ResetConstrainedVertices(std::vector<Eigen::DenseIndex>{vertex_index});
+}
+
+void Position::ResetConstrainedVertices(const std::vector<Eigen::DenseIndex>& vertices_indices)
+{
+	std::lock_guard<std::mutex> lock(m_);
+	for (uint32_t i = 0; i < vertices_indices.size(); i++)
+	{
+		auto& constrained_vertex_data = ei_2_cv_data[vertices_indices[i]];
+		constrained_vertex_data->SetInitialPosition(constrained_vertex_data->GetCurrentPosition());
+	}
+
+	ResetConstraintsMatrices();
 }
 
 void Position::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
@@ -124,7 +152,7 @@ void Position::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std
 
 void Position::CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::VectorXd& f_per_vertex)
 {
-	if (im_vi_2_ci_.size() > 0)
+	if (ei_2_cv_data.size() > 0)
 	{
 		f = x_diff_.squaredNorm();
 	}
@@ -137,13 +165,14 @@ void Position::CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::Vector
 void Position::CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g)
 {
 	g.setZero();
-	if (im_vi_2_ci_.size() > 0)
+	if (ei_2_cv_data.size() > 0)
 	{
-		Eigen::DenseIndex current_vertex_index;
-		for (const auto& [image_vertex_index, constrained_index] : im_vi_2_ci_)
+		uint32_t internal_index;
+		for (const auto& [external_index, constrained_vertex_data] : ei_2_cv_data)
 		{
-			g(image_vertex_index) = 2 * x_diff_(constrained_index, 0);
-			g(image_vertex_index + image_vertices_count_) = 2 * x_diff_(constrained_index, 1);
+			internal_index = constrained_vertex_data->GetInternalIndex();
+			g(external_index) = 2 * x_diff_(internal_index, 0);
+			g(external_index + image_vertices_count_) = 2 * x_diff_(internal_index, 1);
 		}
 	}
 }
@@ -151,29 +180,92 @@ void Position::CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g)
 void Position::CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss)
 {
 	std::fill(ss.begin(), ss.end(), 0);
-	if (im_vi_2_ci_.size() > 0)
+	if (ei_2_cv_data.size() > 0)
 	{
-		Eigen::DenseIndex current_vertex_index;
-		for (const auto& [image_vertex_index, constrained_index] : im_vi_2_ci_)
+		for (const auto& [external_index, constrained_vertex_data] : ei_2_cv_data)
 		{
-			ss[image_vertex_index] = 2;
-			ss[image_vertex_index + image_vertices_count_] = 2;
+			ss[external_index] = 2;
+			ss[external_index + image_vertices_count_] = 2;
 		}
 	}
 }
 
 void Position::PreUpdate(const Eigen::VectorXd& x)
 {
-	if (im_vi_2_ci_.size() > 0)
+	uint32_t constrained_vertices_count = ei_2_cv_data.size();
+	if (constrained_vertices_count > 0)
 	{
-		x_current_.resize(constrained_vertices_count_, 2);
-		Eigen::DenseIndex current_vertex_index;
-		for (const auto& [image_vertex_index, constrained_index] : im_vi_2_ci_)
+		x_current_.resize(constrained_vertices_count, 2);
+		uint32_t internal_index;
+		for (const auto& [external_index, constrained_vertex_data] : ei_2_cv_data)
 		{
-			x_current_(constrained_index, 0) = x(image_vertex_index);
-			x_current_(constrained_index, 1) = x(image_vertex_index + image_vertices_count_);
+			internal_index = constrained_vertex_data->GetInternalIndex();
+			x_current_(internal_index, 0) = x(external_index);
+			x_current_(internal_index, 1) = x(external_index + image_vertices_count_);
 		}
 
 		x_diff_ = x_current_ - x_constrained_;
 	}
+}
+
+void Position::ResetConstraintsMatrices()
+{
+	uint32_t constrained_vertices_count = ei_2_cv_data.size();
+	if (constrained_vertices_count > 0)
+	{
+		x_constrained_.resize(constrained_vertices_count, 2);
+		x_constrained_initial_.resize(constrained_vertices_count, 2);
+		uint32_t internal_index = 0;
+		for (auto& [external_index, constrained_vertex_data] : ei_2_cv_data)
+		{
+			x_constrained_.row(internal_index) = constrained_vertex_data->GetCurrentPosition();
+			x_constrained_initial_.row(internal_index) = constrained_vertex_data->GetInitialPosition();
+			constrained_vertex_data->SetInternalIndex(internal_index);
+			internal_index++;
+		}
+	}
+}
+
+Position::ConstrainedVertexData::ConstrainedVertexData(const uint32_t internal_index, const uint32_t external_index, const Eigen::Vector2d& initial_position) :
+	internal_index_(internal_index),
+	external_index_(external_index),
+	initial_position_(initial_position),
+	current_position_(initial_position)
+{
+
+}
+
+void Position::ConstrainedVertexData::SetInternalIndex(const uint32_t internal_index)
+{
+	internal_index_ = internal_index;
+}
+
+void Position::ConstrainedVertexData::SetInitialPosition(const Eigen::Vector2d& position)
+{
+	initial_position_ = position;
+}
+
+void Position::ConstrainedVertexData::SetCurrentPosition(const Eigen::Vector2d& position)
+{
+	current_position_ = position;
+}
+
+const uint32_t Position::ConstrainedVertexData::GetInternalIndex() const
+{
+	return internal_index_;
+}
+
+const uint32_t Position::ConstrainedVertexData::GetExternalIndex() const
+{
+	return external_index_;
+}
+
+const Eigen::Vector2d& Position::ConstrainedVertexData::GetInitialPosition() const
+{
+	return initial_position_;
+}
+
+const Eigen::Vector2d& Position::ConstrainedVertexData::GetCurrentPosition() const
+{
+	return current_position_;
 }

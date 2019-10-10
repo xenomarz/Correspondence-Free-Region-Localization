@@ -639,6 +639,9 @@ export class AutoquadsView extends connect(store)(LitElement) {
             if(!payload.faceSelected) {
                 this._engine.unconstrainFacePosition(payload.face.id);
             }
+            else {
+                this._engine.reconstrainFacePosition(payload.face.id);
+            }
             PubSub.publish('mesh-view-reset-dragged-face', payload);
         });
 

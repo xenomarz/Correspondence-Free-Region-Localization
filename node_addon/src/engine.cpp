@@ -21,6 +21,7 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("constrainFacePosition", &Engine::ConstrainFacePosition),
 		InstanceMethod("updateConstrainedFacePosition", &Engine::UpdateConstrainedFacePosition),
 		InstanceMethod("unconstrainFacePosition", &Engine::UnconstrainFacePosition),
+		InstanceMethod("reconstrainFacePosition", &Engine::ReconstrainFacePosition),
 		InstanceMethod("getDomainFacesCount", &Engine::GetDomainFacesCount),
 		InstanceMethod("getImageFacesCount", &Engine::GetImageFacesCount),
 		InstanceMethod("getDomainVerticesCount", &Engine::GetDomainVerticesCount),
@@ -624,6 +625,49 @@ Napi::Value Engine::UnconstrainFacePosition(const Napi::CallbackInfo& info)
 		}
 
 		position_->RemoveConstrainedVertices(vertices_indices);
+	}
+
+	return env.Null();
+}
+
+Napi::Value Engine::ReconstrainFacePosition(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (info.Length() >= 1)
+	{
+		if (!info[0].IsNumber())
+		{
+			Napi::TypeError::New(env, "First argument is expected to be a Number").ThrowAsJavaScriptException();
+			return env.Null();
+		}
+	}
+	else
+	{
+		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
+		return env.Null();
+	}
+
+	/**
+	 * Remove face vertices from the constrained vertices list of the position objective function
+	 */
+	Napi::Number argument1 = info[0].As<Napi::Number>();
+	Eigen::DenseIndex face_index = argument1.Int64Value();
+	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
+
+	if (position_)
+	{
+		std::vector<Eigen::DenseIndex> vertices_indices;
+		for (int i = 0; i < 3; i++)
+		{
+			vertices_indices.push_back(face_vertices_indices(i));
+		}
+
+		position_->ResetConstrainedVertices(vertices_indices);
 	}
 
 	return env.Null();

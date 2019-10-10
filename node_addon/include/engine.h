@@ -89,6 +89,7 @@ private:
 	Napi::Value ConstrainFacePosition(const Napi::CallbackInfo& info);
 	Napi::Value UpdateConstrainedFacePosition(const Napi::CallbackInfo& info);
 	Napi::Value UnconstrainFacePosition(const Napi::CallbackInfo& info);
+	Napi::Value ReconstrainFacePosition(const Napi::CallbackInfo& info);
 
 	/**
 	 * Regular private instance methods

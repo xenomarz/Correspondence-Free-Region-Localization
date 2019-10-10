@@ -58,7 +58,7 @@ void CompositeObjective::InitializeHessian(std::vector<int>& ii, std::vector<int
 	}
 }
 
-void CompositeObjective::CalculateValue(const Eigen::VectorXd& x, double& f)
+void CompositeObjective::CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::VectorXd& f_per_vertex)
 {
 	f = 0;
 	for (auto objective_function : objective_functions_)

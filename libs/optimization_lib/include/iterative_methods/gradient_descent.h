@@ -24,7 +24,7 @@ public:
 	virtual ~GradientDescent();
 
 private:
-	void ComputeDescentDirection(Eigen::VectorXd& p);
+	void ComputeDescentDirection(Eigen::VectorXd& p) override;
 };
 
 #endif

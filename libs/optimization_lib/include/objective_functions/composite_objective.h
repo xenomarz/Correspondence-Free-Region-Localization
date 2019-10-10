@@ -35,12 +35,12 @@ private:
 	/**
 	 * Private overrides
 	 */
-	void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss);
-	void CalculateValue(const Eigen::VectorXd& X, double& f);
-	void CalculateGradient(const Eigen::VectorXd& X, Eigen::VectorXd& g);
-	void CalculateHessian(const Eigen::VectorXd& X, std::vector<double>& ss);
-	void PreUpdate(const Eigen::VectorXd& x);
-	void PreInitialize();
+	void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss) override;
+	void CalculateValue(const Eigen::VectorXd& X, double& f, Eigen::VectorXd& f_per_vertex) override;
+	void CalculateGradient(const Eigen::VectorXd& X, Eigen::VectorXd& g) override;
+	void CalculateHessian(const Eigen::VectorXd& X, std::vector<double>& ss) override;
+	void PreUpdate(const Eigen::VectorXd& x) override;
+	void PreInitialize() override;
 
 	/**
 	 * Fields

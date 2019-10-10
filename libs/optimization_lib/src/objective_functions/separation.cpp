@@ -89,16 +89,16 @@ void Separation::CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::Vect
 	EsepP = Esep * X;
 	EsepP_squared_rowwise_sum = EsepP.array().pow(2.0).rowwise().sum();
 
-	for (int i = 0; i < Esept.outerSize(); ++i)
-	{
-		// no inner loop because there are only 2 nnz values per col
-		Eigen::SparseMatrix<double>::InnerIterator it(Esept, i);
-		int idx_xi = it.row();
-		int idx_xj = (++it).row();
+	//for (int i = 0; i < Esept.outerSize(); ++i)
+	//{
+	//	// no inner loop because there are only 2 nnz values per col
+	//	Eigen::SparseMatrix<double>::InnerIterator it(Esept, i);
+	//	int idx_xi = it.row();
+	//	int idx_xj = (++it).row();
 
-		f_per_vertex.coeffRef(idx_xi) += EsepP_squared_rowwise_sum[i];
-		f_per_vertex.coeffRef(idx_xj) += EsepP_squared_rowwise_sum[i];
-	}
+	//	f_per_vertex.coeffRef(idx_xi) += EsepP_squared_rowwise_sum[i];
+	//	f_per_vertex.coeffRef(idx_xj) += EsepP_squared_rowwise_sum[i];
+	//}
 
 	EsepP_squared_rowwise_sum_plus_delta = EsepP_squared_rowwise_sum.array() + delta_;
 	f_per_pair = EsepP_squared_rowwise_sum.cwiseQuotient(EsepP_squared_rowwise_sum_plus_delta);

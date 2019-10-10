@@ -109,14 +109,14 @@ public:
 	/**
 	 * Overrides
 	 */
-	const Eigen::MatrixX3i& GetDomainFaces() const;
-	const Eigen::MatrixX3d& GetDomainVertices() const;
-	const Eigen::MatrixX2i& GetDomainEdges() const;
-	const Eigen::MatrixX3d& GetD1() const;
-	const Eigen::MatrixX3d& GetD2() const;
-	const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const;
-	const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const;
-	const Eigen::DenseIndex GetImageVerticesCount() const;
+	const Eigen::MatrixX3i& GetDomainFaces() const override;
+	const Eigen::MatrixX3d& GetDomainVertices() const override;
+	const Eigen::MatrixX2i& GetDomainEdges() const override;
+	const Eigen::MatrixX3d& GetD1() const override;
+	const Eigen::MatrixX3d& GetD2() const override;
+	const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const override;
+	const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const override;
+	const Eigen::DenseIndex GetImageVerticesCount() const override;
 
 	/**
 	 * Public methods
