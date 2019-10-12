@@ -80,17 +80,17 @@ void ObjectiveFunction::Update(const Eigen::VectorXd& x, const UpdateOptions upd
 
 	if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
 	{
-		CalculateValue(x, f_, f_per_vertex_);
+		CalculateValue(f_, f_per_vertex_);
 	}
 
 	if ((update_options & UpdateOptions::GRADIENT) != UpdateOptions::NONE)
 	{
-		CalculateGradient(x, g_);
+		CalculateGradient(g_);
 	}
 
 	if ((update_options & UpdateOptions::HESSIAN) != UpdateOptions::NONE)
 	{
-		CalculateHessian(x, ss_);
+		CalculateHessian(ss_);
 		//Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_cm_);
 		Utils::SparseMatrixFromTriplets(ii_, jj_, ss_, variables_count_, variables_count_, H_rm_);
 	}

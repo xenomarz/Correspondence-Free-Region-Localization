@@ -14,6 +14,8 @@
 
 // OpenMP
 #include <omp.h>
+#include <Eigen/src/Core/util/ForwardDeclarations.h>
+#include <Eigen/src/Core/util/ForwardDeclarations.h>
 
 Separation::Separation(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider) :
 	ObjectiveFunction(objective_function_data_provider, "Separation")
@@ -82,7 +84,7 @@ void Separation::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, s
 	ss = std::vector<double>(ii.size(), 0.);
 }
 
-void Separation::CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::VectorXd& f_per_vertex)
+void Separation::CalculateValue(double& f, Eigen::VectorXd& f_per_vertex)
 {
 	auto n = objective_function_data_provider_->GetImageVerticesCount();
 
@@ -124,7 +126,7 @@ void Separation::CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::Vect
 	f = f_per_pair.sum();
 }
 
-void Separation::CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g)
+void Separation::CalculateGradient(Eigen::VectorXd& g)
 {
 	Eigen::MatrixX2d ge;
 
@@ -137,7 +139,7 @@ void Separation::CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g)
 	g = Eigen::Map<Eigen::VectorXd>(ge.data(), 2.0 * ge.rows(), 1);
 }
 
-void Separation::CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss)
+void Separation::CalculateHessian(std::vector<double>& ss)
 {
 	int n = X.rows();
 	int threads = omp_get_max_threads();

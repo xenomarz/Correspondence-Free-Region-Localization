@@ -7,6 +7,7 @@
 
 // Optimization lib includes
 #include "../include/engine.h"
+#include "libs/optimization_lib/include/objective_functions/barycenter_position_objective.h"
 
 Napi::FunctionReference Engine::constructor;
 
@@ -21,7 +22,7 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("constrainFacePosition", &Engine::ConstrainFacePosition),
 		InstanceMethod("updateConstrainedFacePosition", &Engine::UpdateConstrainedFacePosition),
 		InstanceMethod("unconstrainFacePosition", &Engine::UnconstrainFacePosition),
-		InstanceMethod("reconstrainFacePosition", &Engine::ReconstrainFacePosition),
+		//InstanceMethod("reconstrainFacePosition", &Engine::ReconstrainFacePosition),
 		InstanceMethod("getDomainFacesCount", &Engine::GetDomainFacesCount),
 		InstanceMethod("getImageFacesCount", &Engine::GetImageFacesCount),
 		InstanceMethod("getDomainVerticesCount", &Engine::GetDomainVerticesCount),
@@ -52,10 +53,9 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	Napi::ObjectWrap<Engine>(info),
 	mesh_wrapper_(std::make_shared<MeshWrapper>())
 {
-	position_ = std::make_shared<Position>(mesh_wrapper_);
 	separation_ = std::make_shared<Separation>(mesh_wrapper_);
 	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet>(mesh_wrapper_);
-	position_ = std::make_shared<Position>(mesh_wrapper_);
+	position_ = std::make_shared<CompositeObjective>(mesh_wrapper_);
 	std::vector<std::shared_ptr<ObjectiveFunction>> objective_functions;
 	objective_functions.push_back(position_);
 	objective_functions.push_back(separation_);
@@ -496,35 +496,29 @@ Napi::Value Engine::ConstrainFacePosition(const Napi::CallbackInfo& info)
 		if (!info[0].IsNumber())
 		{
 			Napi::TypeError::New(env, "First argument is expected to be a Number").ThrowAsJavaScriptException();
-			return env.Null();
+			return Napi::Value();
 		}
 	}
 	else
 	{
 		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
-		return env.Null();
+		return Napi::Value();
 	}
 
 	/**
-	 * Add face vertices to the constrained vertices list of the position objective function
+	 * Create a new barycenter position constraint for the given face
 	 */
-	Napi::Number argument1 = info[0].As<Napi::Number>();
-	Eigen::DenseIndex face_index = argument1.Int64Value();
-	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
-	Eigen::MatrixXd face_vertices = mesh_wrapper_->GetImageVertices(face_vertices_indices);
+	int64_t face_index = info[0].As<Napi::Number>().Int64Value();
+	Eigen::VectorXi indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
 
-	if (position_)
-	{
-		std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>> index_position_pairs;
-		for (int i = 0; i < 3; i++)
-		{
-			index_position_pairs.push_back(std::make_pair(face_vertices_indices(i), face_vertices.row(i)));
-		}
+	Eigen::Vector2d barycenter;
+	Utils::CalculateBarycenter(indices, mesh_wrapper_->GetImageVertices(), barycenter);
 
-		position_->AddConstrainedVertices(index_position_pairs);
-	}
+	auto barycenter_position_objective = std::make_shared<BarycenterPositionObjective>(mesh_wrapper_, indices, barycenter);
+	position_->AddObjectiveFunction(barycenter_position_objective);
+	indices_2_position_objective_map.insert(std::make_pair(indices, barycenter_position_objective));
 
-	return env.Null();
+	return Napi::Value();
 }
 
 Napi::Value Engine::UpdateConstrainedFacePosition(const Napi::CallbackInfo& info)
@@ -540,51 +534,40 @@ Napi::Value Engine::UpdateConstrainedFacePosition(const Napi::CallbackInfo& info
 		if (!info[0].IsNumber())
 		{
 			Napi::TypeError::New(env, "First argument is expected to be a Number").ThrowAsJavaScriptException();
-			return env.Null();
+			return Napi::Value();
 		}
 
 		if (!info[1].IsNumber())
 		{
 			Napi::TypeError::New(env, "Second argument is expected to be a Number").ThrowAsJavaScriptException();
-			return env.Null();
+			return Napi::Value();
 		}
 
 		if (!info[2].IsNumber())
 		{
 			Napi::TypeError::New(env, "Third argument is expected to be a Number").ThrowAsJavaScriptException();
-			return env.Null();
+			return Napi::Value();
 		}
 	}
 	else
 	{
 		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
-		return env.Null();
+		return Napi::Value();
 	}
 
 	/**
-	 * Move the position of the constrained face vertices by a given offset
+	 * Move the barycenter constraint by the given offset
 	 */
-	Napi::Number argument1 = info[0].As<Napi::Number>();
-	Napi::Number argument2 = info[1].As<Napi::Number>();
-	Napi::Number argument3 = info[2].As<Napi::Number>();
-	Eigen::DenseIndex face_index = argument1.Int64Value();
-	double offset_x = argument2.DoubleValue();
-	double offset_y = argument3.DoubleValue();
+	int64_t face_index = info[0].As<Napi::Number>().Int64Value();
+	double offset_x = info[1].As<Napi::Number>().DoubleValue();
+	double offset_y = info[2].As<Napi::Number>().DoubleValue();
+	
 	Eigen::Vector2d offset = Eigen::Vector2d(offset_x, offset_y);
-	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
+	Eigen::VectorXi indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
 
-	if (position_)
-	{
-		std::vector<std::pair<Eigen::DenseIndex, Eigen::Vector2d>> index_offset_pairs;
-		for (int i = 0; i < 3; i++)
-		{
-			index_offset_pairs.push_back(std::make_pair(face_vertices_indices(i), offset));
-		}
+	indices_2_position_objective_map.at(indices)->OffsetPositionConstraint(offset);
 
-		position_->OffsetConstrainedVerticesPositions(index_offset_pairs);
-	}
-
-	return env.Null();
+	return Napi::Value();
 }
 
 Napi::Value Engine::UnconstrainFacePosition(const Napi::CallbackInfo& info)
@@ -600,75 +583,23 @@ Napi::Value Engine::UnconstrainFacePosition(const Napi::CallbackInfo& info)
 		if (!info[0].IsNumber())
 		{
 			Napi::TypeError::New(env, "First argument is expected to be a Number").ThrowAsJavaScriptException();
-			return env.Null();
+			return Napi::Value();
 		}
 	}
 	else
 	{
 		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
-		return env.Null();
+		return Napi::Value();
 	}
 
 	/**
-	 * Remove face vertices from the constrained vertices list of the position objective function
+	 * Remove the barycenter constraint of the given face
 	 */
-	Napi::Number argument1 = info[0].As<Napi::Number>();
-	Eigen::DenseIndex face_index = argument1.Int64Value();
-	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
+	int64_t face_index = info[0].As<Napi::Number>().Int64Value();
+	Eigen::VectorXi indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
 
-	if (position_)
-	{
-		std::vector<Eigen::DenseIndex> vertices_indices;
-		for (int i = 0; i < 3; i++)
-		{
-			vertices_indices.push_back(face_vertices_indices(i));
-		}
+	position_->RemoveObjectiveFunction(indices_2_position_objective_map.at(indices));
+	indices_2_position_objective_map.erase(indices);
 
-		position_->RemoveConstrainedVertices(vertices_indices);
-	}
-
-	return env.Null();
-}
-
-Napi::Value Engine::ReconstrainFacePosition(const Napi::CallbackInfo& info)
-{
-	Napi::Env env = info.Env();
-	Napi::HandleScope scope(env);
-
-	/**
-	 * Validate input arguments
-	 */
-	if (info.Length() >= 1)
-	{
-		if (!info[0].IsNumber())
-		{
-			Napi::TypeError::New(env, "First argument is expected to be a Number").ThrowAsJavaScriptException();
-			return env.Null();
-		}
-	}
-	else
-	{
-		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
-		return env.Null();
-	}
-
-	/**
-	 * Remove face vertices from the constrained vertices list of the position objective function
-	 */
-	Napi::Number argument1 = info[0].As<Napi::Number>();
-	Eigen::DenseIndex face_index = argument1.Int64Value();
-	Eigen::VectorXi face_vertices_indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
-
-	if (position_)
-	{
-		std::vector<Eigen::DenseIndex> vertices_indices;
-		for (int i = 0; i < 3; i++)
-		{
-			vertices_indices.push_back(face_vertices_indices(i));
-		}
-
-		position_->ResetConstrainedVertices(vertices_indices);
-	}
-
-	return env.Null();
+	return Napi::Value();
 }

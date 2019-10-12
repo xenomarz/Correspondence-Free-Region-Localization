@@ -14,7 +14,7 @@
 
 // Boost includes
 #include <boost/signals2/signal.hpp>
-
+#include <boost/functional/hash.hpp>
 
 // Eigen Includes
 #include <Eigen/Core>
@@ -22,58 +22,10 @@
 
 // Optimization lib includes
 #include "./objective_function_data_provider.h"
+#include "../utils/utils.h"
 
 class MeshWrapper : public ObjectiveFunctionDataProvider
 {
-private:
-
-	/**
-	 * Private function objects
-	 */
-
-	 // Custom hash and equals functions for unordered_map
-	 // https://stackoverflow.com/questions/32685540/why-cant-i-compile-an-unordered-map-with-a-pair-as-key
-	struct pair_hash {
-		template <class T1, class T2>
-		std::size_t operator () (const std::pair<T1, T2>& pair) const
-		{
-			auto minmax_pair = std::minmax(pair.first, pair.second);
-			std::size_t seed = 0;
-			hash_combine(seed, minmax_pair.first);
-			hash_combine(seed, minmax_pair.second);
-			return seed;
-		}
-	};
-
-	struct pair_equals {
-		template <class T1, class T2>
-		bool operator () (const std::pair<T1, T2>& pair1, const std::pair<T1, T2>& pair2) const
-		{
-			auto minmax_pair1 = std::minmax(pair1.first, pair1.second);
-			auto minmax_pair2 = std::minmax(pair2.first, pair2.second);
-			return (minmax_pair1.first == minmax_pair2.first) && (minmax_pair1.second == minmax_pair2.second);
-		}
-	};
-
-	/**
-	 * Private type definitions
-	 */
-	using IndexType = Eigen::DenseIndex;
-	using VertexIndex = IndexType;
-	using EdgeIndex = IndexType;
-	using FaceIndex = IndexType;
-	using EdgeDescriptor = std::pair<EdgeIndex, EdgeIndex>;
-	using ED2EIMap = std::unordered_map<EdgeDescriptor, EdgeIndex, pair_hash, pair_equals>;
-	using VI2VIsMap = std::unordered_map<VertexIndex, std::vector<VertexIndex>>;
-	using VI2VIMap = std::unordered_map<VertexIndex, VertexIndex>;
-	using EI2EIsMap = std::unordered_map<EdgeIndex, std::vector<EdgeIndex>>;
-	using EI2EIMap = std::unordered_map<EdgeIndex, EdgeIndex>;
-
-	/**
-	 * Private functions
-	 */
-	void Initialize();
-
 public:
 
 	/**
@@ -116,17 +68,32 @@ public:
 	const Eigen::MatrixX3d& GetD2() const override;
 	const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const override;
 	const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const override;
-	const Eigen::DenseIndex GetImageVerticesCount() const override;
+	int64_t GetImageVerticesCount() const override;
 
 	/**
 	 * Public methods
 	 */
-	Eigen::VectorXi GetImageFaceVerticesIndices(FaceIndex face_index);
+	Eigen::VectorXi GetImageFaceVerticesIndices(int64_t face_index);
 	Eigen::MatrixXd GetImageVertices(const Eigen::VectorXi& vertex_indices);
 	void LoadModel(const std::string& model_file_path);
-	void RegisterModelLoadedCallback(std::function<ModelLoadedCallback> model_loaded_callback);
+	void RegisterModelLoadedCallback(const std::function<ModelLoadedCallback>& model_loaded_callback);
 
 private:
+	/**
+	 * Private type definitions
+	 */
+	using EdgeDescriptor = std::pair<int64_t, int64_t>;
+	using ED2EIMap = std::unordered_map<EdgeDescriptor, int64_t, Utils::PairHash, Utils::PairEquals>;
+	using VI2VIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
+	using VI2VIMap = std::unordered_map<int64_t, int64_t>;
+	using EI2EIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
+	using EI2EIMap = std::unordered_map<int64_t, int64_t>;
+
+	/**
+	 * Private functions
+	 */
+	void Initialize();
+	
 	/**
 	* Private enums
 	*/
@@ -195,8 +162,8 @@ private:
 	Eigen::MatrixX3d d2_;
 
 	// Image corresponding pairs
-	std::vector<std::pair<VertexIndex, VertexIndex>> cv_pairs_;
-	std::vector<std::pair<EdgeIndex, EdgeIndex>> ce_pairs_;
+	std::vector<std::pair<int64_t, int64_t>> cv_pairs_;
+	std::vector<std::pair<int64_t, int64_t>> ce_pairs_;
 	Eigen::SparseMatrix<double> cv_pairs_coefficients_;
 	Eigen::VectorXd cv_pairs_edge_length_;
 
@@ -212,12 +179,12 @@ private:
 	boost::signals2::signal<ModelLoadedCallback> model_loaded_signal_;
 };
 
-// https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values/35991300#35991300
-template <class T>
-inline void hash_combine(std::size_t& seed, const T& v)
-{
-	std::hash<T> hasher;
-	seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-}
+//// https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values/35991300#35991300
+//template <class T>
+//inline void hash_combine(std::size_t& seed, const T& v)
+//{
+//	std::hash<T> hasher;
+//	seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+//}
 
 #endif

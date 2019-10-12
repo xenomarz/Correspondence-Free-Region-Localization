@@ -2,16 +2,17 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-// Node API Includes
+// Node API includes
 #include <napi.h>
 
-// STL Includes
+// STL includes
 #include <memory>
+#include <unordered_map>
 
-// Eigen Includes
+// Eigen includes
 #include <Eigen/Core>
 
-// Optimization Lib Includes
+// Optimization lib includes
 #include <libs/optimization_lib/include/utils/mesh_wrapper.h>
 #include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
 #include <libs/optimization_lib/include/solvers/pardiso_solver.h>
@@ -20,6 +21,7 @@
 #include <libs/optimization_lib/include/objective_functions/position_objective.h>
 #include <libs/optimization_lib/include/objective_functions/separation_objective.h>
 #include <libs/optimization_lib/include/objective_functions/symmetric_dirichlet_objective.h>
+#include <libs/optimization_lib/include/utils/utils.h>
 
 class Engine : public Napi::ObjectWrap<Engine> {
 public:
@@ -207,9 +209,10 @@ private:
 	/**
 	 * Fields
 	 */
+	std::unordered_map<Eigen::VectorXi, std::shared_ptr<PositionObjective>, Utils::VectorHash, Utils::VectorEquals> indices_2_position_objective_map;
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
 	std::shared_ptr<CompositeObjective> composite_objective_;
-	std::shared_ptr<Position> position_;
+	std::shared_ptr<CompositeObjective> position_;
 	std::shared_ptr<Separation> separation_;
 	std::shared_ptr<SymmetricDirichlet> symmetric_dirichlet_;
 	std::unique_ptr<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>> newton_method_;

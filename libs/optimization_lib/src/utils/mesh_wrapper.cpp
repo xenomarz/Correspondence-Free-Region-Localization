@@ -263,7 +263,7 @@ void MeshWrapper::NormalizeVertices(Eigen::MatrixX3d& v)
 
 void MeshWrapper::ComputeEdgeDescriptorMap(const Eigen::MatrixX2i& e, ED2EIMap& ed_2_ei)
 {
-	for (EdgeIndex edge_index = 0; edge_index < e.rows(); ++edge_index)
+	for (int64_t edge_index = 0; edge_index < e.rows(); ++edge_index)
 	{
 		ed_2_ei[std::make_pair(e(edge_index, 0), e(edge_index, 1))] = edge_index;
 	}
@@ -271,7 +271,7 @@ void MeshWrapper::ComputeEdgeDescriptorMap(const Eigen::MatrixX2i& e, ED2EIMap& 
 
 void MeshWrapper::ComputeEdgeIndexMaps()
 {
-	for (EdgeIndex edge_index_im = 0; edge_index_im < e_im_.rows(); ++edge_index_im)
+	for (int64_t edge_index_im = 0; edge_index_im < e_im_.rows(); ++edge_index_im)
 	{
 		auto v1_index_im = e_im_(edge_index_im, 0);
 		auto v2_index_im = e_im_(edge_index_im, 1);
@@ -286,7 +286,7 @@ void MeshWrapper::ComputeEdgeIndexMaps()
 
 void MeshWrapper::ComputeVertexIndexMaps()
 {
-	for (FaceIndex face_index = 0; face_index < f_dom_.rows(); ++face_index)
+	for (int64_t face_index = 0; face_index < f_dom_.rows(); ++face_index)
 	{
 		auto current_face_dom = f_dom_.row(face_index);
 		auto current_face_im = f_im_.row(face_index);
@@ -303,36 +303,36 @@ void MeshWrapper::ComputeVertexIndexMaps()
 
 void MeshWrapper::ComputeCorrespondingPairs()
 {
-	IndexType current_triplet_index = 0;
+	int64_t current_triplet_index = 0;
 	std::vector<Eigen::Triplet<double>> triplets;
 
 	// Iterate over each edge of in the domain
-	for (EdgeIndex edge_index_dom = 0; edge_index_dom < e_dom_.rows(); ++edge_index_dom)
+	for (int64_t edge_index_dom = 0; edge_index_dom < e_dom_.rows(); ++edge_index_dom)
 	{
 		// Get the corresponding copies in the image
-		std::vector<EdgeIndex> edge_indices_im = e_dom_2_e_im_.at(edge_index_dom);
+		std::vector<int64_t> edge_indices_im = e_dom_2_e_im_.at(edge_index_dom);
 
 		// If the domain edge has two image copies
 		if (edge_indices_im.size() == 2)
 		{
 			// Get the indices of the two image edges
-			EdgeIndex edge1_index_im = edge_indices_im[0];
-			EdgeIndex edge2_index_im = edge_indices_im[1];
+			int64_t edge1_index_im = edge_indices_im[0];
+			int64_t edge2_index_im = edge_indices_im[1];
 
 			// Get the indices of the four image vertices that constitute the two image edges
-			VertexIndex e1_v1_index_im = e_im_(edge1_index_im, 0);
-			VertexIndex e1_v2_index_im = e_im_(edge1_index_im, 1);
-			VertexIndex e2_v1_index_im = e_im_(edge2_index_im, 0);
-			VertexIndex e2_v2_index_im = e_im_(edge2_index_im, 1);
+			int64_t e1_v1_index_im = e_im_(edge1_index_im, 0);
+			int64_t e1_v2_index_im = e_im_(edge1_index_im, 1);
+			int64_t e2_v1_index_im = e_im_(edge2_index_im, 0);
+			int64_t e2_v2_index_im = e_im_(edge2_index_im, 1);
 
 			// Get the indices of the four corresponding domain vertices
-			VertexIndex e1_v1_index_dom = v_im_2_v_dom_.at(e1_v1_index_im);
-			VertexIndex e1_v2_index_dom = v_im_2_v_dom_.at(e1_v2_index_im);
-			VertexIndex e2_v1_index_dom = v_im_2_v_dom_.at(e2_v1_index_im);
-			VertexIndex e2_v2_index_dom = v_im_2_v_dom_.at(e2_v2_index_im);
+			int64_t e1_v1_index_dom = v_im_2_v_dom_.at(e1_v1_index_im);
+			int64_t e1_v2_index_dom = v_im_2_v_dom_.at(e1_v2_index_im);
+			int64_t e2_v1_index_dom = v_im_2_v_dom_.at(e2_v1_index_im);
+			int64_t e2_v2_index_dom = v_im_2_v_dom_.at(e2_v2_index_im);
 
 			// Sort the four image vertex-indices according to their corresponding domain vertex-index
-			std::unordered_map<VertexIndex, std::vector<VertexIndex>> dom_v_index_2_im_v_indices;
+			std::unordered_map<int64_t, std::vector<int64_t>> dom_v_index_2_im_v_indices;
 			dom_v_index_2_im_v_indices[e1_v1_index_dom].push_back(e1_v1_index_im);
 			dom_v_index_2_im_v_indices[e1_v2_index_dom].push_back(e1_v2_index_im);
 			dom_v_index_2_im_v_indices[e2_v1_index_dom].push_back(e2_v1_index_im);
@@ -341,12 +341,12 @@ void MeshWrapper::ComputeCorrespondingPairs()
 			// Record the two corresponding image vertices pairs
 			for (auto& it : dom_v_index_2_im_v_indices)
 			{
-				std::pair<VertexIndex, VertexIndex> cv_pair = std::minmax(it.second[0], it.second[1]);
+				std::pair<int64_t, int64_t> cv_pair = std::minmax(it.second[0], it.second[1]);
 				cv_pairs_.push_back(cv_pair);
 			}
 
 			// Record corresponding image edges pair 
-			std::pair<EdgeIndex, EdgeIndex> ce_pair = std::minmax(edge1_index_im, edge2_index_im);
+			std::pair<int64_t, int64_t> ce_pair = std::minmax(edge1_index_im, edge2_index_im);
 			ce_pairs_.push_back(ce_pair);
 		}
 	}
@@ -385,12 +385,12 @@ void MeshWrapper::ComputeCorrespondingVertexPairsEdgeLength()
 	}
 }
 
-const Eigen::DenseIndex MeshWrapper::GetImageVerticesCount() const
+int64_t MeshWrapper::GetImageVerticesCount() const
 {
 	return v_im_.rows();
 }
 
-Eigen::VectorXi MeshWrapper::GetImageFaceVerticesIndices(FaceIndex face_index)
+Eigen::VectorXi MeshWrapper::GetImageFaceVerticesIndices(int64_t face_index)
 {
 	return f_im_.row(face_index);
 }
@@ -406,14 +406,14 @@ MeshWrapper::ModelFileType MeshWrapper::GetModelFileType(const std::string& mode
 	transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
 	if (fileExtension == "obj")
 	{
-		return MeshWrapper::ModelFileType::OBJ;
+		return ModelFileType::OBJ;
 	}
 	else if (fileExtension == "off")
 	{
-		return MeshWrapper::ModelFileType::OFF;
+		return ModelFileType::OFF;
 	}
 
-	return MeshWrapper::ModelFileType::UNKNOWN;
+	return ModelFileType::UNKNOWN;
 }
 
 void MeshWrapper::Initialize()
@@ -438,7 +438,7 @@ void MeshWrapper::Initialize()
 	ComputeSurfaceGradientPerFace(v_dom_, f_dom_, d1_, d2_);
 }
 
-void MeshWrapper::RegisterModelLoadedCallback(std::function<ModelLoadedCallback> model_loaded_callback)
+void MeshWrapper::RegisterModelLoadedCallback(const std::function<ModelLoadedCallback>& model_loaded_callback)
 {
 	model_loaded_signal_.connect(model_loaded_callback);
 }

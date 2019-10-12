@@ -17,6 +17,8 @@
 // Optimization Lib Includes
 #include "../utils/objective_function_data_provider.h"
 #include "../utils/utils.h"
+#include <Eigen/src/Core/util/ForwardDeclarations.h>
+#include <Eigen/src/Core/util/ForwardDeclarations.h>
 
 class ObjectiveFunction
 {
@@ -152,9 +154,9 @@ private:
 
 	// Value, gradient and hessian calculation functions
 	// TODO: Remove input argument 'const Eigen::VectorXd& x' from value, gradient and hessian calculation. This argument should be processed in PreUpdate().
-	virtual void CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::VectorXd& f_per_vertex) = 0;
-	virtual void CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g) = 0;
-	virtual void CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss) = 0;
+	virtual void CalculateValue(double& f, Eigen::VectorXd& f_per_vertex) = 0;
+	virtual void CalculateGradient(Eigen::VectorXd& g) = 0;
+	virtual void CalculateHessian(std::vector<double>& ss) = 0;
 
 	/**
 	 * Private fields

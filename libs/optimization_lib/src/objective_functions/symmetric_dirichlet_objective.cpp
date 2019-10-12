@@ -7,6 +7,8 @@
 
 // LIBIGL includes
 #include <igl/doublearea.h>
+#include <Eigen/src/Core/util/ForwardDeclarations.h>
+#include <Eigen/src/Core/util/ForwardDeclarations.h>
 
 SymmetricDirichlet::SymmetricDirichlet(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider)
 	: ObjectiveFunction(objective_function_data_provider, "Symmetric Dirichlet")
@@ -81,7 +83,7 @@ void SymmetricDirichlet::InitializeHessian(std::vector<int>& ii, std::vector<int
 	ss = std::vector<double>(ii.size(), 0.);
 }
 
-void SymmetricDirichlet::CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::VectorXd& f_per_vertex)
+void SymmetricDirichlet::CalculateValue(double& f, Eigen::VectorXd& f_per_vertex)
 {
 	bool inversions_exist = updateJ(X);
 
@@ -93,7 +95,7 @@ void SymmetricDirichlet::CalculateValue(const Eigen::VectorXd& x, double& f, Eig
 	f = 0.5 * (Area.asDiagonal() * Efi).sum();
 }
 
-void SymmetricDirichlet::CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g)
+void SymmetricDirichlet::CalculateGradient(Eigen::VectorXd& g)
 {
 	bool inversions_exist = updateJ(X);
 	UpdateSSVDFunction();
@@ -126,7 +128,7 @@ void SymmetricDirichlet::CalculateGradient(const Eigen::VectorXd& x, Eigen::Vect
 	}
 }
 
-void SymmetricDirichlet::CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss)
+void SymmetricDirichlet::CalculateHessian(std::vector<double>& ss)
 {
 	auto lambda1 = [](double a) {return a - 1.0 / (a * a * a); };
 

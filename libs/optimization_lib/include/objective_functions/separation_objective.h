@@ -9,6 +9,8 @@
 
 // Optimization lib includes
 #include "./objective_function.h"
+#include <Eigen/src/Core/util/ForwardDeclarations.h>
+#include <Eigen/src/Core/util/ForwardDeclarations.h>
 
 class Separation : public ObjectiveFunction
 {
@@ -32,9 +34,9 @@ private:
 	 * Overrides
 	 */
 	void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss) override;
-	void CalculateValue(const Eigen::VectorXd& x, double& f, Eigen::VectorXd& f_per_vertex) override;
-	void CalculateGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g) override;
-	void CalculateHessian(const Eigen::VectorXd& x, std::vector<double>& ss) override;
+	void CalculateValue(double& f, Eigen::VectorXd& f_per_vertex) override;
+	void CalculateGradient(Eigen::VectorXd& g) override;
+	void CalculateHessian(std::vector<double>& ss) override;
 	void PreUpdate(const Eigen::VectorXd& x) override;
 	void PreInitialize() override;
 

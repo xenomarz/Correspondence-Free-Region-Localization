@@ -13,7 +13,7 @@ public:
 	virtual const Eigen::MatrixX3d& GetDomainVertices() const = 0;
 	virtual const Eigen::MatrixX2i& GetDomainEdges() const = 0;
 	virtual const Eigen::MatrixX3i& GetImageFaces() const = 0;
-	virtual const Eigen::DenseIndex GetImageVerticesCount() const = 0;
+	virtual int64_t GetImageVerticesCount() const = 0;
 	virtual const Eigen::MatrixX3d& GetD1() const = 0;
 	virtual const Eigen::MatrixX3d& GetD2() const = 0;
 
