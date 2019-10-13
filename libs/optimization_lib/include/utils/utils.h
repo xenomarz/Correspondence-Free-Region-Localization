@@ -138,11 +138,11 @@ public:
 		Eigen::SparseMatrix<double, Scheme>& M)
 	{
 		std::vector<Eigen::Triplet<double>> triplets;
-		triplets.reserve(ii.size());
+		triplets.resize(ii.size());
 
 		for (int i = 0; i < ii.size(); i++)
 		{
-			triplets.push_back(Eigen::Triplet<double>(ii[i], jj[i], ss[i]));
+			triplets[i] = Eigen::Triplet<double>(ii[i], jj[i], ss[i]);
 		}
 
 		M.resize(rows, columns);

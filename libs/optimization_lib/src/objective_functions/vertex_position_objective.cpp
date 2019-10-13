@@ -6,8 +6,8 @@ VertexPositionObjective::VertexPositionObjective(const std::shared_ptr<Objective
 	PositionObjective(objective_function_data_provider, 2.0, index_vertex_pairs.size(), "Barycenter Position Objective"),
 	index_vertex_pairs_(index_vertex_pairs)
 {
-	X_objective_.resize(vertices_count_, 2);
-	for(int64_t i = 0; i < vertices_count_; i++)
+	X_objective_.resize(objective_vertices_count_, 2);
+	for(int64_t i = 0; i < objective_vertices_count_; i++)
 	{
 		X_objective_.row(i) = index_vertex_pairs[i].second;
 	}
@@ -26,16 +26,16 @@ void VertexPositionObjective::OffsetPositionConstraint(const Eigen::Vector2d& of
 
 void VertexPositionObjective::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
 {
-	ii.resize(vertices_count_);
-	jj.resize(vertices_count_);
+	ii.resize(objective_variables_count_);
+	jj.resize(objective_variables_count_);
 
-	for (uint64_t i = 0; i < vertices_count_; i++)
+	for (uint64_t i = 0; i < objective_variables_count_; i++)
 	{
 		ii[i] = index_vertex_pairs_[i].first;
 		jj[i] = index_vertex_pairs_[i].first;
 	}
 
-	ss = std::vector<double>(vertices_count_, 0);
+	ss = std::vector<double>(objective_variables_count_, 0);
 }
 
 void VertexPositionObjective::CalculateValue(double& f, Eigen::VectorXd& f_per_vertex)
@@ -46,7 +46,7 @@ void VertexPositionObjective::CalculateValue(double& f, Eigen::VectorXd& f_per_v
 void VertexPositionObjective::CalculateGradient(Eigen::VectorXd& g)
 {
 	g.setZero();
-	for (uint64_t i = 0; i < vertices_count_; i++)
+	for (uint64_t i = 0; i < objective_vertices_count_; i++)
 	{
 		const auto current_index = index_vertex_pairs_[i].first;
 		g(current_index) = coefficient_ * X_diff_(i, 0);
@@ -57,7 +57,7 @@ void VertexPositionObjective::CalculateGradient(Eigen::VectorXd& g)
 void VertexPositionObjective::CalculateHessian(std::vector<double>& ss)
 {
 	std::fill(ss.begin(), ss.end(), 0);
-	for (uint64_t i = 0; i < vertices_count_; i++)
+	for (uint64_t i = 0; i < objective_vertices_count_; i++)
 	{
 		const auto current_index = index_vertex_pairs_[i].first;
 		ss[current_index] = coefficient_;

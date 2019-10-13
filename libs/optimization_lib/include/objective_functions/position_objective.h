@@ -32,7 +32,8 @@ protected:
 	/**
 	 * Protected fields
 	 */
-	int64_t vertices_count_;
+	int64_t objective_vertices_count_;
+	int64_t objective_variables_count_;
 	double coefficient_;
 	
 private:

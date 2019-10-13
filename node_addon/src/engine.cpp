@@ -22,7 +22,6 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("constrainFacePosition", &Engine::ConstrainFacePosition),
 		InstanceMethod("updateConstrainedFacePosition", &Engine::UpdateConstrainedFacePosition),
 		InstanceMethod("unconstrainFacePosition", &Engine::UnconstrainFacePosition),
-		//InstanceMethod("reconstrainFacePosition", &Engine::ReconstrainFacePosition),
 		InstanceMethod("getDomainFacesCount", &Engine::GetDomainFacesCount),
 		InstanceMethod("getImageFacesCount", &Engine::GetImageFacesCount),
 		InstanceMethod("getDomainVerticesCount", &Engine::GetDomainVerticesCount),
@@ -55,12 +54,12 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 {
 	separation_ = std::make_shared<Separation>(mesh_wrapper_);
 	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet>(mesh_wrapper_);
-	position_ = std::make_shared<CompositeObjective>(mesh_wrapper_);
+  	position_ = std::make_shared<CompositeObjective>(mesh_wrapper_, std::string("Position"));
 	std::vector<std::shared_ptr<ObjectiveFunction>> objective_functions;
 	objective_functions.push_back(position_);
 	objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
-	composite_objective_ = std::make_shared<CompositeObjective>(mesh_wrapper_, objective_functions);
+	composite_objective_ = std::make_shared<CompositeObjective>(mesh_wrapper_, objective_functions, true);
 	mesh_wrapper_->RegisterModelLoadedCallback([&]() {
 		/**
 		 * Initialize objective functions

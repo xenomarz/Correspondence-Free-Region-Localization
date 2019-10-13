@@ -869,8 +869,14 @@ export class MeshView extends LitElement {
 
     _updateDragOffset() {
         this._faceIntersection.offset = this._getOffsetFromIntersection();
+        if(this._faceIntersection.movement) {
+            this._faceIntersection.movement = this._faceIntersection.offset - this._faceIntersection.movement;
+        }
+        else {
+            this._faceIntersection.movement = this._faceIntersection.offset;
+        }
         this._publishFaceMessage('mesh-view-face-dragging', this._faceIntersection.face, {
-            offset: this._faceIntersection.offset
+            offset: this._faceIntersection.movement
         });  
     }    
 

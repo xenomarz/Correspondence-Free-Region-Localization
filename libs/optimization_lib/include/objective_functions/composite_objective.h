@@ -8,8 +8,6 @@
 
 // Optimization lib includes
 #include "./objective_function.h"
-#include <Eigen/src/Core/util/ForwardDeclarations.h>
-#include <Eigen/src/Core/util/ForwardDeclarations.h>
 
 class CompositeObjective : public ObjectiveFunction
 {
@@ -17,12 +15,12 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider);
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name);
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction> objective_function);
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions);
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction> objective_function, const std::string& name);
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions, const std::string& name);
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, bool explicitly_zero_diagonal = false);
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name, bool explicitly_zero_diagonal = false);
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction> objective_function, bool explicitly_zero_diagonal = false);
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions, bool explicitly_zero_diagonal = false);
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction> objective_function, const std::string& name, bool explicitly_zero_diagonal = false);
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunction>>& objective_functions, const std::string& name, bool explicitly_zero_diagonal = false);
 	virtual ~CompositeObjective();
 
 	/**
@@ -46,11 +44,12 @@ private:
 	void CalculateHessian(std::vector<double>& ss) override;
 	void PreUpdate(const Eigen::VectorXd& x) override;
 	void PreInitialize() override;
-
+	
 	/**
 	 * Fields
 	 */
 	std::vector<std::shared_ptr<ObjectiveFunction>> objective_functions_;
+	bool explicitly_zero_diagonal_;
 };
 
 #endif

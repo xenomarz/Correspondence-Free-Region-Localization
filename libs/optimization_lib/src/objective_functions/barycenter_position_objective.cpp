@@ -28,48 +28,62 @@ void BarycenterPositionObjective::OffsetPositionConstraint(const Eigen::Vector2d
 
 void BarycenterPositionObjective::InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss)
 {
-	ii.resize(vertices_count_);
-	jj.resize(vertices_count_);
+	ii.resize(objective_variables_count_);
+	jj.resize(objective_variables_count_);
 
-	for (uint64_t i = 0; i < vertices_count_; i++)
+	int64_t vertex_index;
+	int64_t vertex_index_shifted;
+	int64_t i_shifted;
+	
+	for (uint64_t i = 0; i < objective_vertices_count_; i++)
 	{
-		ii[i] = indices_[i];
-		jj[i] = indices_[i];
+		vertex_index = indices_[i];
+		vertex_index_shifted = vertex_index + image_vertices_count_;
+		i_shifted = i + objective_vertices_count_;
+		
+		ii[i] = vertex_index;
+		jj[i] = vertex_index;
+		
+		ii[i_shifted] = vertex_index_shifted;
+		jj[i_shifted] = vertex_index_shifted;
 	}
 
-	ss = std::vector<double>(vertices_count_, 0);
+	ss = std::vector<double>(objective_variables_count_, 0);
 }
 
 void BarycenterPositionObjective::CalculateValue(double& f, Eigen::VectorXd& f_per_vertex)
 {
-	f = barycenters_diff_.squaredNorm();
+	f = 0;
+	//f = barycenters_diff_.squaredNorm();
 }
 
 void BarycenterPositionObjective::CalculateGradient(Eigen::VectorXd& g)
 {
 	g.setZero();
-	for (uint64_t i = 0; i < vertices_count_; i++)
-	{
-		const auto current_index = indices_[i];
-		g(current_index) = coefficient_ * barycenters_diff_(0,0);
-		g(current_index + image_vertices_count_) = coefficient_ * barycenters_diff_(1, 0);
-	}
+	//for (uint64_t i = 0; i < objective_vertices_count_; i++)
+	//{
+	//	const auto current_index = indices_[i];
+	//	g(current_index) = (2.0f / 3.0f) * barycenters_diff_(0,0);
+	//	g(current_index + image_vertices_count_) = (2.0f / 3.0f) * barycenters_diff_(1, 0);
+	//}
 }
 
 void BarycenterPositionObjective::CalculateHessian(std::vector<double>& ss)
 {
 	std::fill(ss.begin(), ss.end(), 0);
-	for (uint64_t i = 0; i < vertices_count_; i++)
-	{
-		const auto current_index = indices_[i];
-		ss[current_index] = coefficient_;
-		ss[current_index + image_vertices_count_] = coefficient_;
-	}
+
+	//int64_t vertex_index;
+	//for (uint64_t i = 0; i < objective_vertices_count_; i++)
+	//{
+	//	//vertex_index = indices_[i];
+	//	ss[i] = 2.0f / 9.0f;
+	//	ss[i + objective_vertices_count_] = 2.0f / 9.0f;
+	//}
 }
 
 void BarycenterPositionObjective::PreUpdate(const Eigen::VectorXd& x)
 {
-	auto X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
-	Utils::CalculateBarycenter(indices_, X, current_barycenter_);
-	barycenters_diff_ = current_barycenter_ - objective_barycenter_;
+	//auto X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
+ //	Utils::CalculateBarycenter(indices_, X, current_barycenter_);
+	//barycenters_diff_ = current_barycenter_ - objective_barycenter_;
 }
