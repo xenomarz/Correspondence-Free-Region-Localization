@@ -17,22 +17,14 @@
 #include "../solvers/solver.h"
 
 // https://en.wikipedia.org/wiki/Newton%27s_method_in_optimization
-template <class Derived, Eigen::StorageOptions StorageOptions>
-class NewtonMethod : public IterativeMethod
+template <class Derived, Eigen::StorageOptions StorageOrder>
+class NewtonMethod : public IterativeMethod<StorageOrder>
 {
 public:
-	NewtonMethod(std::shared_ptr<ObjectiveFunction> objective_function, const Eigen::VectorXd& x0) :
+	NewtonMethod(std::shared_ptr<ObjectiveFunction<StorageOrder>> objective_function, const Eigen::VectorXd& x0) :
 		IterativeMethod(objective_function, x0)
 	{
-		switch (StorageOptions)
-		{
-		case Eigen::StorageOptions::ColMajor:
-			solver_.AnalyzePattern(objective_function->GetHessianColMajor());
-			break;
-		case Eigen::StorageOptions::RowMajor:
-			solver_.AnalyzePattern(objective_function->GetHessianRowMajor());
-			break;
-		}
+		solver_.AnalyzePattern(objective_function->GetHessian());
 	}
 
 	virtual ~NewtonMethod()
@@ -43,19 +35,11 @@ public:
 private:
 	void ComputeDescentDirection(Eigen::VectorXd& p) override
 	{
-		auto objective_function = GetObjectiveFunction();
-		switch (StorageOptions)
-		{
-		case Eigen::StorageOptions::ColMajor:
-			solver_.Solve(objective_function->GetHessianColMajor(), -objective_function->GetGradient(), p);
-			break;
-		case Eigen::StorageOptions::RowMajor:
-			solver_.Solve(objective_function->GetHessianRowMajor(), -objective_function->GetGradient(), p);
-			break;
-		}
+		auto objective_function = this->GetObjectiveFunction();
+		solver_.Solve(objective_function->GetHessian(), -objective_function->GetGradient(), p);
 	}
 
-	std::enable_if_t<std::is_base_of<Solver, Derived>::value, Derived> solver_;
+	std::enable_if_t<std::is_base_of<Solver<StorageOrder>, Derived>::value, Derived> solver_;
 };
 
 #endif

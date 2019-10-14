@@ -869,12 +869,16 @@ export class MeshView extends LitElement {
 
     _updateDragOffset() {
         this._faceIntersection.offset = this._getOffsetFromIntersection();
-        if(this._faceIntersection.movement) {
-            this._faceIntersection.movement = this._faceIntersection.offset - this._faceIntersection.movement;
-        }
-        else {
-            this._faceIntersection.movement = this._faceIntersection.offset;
-        }
+
+        let movementX = this._faceIntersection.offset.x - this._faceIntersection.previousOffset.x;
+        let movementY = this._faceIntersection.offset.y - this._faceIntersection.previousOffset.y;
+
+        this._faceIntersection.movement = new THREE.Vector3(movementX, movementY, 0);
+        // this._faceIntersection.movement.sub(this._faceIntersection.previousOffset);
+        this._faceIntersection.previousOffset = this._faceIntersection.offset;
+
+        console.log(this._faceIntersection.movement);
+
         this._publishFaceMessage('mesh-view-face-dragging', this._faceIntersection.face, {
             offset: this._faceIntersection.movement
         });  
@@ -1239,6 +1243,7 @@ export class MeshView extends LitElement {
     }
 
     beginFaceDragging() {
+        this._faceIntersection.previousOffset = new THREE.Vector3(0, 0, 0);
         this._setDraggedFace(this._faceIntersection.face);
         this._publishFaceMessage('mesh-view-face-dragging-begin', this._draggedFace);        
         this._controls.enablePan = false;

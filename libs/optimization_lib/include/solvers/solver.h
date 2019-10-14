@@ -6,17 +6,22 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
+template<Eigen::StorageOptions StorageOrder>
 class Solver
 {
 public:
-	Solver();
-	~Solver();
+	Solver()
+	{
+		
+	}
+	
+	virtual ~Solver()
+	{
+		
+	}
 
-	virtual void AnalyzePattern(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A) = 0;
-	virtual void AnalyzePattern(const Eigen::SparseMatrix<double, Eigen::StorageOptions::RowMajor>& A) = 0;
-
-	virtual void Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x) = 0;
-	virtual void Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::RowMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x) = 0;
+	virtual void AnalyzePattern(const Eigen::SparseMatrix<double, StorageOrder>& A) = 0;
+	virtual void Solve(const Eigen::SparseMatrix<double, StorageOrder>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x) = 0;
 };
 
 #endif

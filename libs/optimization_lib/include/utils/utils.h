@@ -126,30 +126,6 @@ public:
 	}
 
 	/**
-	 * Sparse matrix creation
-	 */
-	template<int Scheme>
-	static inline void SparseMatrixFromTriplets(
-		const std::vector<int>& ii, 
-		const std::vector<int>& jj, 
-		const std::vector<double>& ss, 
-		const Eigen::SparseMatrix<double>::Index rows, 
-		const Eigen::SparseMatrix<double>::Index columns, 
-		Eigen::SparseMatrix<double, Scheme>& M)
-	{
-		std::vector<Eigen::Triplet<double>> triplets;
-		triplets.resize(ii.size());
-
-		for (int i = 0; i < ii.size(); i++)
-		{
-			triplets[i] = Eigen::Triplet<double>(ii[i], jj[i], ss[i]);
-		}
-
-		M.resize(rows, columns);
-		M.setFromTriplets(triplets.begin(), triplets.end());
-	}
-
-	/**
 	 * Remove row & column from matrix
 	 */
 	

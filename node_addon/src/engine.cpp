@@ -52,14 +52,14 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	Napi::ObjectWrap<Engine>(info),
 	mesh_wrapper_(std::make_shared<MeshWrapper>())
 {
-	separation_ = std::make_shared<Separation>(mesh_wrapper_);
-	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet>(mesh_wrapper_);
-  	position_ = std::make_shared<CompositeObjective>(mesh_wrapper_, std::string("Position"));
-	std::vector<std::shared_ptr<ObjectiveFunction>> objective_functions;
+	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
+	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
+  	position_ = std::make_shared<CompositeObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, std::string("Position"));
+	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor>>> objective_functions;
 	objective_functions.push_back(position_);
 	objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
-	composite_objective_ = std::make_shared<CompositeObjective>(mesh_wrapper_, objective_functions, true);
+	composite_objective_ = std::make_shared<CompositeObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, objective_functions, true);
 	mesh_wrapper_->RegisterModelLoadedCallback([&]() {
 		/**
 		 * Initialize objective functions
@@ -463,7 +463,8 @@ Napi::Value Engine::ResumeSolver(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	if (newton_method_) {
+	if (newton_method_) 
+	{
 		newton_method_->Resume();
 	}
 
@@ -475,7 +476,8 @@ Napi::Value Engine::PauseSolver(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	if (newton_method_) {
+	if (newton_method_) 
+	{
 		newton_method_->Pause();
 	}
 
@@ -513,7 +515,7 @@ Napi::Value Engine::ConstrainFacePosition(const Napi::CallbackInfo& info)
 	Eigen::Vector2d barycenter;
 	Utils::CalculateBarycenter(indices, mesh_wrapper_->GetImageVertices(), barycenter);
 
-	auto barycenter_position_objective = std::make_shared<BarycenterPositionObjective>(mesh_wrapper_, indices, barycenter);
+	auto barycenter_position_objective = std::make_shared<BarycenterPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, indices, barycenter);
 	position_->AddObjectiveFunction(barycenter_position_objective);
 	indices_2_position_objective_map.insert(std::make_pair(indices, barycenter_position_objective));
 
@@ -553,8 +555,7 @@ Napi::Value Engine::UpdateConstrainedFacePosition(const Napi::CallbackInfo& info
 		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
 		return Napi::Value();
 	}
-
-	/**
+ 	/**
 	 * Move the barycenter constraint by the given offset
 	 */
 	int64_t face_index = info[0].As<Napi::Number>().Int64Value();

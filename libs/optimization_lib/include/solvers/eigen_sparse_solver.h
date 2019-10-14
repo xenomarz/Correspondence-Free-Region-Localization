@@ -9,22 +9,38 @@
 // Optimization lib includes
 #include "./solver.h"
 
-class EigenSparseSolver : public Solver
+class EigenSparseSolver : public Solver<Eigen::StorageOptions::ColMajor>
 {
 public:
 	/**
 	 * Constructors and destructor
 	 */
-	EigenSparseSolver();
-	~EigenSparseSolver();
+	EigenSparseSolver()
+	{
+		
+	}
+	
+	virtual ~EigenSparseSolver()
+	{
+		
+	}
 
 	/**
 	 * Overrides
 	 */
-	void AnalyzePattern(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A) override;
-	void AnalyzePattern(const Eigen::SparseMatrix<double, Eigen::StorageOptions::RowMajor>& A) override;
-	void Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x) override;
-	void Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::RowMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x) override;
+	void EigenSparseSolver::AnalyzePattern(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A) override
+	{
+		solver_.analyzePattern(A);
+	}
+
+	void EigenSparseSolver::Solve(const Eigen::SparseMatrix<double, Eigen::StorageOptions::ColMajor>& A, const Eigen::VectorXd& b, Eigen::VectorXd& x) override
+	{
+		// Compute the numerical factorization 
+		solver_.factorize(A);
+
+		// Use the factors to solve the linear system 
+		x = solver_.solve(b);
+	}
 
 private:
 	/**

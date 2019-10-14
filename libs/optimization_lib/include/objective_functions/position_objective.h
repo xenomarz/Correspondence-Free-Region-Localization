@@ -9,19 +9,34 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
-#include "./objective_function.h"
-#include <Eigen/src/Core/util/ForwardDeclarations.h>
-#include <Eigen/src/Core/util/ForwardDeclarations.h>
+#include "./concrete_objective.h"
 
-class PositionObjective : public ObjectiveFunction
+template <Eigen::StorageOptions StorageOrder>
+class PositionObjective : public ConcreteObjective<StorageOrder>
 {
 public:
 	/**
 	 * Constructors and destructor
 	 */
-	PositionObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const double coefficient, const int64_t vertices_count, const std::string& name);
-	PositionObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const double coefficient, const int64_t vertices_count);
-	virtual ~PositionObjective();
+	PositionObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const double coefficient, const int64_t vertices_count, const std::string& name) :
+		ConcreteObjective(objective_function_data_provider, name),
+		objective_vertices_count_(vertices_count),
+		objective_variables_count_(2 * vertices_count),
+		coefficient_(coefficient)
+	{
+
+	}
+
+	PositionObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const double coefficient, const int64_t vertices_count) :
+		PositionObjective(objective_function_data_provider, coefficient, vertices_count, "Position Objective")
+	{
+
+	}
+
+	virtual ~PositionObjective()
+	{
+
+	}
 
 	/**
 	 * Public methods
@@ -35,16 +50,6 @@ protected:
 	int64_t objective_vertices_count_;
 	int64_t objective_variables_count_;
 	double coefficient_;
-	
-private:
-	/**
-	 * Overrides
-	 */
-	virtual void InitializeHessian(std::vector<int>& ii, std::vector<int>& jj, std::vector<double>& ss) = 0;
-	virtual void CalculateValue(double& f, Eigen::VectorXd& f_per_vertex) = 0;
-	virtual void CalculateGradient(Eigen::VectorXd& g) = 0;
-	virtual void CalculateHessian(std::vector<double>& ss) = 0;
-	virtual void PreUpdate(const Eigen::VectorXd& x) = 0;
 };
 
 #endif
