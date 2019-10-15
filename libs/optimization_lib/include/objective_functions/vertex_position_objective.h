@@ -19,9 +19,10 @@ public:
 	 * Constructors and destructor
 	 */
 	VertexPositionObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::pair<int64_t, Eigen::Vector2d>>& index_vertex_pairs) :
-		PositionObjective(objective_function_data_provider, 2.0, index_vertex_pairs.size(), "Barycenter Position Objective"),
+		PositionObjective(objective_function_data_provider, index_vertex_pairs.size(), "Vertex Position Objective"),
 		index_vertex_pairs_(index_vertex_pairs)
 	{
+		X_current_.resize(this->objective_vertices_count_, 2);
 		X_objective_.resize(this->objective_vertices_count_, 2);
 		for (int64_t i = 0; i < this->objective_vertices_count_; i++)
 		{
@@ -63,12 +64,15 @@ private:
 
 	void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-		triplets.reserve(this->objective_variables_count_);
+		triplets.resize(this->objective_variables_count_);
 		int64_t current_index;
-		for (uint64_t i = 0; i < this->objective_variables_count_; i++)
+		int64_t current_index_shifted;
+		for (uint64_t i = 0; i < this->objective_vertices_count_; i++)
 		{
 			current_index = index_vertex_pairs_[i].first;
+			current_index_shifted = index_vertex_pairs_[i].first + this->image_vertices_count_;
 			triplets[i] = Eigen::Triplet<double>(current_index, current_index, 0);
+			triplets[i + this->objective_vertices_count_] = Eigen::Triplet<double>(current_index_shifted, current_index_shifted, 0);
 		}
 	}
 
@@ -82,7 +86,11 @@ private:
 
 	void PreUpdate(const Eigen::VectorXd& x) override
 	{
-		X_current_ = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
+		auto X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
+		for (int64_t i = 0; i < this->objective_vertices_count_; i++)
+		{
+			X_current_.row(i) = X.row(this->index_vertex_pairs_[i].first);
+		}
 		X_diff_ = X_current_ - X_objective_;
 	}
 

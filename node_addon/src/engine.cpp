@@ -8,6 +8,7 @@
 // Optimization lib includes
 #include "../include/engine.h"
 #include "libs/optimization_lib/include/objective_functions/barycenter_position_objective.h"
+#include "libs/optimization_lib/include/objective_functions/vertex_position_objective.h"
 
 Napi::FunctionReference Engine::constructor;
 
@@ -511,10 +512,21 @@ Napi::Value Engine::ConstrainFacePosition(const Napi::CallbackInfo& info)
 	 */
 	int64_t face_index = info[0].As<Napi::Number>().Int64Value();
 	Eigen::VectorXi indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
+	
+	//std::vector<std::pair<int64_t, Eigen::Vector2d>> index_vertex_pairs;
+
+	auto V_im = mesh_wrapper_->GetImageVertices();
+	
+	//for(int64_t i = 0; i < indices.rows(); i++)
+	//{
+	//	index_vertex_pairs.push_back({ indices.coeffRef(i,0), V_im.row(indices.coeffRef(i,0))});
+	//}
 
 	Eigen::Vector2d barycenter;
 	Utils::CalculateBarycenter(indices, mesh_wrapper_->GetImageVertices(), barycenter);
 
+	//auto vertex_position_objective = std::make_shared<VertexPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, index_vertex_pairs);
+	
 	auto barycenter_position_objective = std::make_shared<BarycenterPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, indices, barycenter);
 	position_->AddObjectiveFunction(barycenter_position_objective);
 	indices_2_position_objective_map.insert(std::make_pair(indices, barycenter_position_objective));

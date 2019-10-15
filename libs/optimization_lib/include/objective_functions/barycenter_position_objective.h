@@ -19,10 +19,13 @@ public:
 	 * Constructors and destructor
 	 */
 	BarycenterPositionObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<int64_t>& indices, const Eigen::Vector2d& objective_barycenter) :
-		PositionObjective(objective_function_data_provider, 2.0 / static_cast<double>(indices.size()), indices.size(), "Barycenter Position Objective"),
+		PositionObjective(objective_function_data_provider, indices.size(), "Barycenter Position Objective"),
 		indices_(indices),
 		objective_barycenter_(objective_barycenter)
 	{
+		double indices_count = static_cast<double>(indices.size());
+		gradient_coeff_ = 2.0 / indices_count;
+		hessian_coeff_ = gradient_coeff_ / indices_count;
 		this->Initialize();
 	}
 
@@ -60,8 +63,8 @@ private:
 		for (uint64_t i = 0; i < this->objective_vertices_count_; i++)
 		{
 			const auto current_index = indices_[i];
-			g(current_index) = (2.0f / 3.0f) * barycenters_diff_(0,0);
-			g(current_index + this->image_vertices_count_) = (2.0f / 3.0f) * barycenters_diff_(1, 0);
+			g(current_index) = gradient_coeff_ * barycenters_diff_(0,0);
+			g(current_index + this->image_vertices_count_) = gradient_coeff_ * barycenters_diff_(1, 0);
 		}
 	}
 
@@ -89,8 +92,8 @@ private:
 		int64_t vertex_index;
 		for (uint64_t i = 0; i < this->objective_vertices_count_; i++)
 		{
-			const_cast<double&>(triplets[i].value()) = 2.0f / 9.0f;
-			const_cast<double&>(triplets[i + this->objective_vertices_count_].value()) = 2.0f / 9.0f;
+			const_cast<double&>(triplets[i].value()) = hessian_coeff_;
+			const_cast<double&>(triplets[i + this->objective_vertices_count_].value()) = hessian_coeff_;
 		}		
 	}
 
@@ -104,6 +107,8 @@ private:
 	/**
 	 * Fields
 	 */
+	double gradient_coeff_;
+	double hessian_coeff_;
 	std::vector<int64_t> indices_;
 	Eigen::Vector2d objective_barycenter_;
 	Eigen::Vector2d current_barycenter_;
