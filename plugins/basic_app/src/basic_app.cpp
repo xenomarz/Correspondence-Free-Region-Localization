@@ -70,7 +70,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 
 			viewer->load_mesh_from_file(modelPath.c_str());
 			inputModelID = viewer->data_list[0].id;
-
+			cout << viewer->data_list[0].V.rows() << endl;
 			for (int i = 0; i < Outputs.size(); i++)
 			{
 				viewer->load_mesh_from_file(modelPath.c_str());
