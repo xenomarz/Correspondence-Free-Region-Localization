@@ -558,14 +558,14 @@ void basic_app::Draw_menu_for_Solver() {
 			ImGui::DragFloat(("shift eigen values " + std::to_string(out.ModelID)).c_str(), &(out.totalObjective->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
 		}
 		
-		// objective functions wieghts
+		// objective functions weights
 		int id = 0;
 		for (auto& out : Outputs) {
 			for (auto& obj : out.totalObjective->objectiveList) {
 				ImGui::PushID(id++);
 				ImGui::Text((obj->name + std::to_string(out.ModelID)).c_str());
 				ImGui::PushItemWidth(80 * menu_scaling());
-				ImGui::DragFloat("weight", &(obj->w), 0.05f, 0.1f, 20.0f);
+				ImGui::DragFloat("weight", &(obj->w), 0.05f, 0.1f, 100000.0f);
 
 				ImGui::PopID();
 			}
@@ -706,6 +706,51 @@ void basic_app::Draw_menu_for_models() {
 }
 
 void basic_app::Draw_menu_for_text_results() {
+	ImGui::SetNextWindowSize(ImVec2(1200, 700), ImGuiSetCond_FirstUseEver);
+	ImGui::Begin("edit_window", NULL);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 8));
+	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
+	ImVec2 toolbarSize(800, 0);
+	ImGui::BeginChild("toolbar", toolbarSize, false);
+	
+	////////////////////////
+	if (model_loaded) {
+		ImGui::Columns(Outputs[0].totalObjective->objectiveList.size() + 1, "weights table", true);
+		ImGui::Separator();
+
+		ImGui::NextColumn();
+		for (auto & obj : Outputs[0].totalObjective->objectiveList) {
+			ImGui::Text(obj->name.c_str());
+			ImGui::NextColumn();
+		}
+		ImGui::Separator();
+
+		int id = 0;
+		for (auto& out : Outputs) {
+			ImGui::Text(("Output " + std::to_string(out.CoreID)).c_str());
+			ImGui::NextColumn();
+			for (auto& obj : out.totalObjective->objectiveList) {
+				ImGui::PushID(id++);
+				ImGui::PushItemWidth(80 * menu_scaling());
+				ImGui::DragFloat("", &(obj->w), 0.05f, 0.1f, 100000.0f);
+				ImGui::NextColumn();
+				ImGui::PopID();
+			}
+			ImGui::Separator();
+		}
+	}
+	
+
+
+	////////////////////////
+	ImGui::EndChild();
+	ImGui::PopStyleColor();
+	ImGui::PopStyleVar();
+
+	ImGui::End();
+
+
+
 	if (!show_text) {
 		return;
 	}
@@ -738,6 +783,7 @@ void basic_app::Draw_menu_for_text_results() {
 		}
 		ImGui::End();
 		ImGui::PopStyleColor();
+
 	}
 }
 
