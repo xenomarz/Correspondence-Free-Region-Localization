@@ -27,7 +27,7 @@ private:
 	bool show_text;
 	float core_size;
 	float texture_scaling_output;
-	bool Highlighted_face;
+	bool Highlighted_face, Outputs_Info;
 	app_utils::Parametrization param_type;
 	set<int> selected_faces, selected_vertices;
 	vector<Output> Outputs;
@@ -63,8 +63,8 @@ public:
 	IGL_INLINE virtual bool key_pressed(unsigned int key, int modifiers) override;
 			
 	//Draw menu methods
-	void Draw_menu_for_cores();
-	void Draw_menu_for_models();
+	void Draw_menu_for_cores(ViewerCore& core);
+	void Draw_menu_for_models(ViewerData& data);
 	void Draw_menu_for_Solver();
 	void Draw_menu_for_colors();
 	void Draw_menu_for_text_results();

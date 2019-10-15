@@ -25,7 +25,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		Fixed_vertex_color = BLUE_COLOR;
 		model_color = GREY_COLOR;
 		text_color = BLACK_COLOR;
-		Highlighted_face = false;
+		Outputs_Info = Highlighted_face = false;
 		texture_scaling_output = 1;
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
@@ -70,7 +70,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 
 			viewer->load_mesh_from_file(modelPath.c_str());
 			inputModelID = viewer->data_list[0].id;
-			cout << viewer->data_list[0].V.rows() << endl;
+			
 			for (int i = 0; i < Outputs.size(); i++)
 			{
 				viewer->load_mesh_from_file(modelPath.c_str());
@@ -95,8 +95,9 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		viewer->open_dialog_save_mesh();
 	}
 			
-	ImGui::Checkbox("Highlight faces", &Highlighted_face);
+	ImGui::Checkbox("Outputs Info", &Outputs_Info);
 	ImGui::Checkbox("Show text", &show_text);
+	ImGui::Checkbox("Highlight faces", &Highlighted_face);
 
 	if ((view == Horizontal) || (view == Vertical)) {
 		if(ImGui::SliderFloat("Core Size", &core_size, 0, 1.0/ Outputs.size(), to_string(core_size).c_str(), 1)){
@@ -132,8 +133,8 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 
 	if(model_loaded)
 		Draw_menu_for_Solver();
-	Draw_menu_for_cores();
-	Draw_menu_for_models();
+	Draw_menu_for_cores(viewer->core(inputCoreID));
+	Draw_menu_for_models(viewer->data(inputModelID));
 	Draw_menu_for_colors();
 	Draw_menu_for_text_results();
 
@@ -182,7 +183,6 @@ void basic_app::add_output() {
 
 IGL_INLINE void basic_app::post_resize(int w, int h)
 {
-	//Single Core
 	if (viewer)
 	{
 		if (view == app_utils::Horizontal) {
@@ -227,10 +227,12 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 
 IGL_INLINE bool basic_app::mouse_move(int mouse_x, int mouse_y)
 {
+	if (ImGui::IsMouseHoveringAnyWindow())
+		return true;
+
 	if (!IsTranslate)
-	{
 		return false;
-	}
+	
 	if (mouse_mode == app_utils::FACE_SELECT)
 	{
 		if (!selected_faces.empty())
@@ -550,159 +552,138 @@ void basic_app::Draw_menu_for_Solver() {
 		{
 			checkHessians();
 		}
-		
-		ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.1f, 20.0f);
-		
-		for (auto& out : Outputs) {
-			ImGui::PushItemWidth(80 * menu_scaling());
-			ImGui::DragFloat(("shift eigen values " + std::to_string(out.ModelID)).c_str(), &(out.totalObjective->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
-		}
-		
-		// objective functions weights
-		int id = 0;
-		for (auto& out : Outputs) {
-			for (auto& obj : out.totalObjective->objectiveList) {
-				ImGui::PushID(id++);
-				ImGui::Text((obj->name + std::to_string(out.ModelID)).c_str());
-				ImGui::PushItemWidth(80 * menu_scaling());
-				ImGui::DragFloat("weight", &(obj->w), 0.05f, 0.1f, 100000.0f);
-
-				ImGui::PopID();
-			}
-		}
 	}
 }
 
-void basic_app::Draw_menu_for_cores() {
-	for (auto& core : viewer->core_list)
+void basic_app::Draw_menu_for_cores(ViewerCore& core) {
+	if (!Outputs_Info)
+		return;
+
+	ImGui::PushID(core.id);
+	stringstream ss;
+	string name = (core.id == inputCoreID) ? "Input Core" : "Output Core " + std::to_string(core.id);
+	ss << name;
+	if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		ImGui::PushID(core.id);
-		stringstream ss;
-		string name = (core.id == inputCoreID) ? "Input Core" : "Output Core " + std::to_string(core.id);
-		ss << name;
-		if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+		int data_id;
+		for (auto& out : Outputs) {
+			if (core.id == out.CoreID) {
+				data_id = out.ModelID;
+			}
+		}
+		if (core.id == inputCoreID) {
+			data_id = inputModelID;
+		}
+
+		if (ImGui::Button("Center object", ImVec2(-1, 0)))
 		{
-			int data_id;
-			for (auto& out : Outputs) {
-				if (core.id == out.CoreID) {
-					data_id = out.ModelID;
-				}
-			}
-			if (core.id == inputCoreID) {
-				data_id = inputModelID;
-			}
+			core.align_camera_center(viewer->data(data_id).V, viewer->data(data_id).F);
+		}
+		if (ImGui::Button("Snap canonical view", ImVec2(-1, 0)))
+		{
+			viewer->snap_to_canonical_quaternion();
+		}
 
-			if (ImGui::Button("Center object", ImVec2(-1, 0)))
+		// Zoom
+		ImGui::PushItemWidth(80 * menu_scaling());
+		ImGui::DragFloat("Zoom", &(core.camera_zoom), 0.05f, 0.1f, 20.0f);
+
+		// Lightining factor
+		ImGui::PushItemWidth(80 * menu_scaling());
+		ImGui::DragFloat("Lighting factor", &(core.lighting_factor), 0.05f, 0.1f, 20.0f);
+
+		// Select rotation type
+		int rotation_type = static_cast<int>(core.rotation_type);
+		static Quaternionf trackball_angle = Quaternionf::Identity();
+		static bool orthographic = true;
+		if (ImGui::Combo("Camera Type", &rotation_type, "Trackball\0Two Axes\0002D Mode\0\0"))
+		{
+			using RT = ViewerCore::RotationType;
+			auto new_type = static_cast<RT>(rotation_type);
+			if (new_type != core.rotation_type)
 			{
-				core.align_camera_center(viewer->data(data_id).V, viewer->data(data_id).F);
-			}
-			if (ImGui::Button("Snap canonical view", ImVec2(-1, 0)))
-			{
-				viewer->snap_to_canonical_quaternion();
-			}
-
-			// Zoom
-			ImGui::PushItemWidth(80 * menu_scaling());
-			ImGui::DragFloat("Zoom", &(core.camera_zoom), 0.05f, 0.1f, 20.0f);
-
-			// Lightining factor
-			ImGui::PushItemWidth(80 * menu_scaling());
-			ImGui::DragFloat("Lighting factor", &(core.lighting_factor), 0.05f, 0.1f, 20.0f);
-
-			// Select rotation type
-			int rotation_type = static_cast<int>(core.rotation_type);
-			static Quaternionf trackball_angle = Quaternionf::Identity();
-			static bool orthographic = true;
-			if (ImGui::Combo("Camera Type", &rotation_type, "Trackball\0Two Axes\0002D Mode\0\0"))
-			{
-				using RT = ViewerCore::RotationType;
-				auto new_type = static_cast<RT>(rotation_type);
-				if (new_type != core.rotation_type)
+				if (new_type == RT::ROTATION_TYPE_NO_ROTATION)
 				{
-					if (new_type == RT::ROTATION_TYPE_NO_ROTATION)
-					{
-						trackball_angle = core.trackball_angle;
-						orthographic = core.orthographic;
-						core.trackball_angle = Quaternionf::Identity();
-						core.orthographic = true;
-					}
-					else if (core.rotation_type == RT::ROTATION_TYPE_NO_ROTATION)
-					{
-						core.trackball_angle = trackball_angle;
-						core.orthographic = orthographic;
-					}
-					core.set_rotation_type(new_type);
+					trackball_angle = core.trackball_angle;
+					orthographic = core.orthographic;
+					core.trackball_angle = Quaternionf::Identity();
+					core.orthographic = true;
 				}
+				else if (core.rotation_type == RT::ROTATION_TYPE_NO_ROTATION)
+				{
+					core.trackball_angle = trackball_angle;
+					core.orthographic = orthographic;
+				}
+				core.set_rotation_type(new_type);
 			}
-
-			// Orthographic view
-			ImGui::Checkbox("Orthographic view", &(core.orthographic));
-			ImGui::PopItemWidth();
-			ImGui::ColorEdit4("Background", core.background_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 		}
-		ImGui::PopID();
+
+		// Orthographic view
+		ImGui::Checkbox("Orthographic view", &(core.orthographic));
+		ImGui::PopItemWidth();
+		ImGui::ColorEdit4("Background", core.background_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 	}
+	ImGui::PopID();
 }
 
-void basic_app::Draw_menu_for_models() {
-	for (auto& data : viewer->data_list)
-	{
-		// Helper for setting viewport specific mesh options
-		auto make_checkbox = [&](const char *label, unsigned int &option)
-		{
-			bool temp = option;
-			bool res = ImGui::Checkbox(label, &temp);
-			option = temp;
-			return res;
-		};
+void basic_app::Draw_menu_for_models(ViewerData& data) {
+	if (!Outputs_Info)
+		return;
 
-		ImGui::PushID(data.id);
-		stringstream ss;
+	// Helper for setting viewport specific mesh options
+	auto make_checkbox = [&](const char *label, unsigned int &option)
+	{
+		bool temp = option;
+		bool res = ImGui::Checkbox(label, &temp);
+		option = temp;
+		return res;
+	};
+
+	ImGui::PushID(data.id);
+	stringstream ss;
+	if (data.id == inputModelID) {
+		ss << modelName;
+	}
+	else {
+		ss << modelName + " " + std::to_string(data.id) + " (Param.)";
+	}
+			
+	if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		float w = ImGui::GetContentRegionAvailWidth();
+		float p = ImGui::GetStyle().FramePadding.x;
+
 		if (data.id == inputModelID) {
-			ss << modelName;
+			ImGui::SliderFloat("texture", &texture_scaling_input, 0.01, 100, to_string(texture_scaling_input).c_str(), 1);
 		}
 		else {
-			ss << modelName + " " + std::to_string(data.id) + " (Param.)";
+			ImGui::SliderFloat("texture", &texture_scaling_output, 0.01, 100, to_string(texture_scaling_output).c_str(), 1);
 		}
-		
-		
-		if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-		{
-			float w = ImGui::GetContentRegionAvailWidth();
-			float p = ImGui::GetStyle().FramePadding.x;
-
-			if (data.id == inputModelID) {
-				ImGui::SliderFloat("texture", &texture_scaling_input, 0.01, 100, to_string(texture_scaling_input).c_str(), 1);
-			}
-			else {
-				ImGui::SliderFloat("texture", &texture_scaling_output, 0.01, 100, to_string(texture_scaling_output).c_str(), 1);
-			}
 			
 
-			if (ImGui::Checkbox("Face-based", &(data.face_based)))
-			{
-				data.dirty = MeshGL::DIRTY_ALL;
-			}
-
-			make_checkbox("Show texture", data.show_texture);
-			if (ImGui::Checkbox("Invert normals", &(data.invert_normals)))
-			{
-				data.dirty |= MeshGL::DIRTY_NORMAL;
-			}
-			make_checkbox("Show overlay", data.show_overlay);
-			make_checkbox("Show overlay depth", data.show_overlay_depth);
-			ImGui::ColorEdit4("Line color", data.line_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-			ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.3f);
-			ImGui::DragFloat("Shininess", &(data.shininess), 0.05f, 0.0f, 100.0f);
-			ImGui::PopItemWidth();
-
-			make_checkbox("Wireframe", data.show_lines);
-			make_checkbox("Fill", data.show_faces);
-			ImGui::Checkbox("Show vertex labels", &(data.show_vertid));
-			ImGui::Checkbox("Show faces labels", &(data.show_faceid));
+		if (ImGui::Checkbox("Face-based", &(data.face_based)))
+		{
+			data.dirty = MeshGL::DIRTY_ALL;
 		}
-		ImGui::PopID();
+
+		make_checkbox("Show texture", data.show_texture);
+		if (ImGui::Checkbox("Invert normals", &(data.invert_normals)))
+		{
+			data.dirty |= MeshGL::DIRTY_NORMAL;
+		}
+		make_checkbox("Show overlay", data.show_overlay);
+		make_checkbox("Show overlay depth", data.show_overlay_depth);
+		ImGui::ColorEdit4("Line color", data.line_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.3f);
+		ImGui::DragFloat("Shininess", &(data.shininess), 0.05f, 0.0f, 100.0f);
+		ImGui::PopItemWidth();
+
+		make_checkbox("Wireframe", data.show_lines);
+		make_checkbox("Fill", data.show_faces);
+		ImGui::Checkbox("Show vertex labels", &(data.show_vertid));
+		ImGui::Checkbox("Show faces labels", &(data.show_faceid));
 	}
+	ImGui::PopID();
 }
 
 void basic_app::Draw_menu_for_text_results() {
@@ -715,6 +696,14 @@ void basic_app::Draw_menu_for_text_results() {
 	
 	////////////////////////
 	if (model_loaded) {
+		ImGui::PushItemWidth(80 * menu_scaling());
+		ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.1f, 20.0f);
+
+		for (auto& out : Outputs) {
+			ImGui::PushItemWidth(80 * menu_scaling());
+			ImGui::DragFloat(("shift eigen values " + std::to_string(out.CoreID)).c_str(), &(out.totalObjective->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
+		}
+
 		ImGui::Columns(Outputs[0].totalObjective->objectiveList.size() + 1, "weights table", true);
 		ImGui::Separator();
 
@@ -757,7 +746,26 @@ void basic_app::Draw_menu_for_text_results() {
 
 	for (int i = 0; i < Outputs.size(); i++) {
 		bool bOpened(true);
+		ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
+		if (Outputs_Info) {
+			ImGui::Begin("BCKGNDds" + i, &bOpened,
+				ImGuiWindowFlags_NoTitleBar |
+				ImGuiWindowFlags_NoResize |
+				ImGuiWindowFlags_NoMove |
+				ImGuiWindowFlags_NoBackground |
+				ImGuiWindowFlags_NoCollapse);
+
+			
+			
+
+			ImGui::SetWindowPos(ImVec2(Outputs[i].text_position[0] + Outputs[i].window_size.x / 2, Outputs[i].text_position[1]));
+			Draw_menu_for_cores(viewer->core(Outputs[i].CoreID));
+			Draw_menu_for_models(viewer->data(Outputs[i].ModelID));
+
+			ImGui::End();
+
+		}
 		ImGui::Begin("BCKGND" + i, &bOpened, 
 			ImGuiWindowFlags_NoTitleBar | 
 			ImGuiWindowFlags_NoResize | 
@@ -770,7 +778,7 @@ void basic_app::Draw_menu_for_text_results() {
 			ImGuiWindowFlags_NoInputs | 
 			ImGuiWindowFlags_NoFocusOnAppearing | 
 			ImGuiWindowFlags_NoBringToFrontOnFocus);
-		ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
+		
 		ImGui::SetWindowPos(Outputs[i].text_position);
 		ImGui::SetWindowSize(Outputs[i].window_size);
 		ImGui::SetWindowCollapsed(false);
@@ -783,7 +791,6 @@ void basic_app::Draw_menu_for_text_results() {
 		}
 		ImGui::End();
 		ImGui::PopStyleColor();
-
 	}
 }
 
