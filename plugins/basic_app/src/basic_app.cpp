@@ -1051,12 +1051,12 @@ void basic_app::update_mesh()
 		V.push_back(MatrixXd::Zero(X[i].rows() / 2, 2));
 		V[i] = Map<MatrixXd>(X[i].data(), X[i].rows() / 2, 2);
 		if (IsTranslate && mouse_mode == app_utils::VERTEX_SELECT) {
-			V[i].row(Translate_Index) = OutputModel(i).V.row(Translate_Index);
+			V[i].row(Translate_Index) = OutputModel(i).V.row(Translate_Index).head(2);
 		}
 		else if(IsTranslate && mouse_mode == app_utils::FACE_SELECT) {
 			Vector3i F = OutputModel(i).F.row(Translate_Index);
 			for (int vi = 0; vi < 3; vi++)
-				V[i].row(F[vi]) = OutputModel(i).V.row(F[vi]);	
+				V[i].row(F[vi]) = OutputModel(i).V.row(F[vi]).head(2);
 		}
 		update_texture(V[i],i);
 	}
