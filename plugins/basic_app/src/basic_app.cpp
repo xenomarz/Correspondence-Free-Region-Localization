@@ -9,29 +9,25 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 
 	if (_viewer)
 	{
-		model_loaded = false;
-		solver_on = false;
+		IsMouseDraggingAnyWindow = IsMouseHoveringAnyWindow = solver_settings =
+			solver_on = Outputs_Settings = Highlighted_face = IsTranslate = model_loaded = false;
+		show_text = true;
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
 		param_type = app_utils::None;
-		IsTranslate = false;
-		Max_Distortion = 5;
-		show_text = true;
-		Highlighted_face_color = RED_COLOR;
-		Fixed_face_color = BLUE_COLOR;
-		Dragged_face_color = GREEN_COLOR;
-		Vertex_Energy_color = RED_COLOR;
-		Dragged_vertex_color = GREEN_COLOR;
-		Fixed_vertex_color = BLUE_COLOR;
-		model_color = GREY_COLOR;
-		text_color = BLACK_COLOR;
-		Outputs_Settings = Highlighted_face = false;
-		texture_scaling_output = 1;
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
-		down_mouse_x = down_mouse_y = -1;
-		texture_scaling_input = 1;
 
+		Max_Distortion = 5;
+		texture_scaling_input = texture_scaling_output = 1;
+		down_mouse_x = down_mouse_y = -1;
+
+		Vertex_Energy_color = Highlighted_face_color = RED_COLOR;
+		Fixed_vertex_color = Fixed_face_color = BLUE_COLOR;
+		Dragged_vertex_color = Dragged_face_color = GREEN_COLOR;
+		model_color = GREY_COLOR;
+		text_color = BLACK_COLOR;
+		
 		//update input viewer
 		inputCoreID = viewer->core_list[0].id;
 		viewer->core(inputCoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
@@ -139,10 +135,19 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		Draw_menu_for_Solver();
 	Draw_menu_for_cores(viewer->core(inputCoreID));
 	Draw_menu_for_models(viewer->data(inputModelID));
+	Draw_menu_for_output_settings();
 	Draw_menu_for_text_results();
 
 	follow_and_mark_selected_faces();
 	Update_view();
+
+	IsMouseHoveringAnyWindow = false;
+	if (ImGui::IsAnyWindowHovered() |
+		ImGui::IsRootWindowOrAnyChildHovered() |
+		ImGui::IsItemHoveredRect() |
+		ImGui::IsMouseHoveringAnyWindow() |
+		ImGui::IsMouseHoveringWindow())
+		IsMouseHoveringAnyWindow = true;
 }
 
 void basic_app::remove_output() {
@@ -230,7 +235,7 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 
 IGL_INLINE bool basic_app::mouse_move(int mouse_x, int mouse_y)
 {
-	if (ImGui::IsMouseHoveringAnyWindow())
+	if (IsMouseHoveringAnyWindow | IsMouseDraggingAnyWindow)
 		return true;
 
 	if (!IsTranslate)
@@ -292,10 +297,14 @@ IGL_INLINE bool basic_app::mouse_move(int mouse_x, int mouse_y)
 
 IGL_INLINE bool basic_app::mouse_up(int button, int modifier) {
 	IsTranslate = false;
+	IsMouseDraggingAnyWindow = false;
 	return false;
 }
 
 IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
+	if (IsMouseHoveringAnyWindow)
+		IsMouseDraggingAnyWindow = true;
+
 	down_mouse_x = viewer->current_mouse_x;
 	down_mouse_y = viewer->current_mouse_y;
 			
@@ -307,8 +316,6 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 			if (f == -1)
 				f = pick_face(OutputModel(i).V, OutputModel(i).F, app_utils::OutputOnly0+i);
 		
-		
-
 		if (f != -1)
 		{
 			if (find(selected_faces.begin(), selected_faces.end(), f) != selected_faces.end())
@@ -331,8 +338,6 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 			if(v == -1) 
 				v = pick_vertex(OutputModel(i).V, OutputModel(i).F, app_utils::OutputOnly0+i);
 		
-		
-
 		if (v != -1)
 		{
 			if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
@@ -386,7 +391,6 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 			}
 		}
 		
-
 		if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
 		{
 			IsTranslate = true;
@@ -471,6 +475,10 @@ void basic_app::Draw_menu_for_Solver() {
 		if (ImGui::Checkbox(solver_on ? "On" : "Off", &solver_on)) {
 			solver_on ? start_solver_thread() : stop_solver_thread();
 		}
+		ImGui::Checkbox("Solver settings", &solver_settings);
+		if (solver_settings)
+			Draw_menu_for_solver_settings();
+
 		if (ImGui::Combo("step", (int *)(&solver_type), "NEWTON\0Gradient Descent\0\0")) {
 			stop_solver_thread();
 			for (int i = 0; i < Outputs.size(); i++) {
@@ -689,23 +697,18 @@ void basic_app::Draw_menu_for_models(ViewerData& data) {
 	ImGui::PopID();
 }
 
-void basic_app::Draw_menu_for_text_results() {
-	ImGui::SetNextWindowSize(ImVec2(1200, 700), ImGuiSetCond_FirstUseEver);
-	ImGui::Begin("edit_window", NULL);
+void basic_app::Draw_menu_for_solver_settings() {
+	ImGui::SetNextWindowSize(ImVec2(800, 150), ImGuiSetCond_FirstUseEver);
+	ImGui::Begin("solver settings", NULL);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 8));
 	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
-	ImVec2 toolbarSize(800, 0);
-	ImGui::BeginChild("toolbar", toolbarSize, false);
-	
-	////////////////////////
+
 	if (model_loaded) {
 		Draw_menu_for_colors();
 		ImGui::PushItemWidth(80 * menu_scaling());
 		ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.01f, 10000.0f);
-
 		ImGui::Columns(Outputs[0].totalObjective->objectiveList.size() + 2, "weights table", true);
 		ImGui::Separator();
-
 		ImGui::NextColumn();
 		for (auto & obj : Outputs[0].totalObjective->objectiveList) {
 			ImGui::Text(obj->name.c_str());
@@ -734,30 +737,31 @@ void basic_app::Draw_menu_for_text_results() {
 			ImGui::Separator();
 		}
 	}
-	
-
-
-	////////////////////////
-	ImGui::EndChild();
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
-
 	ImGui::End();
+}
 
-
-	for (auto& out:Outputs) {
+void basic_app::Draw_menu_for_output_settings() {
+	for (auto& out : Outputs) {
 		if (Outputs_Settings) {
-			bool bOpened1(true);
-			ImGui::Begin(("Output settings " + std::to_string(out.CoreID)).c_str() , 
-				&bOpened1,
+			ImGui::SetNextWindowSize(ImVec2(200, 300), ImGuiSetCond_FirstUseEver);
+			ImGui::Begin(("Output settings " + std::to_string(out.CoreID)).c_str(),
+				NULL, 
+				ImGuiWindowFlags_NoTitleBar |
+				ImGuiWindowFlags_NoResize |
 				ImGuiWindowFlags_NoMove);
-
 			ImGui::SetWindowPos(out.text_position);
-			ImGui::SetWindowSize(ImVec2(200,300));
+			
 			Draw_menu_for_cores(viewer->core(out.CoreID));
 			Draw_menu_for_models(viewer->data(out.ModelID));
 			ImGui::End();
 		}
+	}
+}
+
+void basic_app::Draw_menu_for_text_results() {
+	for (auto& out:Outputs) {
 		if (show_text) {
 			bool bOpened2(true);
 			ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);

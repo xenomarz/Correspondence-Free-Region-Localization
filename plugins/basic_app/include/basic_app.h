@@ -11,7 +11,7 @@ class basic_app : public ImGuiMenu
 private:
 	bool model_loaded;
 	float Max_Distortion;
-	bool solver_on;
+	bool solver_on, solver_settings, IsMouseHoveringAnyWindow, IsMouseDraggingAnyWindow;
 	app_utils::Distortion distortion_type;
 	app_utils::SolverType solver_type;
 	MatrixXd Vertices_Input, color_per_vertex;
@@ -66,6 +66,8 @@ public:
 	void Draw_menu_for_cores(ViewerCore& core);
 	void Draw_menu_for_models(ViewerData& data);
 	void Draw_menu_for_Solver();
+	void Draw_menu_for_solver_settings();
+	void Draw_menu_for_output_settings();
 	void Draw_menu_for_colors();
 	void Draw_menu_for_text_results();
 
