@@ -27,7 +27,7 @@ private:
 	bool show_text;
 	float core_size;
 	float texture_scaling_output;
-	bool Highlighted_face, Outputs_Info;
+	bool Highlighted_face, Outputs_Settings;
 	app_utils::Parametrization param_type;
 	set<int> selected_faces, selected_vertices;
 	vector<Output> Outputs;

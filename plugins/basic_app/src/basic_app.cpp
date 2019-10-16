@@ -25,7 +25,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		Fixed_vertex_color = BLUE_COLOR;
 		model_color = GREY_COLOR;
 		text_color = BLACK_COLOR;
-		Outputs_Info = Highlighted_face = false;
+		Outputs_Settings = Highlighted_face = false;
 		texture_scaling_output = 1;
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
@@ -95,8 +95,12 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		viewer->open_dialog_save_mesh();
 	}
 			
-	ImGui::Checkbox("Outputs Info", &Outputs_Info);
-	ImGui::Checkbox("Show text", &show_text);
+	if (ImGui::Checkbox("Outputs settings", &Outputs_Settings))
+		if(Outputs_Settings)
+			show_text = !Outputs_Settings;
+	if (ImGui::Checkbox("Show text", &show_text))
+		if(show_text)
+			Outputs_Settings = !show_text;
 	ImGui::Checkbox("Highlight faces", &Highlighted_face);
 
 	if ((view == Horizontal) || (view == Vertical)) {
@@ -135,7 +139,6 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		Draw_menu_for_Solver();
 	Draw_menu_for_cores(viewer->core(inputCoreID));
 	Draw_menu_for_models(viewer->data(inputModelID));
-	Draw_menu_for_colors();
 	Draw_menu_for_text_results();
 
 	follow_and_mark_selected_faces();
@@ -556,7 +559,7 @@ void basic_app::Draw_menu_for_Solver() {
 }
 
 void basic_app::Draw_menu_for_cores(ViewerCore& core) {
-	if (!Outputs_Info)
+	if (!Outputs_Settings)
 		return;
 
 	ImGui::PushID(core.id);
@@ -586,7 +589,7 @@ void basic_app::Draw_menu_for_cores(ViewerCore& core) {
 
 		// Zoom
 		ImGui::PushItemWidth(80 * menu_scaling());
-		ImGui::DragFloat("Zoom", &(core.camera_zoom), 0.05f, 0.1f, 20.0f);
+		ImGui::DragFloat("Zoom", &(core.camera_zoom), 0.05f, 0.1f, 100000.0f);
 
 		// Lightining factor
 		ImGui::PushItemWidth(80 * menu_scaling());
@@ -627,7 +630,7 @@ void basic_app::Draw_menu_for_cores(ViewerCore& core) {
 }
 
 void basic_app::Draw_menu_for_models(ViewerData& data) {
-	if (!Outputs_Info)
+	if (!Outputs_Settings)
 		return;
 
 	// Helper for setting viewport specific mesh options
@@ -696,15 +699,11 @@ void basic_app::Draw_menu_for_text_results() {
 	
 	////////////////////////
 	if (model_loaded) {
+		Draw_menu_for_colors();
 		ImGui::PushItemWidth(80 * menu_scaling());
-		ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.1f, 20.0f);
+		ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.01f, 10000.0f);
 
-		for (auto& out : Outputs) {
-			ImGui::PushItemWidth(80 * menu_scaling());
-			ImGui::DragFloat(("shift eigen values " + std::to_string(out.CoreID)).c_str(), &(out.totalObjective->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
-		}
-
-		ImGui::Columns(Outputs[0].totalObjective->objectiveList.size() + 1, "weights table", true);
+		ImGui::Columns(Outputs[0].totalObjective->objectiveList.size() + 2, "weights table", true);
 		ImGui::Separator();
 
 		ImGui::NextColumn();
@@ -712,6 +711,8 @@ void basic_app::Draw_menu_for_text_results() {
 			ImGui::Text(obj->name.c_str());
 			ImGui::NextColumn();
 		}
+		ImGui::Text("shift eigen values");
+		ImGui::NextColumn();
 		ImGui::Separator();
 
 		int id = 0;
@@ -721,10 +722,15 @@ void basic_app::Draw_menu_for_text_results() {
 			for (auto& obj : out.totalObjective->objectiveList) {
 				ImGui::PushID(id++);
 				ImGui::PushItemWidth(80 * menu_scaling());
-				ImGui::DragFloat("", &(obj->w), 0.05f, 0.1f, 100000.0f);
+				ImGui::DragFloat("", &(obj->w), 0.05f, 0.0f, 100000.0f);
 				ImGui::NextColumn();
 				ImGui::PopID();
 			}
+			ImGui::PushID(id++);
+			ImGui::PushItemWidth(80 * menu_scaling());
+			ImGui::DragFloat("", &(out.totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
+			ImGui::NextColumn();
+			ImGui::PopID();
 			ImGui::Separator();
 		}
 	}
@@ -739,58 +745,49 @@ void basic_app::Draw_menu_for_text_results() {
 	ImGui::End();
 
 
+	for (auto& out:Outputs) {
+		if (Outputs_Settings) {
+			bool bOpened1(true);
+			ImGui::Begin(("Output settings " + std::to_string(out.CoreID)).c_str() , 
+				&bOpened1,
+				ImGuiWindowFlags_NoMove);
 
-	if (!show_text) {
-		return;
-	}
-
-	for (int i = 0; i < Outputs.size(); i++) {
-		bool bOpened(true);
-		ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
-		if (Outputs_Info) {
-			ImGui::Begin("BCKGNDds" + i, &bOpened,
+			ImGui::SetWindowPos(out.text_position);
+			ImGui::SetWindowSize(ImVec2(200,300));
+			Draw_menu_for_cores(viewer->core(out.CoreID));
+			Draw_menu_for_models(viewer->data(out.ModelID));
+			ImGui::End();
+		}
+		if (show_text) {
+			bool bOpened2(true);
+			ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
+			ImGui::Begin(("Text " + std::to_string(out.CoreID)).c_str(), &bOpened2,
 				ImGuiWindowFlags_NoTitleBar |
 				ImGuiWindowFlags_NoResize |
 				ImGuiWindowFlags_NoMove |
+				ImGuiWindowFlags_NoScrollbar |
+				ImGuiWindowFlags_NoScrollWithMouse |
 				ImGuiWindowFlags_NoBackground |
-				ImGuiWindowFlags_NoCollapse);
+				ImGuiWindowFlags_NoCollapse |
+				ImGuiWindowFlags_NoSavedSettings |
+				ImGuiWindowFlags_NoInputs |
+				ImGuiWindowFlags_NoFocusOnAppearing |
+				ImGuiWindowFlags_NoBringToFrontOnFocus);
 
-			
-			
-
-			ImGui::SetWindowPos(ImVec2(Outputs[i].text_position[0] + Outputs[i].window_size.x / 2, Outputs[i].text_position[1]));
-			Draw_menu_for_cores(viewer->core(Outputs[i].CoreID));
-			Draw_menu_for_models(viewer->data(Outputs[i].ModelID));
-
+			ImGui::SetWindowPos(out.text_position);
+			ImGui::SetWindowSize(out.window_size);
+			ImGui::SetWindowCollapsed(false);
+			//add text...
+			ImGui::TextColored(c, (std::string(out.totalObjective->name) + std::string(" energy ") + std::to_string(out.totalObjective->energy_value)).c_str());
+			ImGui::TextColored(c, (std::string(out.totalObjective->name) + std::string(" gradient ") + std::to_string(out.totalObjective->gradient_norm)).c_str());
+			for (auto& obj : out.totalObjective->objectiveList) {
+				ImGui::TextColored(c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
+				ImGui::TextColored(c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
+			}
 			ImGui::End();
-
+			ImGui::PopStyleColor();
 		}
-		ImGui::Begin("BCKGND" + i, &bOpened, 
-			ImGuiWindowFlags_NoTitleBar | 
-			ImGuiWindowFlags_NoResize | 
-			ImGuiWindowFlags_NoMove | 
-			ImGuiWindowFlags_NoScrollbar | 
-			ImGuiWindowFlags_NoScrollWithMouse | 
-			ImGuiWindowFlags_NoBackground |
-			ImGuiWindowFlags_NoCollapse | 
-			ImGuiWindowFlags_NoSavedSettings | 
-			ImGuiWindowFlags_NoInputs | 
-			ImGuiWindowFlags_NoFocusOnAppearing | 
-			ImGuiWindowFlags_NoBringToFrontOnFocus);
-		
-		ImGui::SetWindowPos(Outputs[i].text_position);
-		ImGui::SetWindowSize(Outputs[i].window_size);
-		ImGui::SetWindowCollapsed(false);
-		//add text...
-		ImGui::TextColored(c,(std::string(Outputs[i].totalObjective->name) + std::string(" energy ") + std::to_string(Outputs[i].totalObjective->energy_value)).c_str());
-		ImGui::TextColored(c,(std::string(Outputs[i].totalObjective->name) + std::string(" gradient ") + std::to_string(Outputs[i].totalObjective->gradient_norm)).c_str());
-		for (auto& obj : Outputs[i].totalObjective->objectiveList) {
-			ImGui::TextColored(c,(std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
-			ImGui::TextColored(c,(std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
-		}
-		ImGui::End();
-		ImGui::PopStyleColor();
 	}
 }
 
