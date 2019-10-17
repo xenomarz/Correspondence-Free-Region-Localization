@@ -8,13 +8,13 @@
 #include <type_traits>
 #include <string>
 #include <mutex>
+#include <any>
 
 // Eigen Includes
 #include <Eigen/Core>
 
 // Optimization Lib Includes
 #include "../utils/objective_function_data_provider.h"
-#include "../utils/utils.h"
 
 template<Eigen::StorageOptions StorageOrder>
 class ObjectiveFunction
@@ -30,6 +30,17 @@ public:
 		GRADIENT = 2,
 		HESSIAN = 4,
 		ALL = 7
+	};
+
+	enum class Properties : uint32_t
+	{
+		Value,
+		ValuePerVertex,
+		Gradient,
+		GradientNorm,
+		Hessian,
+		Weight,
+		Name
 	};
 
 	/**
@@ -146,6 +157,125 @@ public:
 		PostUpdate(x);
 	}
 
+	/**
+	 * GetProperty overloads
+	 */
+	virtual bool GetProperty(const uint32_t property_id, std::any& property_value)
+	{
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::Value:
+		case Properties::GradientNorm:
+		case Properties::Weight:
+			property_value = std::make_any<double>();
+			return GetProperty(property_id, std::any_cast<double&>(property_value));
+		case Properties::ValuePerVertex:
+		case Properties::Gradient:
+			property_value = std::make_any<Eigen::VectorXd>();
+			return GetProperty(property_id, std::any_cast<Eigen::VectorXd&>(property_value));
+		case Properties::Name:
+			property_value = std::make_any<std::string>();
+			return GetProperty(property_id, std::any_cast<std::string&>(property_value));
+		}
+
+		return false;
+	}
+	
+	virtual bool GetProperty(const uint32_t property_id, std::string& property_value)
+	{
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::Name:
+			property_value = GetName();
+			return true;
+		}
+
+		return false;
+	}
+
+	virtual bool GetProperty(const uint32_t property_id, double& property_value)
+	{
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::Value:
+			property_value = GetValue();
+			return true;
+		case Properties::GradientNorm:
+			property_value = GetGradient().norm();
+			return true;
+		case Properties::Weight:
+			property_value = GetWeight();
+			return true;
+		}
+
+		return false;
+	}
+	
+	virtual bool GetProperty(const uint32_t property_id, Eigen::VectorXd& property_value)
+	{
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::ValuePerVertex:
+			property_value = GetValuePerVertex();
+			return true;
+		case Properties::Gradient:
+			property_value = GetGradient();
+			return true;
+		}
+
+		return false;
+	}
+
+	virtual bool GetProperty(const uint32_t property_id, Eigen::VectorXi& property_value)
+	{
+		return false;
+	}
+
+	virtual bool GetProperty(const uint32_t property_id, Eigen::SparseMatrix<double, StorageOrder>& property_value)
+	{
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::Hessian:
+			property_value = GetHessian();
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * SetProperty overloads
+	 */
+	virtual bool SetProperty(const uint32_t property_id, const std::any& property_value)
+	{
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::Weight:
+			return SetProperty(property_id, std::any_cast<const double&>(property_value));
+		}
+
+		return false;
+	}
+	
+	virtual bool SetProperty(const uint32_t property_id, const double property_value)
+	{
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::Weight:
+			SetWeight(property_value);
+			return true;
+		}
+
+		return false;
+	}
+	
 protected:
 
 	/**

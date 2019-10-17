@@ -8,6 +8,7 @@
 // STL includes
 #include <memory>
 #include <unordered_map>
+#include <any>
 
 // Eigen includes
 #include <Eigen/Core>
@@ -85,6 +86,8 @@ private:
 	Napi::Value GetImageBufferedVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainBufferedUvs(const Napi::CallbackInfo& info);
 	Napi::Value GetImageBufferedUvs(const Napi::CallbackInfo& info);
+	Napi::Value GetObjectiveFunctionProperty(const Napi::CallbackInfo& info);
+	Napi::Value SetObjectiveFunctionProperty(const Napi::CallbackInfo& info);
 	Napi::Value LoadModel(const Napi::CallbackInfo& info);
 	Napi::Value ResumeSolver(const Napi::CallbackInfo& info);
 	Napi::Value PauseSolver(const Napi::CallbackInfo& info);
@@ -92,14 +95,19 @@ private:
 	Napi::Value UpdateConstrainedFacePosition(const Napi::CallbackInfo& info);
 	Napi::Value UnconstrainFacePosition(const Napi::CallbackInfo& info);
 	Napi::Value ReconstrainFacePosition(const Napi::CallbackInfo& info);
-
+	
 	/**
 	 * Regular private instance methods
 	 */
 	ModelFileType GetModelFileType(std::string filename);
-	Napi::Array CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F);
-	Napi::Float32Array GetBufferedVertices(const Napi::CallbackInfo& info, const VerticesSource vertices_source);
 	void TryUpdateImageVertices();
+	Napi::Float32Array GetBufferedVertices(const Napi::CallbackInfo& info, const VerticesSource vertices_source);
+	Napi::Array CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F);
+	Napi::Value NativeToJS(Napi::Env env, const std::any& property_value);
+	Napi::Value NativeToJS(Napi::Env env, const Eigen::VectorXd& property_value);
+	Napi::Value NativeToJS(Napi::Env env, const double property_value);
+	Napi::Value NativeToJS(Napi::Env env, const std::string& property_value);
+	std::any JSToNative(Napi::Env env, const Napi::Value& value);
 
 	/**
 	 * Regular private templated instance methods
@@ -218,6 +226,7 @@ private:
 	std::unique_ptr<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>> newton_method_;
 	std::vector<Eigen::DenseIndex> constrained_faces_indices;
 	Eigen::MatrixX2d image_vertices_;
+	std::unordered_map<std::string, uint32_t> properties_map_;
 };
 
 #endif

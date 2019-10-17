@@ -94,12 +94,33 @@ public:
 
 	const std::uint32_t GetObjectiveFunctionsCount() const
 	{
+		std::lock_guard<std::mutex> lock(m_);
 		return objective_functions_.size();
 	}
 
 	const std::shared_ptr<ObjectiveFunction<StorageOrder>> GetObjectiveFunction(std::uint32_t index) const
 	{
-		return objective_functions_.at(index);
+		std::lock_guard<std::mutex> lock(m_);
+		if (index < objective_functions_.size())
+		{
+			return objective_functions_.at(index);
+		}
+
+		return nullptr;
+	}
+
+	const std::shared_ptr<ObjectiveFunction<StorageOrder>> GetObjectiveFunction(const std::string& name) const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		for(auto& objective_function : objective_functions_)
+		{
+			if(!objective_function->GetName().compare(name))
+			{
+				return objective_function;
+			}
+		}
+
+		return nullptr;
 	}
 
 private:

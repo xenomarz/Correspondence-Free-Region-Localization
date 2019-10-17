@@ -55,6 +55,22 @@ private:
 		EsepP_squared_rowwise_sum_plus_delta = EsepP_squared_rowwise_sum.array() + delta_;
 		f_per_pair = EsepP_squared_rowwise_sum.cwiseQuotient(EsepP_squared_rowwise_sum_plus_delta);
 
+		f_per_vertex.setZero();
+		int64_t vertex1_index;
+		int64_t vertex2_index;
+		
+		#pragma omp parallel for
+		for (int i = 0; i < Esept.outerSize(); ++i)
+		{
+			// no inner loop because there are only 2 nnz values per col
+			Eigen::SparseMatrix<double>::InnerIterator it(Esept, i);
+			int64_t vertex1_index = it.row();
+			int64_t vertex2_index = (++it).row();
+
+			f_per_vertex.coeffRef(vertex1_index) += EsepP_squared_rowwise_sum[i];
+			f_per_vertex.coeffRef(vertex2_index) += EsepP_squared_rowwise_sum[i];
+		}
+
 		// add edge length factor
 		f_per_pair = f_per_pair.cwiseProduct(edge_lenghts_per_pair);
 
@@ -122,7 +138,7 @@ private:
 	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		// no inner loop because there are only 2 nnz values per col
-		#pragma omp parallel
+		#pragma omp parallel for
 		for (int i = 0; i < Esept.outerSize(); ++i)
 		{
 			int tid = omp_get_thread_num();

@@ -1,5 +1,6 @@
 // STL includes
 #include <sstream>
+#include <any>
 
 // LIBIGL includes
 #include <igl/readOFF.h>
@@ -7,6 +8,7 @@
 
 // Optimization lib includes
 #include "../include/engine.h"
+#include "libs/optimization_lib/include/objective_functions/objective_function.h"
 #include "libs/optimization_lib/include/objective_functions/barycenter_position_objective.h"
 #include "libs/optimization_lib/include/objective_functions/vertex_position_objective.h"
 
@@ -35,6 +37,8 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("getImageBufferedVertices", &Engine::GetImageBufferedVertices),
 		InstanceMethod("getDomainBufferedUvs", &Engine::GetDomainBufferedUvs),
 		InstanceMethod("getImageBufferedUvs", &Engine::GetImageBufferedUvs),
+		InstanceMethod("getObjectiveFunctionProperty", &Engine::GetObjectiveFunctionProperty),
+		InstanceMethod("setObjectiveFunctionProperty", &Engine::SetObjectiveFunctionProperty),
 		InstanceAccessor("positionWeight", &Engine::GetPositionWeight, &Engine::SetPositionWeight),
 		InstanceAccessor("seamlessWeight", &Engine::GetSeamlessWeight, &Engine::SetSeamlessWeight),
 		InstanceAccessor("lambda", &Engine::GetLambda, &Engine::SetLambda),
@@ -53,6 +57,14 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	Napi::ObjectWrap<Engine>(info),
 	mesh_wrapper_(std::make_shared<MeshWrapper>())
 {
+	properties_map_.insert({ "value", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Value) });
+	properties_map_.insert({ "value_per_vertex", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::ValuePerVertex) });
+	properties_map_.insert({ "gradient", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Gradient) });
+	properties_map_.insert({ "gradient_norm", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::GradientNorm) });
+	properties_map_.insert({ "hessian", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Hessian) });
+	properties_map_.insert({ "weight", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Weight) });
+	properties_map_.insert({ "name", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Name) });
+	
 	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
 	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
   	position_ = std::make_shared<CompositeObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, std::string("Position"));
@@ -239,7 +251,7 @@ Napi::Float32Array Engine::GetBufferedVertices(const Napi::CallbackInfo& info, c
 	return Napi::Float32Array::New(env, 0);
 }
 
-Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
+Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
@@ -247,36 +259,182 @@ Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
 	/**
 	 * Validate input arguments
 	 */
-	if (info.Length() <= 0 || !info[0].IsString())
+	if (info.Length() >= 2)
 	{
-		Napi::TypeError::New(env, "String expected").ThrowAsJavaScriptException();
-		return env.Null();
+		if (!info[0].IsString())
+		{
+			Napi::TypeError::New(env, "First argument is expected to be a String").ThrowAsJavaScriptException();
+			return Napi::Value();
+		}
+
+		if (!info[1].IsString())
+		{
+			Napi::TypeError::New(env, "Second argument is expected to be a String").ThrowAsJavaScriptException();
+			return Napi::Value();
+		}
+	}
+	else
+	{
+		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
+		return Napi::Value();
 	}
 
 	/**
-	 * Load model
+	 * Get objective function by name
 	 */
-	Napi::String value = info[0].As<Napi::String>();
-	std::string model_file_path = std::string(value);
-	mesh_wrapper_->LoadModel(model_file_path);
+	const auto objective_function = composite_objective_->GetObjectiveFunction(info[0].ToString());
+	if(objective_function == nullptr)
+	{
+		Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
+		return Napi::Value();
+	}
 
-	return env.Null();
+	/**
+	 * Get property
+	 */
+	const std::string property_name = info[1].ToString();
+	if(!properties_map_.contains(property_name))
+	{
+		const uint32_t property_id = properties_map_.at(property_name);
+		std::any any_value;
+		if (objective_function->GetProperty(property_id, any_value))
+		{
+			return NativeToJS(env, any_value);
+		}
+		
+		Napi::TypeError::New(env, "Couldn't get property").ThrowAsJavaScriptException();
+		return Napi::Value();
+	}
+
+	/**
+	 * Property not found
+	 */
+	Napi::TypeError::New(env, "Property name could not be found").ThrowAsJavaScriptException();
+	return Napi::Value();
 }
 
-Engine::ModelFileType Engine::GetModelFileType(std::string modelFilePath)
+Napi::Value Engine::SetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 {
-	std::string fileExtension = modelFilePath.substr(modelFilePath.find_last_of(".") + 1);
-	transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
-	if (fileExtension == "obj")
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (info.Length() >= 3)
 	{
-		return Engine::ModelFileType::OBJ;
+		if (!info[0].IsString())
+		{
+			Napi::TypeError::New(env, "First argument is expected to be a String").ThrowAsJavaScriptException();
+			return Napi::Value();
+		}
+
+		if (!info[1].IsString())
+		{
+			Napi::TypeError::New(env, "Second argument is expected to be a String").ThrowAsJavaScriptException();
+			return Napi::Value();
+		}
+
+		if (info[2].IsEmpty())
+		{
+			Napi::TypeError::New(env, "Third argument is expected to be defined").ThrowAsJavaScriptException();
+			return Napi::Value();
+		}
 	}
-	else if (fileExtension == "off")
+	else
 	{
-		return Engine::ModelFileType::OFF;
+		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
+		return Napi::Value();
 	}
 
-	return Engine::ModelFileType::UNKNOWN;
+	/**
+	 * Get objective function by name
+	 */
+	const auto objective_function = composite_objective_->GetObjectiveFunction(info[0].ToString());
+	if (objective_function == nullptr)
+	{
+		Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
+		return Napi::Value();
+	}
+
+	/**
+	 * Set property
+	 */
+	const std::string property_name = info[1].ToString();
+	if (!properties_map_.contains(property_name))
+	{
+		const uint32_t property_id = properties_map_.at(property_name);
+		if(!objective_function->SetProperty(property_id, JSToNative(env, info[2])))
+		{
+			Napi::TypeError::New(env, "Couldn't set property").ThrowAsJavaScriptException();
+			return Napi::Value();
+		}
+	}
+
+	/**
+	 * Property not found
+	 */
+	Napi::TypeError::New(env, "Property name could not be found").ThrowAsJavaScriptException();
+	return Napi::Value();
+}
+
+Napi::Value Engine::NativeToJS(Napi::Env env, const std::any& property_value)
+{
+	if (property_value.type() == typeid(double))
+	{
+		return NativeToJS(env, std::any_cast<const double&>(property_value));
+	}
+
+	if (property_value.type() == typeid(Eigen::VectorXd))
+	{
+		return NativeToJS(env, std::any_cast<const Eigen::VectorXd&>(property_value));
+	}
+
+	if (property_value.type() == typeid(std::string))
+	{
+		return NativeToJS(env, std::any_cast<const std::string&>(property_value));
+	}
+
+	Napi::TypeError::New(env, "Type not supported").ThrowAsJavaScriptException();
+	return Napi::Value();
+}
+
+Napi::Value Engine::NativeToJS(Napi::Env env, const Eigen::VectorXd& property_value)
+{
+	const auto rows_count = property_value.rows();
+	Napi::Array array = Napi::Array::New(env, rows_count);
+	for (int32_t i = 0; i < rows_count; i++)
+	{
+		array[i] = Napi::Number::New(env, property_value.coeffRef(i));
+	}
+
+	return array;
+}
+
+Napi::Value Engine::NativeToJS(Napi::Env env, const double property_value)
+{
+	return Napi::Number::New(env, property_value);
+}
+
+Napi::Value Engine::NativeToJS(Napi::Env env, const std::string& property_value)
+{
+	return Napi::String::New(env, property_value);
+}
+
+std::any Engine::JSToNative(Napi::Env env, const Napi::Value& value)
+{
+	if (value.IsString())
+	{
+		return std::make_any<std::string>(value.ToString());
+	}
+
+	if (value.IsNumber())
+	{
+		return std::make_any<double>(value.ToNumber());
+	}
+
+	Napi::TypeError::New(env, "Type not supported").ThrowAsJavaScriptException();
+	return std::any();
 }
 
 Napi::Array Engine::CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F)
@@ -442,21 +600,80 @@ Napi::Value Engine::GetObjectiveFunctionsData(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	Napi::Array objective_functions_data_array = Napi::Array::New(env);
+	auto objective_functions_count = composite_objective_->GetObjectiveFunctionsCount();
+	Napi::Array objective_functions_data_array = Napi::Array::New(env, objective_functions_count);
 	for (std::uint32_t index = 0; index < composite_objective_->GetObjectiveFunctionsCount(); index++)
 	{
 		Napi::Object data_object = Napi::Object::New(env);
 		Napi::Object data_object_internal = Napi::Object::New(env);
+		Napi::Array value_per_vertex_array = Napi::Array::New(env, mesh_wrapper_->GetImageVerticesCount());
 
 		auto current_objective_function = composite_objective_->GetObjectiveFunction(index);
 		data_object.Set("name", current_objective_function->GetName());
 		data_object.Set("data", data_object_internal);
 		data_object_internal.Set("value", current_objective_function->GetValue());
 		data_object_internal.Set("gradientNorm", current_objective_function->GetGradient().norm());
+
+		auto value_per_vertex = current_objective_function->GetValuePerVertex();
+		for(int32_t i = 0; i < value_per_vertex.rows(); i++)
+		{
+			value_per_vertex_array[i] = Napi::Number::New(env, value_per_vertex.coeffRef(i));
+		}
+		
+		data_object_internal.Set("valuePerVertex", value_per_vertex_array);
+		
 		objective_functions_data_array[index] = data_object;
 	}
 
 	return objective_functions_data_array;
+}
+
+Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (info.Length() >= 1)
+	{
+		if (!info[0].IsString())
+		{
+			Napi::TypeError::New(env, "First argument is expected to be a String").ThrowAsJavaScriptException();
+			return Napi::Value();
+		}
+	}
+	else
+	{
+		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
+		return Napi::Value();
+	}
+
+	/**
+	 * Load model
+	 */
+	Napi::String value = info[0].As<Napi::String>();
+	std::string model_file_path = std::string(value);
+	mesh_wrapper_->LoadModel(model_file_path);
+
+	return env.Null();
+}
+
+Engine::ModelFileType Engine::GetModelFileType(std::string modelFilePath)
+{
+	std::string fileExtension = modelFilePath.substr(modelFilePath.find_last_of(".") + 1);
+	transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
+	if (fileExtension == "obj")
+	{
+		return Engine::ModelFileType::OBJ;
+	}
+	else if (fileExtension == "off")
+	{
+		return Engine::ModelFileType::OFF;
+	}
+
+	return Engine::ModelFileType::UNKNOWN;
 }
 
 Napi::Value Engine::ResumeSolver(const Napi::CallbackInfo& info)
