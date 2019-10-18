@@ -9,10 +9,9 @@
 class basic_app : public ImGuiMenu
 {
 private:
-	bool solverInitialized;
+	bool model_loaded;
 	float Max_Distortion;
-	bool solver_on;
-	app_utils::outputCores num_0f_outputs;
+	bool solver_on, solver_settings, IsMouseHoveringAnyWindow, IsMouseDraggingAnyWindow;
 	app_utils::Distortion distortion_type;
 	app_utils::SolverType solver_type;
 	MatrixXd Vertices_Input, color_per_vertex;
@@ -28,14 +27,14 @@ private:
 	bool show_text;
 	float core_size;
 	float texture_scaling_output;
-	bool Highlighted_face;
+	bool Highlighted_face, Outputs_Settings;
 	app_utils::Parametrization param_type;
 	set<int> selected_faces, selected_vertices;
 	vector<Output> Outputs;
 	//Basic (necessary) parameteres
-	string modelName;
+	string modelName, modelPath;
 	int inputCoreID, inputModelID;
-	app_utils::View view;
+	int view;
 	app_utils::MouseMode mouse_mode;
 	
 	float texture_scaling_input;
@@ -64,9 +63,11 @@ public:
 	IGL_INLINE virtual bool key_pressed(unsigned int key, int modifiers) override;
 			
 	//Draw menu methods
-	void Draw_menu_for_cores();
-	void Draw_menu_for_models();
+	void Draw_menu_for_cores(ViewerCore& core);
+	void Draw_menu_for_models(ViewerData& data);
 	void Draw_menu_for_Solver();
+	void Draw_menu_for_solver_settings();
+	void Draw_menu_for_output_settings();
 	void Draw_menu_for_colors();
 	void Draw_menu_for_text_results();
 
@@ -94,6 +95,10 @@ public:
 	//FD check
 	void checkGradients();
 	void checkHessians();
+
+	//outputs
+	void add_output();
+	void remove_output();
 };
 
 #endif

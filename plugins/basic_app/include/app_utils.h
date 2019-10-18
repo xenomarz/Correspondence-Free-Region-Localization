@@ -68,14 +68,7 @@ public:
 		Horizontal = 0,
 		Vertical = 1,
 		InputOnly = 2,
-		OutputOnly0 = 3, 
-		OutputOnly1 = 4,
-		OutputOnly2 = 5,
-	};
-	static enum outputCores {
-		ONE,
-		TWO,
-		THREE
+		OutputOnly0 = 3
 	};
 	static enum MouseMode { 
 		NONE = 0, 
@@ -154,6 +147,35 @@ public:
 
 	static bool IsMesh2D(const MatrixXd& V) {
 		return (V.col(2).array() == 0).all();
+	}
+
+	static char* build_view_names_list(const int size) {
+		std::string cStr("");
+		cStr += "Horizontal";
+		cStr += '\0';
+		cStr += "Vertical";
+		cStr += '\0';
+		cStr += "InputOnly";
+		cStr += '\0';
+		for (int i = 0; i < size; i++) {
+			std::string sts;
+			sts = "OutputOnly " + std::to_string(i);
+			cStr += sts.c_str();
+			cStr += '\0';
+			
+		}
+		cStr += '\0';
+
+		int listLength = cStr.length();
+		char* comboList = new char[listLength];
+
+		if (listLength == 1)
+			comboList[0] = cStr.at(0);
+
+		for (unsigned int i = 0; i < listLength; i++)
+			comboList[i] = cStr.at(i);
+
+		return comboList;
 	}
 
 	//Parametrizations
@@ -307,7 +329,7 @@ public:
 	vector<int> *HandlesInd; //pointer to indices in constraitPositional
 	MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
 	MatrixXd color_per_face, Vertices_output;
-	int ModelID, CoreID, index;
+	int ModelID, CoreID;
 	ImVec2 window_position, window_size, text_position;
 
 	// Solver thread
@@ -317,12 +339,23 @@ public:
 	shared_ptr<TotalObjective> totalObjective;
 
 	//Constructor & initialization
-	Output() {
+	Output(igl::opengl::glfw::Viewer* viewer) {
 		// Initialize solver thread
 		newton = make_shared<NewtonSolver>();
 		gradient_descent = make_shared<GradientDescentSolver>();
 		solver = newton;
 		totalObjective = make_shared<TotalObjective>();
+
+		//update viewer
+		CoreID = viewer->append_core(Vector4f::Zero());
+		viewer->core(CoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
+		viewer->core(CoreID).is_animating = true;
+		viewer->core(CoreID).lighting_factor = 0;
+		//set rotation type to 2D mode
+		viewer->core(CoreID).trackball_angle = Quaternionf::Identity();
+		viewer->core(CoreID).orthographic = true;
+		viewer->core(CoreID).set_rotation_type(ViewerCore::RotationType(2));
+
 	}
 	~Output() {}
 };

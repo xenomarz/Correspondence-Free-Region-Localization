@@ -9,74 +9,34 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 
 	if (_viewer)
 	{
-		solverInitialized = false;
-		solver_on = false;
+		IsMouseDraggingAnyWindow = IsMouseHoveringAnyWindow = solver_settings =
+			solver_on = Outputs_Settings = Highlighted_face = IsTranslate = model_loaded = false;
+		show_text = true;
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
 		param_type = app_utils::None;
-		IsTranslate = false;
-		Max_Distortion = 5;
-		show_text = true;
-		Highlighted_face_color = RED_COLOR;
-		Fixed_face_color = BLUE_COLOR;
-		Dragged_face_color = GREEN_COLOR;
-		Vertex_Energy_color = RED_COLOR;
-		Dragged_vertex_color = GREEN_COLOR;
-		Fixed_vertex_color = BLUE_COLOR;
-		model_color = GREY_COLOR;
-		text_color = BLACK_COLOR;
-		Highlighted_face = false;
-		texture_scaling_output = 1;
-		num_0f_outputs = app_utils::ONE;
-
-		Outputs.push_back(Output());
-		Outputs.push_back(Output());
-		Outputs.push_back(Output());
-		
-		core_size = 1.0 / (num_0f_outputs +2.0);
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
+
+		Max_Distortion = 5;
+		texture_scaling_input = texture_scaling_output = 1;
 		down_mouse_x = down_mouse_y = -1;
-		texture_scaling_input = 1;
+
+		Vertex_Energy_color = Highlighted_face_color = RED_COLOR;
+		Fixed_vertex_color = Fixed_face_color = BLUE_COLOR;
+		Dragged_vertex_color = Dragged_face_color = GREEN_COLOR;
+		model_color = GREY_COLOR;
+		text_color = BLACK_COLOR;
+		
+		//update input viewer
+		inputCoreID = viewer->core_list[0].id;
+		viewer->core(inputCoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
+		viewer->core(inputCoreID).is_animating = true;
+		viewer->core(inputCoreID).lighting_factor = 0.2;
 
 		//Load multiple views
-		viewer->core().viewport = Vector4f::Zero();
-		inputCoreID = viewer->core(0).id;
-		viewer->core(inputCoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
-		
-		for (auto& out : Outputs) {
-			out.CoreID = viewer->append_core(Vector4f::Zero());
-			viewer->core(out.CoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
-		}
-
-		//set rotation type to 2D mode
-		for (auto& out : Outputs) {
-			viewer->core(out.CoreID).trackball_angle = Quaternionf::Identity();
-			viewer->core(out.CoreID).orthographic = true;
-			viewer->core(out.CoreID).set_rotation_type(ViewerCore::RotationType(2));
-		}
-		
-		//Update scene
-		Update_view();
-		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
-		for(int i=0;i<Outputs.size();i++)
-			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
-
-		viewer->core(inputCoreID).is_animating = true;
-		for (auto& out:Outputs)
-			viewer->core(out.CoreID).is_animating = true;
-
-		viewer->core(inputCoreID).lighting_factor = 0.2;
-		for (auto& out : Outputs)
-			viewer->core(out.CoreID).lighting_factor = 0;
-				
-		// Initialize solver thread
-		for (auto& out : Outputs) {
-			out.newton = make_shared<NewtonSolver>();
-			out.gradient_descent = make_shared<GradientDescentSolver>();
-			out.solver = out.newton;
-			out.totalObjective = make_shared<TotalObjective>();
-		}
+		Outputs.push_back(Output(viewer));
+		core_size = 1.0 / (Outputs.size() + 1.0);
 		
 		//maximize window
 		glfwMaximizeWindow(viewer->window);
@@ -90,28 +50,39 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	if (ImGui::Button("Load##Mesh", ImVec2((w - p) / 2.f, 0)))
 	{
 		//Load new model that has two copies
-		string model_Path = file_dialog_open();
-		if (model_Path.length() != 0)
+		modelPath = file_dialog_open();
+		if (modelPath.length() != 0)
 		{
-			modelName = app_utils::ExtractModelName(model_Path);
-			cout << model_Path << endl;
-			cout << modelName << endl;
+			modelName = app_utils::ExtractModelName(modelPath);
 			
 			stop_solver_thread();
 
-			viewer->load_mesh_from_file(model_Path.c_str());
+			if (model_loaded) {
+				//remove previous data
+				while (Outputs.size() > 0)
+					remove_output();
+				viewer->data_list.clear();
+			}
+
+			viewer->load_mesh_from_file(modelPath.c_str());
+			inputModelID = viewer->data_list[0].id;
+			
 			for (int i = 0; i < Outputs.size(); i++)
 			{
-				viewer->load_mesh_from_file(model_Path.c_str());
+				viewer->load_mesh_from_file(modelPath.c_str());
 				Outputs[i].ModelID = viewer->data_list[i+1].id;
 				initializeSolver(i);
 			}
-			solverInitialized = true;
-			
-			Update_view();
+
+			if (model_loaded) {
+				//add new data
+				add_output();
+			}
+
 			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
 			for (int i = 0; i < Outputs.size(); i++)
 				viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+			model_loaded = true;
 		}
 	}
 	ImGui::SameLine(0, p);
@@ -120,26 +91,32 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		viewer->open_dialog_save_mesh();
 	}
 			
+	if (ImGui::Checkbox("Outputs settings", &Outputs_Settings))
+		if(Outputs_Settings)
+			show_text = !Outputs_Settings;
+	if (ImGui::Checkbox("Show text", &show_text))
+		if(show_text)
+			Outputs_Settings = !show_text;
 	ImGui::Checkbox("Highlight faces", &Highlighted_face);
-	ImGui::Checkbox("Show text", &show_text);
 
 	if ((view == Horizontal) || (view == Vertical)) {
-		if(ImGui::SliderFloat("Core Size", &core_size, 0, 1.0/ (num_0f_outputs+1.0), to_string(core_size).c_str(), 1)){
+		if(ImGui::SliderFloat("Core Size", &core_size, 0, 1.0/ Outputs.size(), to_string(core_size).c_str(), 1)){
 			int frameBufferWidth, frameBufferHeight;
 			glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
 			post_resize(frameBufferWidth, frameBufferHeight);
 		}
 	}
-
-	if (ImGui::Combo("Num Of Outputs", (int *)(&num_0f_outputs), "One\0Two\0Three\0\0")) {
-		core_size = 1.0 / (num_0f_outputs + 2.0);
-		int frameBufferWidth, frameBufferHeight;
-		glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
-		post_resize(frameBufferWidth, frameBufferHeight);
+	
+	if (model_loaded) {
+		if (ImGui::Button("Add Output", ImVec2((w - p) / 2.f, 0)))
+			add_output();
+		ImGui::SameLine(0, p);
+		if (ImGui::Button("Remove Output", ImVec2((w - p) / 2.f, 0)) && Outputs.size()>1)
+			remove_output();
 	}
-		
-
-	if (ImGui::Combo("View", (int *)(&view), "Horizontal\0Vertical\0InputOnly\0OutputOnly0\0OutputOnly1\0OutputOnly2\0\0")) {
+	
+	
+	if (ImGui::Combo("View", (int *)(&view), app_utils::build_view_names_list(Outputs.size()))) {
 		// That's how you get the current width/height of the frame buffer (for example, after the window was resized)
 		int frameBufferWidth, frameBufferHeight;
 		glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
@@ -154,23 +131,85 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		}
 	}
 
-	if(solverInitialized)
+	if(model_loaded)
 		Draw_menu_for_Solver();
-	Draw_menu_for_cores();
-	Draw_menu_for_models();
-	Draw_menu_for_colors();
+	Draw_menu_for_cores(viewer->core(inputCoreID));
+	Draw_menu_for_models(viewer->data(inputModelID));
+	Draw_menu_for_output_settings();
 	Draw_menu_for_text_results();
 
 	follow_and_mark_selected_faces();
 	Update_view();
+
+	IsMouseHoveringAnyWindow = false;
+	if (ImGui::IsAnyWindowHovered() |
+		ImGui::IsRootWindowOrAnyChildHovered() |
+		ImGui::IsItemHoveredRect() |
+		ImGui::IsMouseHoveringAnyWindow() |
+		ImGui::IsMouseHoveringWindow())
+		IsMouseHoveringAnyWindow = true;
+}
+
+void basic_app::remove_output() {
+	stop_solver_thread();
+	viewer->core_list.pop_back();
+	viewer->data_list.pop_back();
+	Outputs.pop_back();
+
+	core_size = 1.0 / (Outputs.size() + 1.0);
+
+	viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
+	for (int i = 0; i < Outputs.size(); i++)
+		viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+
+	//TODO: remove output
+	core_size = 1.0 / (Outputs.size() + 1.0);
+	int frameBufferWidth, frameBufferHeight;
+	glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
+	post_resize(frameBufferWidth, frameBufferHeight);
+}
+
+void basic_app::add_output() {
+	stop_solver_thread();
+	Outputs.push_back(Output(viewer));
+	core_size = 1.0 / (Outputs.size() + 1.0);
+
+	viewer->load_mesh_from_file(modelPath.c_str());
+	Outputs[Outputs.size() - 1].ModelID = viewer->data_list[Outputs.size()].id;
+	initializeSolver(Outputs.size() - 1);
+
+	viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
+	for (int i = 0; i < Outputs.size(); i++)
+		viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+
+	//TODO: add output
+	core_size = 1.0 / (Outputs.size() + 1.0);
+	int frameBufferWidth, frameBufferHeight;
+	glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
+	post_resize(frameBufferWidth, frameBufferHeight);
 }
 
 IGL_INLINE void basic_app::post_resize(int w, int h)
 {
-	//Single Core
 	if (viewer)
 	{
-		if (view == app_utils::InputOnly) {
+		if (view == app_utils::Horizontal) {
+			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * Outputs.size() * core_size, h);
+			for (int i = 0; i < Outputs.size(); i++) {
+				Outputs[i].window_position = ImVec2(w - w * (Outputs.size() - i) * core_size, 0);
+				Outputs[i].window_size = ImVec2(w * core_size, h);
+				Outputs[i].text_position = Outputs[i].window_position;
+			}
+		}
+		if (view == app_utils::Vertical) {
+			viewer->core(inputCoreID).viewport = Vector4f(0, Outputs.size() * h * core_size, w, h - Outputs.size() * h * core_size);
+			for (int i = 0; i < Outputs.size(); i++) {
+				Outputs[i].window_position = ImVec2(0, (Outputs.size() - i - 1) * h * core_size);
+				Outputs[i].window_size = ImVec2(w, h * core_size);
+				Outputs[i].text_position = ImVec2(w*0.8, h - Outputs[i].window_position[1] - Outputs[i].window_size[1]);
+			}
+		}
+		if (view == app_utils::InputOnly) { 
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w, h);
 			for (auto&o : Outputs) {
 				o.window_position = ImVec2(w, h);
@@ -178,140 +217,30 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 				o.text_position = o.window_position;
 			}
 		}
-		else if (view == app_utils::OutputOnly0) {
+		if (view >= app_utils::OutputOnly0) {
 			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
-			Outputs[0].window_position = ImVec2(0, 0);
-			Outputs[0].window_size = ImVec2(w, h);
-			Outputs[1].window_position = ImVec2(w, h);
-			Outputs[1].window_size = ImVec2(0, 0);
-			Outputs[2].window_position = ImVec2(w, h);
-			Outputs[2].window_size = ImVec2(0, 0);
-
-			Outputs[0].text_position = ImVec2(w*0.8, 0);
-			Outputs[1].text_position = Outputs[1].window_position;
-			Outputs[2].text_position = Outputs[2].window_position;
-		}
-		else if (view == app_utils::OutputOnly1) {
-			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
-			Outputs[0].window_position = ImVec2(w, h);
-			Outputs[0].window_size = ImVec2(w, h);
-			Outputs[1].window_position = ImVec2(0, 0);
-			Outputs[1].window_size = ImVec2(w, h);
-			Outputs[2].window_position = ImVec2(w, h);
-			Outputs[2].window_size = ImVec2(w, h);
-
-			Outputs[0].text_position = Outputs[0].window_position;
-			Outputs[1].text_position = ImVec2(w*0.8, 0);
-			Outputs[2].text_position = Outputs[2].window_position;
-		}
-		else if (view == app_utils::OutputOnly2) {
-			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
-			Outputs[0].window_position = ImVec2(w, h);
-			Outputs[0].window_size = ImVec2(w, h);
-			Outputs[1].window_position = ImVec2(w, h);
-			Outputs[1].window_size = ImVec2(w, h);
-			Outputs[2].window_position = ImVec2(0, 0);
-			Outputs[2].window_size = ImVec2(w, h);
-
-			Outputs[0].text_position = Outputs[0].window_position;
-			Outputs[1].text_position = Outputs[1].window_position;
-			Outputs[2].text_position = ImVec2(w*0.8, 0);
-		}
-		
-		else if (num_0f_outputs == app_utils::ONE) {
-			if (view == app_utils::Horizontal) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * core_size, h);
-				Outputs[0].window_position = ImVec2(w - w * core_size, 0);
-				Outputs[0].window_size = ImVec2(w * core_size, h);
-				Outputs[1].window_position = ImVec2(w, h);
-				Outputs[1].window_size = ImVec2(w, h);
-				Outputs[2].window_position = ImVec2(w, h);
-				Outputs[2].window_size = ImVec2(w, h);
-
-				for (auto& o : Outputs)
-					o.text_position = o.window_position;
+			for (auto&o : Outputs) {
+				o.window_position = ImVec2(w, h);
+				o.window_size = ImVec2(0, 0);
+				o.text_position = o.window_position;
 			}
-			if (view == app_utils::Vertical) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, h * core_size, w, h - h * core_size);
-				Outputs[0].window_position = ImVec2(0, 0);
-				Outputs[0].window_size = ImVec2(w, h * core_size);
-				Outputs[1].window_position = ImVec2(w, h);
-				Outputs[1].window_size = ImVec2(w, h);
-				Outputs[2].window_position = ImVec2(w, h);
-				Outputs[2].window_size = ImVec2(w, h);
-
-				Outputs[0].text_position = ImVec2(w*0.8, h - Outputs[0].window_position[1] - Outputs[0].window_size[1]);
-				Outputs[1].text_position = Outputs[1].window_position;;
-				Outputs[2].text_position = Outputs[2].window_position;
-			}
-		}
-		else if (num_0f_outputs == app_utils::TWO) {
-			if (view == app_utils::Horizontal) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * 2 * core_size, h);
-				Outputs[0].window_position = ImVec2(w - w * 2 * core_size, 0);
-				Outputs[0].window_size = ImVec2(w * core_size, h);
-				Outputs[1].window_position = ImVec2(w - w * core_size, 0);
-				Outputs[1].window_size = ImVec2(w * core_size, h);
-				Outputs[2].window_position = ImVec2(w, h);
-				Outputs[2].window_size = ImVec2(w, h);
-
-				for (auto& o : Outputs)
-					o.text_position = o.window_position;
-			}
-			if (view == app_utils::Vertical) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, 2 * h * core_size, w, h - 2 * h * core_size);
-				Outputs[0].window_position = ImVec2(0, h * core_size);
-				Outputs[0].window_size = ImVec2(w, h * core_size);
-				Outputs[1].window_position = ImVec2(0, 0);
-				Outputs[1].window_size = ImVec2(w, h * core_size);
-				Outputs[2].window_position = ImVec2(w, h);
-				Outputs[2].window_size = ImVec2(w, h);
-
-				Outputs[0].text_position = ImVec2(w*0.8, h - Outputs[0].window_position[1] - Outputs[0].window_size[1]);
-				Outputs[1].text_position = ImVec2(w*0.8, h - Outputs[1].window_position[1] - Outputs[0].window_size[1]);
-				Outputs[2].text_position = Outputs[2].window_position;
-			}
-		}
-		else if (num_0f_outputs == app_utils::THREE) {
-			if (view == app_utils::Horizontal) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * 3 * core_size, h);
-				Outputs[0].window_position = ImVec2(w - w * 3 * core_size, 0);
-				Outputs[0].window_size = ImVec2(w * core_size, h);
-				Outputs[1].window_position = ImVec2(w - w * 2 * core_size, 0);
-				Outputs[1].window_size = ImVec2(w * core_size, h);
-				Outputs[2].window_position = ImVec2(w - w * core_size, 0);
-				Outputs[2].window_size = ImVec2(w * core_size, h);
-
-				for (auto& o:Outputs)
-					o.text_position = o.window_position;
-			}
-			if (view == app_utils::Vertical) {
-				viewer->core(inputCoreID).viewport = Vector4f(0, 3 * h * core_size, w, h - 3 * h * core_size);
-				Outputs[0].window_position = ImVec2(0, 2 * h * core_size);
-				Outputs[0].window_size = ImVec2(w, h * core_size);
-				Outputs[1].window_position = ImVec2(0, h * core_size);
-				Outputs[1].window_size = ImVec2(w, h * core_size);
-				Outputs[2].window_position = ImVec2(0, 0);
-				Outputs[2].window_size = ImVec2(w, h * core_size);
-
-				for (auto& o : Outputs)
-					o.text_position = ImVec2(w*0.8, h - o.window_position[1] - o.window_size[1]);
-			}
-		}
+			Outputs[view - app_utils::OutputOnly0].window_position = ImVec2(0, 0);
+			Outputs[view - app_utils::OutputOnly0].window_size = ImVec2(w, h);
+			Outputs[view - app_utils::OutputOnly0].text_position = ImVec2(w*0.8, 0);
+		}		
 		for (auto& o : Outputs)
 			viewer->core(o.CoreID).viewport = Vector4f(o.window_position[0], o.window_position[1], o.window_size[0], o.window_size[1]);
-
 	}
 }
 
 IGL_INLINE bool basic_app::mouse_move(int mouse_x, int mouse_y)
 {
-	if (ImGui::GetIO().WantCaptureMouse)
+	if (IsMouseHoveringAnyWindow | IsMouseDraggingAnyWindow)
 		return true;
+
 	if (!IsTranslate)
-	{
 		return false;
-	}
+	
 	if (mouse_mode == app_utils::FACE_SELECT)
 	{
 		if (!selected_faces.empty())
@@ -368,10 +297,14 @@ IGL_INLINE bool basic_app::mouse_move(int mouse_x, int mouse_y)
 
 IGL_INLINE bool basic_app::mouse_up(int button, int modifier) {
 	IsTranslate = false;
+	IsMouseDraggingAnyWindow = false;
 	return false;
 }
 
 IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
+	if (IsMouseHoveringAnyWindow)
+		IsMouseDraggingAnyWindow = true;
+
 	down_mouse_x = viewer->current_mouse_x;
 	down_mouse_y = viewer->current_mouse_y;
 			
@@ -383,8 +316,6 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 			if (f == -1)
 				f = pick_face(OutputModel(i).V, OutputModel(i).F, app_utils::OutputOnly0+i);
 		
-		
-
 		if (f != -1)
 		{
 			if (find(selected_faces.begin(), selected_faces.end(), f) != selected_faces.end())
@@ -407,8 +338,6 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 			if(v == -1) 
 				v = pick_vertex(OutputModel(i).V, OutputModel(i).F, app_utils::OutputOnly0+i);
 		
-		
-
 		if (v != -1)
 		{
 			if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
@@ -462,7 +391,6 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 			}
 		}
 		
-
 		if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
 		{
 			IsTranslate = true;
@@ -547,6 +475,10 @@ void basic_app::Draw_menu_for_Solver() {
 		if (ImGui::Checkbox(solver_on ? "On" : "Off", &solver_on)) {
 			solver_on ? start_solver_thread() : stop_solver_thread();
 		}
+		ImGui::Checkbox("Solver settings", &solver_settings);
+		if (solver_settings)
+			Draw_menu_for_solver_settings();
+
 		if (ImGui::Combo("step", (int *)(&solver_type), "NEWTON\0Gradient Descent\0\0")) {
 			stop_solver_thread();
 			for (int i = 0; i < Outputs.size(); i++) {
@@ -631,194 +563,235 @@ void basic_app::Draw_menu_for_Solver() {
 		{
 			checkHessians();
 		}
-		
-		ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.1f, 20.0f);
-		
-		for (auto& out : Outputs) {
-			ImGui::PushItemWidth(80 * menu_scaling());
-			ImGui::DragFloat(("shift eigen values " + std::to_string(out.ModelID)).c_str(), &(out.totalObjective->Shift_eigen_values), 0.07f, 0.1f, 20.0f);
-		}
-		
-		// objective functions wieghts
-		int id = 0;
-		for (auto& out : Outputs) {
-			for (auto& obj : out.totalObjective->objectiveList) {
-				ImGui::PushID(id++);
-				ImGui::Text((obj->name + std::to_string(out.ModelID)).c_str());
-				ImGui::PushItemWidth(80 * menu_scaling());
-				ImGui::DragFloat("weight", &(obj->w), 0.05f, 0.1f, 20.0f);
-
-				ImGui::PopID();
-			}
-		}
 	}
 }
 
-void basic_app::Draw_menu_for_cores() {
-	for (auto& core : viewer->core_list)
+void basic_app::Draw_menu_for_cores(ViewerCore& core) {
+	if (!Outputs_Settings)
+		return;
+
+	ImGui::PushID(core.id);
+	stringstream ss;
+	string name = (core.id == inputCoreID) ? "Input Core" : "Output Core " + std::to_string(core.id);
+	ss << name;
+	if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		ImGui::PushID(core.id);
-		stringstream ss;
-		string name = (core.id == inputCoreID) ? "Input Core" : "Output Core " + std::to_string(core.id);
-		ss << name;
-		if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+		int data_id;
+		for (auto& out : Outputs) {
+			if (core.id == out.CoreID) {
+				data_id = out.ModelID;
+			}
+		}
+		if (core.id == inputCoreID) {
+			data_id = inputModelID;
+		}
+
+		if (ImGui::Button("Center object", ImVec2(-1, 0)))
 		{
-			int data_id;
-			for (auto& out : Outputs) {
-				if (core.id == out.CoreID) {
-					data_id = out.ModelID;
-				}
-			}
-			if (core.id == inputCoreID) {
-				data_id = inputModelID;
-			}
+			core.align_camera_center(viewer->data(data_id).V, viewer->data(data_id).F);
+		}
+		if (ImGui::Button("Snap canonical view", ImVec2(-1, 0)))
+		{
+			viewer->snap_to_canonical_quaternion();
+		}
 
-			if (ImGui::Button("Center object", ImVec2(-1, 0)))
+		// Zoom
+		ImGui::PushItemWidth(80 * menu_scaling());
+		ImGui::DragFloat("Zoom", &(core.camera_zoom), 0.05f, 0.1f, 100000.0f);
+
+		// Lightining factor
+		ImGui::PushItemWidth(80 * menu_scaling());
+		ImGui::DragFloat("Lighting factor", &(core.lighting_factor), 0.05f, 0.1f, 20.0f);
+
+		// Select rotation type
+		int rotation_type = static_cast<int>(core.rotation_type);
+		static Quaternionf trackball_angle = Quaternionf::Identity();
+		static bool orthographic = true;
+		if (ImGui::Combo("Camera Type", &rotation_type, "Trackball\0Two Axes\0002D Mode\0\0"))
+		{
+			using RT = ViewerCore::RotationType;
+			auto new_type = static_cast<RT>(rotation_type);
+			if (new_type != core.rotation_type)
 			{
-				core.align_camera_center(viewer->data(data_id).V, viewer->data(data_id).F);
-			}
-			if (ImGui::Button("Snap canonical view", ImVec2(-1, 0)))
-			{
-				viewer->snap_to_canonical_quaternion();
-			}
-
-			// Zoom
-			ImGui::PushItemWidth(80 * menu_scaling());
-			ImGui::DragFloat("Zoom", &(core.camera_zoom), 0.05f, 0.1f, 20.0f);
-
-			// Lightining factor
-			ImGui::PushItemWidth(80 * menu_scaling());
-			ImGui::DragFloat("Lighting factor", &(core.lighting_factor), 0.05f, 0.1f, 20.0f);
-
-			// Select rotation type
-			int rotation_type = static_cast<int>(core.rotation_type);
-			static Quaternionf trackball_angle = Quaternionf::Identity();
-			static bool orthographic = true;
-			if (ImGui::Combo("Camera Type", &rotation_type, "Trackball\0Two Axes\0002D Mode\0\0"))
-			{
-				using RT = ViewerCore::RotationType;
-				auto new_type = static_cast<RT>(rotation_type);
-				if (new_type != core.rotation_type)
+				if (new_type == RT::ROTATION_TYPE_NO_ROTATION)
 				{
-					if (new_type == RT::ROTATION_TYPE_NO_ROTATION)
-					{
-						trackball_angle = core.trackball_angle;
-						orthographic = core.orthographic;
-						core.trackball_angle = Quaternionf::Identity();
-						core.orthographic = true;
-					}
-					else if (core.rotation_type == RT::ROTATION_TYPE_NO_ROTATION)
-					{
-						core.trackball_angle = trackball_angle;
-						core.orthographic = orthographic;
-					}
-					core.set_rotation_type(new_type);
+					trackball_angle = core.trackball_angle;
+					orthographic = core.orthographic;
+					core.trackball_angle = Quaternionf::Identity();
+					core.orthographic = true;
 				}
+				else if (core.rotation_type == RT::ROTATION_TYPE_NO_ROTATION)
+				{
+					core.trackball_angle = trackball_angle;
+					core.orthographic = orthographic;
+				}
+				core.set_rotation_type(new_type);
 			}
-
-			// Orthographic view
-			ImGui::Checkbox("Orthographic view", &(core.orthographic));
-			ImGui::PopItemWidth();
-			ImGui::ColorEdit4("Background", core.background_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 		}
-		ImGui::PopID();
+
+		// Orthographic view
+		ImGui::Checkbox("Orthographic view", &(core.orthographic));
+		ImGui::PopItemWidth();
+		ImGui::ColorEdit4("Background", core.background_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
 	}
+	ImGui::PopID();
 }
 
-void basic_app::Draw_menu_for_models() {
-	for (auto& data : viewer->data_list)
-	{
-		// Helper for setting viewport specific mesh options
-		auto make_checkbox = [&](const char *label, unsigned int &option)
-		{
-			bool temp = option;
-			bool res = ImGui::Checkbox(label, &temp);
-			option = temp;
-			return res;
-		};
+void basic_app::Draw_menu_for_models(ViewerData& data) {
+	if (!Outputs_Settings)
+		return;
 
-		ImGui::PushID(data.id);
-		stringstream ss;
+	// Helper for setting viewport specific mesh options
+	auto make_checkbox = [&](const char *label, unsigned int &option)
+	{
+		bool temp = option;
+		bool res = ImGui::Checkbox(label, &temp);
+		option = temp;
+		return res;
+	};
+
+	ImGui::PushID(data.id);
+	stringstream ss;
+	if (data.id == inputModelID) {
+		ss << modelName;
+	}
+	else {
+		ss << modelName + " " + std::to_string(data.id) + " (Param.)";
+	}
+			
+	if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		float w = ImGui::GetContentRegionAvailWidth();
+		float p = ImGui::GetStyle().FramePadding.x;
+
 		if (data.id == inputModelID) {
-			ss << modelName;
+			ImGui::SliderFloat("texture", &texture_scaling_input, 0.01, 100, to_string(texture_scaling_input).c_str(), 1);
 		}
 		else {
-			ss << modelName + " " + std::to_string(data.id) + " (Param.)";
+			ImGui::SliderFloat("texture", &texture_scaling_output, 0.01, 100, to_string(texture_scaling_output).c_str(), 1);
 		}
-		
-		
-		if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-		{
-			float w = ImGui::GetContentRegionAvailWidth();
-			float p = ImGui::GetStyle().FramePadding.x;
-
-			if (data.id == inputModelID) {
-				ImGui::SliderFloat("texture", &texture_scaling_input, 0.01, 100, to_string(texture_scaling_input).c_str(), 1);
-			}
-			else {
-				ImGui::SliderFloat("texture", &texture_scaling_output, 0.01, 100, to_string(texture_scaling_output).c_str(), 1);
-			}
 			
 
-			if (ImGui::Checkbox("Face-based", &(data.face_based)))
-			{
-				data.dirty = MeshGL::DIRTY_ALL;
-			}
-
-			make_checkbox("Show texture", data.show_texture);
-			if (ImGui::Checkbox("Invert normals", &(data.invert_normals)))
-			{
-				data.dirty |= MeshGL::DIRTY_NORMAL;
-			}
-			make_checkbox("Show overlay", data.show_overlay);
-			make_checkbox("Show overlay depth", data.show_overlay_depth);
-			ImGui::ColorEdit4("Line color", data.line_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
-			ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.3f);
-			ImGui::DragFloat("Shininess", &(data.shininess), 0.05f, 0.0f, 100.0f);
-			ImGui::PopItemWidth();
-
-			make_checkbox("Wireframe", data.show_lines);
-			make_checkbox("Fill", data.show_faces);
-			ImGui::Checkbox("Show vertex labels", &(data.show_vertid));
-			ImGui::Checkbox("Show faces labels", &(data.show_faceid));
+		if (ImGui::Checkbox("Face-based", &(data.face_based)))
+		{
+			data.dirty = MeshGL::DIRTY_ALL;
 		}
-		ImGui::PopID();
+
+		make_checkbox("Show texture", data.show_texture);
+		if (ImGui::Checkbox("Invert normals", &(data.invert_normals)))
+		{
+			data.dirty |= MeshGL::DIRTY_NORMAL;
+		}
+		make_checkbox("Show overlay", data.show_overlay);
+		make_checkbox("Show overlay depth", data.show_overlay_depth);
+		ImGui::ColorEdit4("Line color", data.line_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
+		ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.3f);
+		ImGui::DragFloat("Shininess", &(data.shininess), 0.05f, 0.0f, 100.0f);
+		ImGui::PopItemWidth();
+
+		make_checkbox("Wireframe", data.show_lines);
+		make_checkbox("Fill", data.show_faces);
+		ImGui::Checkbox("Show vertex labels", &(data.show_vertid));
+		ImGui::Checkbox("Show faces labels", &(data.show_faceid));
+	}
+	ImGui::PopID();
+}
+
+void basic_app::Draw_menu_for_solver_settings() {
+	ImGui::SetNextWindowSize(ImVec2(800, 150), ImGuiSetCond_FirstUseEver);
+	ImGui::Begin("solver settings", NULL);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 8));
+	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
+
+	if (model_loaded) {
+		Draw_menu_for_colors();
+		ImGui::PushItemWidth(80 * menu_scaling());
+		ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.01f, 10000.0f);
+		ImGui::Columns(Outputs[0].totalObjective->objectiveList.size() + 2, "weights table", true);
+		ImGui::Separator();
+		ImGui::NextColumn();
+		for (auto & obj : Outputs[0].totalObjective->objectiveList) {
+			ImGui::Text(obj->name.c_str());
+			ImGui::NextColumn();
+		}
+		ImGui::Text("shift eigen values");
+		ImGui::NextColumn();
+		ImGui::Separator();
+
+		int id = 0;
+		for (auto& out : Outputs) {
+			ImGui::Text(("Output " + std::to_string(out.CoreID)).c_str());
+			ImGui::NextColumn();
+			for (auto& obj : out.totalObjective->objectiveList) {
+				ImGui::PushID(id++);
+				ImGui::PushItemWidth(80 * menu_scaling());
+				ImGui::DragFloat("", &(obj->w), 0.05f, 0.0f, 100000.0f);
+				ImGui::NextColumn();
+				ImGui::PopID();
+			}
+			ImGui::PushID(id++);
+			ImGui::PushItemWidth(80 * menu_scaling());
+			ImGui::DragFloat("", &(out.totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
+			ImGui::NextColumn();
+			ImGui::PopID();
+			ImGui::Separator();
+		}
+	}
+	ImGui::PopStyleColor();
+	ImGui::PopStyleVar();
+	ImGui::End();
+}
+
+void basic_app::Draw_menu_for_output_settings() {
+	for (auto& out : Outputs) {
+		if (Outputs_Settings) {
+			ImGui::SetNextWindowSize(ImVec2(200, 300), ImGuiSetCond_FirstUseEver);
+			ImGui::Begin(("Output settings " + std::to_string(out.CoreID)).c_str(),
+				NULL, 
+				ImGuiWindowFlags_NoTitleBar |
+				ImGuiWindowFlags_NoResize |
+				ImGuiWindowFlags_NoMove);
+			ImGui::SetWindowPos(out.text_position);
+			
+			Draw_menu_for_cores(viewer->core(out.CoreID));
+			Draw_menu_for_models(viewer->data(out.ModelID));
+			ImGui::End();
+		}
 	}
 }
 
 void basic_app::Draw_menu_for_text_results() {
-	if (!show_text) {
-		return;
-	}
+	for (auto& out:Outputs) {
+		if (show_text) {
+			bool bOpened2(true);
+			ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
+			ImGui::Begin(("Text " + std::to_string(out.CoreID)).c_str(), &bOpened2,
+				ImGuiWindowFlags_NoTitleBar |
+				ImGuiWindowFlags_NoResize |
+				ImGuiWindowFlags_NoMove |
+				ImGuiWindowFlags_NoScrollbar |
+				ImGuiWindowFlags_NoScrollWithMouse |
+				ImGuiWindowFlags_NoBackground |
+				ImGuiWindowFlags_NoCollapse |
+				ImGuiWindowFlags_NoSavedSettings |
+				ImGuiWindowFlags_NoInputs |
+				ImGuiWindowFlags_NoFocusOnAppearing |
+				ImGuiWindowFlags_NoBringToFrontOnFocus);
 
-	for (int i = 0; i < Outputs.size(); i++) {
-		bool bOpened(true);
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
-		ImGui::Begin("BCKGND" + i, &bOpened, 
-			ImGuiWindowFlags_NoTitleBar | 
-			ImGuiWindowFlags_NoResize | 
-			ImGuiWindowFlags_NoMove | 
-			ImGuiWindowFlags_NoScrollbar | 
-			ImGuiWindowFlags_NoScrollWithMouse | 
-			ImGuiWindowFlags_NoBackground |
-			ImGuiWindowFlags_NoCollapse | 
-			ImGuiWindowFlags_NoSavedSettings | 
-			ImGuiWindowFlags_NoInputs | 
-			ImGuiWindowFlags_NoFocusOnAppearing | 
-			ImGuiWindowFlags_NoBringToFrontOnFocus);
-		ImColor c(text_color[0], text_color[1], text_color[2], 1.0f);
-		ImGui::SetWindowPos(Outputs[i].text_position);
-		ImGui::SetWindowSize(Outputs[i].window_size);
-		ImGui::SetWindowCollapsed(false);
-		//add text...
-		ImGui::TextColored(c,(std::string(Outputs[i].totalObjective->name) + std::string(" energy ") + std::to_string(Outputs[i].totalObjective->energy_value)).c_str());
-		ImGui::TextColored(c,(std::string(Outputs[i].totalObjective->name) + std::string(" gradient ") + std::to_string(Outputs[i].totalObjective->gradient_norm)).c_str());
-		for (auto& obj : Outputs[i].totalObjective->objectiveList) {
-			ImGui::TextColored(c,(std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
-			ImGui::TextColored(c,(std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
+			ImGui::SetWindowPos(out.text_position);
+			ImGui::SetWindowSize(out.window_size);
+			ImGui::SetWindowCollapsed(false);
+			//add text...
+			ImGui::TextColored(c, (std::string(out.totalObjective->name) + std::string(" energy ") + std::to_string(out.totalObjective->energy_value)).c_str());
+			ImGui::TextColored(c, (std::string(out.totalObjective->name) + std::string(" gradient ") + std::to_string(out.totalObjective->gradient_norm)).c_str());
+			for (auto& obj : out.totalObjective->objectiveList) {
+				ImGui::TextColored(c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
+				ImGui::TextColored(c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
+			}
+			ImGui::End();
+			ImGui::PopStyleColor();
 		}
-		ImGui::End();
-		ImGui::PopStyleColor();
 	}
 }
 
@@ -859,7 +832,7 @@ void basic_app::UpdateHandles() {
 	}
 	//Finally, we update the handles in the constraints positional object
 	for (int i = 0; i < Outputs.size();i++) {
-		if (solverInitialized) {
+		if (model_loaded) {
 			(*Outputs[i].HandlesInd) = CurrHandlesInd;
 			(*Outputs[i].HandlesPosDeformed) = CurrHandlesPosDeformed[i];
 		}
@@ -1041,7 +1014,7 @@ void basic_app::checkGradients()
 	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
 		cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << endl;
-		if (!solverInitialized) {
+		if (!model_loaded) {
 			solver_on = false;
 			return;
 		}
@@ -1058,7 +1031,7 @@ void basic_app::checkHessians()
 	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
 		cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << endl;
-		if (!solverInitialized) {
+		if (!model_loaded) {
 			solver_on = false;
 			return;
 		}
@@ -1079,12 +1052,12 @@ void basic_app::update_mesh()
 		V.push_back(MatrixXd::Zero(X[i].rows() / 2, 2));
 		V[i] = Map<MatrixXd>(X[i].data(), X[i].rows() / 2, 2);
 		if (IsTranslate && mouse_mode == app_utils::VERTEX_SELECT) {
-			V[i].row(Translate_Index) = OutputModel(i).V.row(Translate_Index);
+			V[i].row(Translate_Index) = OutputModel(i).V.row(Translate_Index).head(2);
 		}
 		else if(IsTranslate && mouse_mode == app_utils::FACE_SELECT) {
 			Vector3i F = OutputModel(i).F.row(Translate_Index);
 			for (int vi = 0; vi < 3; vi++)
-				V[i].row(F[vi]) = OutputModel(i).V.row(F[vi]);	
+				V[i].row(F[vi]) = OutputModel(i).V.row(F[vi]).head(2);
 		}
 		update_texture(V[i],i);
 	}
@@ -1101,7 +1074,7 @@ void basic_app::stop_solver_thread() {
 }
 
 void basic_app::start_solver_thread() {
-	if (!solverInitialized) {
+	if (!model_loaded) {
 		solver_on = false;
 		return;
 	}
