@@ -1,12 +1,12 @@
-#include <objective_functions/AreaDistortion.h>
+#include <objective_functions/Lagrangian.h>
 
-AreaDistortion::AreaDistortion()
+Lagrangian::Lagrangian()
 {
-	name = "Area Preserving";
-	w = 1;
+	name = "Lagrangian";
+	w = 0;
 }
 
-void AreaDistortion::init()
+void Lagrangian::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw name + " must define members V,F before init()!";
@@ -21,7 +21,8 @@ void AreaDistortion::init()
 	grad.resize(F.rows(), 6);
 	Hessian.resize(F.rows());
 	dJ_dX.resize(F.rows());
-
+	lambda.resize(F.rows());
+	
 	// compute init energy matrices
 	igl::doublearea(V, F, Area);
 	Area /= 2;
@@ -47,7 +48,7 @@ void AreaDistortion::init()
 	init_hessian();
 }
 
-void AreaDistortion::updateX(const VectorXd& X)
+void Lagrangian::updateX(const VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
@@ -55,11 +56,14 @@ void AreaDistortion::updateX(const VectorXd& X)
 	}
 }
 
-double AreaDistortion::value(bool update)
+double Lagrangian::value(bool update)
 {
-	// E = 0.5(det(J) - 1)^2
-	VectorXd E = (detJ - VectorXd::Ones(detJ.rows())).cwiseAbs2();
-	double value = 0.5 * (Area.asDiagonal() * E).sum();
+	// L = LSCM - lambda * area
+	VectorXd LSCM = 2 * (d.cwiseAbs2()) + (b + c).cwiseAbs2() + 2 * (a.cwiseAbs2());
+	VectorXd areaE = detJ - VectorXd::Ones(F.rows());
+	
+	VectorXd E = LSCM - lambda.cwiseProduct(areaE);
+	double value = (Area.asDiagonal() * E).sum();
 	
 	if (update) {
 		Efi = E;
@@ -69,16 +73,33 @@ double AreaDistortion::value(bool update)
 	return value;
 }
 
-void AreaDistortion::gradient(VectorXd& g)
+double Lagrangian::AugmentedValue()
 {
-	g.conservativeResize(V.rows() * 2);
+	// L = LSCM - lambda * area
+	double k = 1;
+
+	VectorXd areaE = (detJ - VectorXd::Ones(F.rows())).cwiseAbs2();
+	//I am not sure of multiplying areaE by Area!!!
+	double augmented_part = (Area.asDiagonal() * areaE).sum();
+	
+	return value(false) + k* augmented_part;
+}
+
+void Lagrangian::gradient(VectorXd& g)
+{
+	g.conservativeResize(V.rows() * 2 + F.rows());
 	g.setZero();
 
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		//prepare gradient
-		Vector4d dE_dJ(d(fi), -c(fi), -b(fi), a(fi));
-		dE_dJ *= (detJ(fi) - 1);
+		Vector4d dE_dJ(
+			4 * a(fi) - lambda(fi) * d(fi), 
+			2 * b(fi) + 2 * c(fi) + lambda(fi) * c(fi),
+			2 * b(fi) + 2 * c(fi) + lambda(fi) * b(fi),
+			4 * d(fi) - lambda(fi) * a(fi)
+		);
 		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
+		
 		
 		//Update the gradient of the x-axis
 		g(F(fi, 0)) += grad(fi, 0);
@@ -88,11 +109,13 @@ void AreaDistortion::gradient(VectorXd& g)
 		g(F(fi, 0) + V.rows()) += grad(fi, 3);
 		g(F(fi, 1) + V.rows()) += grad(fi, 4);
 		g(F(fi, 2) + V.rows()) += grad(fi, 5);
+		//Update the gradient of lambda
+		g(fi + 2 * V.rows()) += detJ(fi) - 1;
 	}
 	gradient_norm = g.norm();
 }
 
-void AreaDistortion::hessian()
+void Lagrangian::hessian()
 {
 #pragma omp parallel for num_threads(24)
 	int index2 = 0;
@@ -119,9 +142,10 @@ void AreaDistortion::hessian()
 	}
 }
 
-bool AreaDistortion::update_variables(const VectorXd& X)
+bool Lagrangian::update_variables(const VectorXd& X)
 {
-	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
+	lambda = X.tail(F.rows());
+	Eigen::Map<const MatrixX2d> x(X.head(2*V.rows()).data(), X.head(2 * V.rows()).size() / 2, 2);
 
 	for (int i = 0; i < F.rows(); i++)
 	{
@@ -142,7 +166,7 @@ bool AreaDistortion::update_variables(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 }
 
-void AreaDistortion::init_hessian()
+void Lagrangian::init_hessian()
 {
 	II.clear();
 	JJ.clear();

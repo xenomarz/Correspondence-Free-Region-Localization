@@ -1018,9 +1018,16 @@ void basic_app::checkGradients()
 			solver_on = false;
 			return;
 		}
-		
+		int idx = 0;
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
-			objective->checkGradient(Outputs[i].solver->ext_x);
+			VectorXd xxxx; xxxx.resize(2 * InputModel().V.rows());
+			if (!idx++) {
+				xxxx.Ones(2 * InputModel().V.rows() + InputModel().F.rows());
+			}
+			else {
+				objective->checkGradient(Outputs[i].solver->ext_x);
+			}
+			
 		}
 	}
 	start_solver_thread();
@@ -1100,6 +1107,9 @@ void basic_app::initializeSolver(const int index)
 	auto areapreservingOneRing = make_unique<AreaDistortionOneRing>();
 	areapreservingOneRing->init_mesh(V, F);
 	areapreservingOneRing->init();
+	auto lagrange = make_unique<Lagrangian>();
+	lagrange->init_mesh(V, F);
+	lagrange->init();
 	auto symDirichlet = make_unique<SymmetricDirichlet>();
 	symDirichlet->init_mesh(V, F);
 	symDirichlet->init();
@@ -1137,6 +1147,7 @@ void basic_app::initializeSolver(const int index)
 	Outputs[index].HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
 
 	Outputs[index].totalObjective->objectiveList.clear();
+	Outputs[index].totalObjective->objectiveList.push_back(move(lagrange));
 	Outputs[index].totalObjective->objectiveList.push_back(move(areapreservingOneRing));
 	Outputs[index].totalObjective->objectiveList.push_back(move(areaPreserving));
 	Outputs[index].totalObjective->objectiveList.push_back(move(anglePreserving));

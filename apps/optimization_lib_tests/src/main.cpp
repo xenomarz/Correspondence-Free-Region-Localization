@@ -9,12 +9,10 @@ int GetUpperTriangleSize(int MatrixSize) {
 
 int main(int argc, char * argv[])
 {
-	cout << GetUpperTriangleSize(0) << endl;
-	cout << GetUpperTriangleSize(1) << endl;
-	cout << GetUpperTriangleSize(2) << endl;
-	cout << GetUpperTriangleSize(3) << endl;
-	cout << GetUpperTriangleSize(4) << endl;
-	cout << GetUpperTriangleSize(5) << endl;
-	cout << GetUpperTriangleSize(6) << endl;
+	VectorXd x; x.resize(9);
+	int v = 3;
+	x << 1, 1, 1, 2, 2, 2, 3, 3, 3;
+	cout << x.head(v * 2);
+	cout << x.tail(v);
 	return 0;
 }
