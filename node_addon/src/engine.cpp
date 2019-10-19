@@ -64,7 +64,9 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "hessian", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Hessian) });
 	properties_map_.insert({ "weight", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Weight) });
 	properties_map_.insert({ "name", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Name) });
-	
+	properties_map_.insert({ "delta", static_cast<uint32_t>(Separation<Eigen::StorageOptions::RowMajor>::Properties::Delta) });
+
+	// TODO: Expose interface for addition and removal of objective function
 	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
 	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
   	position_ = std::make_shared<CompositeObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, std::string("Position"));
@@ -293,7 +295,7 @@ Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	 * Get property
 	 */
 	const std::string property_name = info[1].ToString();
-	if(!properties_map_.contains(property_name))
+	if(properties_map_.contains(property_name))
 	{
 		const uint32_t property_id = properties_map_.at(property_name);
 		std::any any_value;
@@ -361,14 +363,15 @@ Napi::Value Engine::SetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	 * Set property
 	 */
 	const std::string property_name = info[1].ToString();
-	if (!properties_map_.contains(property_name))
+	if (properties_map_.contains(property_name))
 	{
 		const uint32_t property_id = properties_map_.at(property_name);
 		if(!objective_function->SetProperty(property_id, JSToNative(env, info[2])))
 		{
 			Napi::TypeError::New(env, "Couldn't set property").ThrowAsJavaScriptException();
-			return Napi::Value();
 		}
+
+		return Napi::Value();
 	}
 
 	/**

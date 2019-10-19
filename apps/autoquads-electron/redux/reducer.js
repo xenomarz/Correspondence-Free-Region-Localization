@@ -18,8 +18,6 @@ import {
     CHANGE_HIGHLIGHTED_FACE_COLOR,
     CHANGE_DRAGGED_FACE_COLOR,
     CHANGE_FIXED_FACE_COLOR,
-    CHANGE_VERTEX_ENERGY_COLOR,
-    CHANGE_VERTEX_ENERGY_TYPE,
     CHANGE_GRID_SIZE,
     CHANGE_GRID_TEXTURE_SIZE,
     CHANGE_GRID_LINE_WIDTH,
@@ -30,7 +28,9 @@ import {
     CHANGE_MODEL_FILENAME,
     CHANGE_MODULE_FILENAME,
     CHANGE_MODEL_STATE,
-    CHANGE_MODULE_STATE    
+    CHANGE_MODULE_STATE,
+    CHANGE_OBJECTIVE_FUNCTION_PROPERTY_COLOR,
+    CHANGE_OBJECTIVE_FUNCTION_PROPERTY_VISIBILITY
 } from './actions.js';
 
 import * as EnumsExports from './enums.js';
@@ -55,8 +55,6 @@ const INITIAL_STATE = {
     highlightedFaceColor: 'rgb(0,255,0)',
     draggedFaceColor: 'rgb(0,0,255)',
     fixedFaceColor: 'rgb(255,0,0)',
-    vertexEnergyColor: 'rgb(255,0,0)',
-    vertexEnergyType: EnumsExports.EnergyType.SEPERATION,
     gridSize: 3,
     gridTextureSize: 8,
     gridLineWidth: 0,
@@ -65,10 +63,38 @@ const INITIAL_STATE = {
     optimizationDataMonitorVisibility: EnumsExports.Visibility.VISIBLE,
     solverState: EnumsExports.SolverState.OFF,
     modelFilename: '',
-    moduleFilename: '',
+    moduleFilename: require('path').join(appRoot, 'node-addon.node'),
     modelState: EnumsExports.LoadState.UNLOADED,
-    moduleState: EnumsExports.LoadState.UNLOADED    
+    moduleState: EnumsExports.LoadState.UNLOADED,
+    objectiveFunctionsProperties: [
+        {
+            objectiveFunctionId: 'Separation',
+            propertyId: 'value_per_vertex',
+            objectiveFunctionName: 'Separation',
+            propertyName: 'Value Per Vertex',
+            color: 'rgb(255,0,0)',
+            visibility: EnumsExports.Visibility.HIDDEN
+        },
+        {
+            objectiveFunctionId: 'Symmetric Dirichlet',
+            propertyId: 'value_per_vertex',
+            objectiveFunctionName: 'Symmetric Dirichlet',
+            propertyName: 'Value Per Vertex',
+            color: 'rgb(255,0,0)',
+            visibility: EnumsExports.Visibility.HIDDEN            
+        }
+    ]
 };
+
+function matchObjectiveFunctionProperty(objectivePropertyVisualData, action) {
+    if(objectivePropertyVisualData.objectiveFunctionId === action.objectiveFunctionId && 
+        objectivePropertyVisualData.propertyId === action.propertyId)
+    {
+        return true;
+    }
+
+    return false;
+}
 
 export const reducer = (state = INITIAL_STATE, action) => {
     switch (action.type) {
@@ -167,16 +193,6 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 fixedFaceColor: action.color
             };
-        case CHANGE_VERTEX_ENERGY_COLOR:
-            return {
-                ...state,
-                vertexEnergyColor: action.color
-            };
-        case CHANGE_VERTEX_ENERGY_TYPE:
-            return {
-                ...state,
-                vertexEnergyType: action.type
-            };
         case CHANGE_GRID_SIZE:
             return {
                 ...state,
@@ -233,6 +249,26 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 moduleState: action.state
             };
+        case CHANGE_OBJECTIVE_FUNCTION_PROPERTY_COLOR:
+            var newState = state;
+            for(let objectiveFunctionProperty of newState.objectiveFunctionProperties)
+            {
+                if(matchObjectiveFunctionProperty(objectiveFunctionProperty, action)) {
+                    objectiveFunctionProperty.color = action.color;
+                    break;
+                }
+            }
+            return newState;
+        case CHANGE_OBJECTIVE_FUNCTION_PROPERTY_VISIBILITY:
+            var newState = state;
+            for(let objectiveFunctionProperty of newState.objectiveFunctionProperties)
+            {
+                if(matchObjectiveFunctionProperty(objectiveFunctionProperty, action)) {
+                    objectiveFunctionProperty.visibility = action.visibility;
+                    break;
+                }
+            }
+            return newState;
         default:
             return state;
     }

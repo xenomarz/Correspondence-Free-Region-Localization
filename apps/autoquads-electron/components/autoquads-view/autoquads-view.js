@@ -180,14 +180,6 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: String,
                 attribute: 'fixed-face-color'
             },
-            vertexEnergyColor: {
-                type: String,
-                attribute: 'vertex-energy-color'
-            },
-            vertexEnergyType: {
-                type: String,
-                attribute: 'vertex-energy-type'
-            },
             gridSize: {
                 type: Number,
                 attribute: 'grid-size'
@@ -223,6 +215,10 @@ export class AutoquadsView extends connect(store)(LitElement) {
             module: {
                 type: Object,
                 attribute: 'module'
+            },
+            objectiveFunctionsProperties: {
+                type: Object,
+                attribute: 'objective-functions-properties'
             }
         };
     }
@@ -230,16 +226,36 @@ export class AutoquadsView extends connect(store)(LitElement) {
     /**
      * State handling
      */
-
     stateChanged(state) {
+        let isValidKey = (key) => {
+            if(key !== 'moduleFilename' && key !== 'modelFilename') {
+                return true;
+            }
+
+            return false;
+        }
+
         let localState = {};
+
+        if(this.moduleFilename !== state['moduleFilename']) {
+            this.moduleFilename = state['moduleFilename'];
+        }
+
+        if(this.modelFilename !== state['modelFilename']) {
+            this.modelFilename = state['modelFilename'];
+        }        
+
         for (let [key, value] of Object.entries(state)) {
-            localState[key] = this[key];
+            if(isValidKey(key)) {
+                localState[key] = this[key];
+            }
         }
 
         for (let [key, value] of Object.entries(state)) {
-            if(localState[key] !== state[key]) {
-                this[key] = state[key];
+            if(isValidKey(key)) {
+                if(localState[key] !== state[key]) {
+                    this[key] = state[key];
+                }
             }
         }    
     }
@@ -247,7 +263,6 @@ export class AutoquadsView extends connect(store)(LitElement) {
     /**
      * Constructor
      */
-
     constructor() {
         super();
         this._modelMeshProvider = new MeshProvider();
@@ -257,7 +272,6 @@ export class AutoquadsView extends connect(store)(LitElement) {
     /**
      * Properties
      */
-
     set splitOrientation(value) {
         const oldValue = this._splitOrientation;
         this._splitOrientation = value;
@@ -344,26 +358,31 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._delta;
             this._delta = value;
-            this._engine.delta = value;
+            this._engine.setObjectiveFunctionProperty('Separation', 'delta', value);
             this.requestUpdate('delta', oldValue);
         }
     }
 
     get delta() {
-        return this._delta;
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            return this._engine.getObjectiveFunctionProperty('Separation', 'delta');
+        }
     }
 
     set lambda(value) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._lambda;
             this._lambda = value;
-            this._engine.lambda = value;
+            this._engine.setObjectiveFunctionProperty('Separation', 'weight', value);
+            this._engine.setObjectiveFunctionProperty('Symmetric Dirichlet', 'weight', 1 - value);
             this.requestUpdate('lambda', oldValue);
         }
     }
 
     get lambda() {
-        return this._lambda;
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            return this._engine.getObjectiveFunctionProperty('Separation', 'weight');
+        }
     }
 
     set seamlessWeight(value) {
@@ -457,30 +476,6 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
     get fixedFaceColor() {
         return this._fixedFaceColor;
-    }
-    
-    set vertexEnergyColor(value) {
-        const oldValue = this._vertexEnergyColor;
-        this._vertexEnergyColor = value;
-        this._modelMeshProvider.vertexEnergyColor = value;
-        this._soupMeshProvider.vertexEnergyColor = value;
-        this.requestUpdate('vertexEnergyColor', oldValue);
-    }
-
-    get vertexEnergyColor() {
-        return this._vertexEnergyColor;
-    } 
-
-    set vertexEnergyType(value) {
-        const oldValue = this._vertexEnergyType;
-        this._vertexEnergyType = value;
-        this._modelMeshProvider.vertexEnergyType = value;
-        this._soupMeshProvider.vertexEnergyType = value;
-        this.requestUpdate('vertexEnergyType', oldValue);
-    }
-
-    get vertexEnergyType() {
-        return this._vertexEnergyType;
     }
     
     set gridSize(value) {
@@ -607,12 +602,11 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
     get moduleState() {
         return this._moduleState;
-    } 
+    }
 
     /**
      * Element life-cycle callbacks
      */
-
     connectedCallback() {
         super.connectedCallback();
 
@@ -670,8 +664,8 @@ export class AutoquadsView extends connect(store)(LitElement) {
             store.dispatch(ActionsExports.setModelState(EnumsExports.LoadState.LOADING));
             try {
                 this._engine.loadModel(modelFilename);
-                this._modelMeshProvider = new AutoquadsModelMeshProvider(this._engine, this.vertexEnergyType, this.vertexEnergyColor, this.modelColor);
-                this._soupMeshProvider = new AutoquadsSoupMeshProvider(this._engine, this.vertexEnergyType, this.vertexEnergyColor, this.soupColor);  
+                this._modelMeshProvider = new AutoquadsModelMeshProvider(this._engine, this.modelColor);
+                this._soupMeshProvider = new AutoquadsSoupMeshProvider(this._engine, this.soupColor);  
                 console.log("Model loaded: " + modelFilename);
                 store.dispatch(ActionsExports.setModelState(EnumsExports.LoadState.LOADED));
             }

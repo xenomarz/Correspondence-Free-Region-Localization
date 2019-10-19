@@ -28,10 +28,6 @@ export const solverStateText = (solverState) => {
     return solverState;
 };
 
-export const energyTypeText = (energyType) => {
-    return energyType;
-};
-
 export const splitOrientationText = (splitOrientation) => {
     return splitOrientation;
 };

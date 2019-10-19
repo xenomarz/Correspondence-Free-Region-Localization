@@ -15,6 +15,7 @@ import { SideBar } from '../side-bar/side-bar.js';
 import '../side-bar-collapsable-section/side-bar-collapsable-section.js';
 import '../side-bar-parameter-input/side-bar-parameter-input.js';
 import '../side-bar-color-picker/side-bar-color-picker.js';
+import '../autoquads-side-bar-objective-function-visual-property/autoquads-side-bar-objective-function-visual-property.js';
 import * as ReducerExports from '../../redux/reducer.js';
 import * as ActionsExports from '../../redux/actions.js';
 import * as EnumsExports from '../../redux/enums.js';
@@ -77,7 +78,7 @@ export class AutoquadsSideBar extends SideBar {
                 </vaadin-checkbox>   
             </side-bar-collapsable-section>
             <side-bar-collapsable-section
-                caption="Energy Parameters">
+                caption="Numeric Properties">
                 <side-bar-parameter-input
                     id="lambda"
                     increase-key="d"
@@ -123,6 +124,21 @@ export class AutoquadsSideBar extends SideBar {
                 </side-bar-parameter-input>
             </side-bar-collapsable-section>
             <side-bar-collapsable-section
+                caption="Visual Properties">
+                ${this.objectiveFunctionsProperties.map(item => html`
+                    <autoquads-side-bar-objective-function-visual-property
+                        objective-function-id=${item.objectiveFunctionId}
+                        property-id=${item.propertyId}
+                        objective-function-name=${item.objectiveFunctionName}
+                        property-name=${item.propertyName}
+                        color=${item.color}
+                        ?selected=${item.selected}
+                        @color-changed="${this._objectiveFunctionVisualPropertyColorInputChanged}"
+                        @selected-changed="${this._objectiveFunctionVisualPropertyVisibilityInputChanged}">
+                    </autoquads-side-bar-objective-function-visual-property>
+                `)}
+            </side-bar-collapsable-section>
+            <side-bar-collapsable-section
                 caption="Solver">
                 <paper-toggle-button
                     class="solver"
@@ -149,28 +165,6 @@ export class AutoquadsSideBar extends SideBar {
                     color="${this._fixedFaceColor}"
                     @color-changed="${this._fixedFaceColorInputChanged}">
                 </side-bar-color-picker>
-                <side-bar-color-picker
-                    caption="Vertex Energy Color"
-                    color="${this._vertexEnergyColor}"
-                    @color-changed="${this._vertexEnergyColorInputChanged}">
-                </side-bar-color-picker>
-                <vaadin-select
-                    label="Vertex Energy Type"
-                    value="${this._vertexEnergyType}"
-                    @change=${this._vertexEnergyTypeInputChanged}>
-                    <template>
-                        <vaadin-list-box>
-                            <vaadin-item
-                                value="${EnumsExports.EnergyType.SEPERATION}">
-                                <span>${HelpersExports.energyTypeText(EnumsExports.EnergyType.SEPERATION)}</span>
-                            </vaadin-item>
-                            <vaadin-item
-                                value="${EnumsExports.EnergyType.SEAMLESS}">
-                                <span>${HelpersExports.energyTypeText(EnumsExports.EnergyType.SEAMLESS)}</span>
-                            </vaadin-item>
-                        </vaadin-list-box>
-                    </template>
-                </vaadin-select>
             </side-bar-collapsable-section>
             <side-bar-collapsable-section
                 caption="Viewports">
@@ -363,14 +357,6 @@ export class AutoquadsSideBar extends SideBar {
                 type: String,
                 attribute: 'fixed-face-color'
             },
-            vertexEnergyColor: {
-                type: String,
-                attribute: 'vertex-energy-color'
-            },
-            vertexEnergyType: {
-                type: String,
-                attribute: 'vertex-energy-type'
-            },
             gridSize: {
                 type: Number,
                 attribute: 'grid-size'
@@ -406,6 +392,10 @@ export class AutoquadsSideBar extends SideBar {
             module: {
                 type: Object,
                 attribute: 'module'
+            },
+            objectiveFunctionsProperties: {
+                type: Object,
+                attribute: 'objective-functions-properties'
             }
         };
     }
@@ -629,26 +619,6 @@ export class AutoquadsSideBar extends SideBar {
         return this._fixedFaceColor;
     }
     
-    set vertexEnergyColor(value) {
-        const oldValue = this._vertexEnergyColor;
-        this._vertexEnergyColor = value;
-        this.requestUpdate('vertexEnergyColor', oldValue);
-    }
-
-    get vertexEnergyColor() {
-        return this._vertexEnergyColor;
-    } 
-
-    set vertexEnergyType(value) {
-        const oldValue = this._vertexEnergyType;
-        this._vertexEnergyType = value;
-        this.requestUpdate('vertexEnergyType', oldValue);
-    }
-
-    get vertexEnergyType() {
-        return this._vertexEnergyType;
-    }
-    
     set gridSize(value) {
         const oldValue = this._gridSize;
         this._gridSize = value;
@@ -757,17 +727,23 @@ export class AutoquadsSideBar extends SideBar {
 
     get moduleState() {
         return this._moduleState;
-    } 
+    }
+
+    set objectivePropertiesVisualData(value) {
+        const oldValue = this._objectivePropertiesVisualData;
+        this._objectivePropertiesVisualData = value;
+        this.requestUpdate('objectivePropertiesVisualData', oldValue);
+    }
+
+    get objectivePropertiesVisualData() {
+        return this._objectivePropertiesVisualData;
+    }     
 
     /**
      * Element life-cycle callbacks
      */
 
      firstUpdated() {
-        const { join } = require('path');
-        let moduleFilename = join(appRoot, 'node-addon.node');
-        store.dispatch(ActionsExports.loadModuleFile(moduleFilename));
-
         // TODO: call removeEventListener for the 'focus' events
         // https://stackoverflow.com/questions/22280139/prevent-space-button-from-triggering-any-other-button-click-in-jquery
         this.shadowRoot.querySelectorAll('vaadin-button').forEach(function (item) {
@@ -861,14 +837,6 @@ export class AutoquadsSideBar extends SideBar {
         store.dispatch(ActionsExports.setFixedFaceColor(e.detail.color));
     }
 
-    _vertexEnergyColorInputChanged(e) {
-        store.dispatch(ActionsExports.setVertexEnergyColor(e.detail.color));
-    }
-
-    _vertexEnergyTypeInputChanged(e) {
-        store.dispatch(ActionsExports.setVertexEnergyType(e.srcElement.value));
-    }
-
     _wireframeVisibilityInputChanged(e) {
         if(e.srcElement.checked) {
             store.dispatch(ActionsExports.showWireframe());
@@ -960,6 +928,14 @@ export class AutoquadsSideBar extends SideBar {
     _gridLineWidthInputChanged(e) {
         store.dispatch(ActionsExports.setGridLineWidth(e.srcElement.value));
     }
+
+    _objectiveFunctionVisualPropertyColorInputChanged(e) {
+        store.dispatch(ActionsExports.setObjectiveFunctionPropertyColor(e.detail.objectiveFunctionId, e.detail.propertyId, e.detail.color));
+    }
+
+    _objectiveFunctionVisualPropertyVisibilityInputChanged(e) {
+        store.dispatch(ActionsExports.setObjectiveFunctionPropertyVisibility(e.detail.objectiveFunctionId, e.detail.propertyId, e.detail.selected ? EnumsExports.Visibility.ON : EnumsExports.Visibility.OFF)); 
+    }    
 }
 
 customElements.define('autoquads-side-bar', AutoquadsSideBar);

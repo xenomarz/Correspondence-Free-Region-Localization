@@ -12,7 +12,14 @@ template<Eigen::StorageOptions StorageOrder>
 class Separation : public ConcreteObjective<StorageOrder>
 {
 public:
-
+	/**
+	 * Public type definitions
+	 */
+	enum class Properties : uint32_t
+	{
+		Delta = ObjectiveFunction<StorageOrder>::Properties::Count_
+	};
+	
 	/**
 	 * Constructors and destructor
 	 */
@@ -35,12 +42,48 @@ public:
 		delta_ = delta;
 	}
 
+	bool SetProperty(const uint32_t property_id, const std::any& property_value) override
+	{
+		if(ObjectiveFunction<StorageOrder>::SetProperty(property_id, property_value))
+		{
+			return true;
+		}
+		
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::Delta:
+			SetDelta(std::any_cast<const double>(property_value));
+			return true;
+		}
+
+		return false;
+	}
+
 	/**
 	 * Getters
 	 */
 	double GetDelta() const
 	{
 		return delta_;
+	}
+
+	bool GetProperty(const uint32_t property_id, std::any& property_value) override
+	{
+		if (ObjectiveFunction<StorageOrder>::GetProperty(property_id, property_value))
+		{
+			return true;
+		}
+
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::Delta:
+			property_value = GetDelta();
+			return true;
+		}
+
+		return false;
 	}
 
 private:

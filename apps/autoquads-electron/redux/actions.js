@@ -20,8 +20,6 @@ export const CHANGE_GRID_BACKGROUND_COLOR2 = 'CHANGE_GRID_BACKGROUND_COLOR2';
 export const CHANGE_HIGHLIGHTED_FACE_COLOR = 'CHANGE_HIGHLIGHTED_FACE_COLOR';
 export const CHANGE_DRAGGED_FACE_COLOR = 'CHANGE_DRAGGED_FACE_COLOR';
 export const CHANGE_FIXED_FACE_COLOR = 'CHANGE_FIXED_FACE_COLOR';
-export const CHANGE_VERTEX_ENERGY_COLOR = 'CHANGE_VERTEX_ENERGY_COLOR';
-export const CHANGE_VERTEX_ENERGY_TYPE = 'CHANGE_VERTEX_ENERGY_TYPE';
 export const CHANGE_GRID_SIZE = 'CHANGE_GRID_SIZE';
 export const CHANGE_GRID_TEXTURE_SIZE = 'CHANGE_GRID_TEXTURE_SIZE';
 export const CHANGE_GRID_LINE_WIDTH = 'CHANGE_GRID_LINE_WIDTH';
@@ -33,6 +31,8 @@ export const CHANGE_MODEL_FILENAME = 'CHANGE_MODEL_FILENAME';
 export const CHANGE_MODULE_FILENAME = 'CHANGE_MODULE_FILENAME';
 export const CHANGE_MODEL_STATE = 'CHANGE_MODEL_STATE';
 export const CHANGE_MODULE_STATE = 'CHANGE_MODULE_STATE';
+export const CHANGE_OBJECTIVE_FUNCTION_PROPERTY_COLOR = 'CHANGE_OBJECTIVE_FUNCTION_PROPERTY_COLOR';
+export const CHANGE_OBJECTIVE_FUNCTION_PROPERTY_VISIBILITY = 'CHANGE_OBJECTIVE_FUNCTION_PROPERTY_VISIBILITY';
 
 export const setSplitOrientation = orientation => {
     return {
@@ -188,20 +188,6 @@ export const setFixedFaceColor = color => {
     };
 };
 
-export const setVertexEnergyColor = color => {
-    return {
-        type: CHANGE_VERTEX_ENERGY_COLOR,
-        color: color
-    };
-};
-
-export const setVertexEnergyType = type => {
-    return {
-        type: CHANGE_VERTEX_ENERGY_TYPE,
-        type: type
-    };
-};
-
 export const setGridSize = size => {
     return {
         type: CHANGE_GRID_SIZE,
@@ -304,5 +290,23 @@ export const setModuleState = state => {
     return {
         type: CHANGE_MODULE_STATE,
         state: state
+    };
+};
+
+export const setObjectiveFunctionPropertyColor = (objectiveFunctionId, propertyId, color) => {
+    return {
+        type: CHANGE_OBJECTIVE_FUNCTION_PROPERTY_COLOR,
+        objectiveFunctionId: objectiveFunctionId,
+        propertyId: propertyId,
+        color: color
+    };
+};
+
+export const setObjectiveFunctionPropertyVisibility = (objectiveFunctionId, propertyId, visibility) => {
+    return {
+        type: CHANGE_OBJECTIVE_FUNCTION_PROPERTY_VISIBILITY,
+        objectiveFunctionId: objectiveFunctionId,
+        propertyId: propertyId,
+        visibility: visibility
     };
 };

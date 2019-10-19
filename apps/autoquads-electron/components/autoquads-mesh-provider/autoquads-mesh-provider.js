@@ -2,11 +2,9 @@ import { MeshProvider } from '../mesh-provider/mesh-provider.js';
 import * as THREE from '../../web_modules/three.js';
 
 export class AutoquadsMeshProvider extends MeshProvider {
-    constructor(engine, vertexEnergyType, energyColor, meshColor) {
+    constructor(engine, meshColor) {
         super();
         this._engine = engine;
-        this.vertexEnergyType = vertexEnergyType;
-        this.energyColor = energyColor;
         this.meshColor = meshColor;
     }
 
@@ -26,14 +24,6 @@ export class AutoquadsMeshProvider extends MeshProvider {
         return bufferedVertexColors;
     }
 
-    set energyColor(value) {
-        this._energyColor = new THREE.Color(value);
-    }
-
-    get energyColor() {
-        return this._energyColor;
-    }
-
     set meshColor(value) {
         this._meshColor = new THREE.Color(value);
     }
@@ -42,11 +32,11 @@ export class AutoquadsMeshProvider extends MeshProvider {
         return this._meshColor;
     }
 
-    set vertexEnergyType(value) {
-        this._vertexEnergyType = value;
+    set objectiveFunctionsProperties(value) {
+        this._objectiveFunctionsProperties = value;
     }
 
-    get vertexEnergyType() {
-        return this._vertexEnergyType;
-    }
+    get objectiveFunctionsProperties() {
+        return this._objectiveFunctionsProperties;
+    }    
 }

@@ -8,11 +8,6 @@ export const Visibility = {
     HIDDEN: 'Hidden'
 };
 
-export const EnergyType = {
-    SEPERATION: 'Seperation',
-    SEAMLESS: 'Seamless'
-};
-
 export const SolverState = {
     ON: 'On',
     OFF: 'Off'
