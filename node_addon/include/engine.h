@@ -52,6 +52,12 @@ private:
 		IMAGE_VERTICES
 	};
 
+	enum class FacesSource
+	{
+		DOMAIN_FACES,
+		IMAGE_FACES
+	};
+
 	static Napi::FunctionReference constructor;
 
 	/**
@@ -82,6 +88,8 @@ private:
 	Napi::Value GetImageFaces(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetImageVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainBufferedFaces(const Napi::CallbackInfo& info);
+	Napi::Value GetImageBufferedFaces(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainBufferedVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetImageBufferedVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainBufferedUvs(const Napi::CallbackInfo& info);
@@ -101,7 +109,9 @@ private:
 	 */
 	ModelFileType GetModelFileType(std::string filename);
 	void TryUpdateImageVertices();
+	Napi::Int32Array GetBufferedFaces(const Napi::CallbackInfo& info, const FacesSource faces_source) const;
 	Napi::Float32Array GetBufferedVertices(const Napi::CallbackInfo& info, const VerticesSource vertices_source);
+	Napi::Int32Array CreateBufferedFacesArray(Napi::Env env, const Eigen::MatrixXi& F) const;
 	Napi::Array CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F);
 	Napi::Value NativeToJS(Napi::Env env, const std::any& property_value);
 	Napi::Value NativeToJS(Napi::Env env, const Eigen::VectorXd& property_value);

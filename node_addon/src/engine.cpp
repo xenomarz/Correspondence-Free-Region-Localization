@@ -33,6 +33,8 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("getImageFaces", &Engine::GetImageFaces),
 		InstanceMethod("getDomainVertices", &Engine::GetDomainVertices),
 		InstanceMethod("getImageVertices", &Engine::GetImageVertices),
+		InstanceMethod("getDomainBufferedFaces", &Engine::GetDomainBufferedFaces),
+		InstanceMethod("getImageBufferedFaces", &Engine::GetImageBufferedFaces),
 		InstanceMethod("getDomainBufferedVertices", &Engine::GetDomainBufferedVertices),
 		InstanceMethod("getImageBufferedVertices", &Engine::GetImageBufferedVertices),
 		InstanceMethod("getDomainBufferedUvs", &Engine::GetDomainBufferedUvs),
@@ -166,6 +168,16 @@ Napi::Value Engine::GetImageVertices(const Napi::CallbackInfo& info)
 	return CreateVerticesArray(env, mesh_wrapper_->GetImageVertices());
 }
 
+Napi::Value Engine::GetDomainBufferedFaces(const Napi::CallbackInfo& info)
+{
+	return GetBufferedFaces(info, FacesSource::DOMAIN_FACES);
+}
+
+Napi::Value Engine::GetImageBufferedFaces(const Napi::CallbackInfo& info)
+{
+	return GetBufferedFaces(info, FacesSource::IMAGE_FACES);
+}
+
 Napi::Value Engine::GetDomainBufferedVertices(const Napi::CallbackInfo& info)
 {
 	TryUpdateImageVertices();
@@ -196,6 +208,26 @@ Napi::Value Engine::GetImageBufferedUvs(const Napi::CallbackInfo& info)
 	TryUpdateImageVertices();
 
 	return CreateBufferedUvsArray(env, mesh_wrapper_->GetImageVertices(), mesh_wrapper_->GetImageFaces());
+}
+
+Napi::Int32Array Engine::GetBufferedFaces(const Napi::CallbackInfo& info, const FacesSource faces_source) const
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Create buffered faces array
+	 */
+	switch (faces_source)
+	{
+	case FacesSource::DOMAIN_FACES:
+		return CreateBufferedFacesArray(env, mesh_wrapper_->GetDomainFaces());
+	case FacesSource::IMAGE_FACES:
+		return CreateBufferedFacesArray(env, mesh_wrapper_->GetImageFaces());
+	}
+
+	Napi::TypeError::New(env, "Unknown buffered primitive type").ThrowAsJavaScriptException();
+	return Napi::Int32Array::New(env, 0);
 }
 
 Napi::Float32Array Engine::GetBufferedVertices(const Napi::CallbackInfo& info, const VerticesSource vertices_source)
@@ -379,6 +411,25 @@ Napi::Value Engine::SetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	 */
 	Napi::TypeError::New(env, "Property name could not be found").ThrowAsJavaScriptException();
 	return Napi::Value();
+}
+
+Napi::Int32Array Engine::CreateBufferedFacesArray(Napi::Env env, const Eigen::MatrixXi& F) const
+{
+	const uint32_t entries_per_face = 3;
+	auto buffered_faces_array = Napi::Int32Array::New(env, entries_per_face * F.rows());
+
+	#pragma omp parallel for
+	for (int32_t face_index = 0; face_index < F.rows(); face_index++)
+	{
+		const int base_index = entries_per_face * face_index;
+		auto face = F.row(face_index);
+		for (uint32_t i = 0; i < 3; i++)
+		{
+			buffered_faces_array[base_index + i] = face.coeffRef(i);
+		}
+	}
+
+	return buffered_faces_array;
 }
 
 Napi::Value Engine::NativeToJS(Napi::Env env, const std::any& property_value)
