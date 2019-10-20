@@ -403,7 +403,6 @@ export class AutoquadsSideBar extends SideBar {
     /**
      * State handling
      */
-
     stateChanged(state) {
         let localState = {};
         for (let [key, value] of Object.entries(state)) {
@@ -411,16 +410,16 @@ export class AutoquadsSideBar extends SideBar {
         }
 
         for (let [key, value] of Object.entries(state)) {
-            if(localState[key] !== state[key]) {
+            let currentState = store.getState();
+            if((state[key] === currentState[key]) && (localState[key] !== state[key])) {
                 this[key] = state[key];
             }
-        }  
+        } 
     }
 
     /**
      * Constructor
      */
-
     constructor() {
         super();
     }
@@ -428,7 +427,6 @@ export class AutoquadsSideBar extends SideBar {
     /**
      * Properties
      */
-
     set splitOrientation(value) {
         const oldValue = this._splitOrientation;
         this._splitOrientation = value;
@@ -934,7 +932,7 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     _objectiveFunctionVisualPropertyVisibilityInputChanged(e) {
-        store.dispatch(ActionsExports.setObjectiveFunctionPropertyVisibility(e.detail.objectiveFunctionId, e.detail.propertyId, e.detail.selected ? EnumsExports.Visibility.ON : EnumsExports.Visibility.OFF)); 
+        store.dispatch(ActionsExports.setObjectiveFunctionPropertyVisibility(e.detail.objectiveFunctionId, e.detail.propertyId, e.detail.selected ? EnumsExports.Visibility.VISIBLE : EnumsExports.Visibility.HIDDEN)); 
     }    
 }
 

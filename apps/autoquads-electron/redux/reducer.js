@@ -250,24 +250,34 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 moduleState: action.state
             };
         case CHANGE_OBJECTIVE_FUNCTION_PROPERTY_COLOR:
-            var newState = state;
-            for(let objectiveFunctionProperty of newState.objectiveFunctionProperties)
+            var newState = {
+                ...state
+            }
+
+            newState.objectiveFunctionsProperties = [...newState.objectiveFunctionsProperties];
+            for(let objectiveFunctionProperty of newState.objectiveFunctionsProperties)
             {
                 if(matchObjectiveFunctionProperty(objectiveFunctionProperty, action)) {
                     objectiveFunctionProperty.color = action.color;
                     break;
                 }
             }
+            
             return newState;
         case CHANGE_OBJECTIVE_FUNCTION_PROPERTY_VISIBILITY:
-            var newState = state;
-            for(let objectiveFunctionProperty of newState.objectiveFunctionProperties)
+            var newState = {
+                ...state
+            }
+
+            newState.objectiveFunctionsProperties = [...newState.objectiveFunctionsProperties];
+            for(let objectiveFunctionProperty of newState.objectiveFunctionsProperties)
             {
                 if(matchObjectiveFunctionProperty(objectiveFunctionProperty, action)) {
                     objectiveFunctionProperty.visibility = action.visibility;
                     break;
                 }
             }
+
             return newState;
         default:
             return state;

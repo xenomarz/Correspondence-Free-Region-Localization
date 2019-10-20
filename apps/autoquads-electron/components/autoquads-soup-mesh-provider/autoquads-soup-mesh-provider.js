@@ -1,7 +1,7 @@
 import { AutoquadsMeshProvider } from '../autoquads-mesh-provider/autoquads-mesh-provider.js';
 export class AutoquadsSoupMeshProvider extends AutoquadsMeshProvider {
-    constructor(engine, meshColor) {
-        super(engine, meshColor);
+    constructor(engine, meshColor, objectiveFunctionsProperties) {
+        super(engine, meshColor, objectiveFunctionsProperties);
     }
 
     getFaces() {

@@ -2,13 +2,20 @@ import { MeshProvider } from '../mesh-provider/mesh-provider.js';
 import * as THREE from '../../web_modules/three.js';
 
 export class AutoquadsMeshProvider extends MeshProvider {
-    constructor(engine, meshColor) {
+    constructor(engine, meshColor, objectiveFunctionsProperties) {
         super();
         this._engine = engine;
         this.meshColor = meshColor;
+        this.objectiveFunctionsProperties = objectiveFunctionsProperties;
     }
 
     getBufferedColors() {
+        let y =5;
+
+        for(let objectiveFunctionProperty of this._objectiveFunctionsProperties) {
+            let property = this._engine.getObjectiveFunctionProperty(objectiveFunctionProperty.objectiveFunctionId, objectiveFunctionProperty.propertyId);
+        }
+        
         let domainFacesCount = this._engine.getDomainFacesCount();
         let verticesCount = 3 * domainFacesCount;
         let componenetsCount = 3 * verticesCount;

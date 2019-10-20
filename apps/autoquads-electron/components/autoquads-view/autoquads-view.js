@@ -227,35 +227,15 @@ export class AutoquadsView extends connect(store)(LitElement) {
      * State handling
      */
     stateChanged(state) {
-        let isValidKey = (key) => {
-            if(key !== 'moduleFilename' && key !== 'modelFilename') {
-                return true;
-            }
-
-            return false;
-        }
-
         let localState = {};
-
-        if(this.moduleFilename !== state['moduleFilename']) {
-            this.moduleFilename = state['moduleFilename'];
-        }
-
-        if(this.modelFilename !== state['modelFilename']) {
-            this.modelFilename = state['modelFilename'];
-        }        
-
         for (let [key, value] of Object.entries(state)) {
-            if(isValidKey(key)) {
-                localState[key] = this[key];
-            }
+            localState[key] = this[key];
         }
 
         for (let [key, value] of Object.entries(state)) {
-            if(isValidKey(key)) {
-                if(localState[key] !== state[key]) {
-                    this[key] = state[key];
-                }
+            let currentState = store.getState();
+            if((state[key] === currentState[key]) && (localState[key] !== state[key])) {
+                this[key] = state[key];
             }
         }    
     }
@@ -604,6 +584,18 @@ export class AutoquadsView extends connect(store)(LitElement) {
         return this._moduleState;
     }
 
+    set objectiveFunctionsProperties(value) {
+        const oldValue = this._objectiveFunctionsProperties;
+        this._objectiveFunctionsProperties = value;
+        this._modelMeshProvider.objectiveFunctionsProperties = value;
+        this._soupMeshProvider.objectiveFunctionsProperties = value;
+        this.requestUpdate('objectiveFunctionsProperties', oldValue);
+    }
+
+    get objectiveFunctionsProperties() {
+        return this._objectiveFunctionsProperties;
+    }
+
     /**
      * Element life-cycle callbacks
      */
@@ -664,8 +656,8 @@ export class AutoquadsView extends connect(store)(LitElement) {
             store.dispatch(ActionsExports.setModelState(EnumsExports.LoadState.LOADING));
             try {
                 this._engine.loadModel(modelFilename);
-                this._modelMeshProvider = new AutoquadsModelMeshProvider(this._engine, this.modelColor);
-                this._soupMeshProvider = new AutoquadsSoupMeshProvider(this._engine, this.soupColor);  
+                this._modelMeshProvider = new AutoquadsModelMeshProvider(this._engine, this.modelColor, this.objectiveFunctionsProperties);
+                this._soupMeshProvider = new AutoquadsSoupMeshProvider(this._engine, this.soupColor, this.objectiveFunctionsProperties);  
                 console.log("Model loaded: " + modelFilename);
                 store.dispatch(ActionsExports.setModelState(EnumsExports.LoadState.LOADED));
             }
