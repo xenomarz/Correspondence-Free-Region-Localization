@@ -6,11 +6,12 @@ file(GLOB SOURCES
 	src/objective_functions/objective_function.cpp
 	src/objective_functions/concrete_objective.cpp
 	src/objective_functions/composite_objective.cpp
+	src/objective_functions/position_objective.cpp
 	src/objective_functions/vertex_position_objective.cpp
 	src/objective_functions/barycenter_position_objective.cpp
 	src/objective_functions/symmetric_dirichlet_objective.cpp
 	src/objective_functions/separation_objective.cpp
-	src/objective_functions/position_objective.cpp
+	src/objective_functions/periodic_objective.cpp
 	src/iterative_methods/iterative_method.cpp
 	src/iterative_methods/newton_method.cpp
 	src/iterative_methods/gradient_descent.cpp
@@ -23,11 +24,12 @@ file(GLOB SOURCES
 	include/objective_functions/objective_function.h
 	include/objective_functions/concrete_objective.h
 	include/objective_functions/composite_objective.h
+	include/objective_functions/position_objective.h
 	include/objective_functions/vertex_position_objective.h
 	include/objective_functions/barycenter_position_objective.h
 	include/objective_functions/symmetric_dirichlet_objective.h
 	include/objective_functions/separation_objective.h
-	include/objective_functions/position_objective.h
+	include/objective_functions/periodic_objective.h
 	include/iterative_methods/iterative_method.h
 	include/iterative_methods/newton_method.h
 	include/iterative_methods/gradient_descent.h
