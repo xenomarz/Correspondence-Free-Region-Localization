@@ -7,48 +7,48 @@
 #include <vector>
 
 // Optimization lib includes
-#include "./objective_function.h"
+#include "./dense_objective_function.h"
 
-template<Eigen::StorageOptions StorageOrder>
-class CompositeObjective : public ObjectiveFunction<StorageOrder>
+template<typename ObjectiveFunctionType_>
+class CompositeObjective : public DenseObjectiveFunction<static_cast<Eigen::StorageOptions>(ObjectiveFunctionType_::StorageOrder)>
 {
 public:
 	/**
 	 * Constructors and destructor
 	 */
 	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, bool explicitly_zero_diagonal = false) :
-		ObjectiveFunction(objective_function_data_provider, "Composite Objective"),
+		DenseObjectiveFunction(objective_function_data_provider, "Composite Objective"),
 		explicitly_zero_diagonal_(explicitly_zero_diagonal)
 	{
 		this->Initialize();
 	}
 
 	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name, bool explicitly_zero_diagonal = false) :
-		ObjectiveFunction(objective_function_data_provider, name),
+		DenseObjectiveFunction(objective_function_data_provider, name),
 		explicitly_zero_diagonal_(explicitly_zero_diagonal)
 	{
 		this->Initialize();
 	}
 
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunction<StorageOrder>>>& objective_functions, const std::string& name, bool explicitly_zero_diagonal = false) :
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, bool explicitly_zero_diagonal = false) :
 		CompositeObjective(objective_function_data_provider, name, explicitly_zero_diagonal)
 	{
 		AddObjectiveFunctions(objective_functions);
 	}
 
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction<StorageOrder>> objective_function, const std::string& name, bool explicitly_zero_diagonal = false) :
-		CompositeObjective(objective_function_data_provider, std::vector<std::shared_ptr<ObjectiveFunction<StorageOrder>>>{ objective_function }, name, explicitly_zero_diagonal)
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, bool explicitly_zero_diagonal = false) :
+		CompositeObjective(objective_function_data_provider, std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, explicitly_zero_diagonal)
 	{
 
 	}
 
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunction<StorageOrder>>>& objective_functions, bool explicitly_zero_diagonal = false) :
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, bool explicitly_zero_diagonal = false) :
 		CompositeObjective(objective_function_data_provider, objective_functions, "Composite Objective", explicitly_zero_diagonal)
 	{
 
 	}
 
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunction<StorageOrder>> objective_function, bool explicitly_zero_diagonal = false) :
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, bool explicitly_zero_diagonal = false) :
 		CompositeObjective(objective_function_data_provider, objective_function, "Composite Objective", explicitly_zero_diagonal)
 	{
 
@@ -62,13 +62,13 @@ public:
 	/**
 	 * Public Methods
 	 */
-	void AddObjectiveFunction(const std::shared_ptr<ObjectiveFunction<StorageOrder>>& objective_function)
+	void AddObjectiveFunction(const std::shared_ptr<ObjectiveFunctionType_>& objective_function)
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		objective_functions_.push_back(objective_function);
 	}
 
-	void AddObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunction<StorageOrder>>>& objective_functions)
+	void AddObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions)
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		for (auto& objective_function : objective_functions)
@@ -77,13 +77,13 @@ public:
 		}
 	}
 
-	void RemoveObjectiveFunction(const std::shared_ptr<ObjectiveFunction<StorageOrder>>& objective_function)
+	void RemoveObjectiveFunction(const std::shared_ptr<ObjectiveFunctionType_>& objective_function)
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		objective_functions_.erase(std::remove(objective_functions_.begin(), objective_functions_.end(), objective_function), objective_functions_.end());
 	}
 
-	void RemoveObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunction<StorageOrder>>>& objective_functions)
+	void RemoveObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions)
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		for (const auto& objective_function : objective_functions)
@@ -98,7 +98,7 @@ public:
 		return objective_functions_.size();
 	}
 
-	const std::shared_ptr<ObjectiveFunction<StorageOrder>> GetObjectiveFunction(std::uint32_t index) const
+	const std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(std::uint32_t index) const
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		if (index < objective_functions_.size())
@@ -109,12 +109,12 @@ public:
 		return nullptr;
 	}
 
-	const std::shared_ptr<ObjectiveFunction<StorageOrder>> GetObjectiveFunction(const std::string& name) const
+	const std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(const std::string& name) const
 	{
 		std::lock_guard<std::mutex> lock(m_);
-		for(auto& objective_function : objective_functions_)
+		for (auto& objective_function : objective_functions_)
 		{
-			if(!objective_function->GetName().compare(name))
+			if (!objective_function->GetName().compare(name))
 			{
 				return objective_function;
 			}
@@ -143,24 +143,28 @@ private:
 
 	void CalculateGradient(Eigen::VectorXd& g) override
 	{
-		g.setZero();
+		typename ObjectiveFunctionType_::GradientType g_local(g.size());
+		g_local.setZero();
+
 		for (const auto& objective_function : objective_functions_)
 		{
 			auto w = objective_function->GetWeight();
 			if (w != 0)
 			{
-				g += w * objective_function->GetGradient();
+				g_local += w * objective_function->GetGradient();
 			}
 		}
+
+		g = std::move(g_local);
 	}
 
-	void CalculateHessian(Eigen::SparseMatrix<double, StorageOrder>& H) override
+	void CalculateHessian(Eigen::SparseMatrix<double, ObjectiveFunctionType_::StorageOrder>& H) override
 	{
 		H.setZero();
 
-		if(explicitly_zero_diagonal_)
+		if (explicitly_zero_diagonal_)
 		{
-			for(int64_t i = 0; i < this->variables_count_; i++)
+			for (int64_t i = 0; i < this->variables_count_; i++)
 			{
 				H.coeffRef(i, i) = 0;
 			}
@@ -191,11 +195,11 @@ private:
 			objective_function->Update(x);
 		}
 	}
-	
+
 	/**
 	 * Fields
 	 */
-	std::vector<std::shared_ptr<ObjectiveFunction<StorageOrder>>> objective_functions_;
+	std::vector<std::shared_ptr<ObjectiveFunctionType_>> objective_functions_;
 	bool explicitly_zero_diagonal_;
 };
 

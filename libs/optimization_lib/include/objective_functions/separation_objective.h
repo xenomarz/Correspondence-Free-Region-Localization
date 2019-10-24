@@ -8,8 +8,8 @@
 // Optimization lib includes
 #include "./concrete_objective.h"
 
-template<Eigen::StorageOptions StorageOrder>
-class Separation : public ConcreteObjective<StorageOrder>
+template<Eigen::StorageOptions StorageOrder_>
+class Separation : public ConcreteObjective<DenseObjectiveFunction<StorageOrder_>>
 {
 public:
 	/**
@@ -17,14 +17,14 @@ public:
 	 */
 	enum class Properties : uint32_t
 	{
-		Delta = ObjectiveFunction<StorageOrder>::Properties::Count_
+		Delta = DenseObjectiveFunction<StorageOrder_>::Properties::Count_
 	};
 	
 	/**
 	 * Constructors and destructor
 	 */
 	Separation(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider) :
-		ConcreteObjective<StorageOrder>(objective_function_data_provider, "Separation")
+		ConcreteObjective<DenseObjectiveFunction<StorageOrder_>>(objective_function_data_provider, "Separation")
 	{
 		this->Initialize();
 	}
@@ -44,7 +44,7 @@ public:
 
 	bool SetProperty(const uint32_t property_id, const std::any& property_value) override
 	{
-		if(ObjectiveFunction<StorageOrder>::SetProperty(property_id, property_value))
+		if(DenseObjectiveFunction<StorageOrder_>::SetProperty(property_id, property_value))
 		{
 			return true;
 		}
@@ -70,7 +70,7 @@ public:
 
 	bool GetProperty(const uint32_t property_id, std::any& property_value) override
 	{
-		if (ObjectiveFunction<StorageOrder>::GetProperty(property_id, property_value))
+		if (DenseObjectiveFunction<StorageOrder_>::GetProperty(property_id, property_value))
 		{
 			return true;
 		}

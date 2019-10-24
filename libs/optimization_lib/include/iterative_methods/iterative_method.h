@@ -20,14 +20,15 @@
 //#include <tbb/concurrent_vector.h>
 
 // Optimization lib includes
-#include "../objective_functions/objective_function.h"
+#include "../objective_functions/dense_objective_function.h"
+//#include "../objective_functions/objective_function.h"
 
 // https://en.wikipedia.org/wiki/Iterative_method
-template <Eigen::StorageOptions StorageOrder>
+template <Eigen::StorageOptions StorageOrder_>
 class IterativeMethod
 {
 public:
-	IterativeMethod(std::shared_ptr<ObjectiveFunction<StorageOrder>> objective_function, const Eigen::VectorXd& x0) :
+	IterativeMethod(std::shared_ptr<DenseObjectiveFunction<StorageOrder_>> objective_function, const Eigen::VectorXd& x0) :
 		objective_function_(objective_function),
 		x_(x0),
 		p_(Eigen::VectorXd::Zero(x0.size())),
@@ -44,7 +45,7 @@ public:
 		Terminate();
 	}
 
-	const std::shared_ptr<ObjectiveFunction<StorageOrder>> GetObjectiveFunction() const
+	const std::shared_ptr<DenseObjectiveFunction<StorageOrder_>> GetObjectiveFunction() const
 	{
 		return objective_function_;
 	}
@@ -69,7 +70,7 @@ public:
 					}
 					lock.unlock();
 
-					objective_function_->Update(x_, ObjectiveFunction<StorageOrder>::UpdateOptions::GRADIENT | ObjectiveFunction<StorageOrder>::UpdateOptions::HESSIAN);
+					objective_function_->Update(x_, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::GRADIENT | DenseObjectiveFunction<StorageOrder_>::UpdateOptions::HESSIAN);
 					ComputeDescentDirection(p_);
 					LineSearch(p_);
 				}
@@ -187,7 +188,7 @@ private:
 		while (current_iteration < max_backtracking_iterations_)
 		{
 			current_x = x_ + step_size * p;
-			objective_function_->Update(current_x, ObjectiveFunction<StorageOrder>::UpdateOptions::VALUE);
+			objective_function_->Update(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::VALUE);
 			updated_value = objective_function_->GetValue();
 
 			if (updated_value >= current_value)
@@ -218,7 +219,7 @@ private:
 	mutable std::mutex x_mutex_;
 
 	// Objective function
-	std::shared_ptr<ObjectiveFunction<StorageOrder>> objective_function_;
+	std::shared_ptr<DenseObjectiveFunction<StorageOrder_>> objective_function_;
 
 	// Line search
 	const long max_backtracking_iterations_;

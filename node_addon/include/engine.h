@@ -229,8 +229,8 @@ private:
 	 */
 	std::unordered_map<Eigen::VectorXi, std::shared_ptr<PositionObjective<Eigen::StorageOptions::RowMajor>>, Utils::VectorHash, Utils::VectorEquals> indices_2_position_objective_map;
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
-	std::shared_ptr<CompositeObjective<Eigen::StorageOptions::RowMajor>> composite_objective_;
-	std::shared_ptr<CompositeObjective<Eigen::StorageOptions::RowMajor>> position_;
+	std::shared_ptr<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> composite_objective_;
+	std::shared_ptr<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> position_;
 	std::shared_ptr<Separation<Eigen::StorageOptions::RowMajor>> separation_;
 	std::shared_ptr<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>> symmetric_dirichlet_;
 	std::unique_ptr<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>> newton_method_;

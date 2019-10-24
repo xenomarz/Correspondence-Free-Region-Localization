@@ -11,8 +11,8 @@
 // Optimization lib includes
 #include "./concrete_objective.h"
 
-template <Eigen::StorageOptions StorageOrder>
-class PositionObjective : public ConcreteObjective<StorageOrder>
+template <Eigen::StorageOptions StorageOrder_>
+class PositionObjective : public ConcreteObjective<DenseObjectiveFunction<StorageOrder_>>
 {
 public:
 	/**

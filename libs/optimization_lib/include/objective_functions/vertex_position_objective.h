@@ -11,8 +11,8 @@
 // Optimization lib includes
 #include "./position_objective.h"
 
-template<Eigen::StorageOptions StorageOrder>
-class VertexPositionObjective : public PositionObjective<StorageOrder>
+template<Eigen::StorageOptions StorageOrder_>
+class VertexPositionObjective : public PositionObjective<StorageOrder_>
 {
 public:
 	/**

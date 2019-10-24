@@ -16,8 +16,8 @@
 #include "./concrete_objective.h"
 #include "../utils/utils.h"
 
-template<Eigen::StorageOptions StorageOrder>
-class SymmetricDirichlet : public ConcreteObjective<StorageOrder>
+template<Eigen::StorageOptions StorageOrder_>
+class SymmetricDirichlet : public ConcreteObjective<DenseObjectiveFunction<StorageOrder_>>
 {
 public:
 
@@ -25,7 +25,7 @@ public:
 	 * Constructors and destructor
 	 */
 	SymmetricDirichlet(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider)
-		: ConcreteObjective<StorageOrder>(objective_function_data_provider, "Symmetric Dirichlet")
+		: ConcreteObjective<DenseObjectiveFunction<StorageOrder_>>(objective_function_data_provider, "Symmetric Dirichlet")
 	{
 		this->Initialize();
 	}

@@ -16,13 +16,20 @@
 // Optimization Lib Includes
 #include "../utils/objective_function_data_provider.h"
 
-template<Eigen::StorageOptions StorageOrder>
+template<Eigen::StorageOptions StorageOrder_, typename GradientType_>
 class ObjectiveFunction
 {
 public:
 	/**
 	 * Public type definitions
 	 */
+	using GradientType = GradientType_;
+	
+	enum TemplateSettings
+	{
+		StorageOrder = StorageOrder_
+	};
+	
 	enum class UpdateOptions : uint32_t
 	{
 		NONE = 0,
@@ -81,13 +88,13 @@ public:
 		return f_per_vertex_;
 	}
 
-	const Eigen::VectorXd& GetGradient() const
+	const GradientType_& GetGradient() const
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		return g_;
 	}
 
-	const Eigen::SparseMatrix<double, StorageOrder>& GetHessian() const
+	const Eigen::SparseMatrix<double, StorageOrder_>& GetHessian() const
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		return H_;
@@ -256,25 +263,25 @@ private:
 	void InitializeValue(double& f, Eigen::VectorXd& f_per_vertex)
 	{
 		f = 0;
-		f_per_vertex.conservativeResize(image_vertices_count_);
+		f_per_vertex.resize(image_vertices_count_);
 		f_per_vertex.setZero();
 	}
 
-	void InitializeGradient(Eigen::VectorXd& g)
+	void InitializeGradient(GradientType_& g)
 	{
-		g.conservativeResize(variables_count_);
+		g.resize(variables_count_);
 		g.setZero();
 	}
 
-	void InitializeHessian(Eigen::SparseMatrix<double, StorageOrder>& H)
+	void InitializeHessian(Eigen::SparseMatrix<double, StorageOrder_>& H)
 	{
 		H.resize(variables_count_, variables_count_);
 	}
 
 	// Value, gradient and hessian calculation functions
 	virtual void CalculateValue(double& f, Eigen::VectorXd& f_per_vertex) = 0;
-	virtual void CalculateGradient(Eigen::VectorXd& g) = 0;
-	virtual void CalculateHessian(Eigen::SparseMatrix<double, StorageOrder>& H) = 0;
+	virtual void CalculateGradient(GradientType_& g) = 0;
+	virtual void CalculateHessian(Eigen::SparseMatrix<double, StorageOrder_>& H) = 0;
 
 	/**
 	 * Private fields
@@ -285,10 +292,10 @@ private:
 	Eigen::VectorXd f_per_vertex_;
 
 	// Gradient
-	Eigen::VectorXd g_;
+	GradientType_ g_;
 
 	// Hessian
-	Eigen::SparseMatrix<double, StorageOrder> H_;
+	Eigen::SparseMatrix<double, StorageOrder_> H_;
 
 	// Weight
 	std::atomic<double> w_;
@@ -298,9 +305,14 @@ private:
 };
 
 // http://blog.bitwigglers.org/using-enum-classes-as-type-safe-bitmasks/
-ObjectiveFunction<Eigen::StorageOptions::RowMajor>::UpdateOptions operator | (const ObjectiveFunction<Eigen::StorageOptions::RowMajor>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor>::UpdateOptions& operator |= (ObjectiveFunction<Eigen::StorageOptions::RowMajor>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor>::UpdateOptions operator & (const ObjectiveFunction<Eigen::StorageOptions::RowMajor>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor>::UpdateOptions& operator &= (ObjectiveFunction<Eigen::StorageOptions::RowMajor>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor>::UpdateOptions rhs);
+ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions operator | (const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions rhs);
+ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions& operator |= (ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions rhs);
+ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions operator & (const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions rhs);
+ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions& operator &= (ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions rhs);
+
+ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions operator | (const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions rhs);
+ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions& operator |= (ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions rhs);
+ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions operator & (const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions rhs);
+ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions& operator &= (ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions rhs);
 
 #endif

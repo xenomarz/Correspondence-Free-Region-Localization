@@ -7,17 +7,17 @@
 #include <vector>
 
 // Optimization lib includes
-#include "./objective_function.h"
+#include "./dense_objective_function.h"
 
-template<Eigen::StorageOptions StorageOrder>
-class ConcreteObjective : public ObjectiveFunction<StorageOrder>
+template<typename ObjectiveFunctionType_>
+class ConcreteObjective : public ObjectiveFunctionType_
 {
 public:
 	/**
 	 * Constructors and destructor
 	 */
 	ConcreteObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name) :
-		ObjectiveFunction(objective_function_data_provider, name)
+		DenseObjectiveFunction(objective_function_data_provider, name)
 	{
 
 	}
@@ -27,7 +27,7 @@ private:
 	/**
 	 * Private overrides
 	 */
-	void CalculateHessian(Eigen::SparseMatrix<double, StorageOrder>& H) override
+	void CalculateHessian(Eigen::SparseMatrix<double, ObjectiveFunctionType_::StorageOrder>& H) override
 	{
 		CalculateTriplets(triplets_);
 		H.setFromTriplets(triplets_.begin(), triplets_.end());

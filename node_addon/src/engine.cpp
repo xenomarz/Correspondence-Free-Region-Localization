@@ -9,6 +9,7 @@
 // Optimization lib includes
 #include "../include/engine.h"
 #include "libs/optimization_lib/include/objective_functions/objective_function.h"
+#include "libs/optimization_lib/include/objective_functions/dense_objective_function.h"
 #include "libs/optimization_lib/include/objective_functions/barycenter_position_objective.h"
 #include "libs/optimization_lib/include/objective_functions/vertex_position_objective.h"
 
@@ -59,24 +60,24 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	Napi::ObjectWrap<Engine>(info),
 	mesh_wrapper_(std::make_shared<MeshWrapper>())
 {
-	properties_map_.insert({ "value", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Value) });
-	properties_map_.insert({ "value_per_vertex", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::ValuePerVertex) });
-	properties_map_.insert({ "gradient", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Gradient) });
-	properties_map_.insert({ "gradient_norm", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::GradientNorm) });
-	properties_map_.insert({ "hessian", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Hessian) });
-	properties_map_.insert({ "weight", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Weight) });
-	properties_map_.insert({ "name", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Name) });
+	properties_map_.insert({ "value", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Value) });
+	properties_map_.insert({ "value_per_vertex", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::ValuePerVertex) });
+	properties_map_.insert({ "gradient", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Gradient) });
+	properties_map_.insert({ "gradient_norm", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::GradientNorm) });
+	properties_map_.insert({ "hessian", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Hessian) });
+	properties_map_.insert({ "weight", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Weight) });
+	properties_map_.insert({ "name", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Name) });
 	properties_map_.insert({ "delta", static_cast<uint32_t>(Separation<Eigen::StorageOptions::RowMajor>::Properties::Delta) });
 
 	// TODO: Expose interface for addition and removal of objective function
 	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
 	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
-  	position_ = std::make_shared<CompositeObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, std::string("Position"));
-	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor>>> objective_functions;
+  	position_ = std::make_shared<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, std::string("Position"));
+	std::vector<std::shared_ptr<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> objective_functions;
 	objective_functions.push_back(position_);
 	objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
-	composite_objective_ = std::make_shared<CompositeObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, objective_functions, true);
+	composite_objective_ = std::make_shared<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, objective_functions, true);
 	mesh_wrapper_->RegisterModelLoadedCallback([&]() {
 		/**
 		 * Initialize objective functions
