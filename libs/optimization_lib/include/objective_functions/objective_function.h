@@ -247,11 +247,11 @@ protected:
 	mutable std::mutex m_;
 
 	// Elements count
-	Eigen::DenseIndex domain_faces_count_;
-	Eigen::DenseIndex domain_vertices_count_;
-	Eigen::DenseIndex image_faces_count_;
-	Eigen::DenseIndex image_vertices_count_;
-	Eigen::DenseIndex variables_count_;
+	uint64_t domain_faces_count_;
+	uint64_t domain_vertices_count_;
+	uint64_t image_faces_count_;
+	uint64_t image_vertices_count_;
+	uint64_t variables_count_;
 
 private:
 

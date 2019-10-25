@@ -132,7 +132,7 @@ protected:
 	 */
 	virtual void CalculateValueInner(double& f) = 0;
 	virtual void CalculateGradientInner(GradientType_& g) = 0;
-	virtual void CalculateHessianInner(Eigen::SparseMatrix<double, StorageOrder_>& H) = 0;
+	virtual void CalculateTripletsInner(std::vector<Eigen::Triplet<double>>& triplets) = 0;
 
 	/**
 	 * Value, gradient and hessian calculation functions for outer function
@@ -147,7 +147,7 @@ protected:
 		g = polynomial_first_derivative_ * g;
 	}
 	
-	void CalculateHessianOuter(Eigen::SparseMatrix<double, StorageOrder_>& H)
+	void CalculateTripletsOuter(std::vector<Eigen::Triplet<double>>& triplets)
 	{
 		
 	}
@@ -169,13 +169,13 @@ private:
 		CalculateGradientInner(g);
 		CalculateGradientOuter(g);
 	}
-	
-	void CalculateHessian(Eigen::SparseMatrix<double, StorageOrder_>& H) override
-	{
-		CalculateHessianInner(H);
-		CalculateHessianOuter(H);
-	}
 
+	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
+	{
+		CalculateTripletsInner(triplets);
+		CalculateTripletsOuter(triplets);
+	}
+	
 	/**
 	 * Private methods
 	 */
