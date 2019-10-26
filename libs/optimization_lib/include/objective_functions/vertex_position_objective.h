@@ -46,7 +46,7 @@ private:
 	 * Overrides
 	 */
 
-	void CalculateValue(double& f, Eigen::VectorXd& f_per_vertex) override
+	void CalculateValue(double& f) override
 	{
 		f = X_diff_.squaredNorm();
 	}

@@ -91,13 +91,22 @@ private:
 	/**
 	 * Overrides
 	 */
-	void CalculateValue(double& f, Eigen::VectorXd& f_per_vertex) override
+	void CalculateValue(double& f) override
 	{
 		EsepP = Esep * X;
 		EsepP_squared_rowwise_sum = EsepP.array().pow(2.0).rowwise().sum();
 		EsepP_squared_rowwise_sum_plus_delta = EsepP_squared_rowwise_sum.array() + delta_;
 		f_per_pair = EsepP_squared_rowwise_sum.cwiseQuotient(EsepP_squared_rowwise_sum_plus_delta);
 
+		// add edge length factor
+		f_per_pair = f_per_pair.cwiseProduct(edge_lenghts_per_pair);
+
+		// sum everything up
+		f = f_per_pair.sum();
+	}
+
+	void CalculateValuePerVertex(Eigen::VectorXd& f_per_vertex) override
+	{
 		f_per_vertex.setZero();
 		int64_t vertex1_index;
 		int64_t vertex2_index;
@@ -113,12 +122,6 @@ private:
 			f_per_vertex.coeffRef(vertex1_index) += EsepP_squared_rowwise_sum[i];
 			f_per_vertex.coeffRef(vertex2_index) += EsepP_squared_rowwise_sum[i];
 		}
-
-		// add edge length factor
-		f_per_pair = f_per_pair.cwiseProduct(edge_lenghts_per_pair);
-
-		// sum everything up
-		f = f_per_pair.sum();
 	}
 	
 	void CalculateGradient(Eigen::VectorXd& g) override

@@ -128,7 +128,7 @@ private:
 	/**
 	 * Private overrides
 	 */
-	void CalculateValue(double& f, Eigen::VectorXd& f_per_vertex) override
+	void CalculateValue(double& f) override
 	{
 		f = 0;
 		for (const const auto& objective_function : objective_functions_)

@@ -195,7 +195,8 @@ public:
 
 		if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
 		{
-			CalculateValue(f_, f_per_vertex_);
+			CalculateValue(f_);
+			CalculateValuePerVertex(f_per_vertex_);
 		}
 
 		if ((update_options & UpdateOptions::GRADIENT) != UpdateOptions::NONE)
@@ -279,7 +280,13 @@ private:
 	}
 
 	// Value, gradient and hessian calculation functions
-	virtual void CalculateValue(double& f, Eigen::VectorXd& f_per_vertex) = 0;
+	virtual void CalculateValue(double& f) = 0;
+	
+	virtual void CalculateValuePerVertex(Eigen::VectorXd& f_per_vertex)
+	{
+		// Empty implementation
+	}
+	
 	virtual void CalculateGradient(GradientType_& g) = 0;
 	virtual void CalculateHessian(Eigen::SparseMatrix<double, StorageOrder_>& H) = 0;
 

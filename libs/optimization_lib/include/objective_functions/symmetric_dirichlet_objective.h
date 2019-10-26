@@ -40,7 +40,7 @@ private:
 	/**
 	 * Overrides
 	 */
-	void CalculateValue(double& f, Eigen::VectorXd& f_per_vertex) override
+	void CalculateValue(double& f) override
 	{
 		bool inversions_exist = UpdateJ(X);
 

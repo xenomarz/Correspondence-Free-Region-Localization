@@ -149,9 +149,14 @@ protected:
 	
 	void CalculateTripletsOuter(std::vector<Eigen::Triplet<double>>& triplets)
 	{
-		
+		auto g = this->GetGradient();
+		const auto triplets_count = triplets.size();
+		for(std::size_t i = 0; i < triplets_count; i++)
+		{
+			auto& value = const_cast<double&>(triplets[i].value());
+			value = (polynomial_first_derivative_ * value) + (polynomial_second_derivative_ * g.coeffRef(triplets[i].row()) * g.coeffRef(triplets[i].col()));
+		}
 	}
-
 
 private:
 	/**

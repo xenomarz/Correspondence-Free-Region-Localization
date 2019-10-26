@@ -52,7 +52,7 @@ private:
 	/**
 	 * Private overrides
 	 */
-	void CalculateValue(double& f, Eigen::VectorXd& f_per_vertex) override
+	void CalculateValue(double& f) override
 	{
 		f = barycenters_diff_.squaredNorm();
 	}
