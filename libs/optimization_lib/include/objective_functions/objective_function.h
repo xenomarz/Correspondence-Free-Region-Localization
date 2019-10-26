@@ -16,14 +16,14 @@
 // Optimization Lib Includes
 #include "../utils/objective_function_data_provider.h"
 
-template<Eigen::StorageOptions StorageOrder_, typename GradientType_>
+template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
 class ObjectiveFunction
 {
 public:
 	/**
 	 * Public type definitions
 	 */
-	using GradientType = GradientType_;
+	using GradientType = VectorType_;
 	
 	enum TemplateSettings
 	{
@@ -82,13 +82,13 @@ public:
 		return f_;
 	}
 
-	const Eigen::VectorXd& GetValuePerVertex() const
+	const VectorType_& GetValuePerVertex() const
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		return f_per_vertex_;
 	}
 
-	const GradientType_& GetGradient() const
+	const VectorType_& GetGradient() const
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		return g_;
@@ -181,7 +181,8 @@ public:
 		variables_count_ = 2 * image_vertices_count_;
 		
 		PreInitialize();
-		InitializeValue(f_, f_per_vertex_);
+		InitializeValue(f_);
+		InitializeValuePerVertex(f_per_vertex_);
 		InitializeGradient(g_);
 		InitializeHessian(H_);
 		PostInitialize();
@@ -261,14 +262,18 @@ private:
 	 */
 
 	 // Value, gradient and hessian initializers
-	void InitializeValue(double& f, Eigen::VectorXd& f_per_vertex)
+	void InitializeValue(double& f)
 	{
 		f = 0;
+	}
+
+	void InitializeValuePerVertex(VectorType_& f_per_vertex)
+	{
 		f_per_vertex.resize(image_vertices_count_);
 		f_per_vertex.setZero();
 	}
 
-	void InitializeGradient(GradientType_& g)
+	void InitializeGradient(VectorType_& g)
 	{
 		g.resize(variables_count_);
 		g.setZero();
@@ -282,12 +287,12 @@ private:
 	// Value, gradient and hessian calculation functions
 	virtual void CalculateValue(double& f) = 0;
 	
-	virtual void CalculateValuePerVertex(Eigen::VectorXd& f_per_vertex)
+	virtual void CalculateValuePerVertex(VectorType_& f_per_vertex)
 	{
 		// Empty implementation
 	}
 	
-	virtual void CalculateGradient(GradientType_& g) = 0;
+	virtual void CalculateGradient(VectorType_& g) = 0;
 	virtual void CalculateHessian(Eigen::SparseMatrix<double, StorageOrder_>& H) = 0;
 
 	/**
@@ -296,10 +301,10 @@ private:
 
 	// Value
 	double f_;
-	Eigen::VectorXd f_per_vertex_;
+	VectorType_ f_per_vertex_;
 
 	// Gradient
-	GradientType_ g_;
+	VectorType_ g_;
 
 	// Hessian
 	Eigen::SparseMatrix<double, StorageOrder_> H_;

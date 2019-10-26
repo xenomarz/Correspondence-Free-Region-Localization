@@ -282,6 +282,18 @@ private:
 	};
 
 	/**
+	 * Private overrides
+	 */
+	void CalculateValuePerVertex(Eigen::SparseVector<double>& f_per_vertex) override
+	{
+		double value = this->GetValue();
+		f_per_vertex(edge1_indices_.first) += value;
+		f_per_vertex(edge1_indices_.second) += value;
+		f_per_vertex(edge2_indices_.first) += value;
+		f_per_vertex(edge2_indices_.second) += value;
+	}
+	
+	/**
 	 * Private methods
 	 */
 	double CalculateFirstPartialDerivative(const Partial partial)

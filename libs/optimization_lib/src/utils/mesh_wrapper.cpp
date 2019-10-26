@@ -332,19 +332,42 @@ void MeshWrapper::ComputeCorrespondingPairs()
 			int64_t e2_v2_index_dom = v_im_2_v_dom_.at(e2_v2_index_im);
 
 			// Sort the four image vertex-indices according to their corresponding domain vertex-index
-			std::unordered_map<int64_t, std::vector<int64_t>> dom_v_index_2_im_v_indices;
-			dom_v_index_2_im_v_indices[e1_v1_index_dom].push_back(e1_v1_index_im);
-			dom_v_index_2_im_v_indices[e1_v2_index_dom].push_back(e1_v2_index_im);
-			dom_v_index_2_im_v_indices[e2_v1_index_dom].push_back(e2_v1_index_im);
-			dom_v_index_2_im_v_indices[e2_v2_index_dom].push_back(e2_v2_index_im);
+			std::unordered_map<int64_t, std::vector<std::pair<int64_t, int64_t>>> dom_v_index_2_im_v_e_indices;
+			dom_v_index_2_im_v_e_indices[e1_v1_index_dom].push_back(std::make_pair(e1_v1_index_im, edge1_index_im));
+			dom_v_index_2_im_v_e_indices[e1_v2_index_dom].push_back(std::make_pair(e1_v2_index_im, edge1_index_im));
+			dom_v_index_2_im_v_e_indices[e2_v1_index_dom].push_back(std::make_pair(e2_v1_index_im, edge2_index_im));
+			dom_v_index_2_im_v_e_indices[e2_v2_index_dom].push_back(std::make_pair(e2_v2_index_im, edge2_index_im));
+
+			// Get a liat of unique dom vertices indices values
+			std::vector<int64_t> dom_v_indices = { e1_v1_index_dom, e1_v2_index_dom, e2_v1_index_dom, e2_v2_index_dom };
+			const auto it = std::unique(dom_v_indices.begin(), dom_v_indices.end());
+			dom_v_indices.resize(std::distance(dom_v_indices.begin(), it));
+
+			// Sort each bucket of 'dom_v_index_2_im_v_e_indices' according to the image edge index
+			for (auto i = 0; i < dom_v_indices.size(); i++)
+			{
+				std::sort(dom_v_index_2_im_v_e_indices[dom_v_indices[i]].begin(), dom_v_index_2_im_v_e_indices[dom_v_indices[i]].end(), [](std::pair<int64_t, int64_t>& pair1, std::pair<int64_t, int64_t>& pair2) {
+					return pair1.second < pair2.second;
+				});
+			}
 
 			// Record the two corresponding image vertices pairs
-			for (auto& it : dom_v_index_2_im_v_indices)
+			for (auto& it : dom_v_index_2_im_v_e_indices)
 			{
-				std::pair<int64_t, int64_t> cv_pair = std::minmax(it.second[0], it.second[1]);
+				std::pair<int64_t, int64_t> cv_pair = std::minmax(it.second[0].first, it.second[1].first);
 				cv_pairs_.push_back(cv_pair);
 			}
 
+			// Get the vertices indices of the image edges in order. that means that 'e1_v1_index_im_ordered' and 'e2_v1_index_im_ordered' both correspond to the same dom vertex, same for the 'v2' indices.
+			auto e1_v1_index_im_ordered = dom_v_index_2_im_v_e_indices[dom_v_indices[0]][0].first;
+			auto e2_v1_index_im_ordered = dom_v_index_2_im_v_e_indices[dom_v_indices[0]][1].first;
+			auto e1_v2_index_im_ordered = dom_v_index_2_im_v_e_indices[dom_v_indices[1]][0].first;
+			auto e2_v2_index_im_ordered = dom_v_index_2_im_v_e_indices[dom_v_indices[1]][1].first;
+
+			// Record corresponding image edges, expressed using their vertices
+			auto cev_pair = std::make_pair(std::make_pair(e1_v1_index_im_ordered, e1_v2_index_im_ordered), std::make_pair(e2_v1_index_im_ordered, e2_v2_index_im_ordered));
+ 			cev_pairs_.push_back(cev_pair);
+			
 			// Record corresponding image edges pair 
 			std::pair<int64_t, int64_t> ce_pair = std::minmax(edge1_index_im, edge2_index_im);
 			ce_pairs_.push_back(ce_pair);

@@ -164,6 +164,7 @@ private:
 	// Image corresponding pairs
 	std::vector<std::pair<int64_t, int64_t>> cv_pairs_;
 	std::vector<std::pair<int64_t, int64_t>> ce_pairs_;
+	std::vector<std::pair<std::pair<int64_t, int64_t>, std::pair<int64_t, int64_t>>> cev_pairs_;
 	Eigen::SparseMatrix<double> cv_pairs_coefficients_;
 	Eigen::VectorXd cv_pairs_edge_length_;
 
