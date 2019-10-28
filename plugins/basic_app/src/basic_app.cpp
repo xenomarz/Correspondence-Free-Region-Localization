@@ -1011,6 +1011,8 @@ void basic_app::update_texture(MatrixXd& V_uv, const int index) {
 	
 void basic_app::checkGradients()
 {
+	cout << "#V = " << InputModel().V.rows() << " , #F = " << InputModel().F.rows() << endl;
+
 	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
 		cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << endl;
@@ -1022,7 +1024,9 @@ void basic_app::checkGradients()
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
 			VectorXd xxxx; xxxx.resize(2 * InputModel().V.rows());
 			if (!idx++) {
-				xxxx.Ones(2 * InputModel().V.rows() + InputModel().F.rows());
+				xxxx = VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
+				xxxx.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
+				objective->checkGradient(xxxx);
 			}
 			else {
 				objective->checkGradient(Outputs[i].solver->ext_x);

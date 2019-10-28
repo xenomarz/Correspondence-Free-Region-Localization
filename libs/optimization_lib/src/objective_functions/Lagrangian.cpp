@@ -59,7 +59,7 @@ void Lagrangian::updateX(const VectorXd& X)
 double Lagrangian::value(bool update)
 {
 	// L = LSCM - lambda * area
-	VectorXd LSCM = 2 * (d.cwiseAbs2()) + (b + c).cwiseAbs2() + 2 * (a.cwiseAbs2());
+	VectorXd LSCM = 2 * d.cwiseAbs2() + (b + c).cwiseAbs2() + 2 * a.cwiseAbs2();
 	VectorXd areaE = detJ - VectorXd::Ones(F.rows());
 	
 	VectorXd E = LSCM - lambda.cwiseProduct(areaE);
@@ -110,7 +110,7 @@ void Lagrangian::gradient(VectorXd& g)
 		g(F(fi, 1) + V.rows()) += grad(fi, 4);
 		g(F(fi, 2) + V.rows()) += grad(fi, 5);
 		//Update the gradient of lambda
-		g(fi + 2 * V.rows()) += detJ(fi) - 1;
+		g(fi + 2 * V.rows()) += Area(fi)*(1 - detJ(fi));
 	}
 	gradient_norm = g.norm();
 }
@@ -145,7 +145,7 @@ void Lagrangian::hessian()
 bool Lagrangian::update_variables(const VectorXd& X)
 {
 	lambda = X.tail(F.rows());
-	Eigen::Map<const MatrixX2d> x(X.head(2*V.rows()).data(), X.head(2 * V.rows()).size() / 2, 2);
+	Eigen::Map<const MatrixX2d> x(X.head(2*V.rows()).data(), V.rows(), 2);
 
 	for (int i = 0; i < F.rows(); i++)
 	{
