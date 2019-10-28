@@ -21,7 +21,10 @@ public:
 		template <class T1, class T2>
 		std::size_t operator () (const std::pair<T1, T2>& pair) const
 		{
-			auto minmax_pair = std::minmax(pair.first, pair.second);
+			const auto first = static_cast<uint64_t>(pair.first);
+			const auto second = static_cast<uint64_t>(pair.second);
+
+			const auto minmax_pair = std::minmax(first, second);
 			std::size_t seed = 0;
 
 			// https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values/35991300#35991300
@@ -35,8 +38,13 @@ public:
 		template <class T1, class T2>
 		bool operator () (const std::pair<T1, T2>& pair1, const std::pair<T1, T2>& pair2) const
 		{
-			auto minmax_pair1 = std::minmax(pair1.first, pair1.second);
-			auto minmax_pair2 = std::minmax(pair2.first, pair2.second);
+			const auto pair1_first = static_cast<uint64_t>(pair1.first);
+			const auto pair1_second = static_cast<uint64_t>(pair1.second);
+			const auto pair2_first = static_cast<uint64_t>(pair2.first);
+			const auto pair2_second = static_cast<uint64_t>(pair2.second);
+
+			const auto minmax_pair1 = std::minmax(pair1_first, pair1_second);
+			const auto minmax_pair2 = std::minmax(pair2_first, pair2_second);
 			return (minmax_pair1.first == minmax_pair2.first) && (minmax_pair1.second == minmax_pair2.second);
 		}
 	};

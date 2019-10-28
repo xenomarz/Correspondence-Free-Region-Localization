@@ -25,10 +25,16 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	PeriodicObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const double period) :
-		ConcreteObjective(objective_function_data_provider, "Periodic")
+	PeriodicObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name, const double period) :
+		ConcreteObjective(objective_function_data_provider, name)
 	{
 		SetPeriod(period);
+	}
+	
+	PeriodicObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const double period) :
+		PeriodicObjective(objective_function_data_provider, "Periodic", period)
+	{
+
 	}
 
 	virtual ~PeriodicObjective()
@@ -53,10 +59,10 @@ public:
 		hp4_ = hp3_ * hp_;
 		hp5_ = hp4_ * hp_;
 
-		Eigen::Vector4d b;
+		Eigen::VectorXd b(6);
 		b << 0, 0, 1, 0, 0, 0;
 
-		Eigen::Matrix4d A;
+		Eigen::MatrixXd A(6,6);
 		A <<		0,		   0,		   0,			0 ,		  0,	 1,
 					0,		   0,		   0,			0 ,		  1,	 0,
 				 hp5_,		hp4_,		hp3_,		  hp2_,		hp_,	 1,
@@ -65,6 +71,9 @@ public:
 			 5 *  p4_,	4 *  p3_,	3 *  p2_,	  2 *  p_ ,		  1,	 0;
 
 		polynomial_coeffs_ = A.fullPivHouseholderQr().solve(b);
+		polynomial_coeffs_.coeffRef(0) = 0;
+		polynomial_coeffs_.coeffRef(4) = 0;
+		polynomial_coeffs_.coeffRef(5) = 0;
 	}
 
 	bool SetProperty(const uint32_t property_id, const std::any& property_value) override
@@ -90,20 +99,20 @@ public:
 	 */
 	double GetPeriod() const
 	{
-		return period_;
+		return p_;
 	}
 
 	double GetPeriodSquared() const
 	{
-		return period_squared_;
+		return p2_;
 	}
 
 	double GetPeriodTripled() const
 	{
-		return period_tripled_;
+		return p3_;
 	}
 
-	const Eigen::Vector4d& GetPolynomialCoeffs() const
+	const Eigen::VectorXd& GetPolynomialCoeffs() const
 	{
 		return polynomial_coeffs_;
 	}
@@ -131,18 +140,18 @@ protected:
 	 * Value, gradient and hessian calculation functions for inner function
 	 */
 	virtual void CalculateValueInner(double& f) = 0;
-	virtual void CalculateGradientInner(GradientType_& g) = 0;
+	virtual void CalculateGradientInner(Eigen::SparseVector<double>& g) = 0;
 	virtual void CalculateTripletsInner(std::vector<Eigen::Triplet<double>>& triplets) = 0;
 
 	/**
 	 * Value, gradient and hessian calculation functions for outer function
 	 */
-	void CalculateValueOuter(double& f, Eigen::VectorXd& f_per_vertex)
+	void CalculateValueOuter(double& f)
 	{
 		f = polynomial_value_;
 	}
 	
-	void CalculateGradientOuter(GradientType_& g)
+	void CalculateGradientOuter(Eigen::SparseVector<double>& g)
 	{
 		g = polynomial_first_derivative_ * g;
 	}
@@ -162,14 +171,14 @@ private:
 	/**
 	 * Private method overrides
 	 */
-	void CalculateValue(double& f, Eigen::VectorXd& f_per_vertex) override
+	void CalculateValue(double& f) override
 	{
 		CalculateValueInner(f);
 		CalculatePolynomialDerivatives(fmod(f, p_));
-		CalculateValueOuter(f, f_per_vertex);
+		CalculateValueOuter(f);
 	}
 	
-	void CalculateGradient(GradientType_& g) override
+	void CalculateGradient(Eigen::SparseVector<double>& g) override
 	{
 		CalculateGradientInner(g);
 		CalculateGradientOuter(g);
@@ -191,7 +200,7 @@ private:
 		const double f4 = f3 * f;
 		const double f5 = f4 * f;
 		
-		Eigen::Vector4d values;
+		Eigen::VectorXd values(6);
 
 		values << f5, f4, f3, f2, f, 1;
 		polynomial_value_ = values.dot(polynomial_coeffs_);
@@ -219,7 +228,7 @@ private:
 	double p3_;
 	double p4_;
 	double p5_;
-	Eigen::Vector4d polynomial_coeffs_;
+	Eigen::VectorXd polynomial_coeffs_;
 };
 
 #endif

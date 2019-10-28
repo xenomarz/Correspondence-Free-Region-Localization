@@ -8,11 +8,15 @@
 #include <algorithm>
 #include <unordered_map>
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 // Eigen includes
 #include <Eigen/Eigenvalues> 
 
 // Optimization lib includes
 #include "./periodic_objective.h"
+#include "../utils/utils.h"
 
 template<Eigen::StorageOptions StorageOrder_>
 class EdgePairAngleObjective : public PeriodicObjective<StorageOrder_>
@@ -30,7 +34,7 @@ public:
 	 * Constructors and destructor
 	 */
 	EdgePairAngleObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::pair<uint64_t, uint64_t>& edge1_indices, const std::pair<uint64_t, uint64_t>& edge2_indices) :
-		PeriodicObjective(objective_function_data_provider, "Edge Pair Angle Objective"),
+		PeriodicObjective(objective_function_data_provider, "Edge Pair Angle Objective", M_PI / 2),
 		edge1_indices_(edge1_indices),
 		edge2_indices_(edge2_indices)
 	{
@@ -77,7 +81,7 @@ public:
 
 		for(std::size_t i = 0; i < indices_.size(); i++)
 		{
-			partial_to_dense_index_map_.insert({ sparse_index_to_partial_map_(indices_.at(i)), i });
+			partial_to_dense_index_map_.insert({ sparse_index_to_partial_map_[indices_.at(i)], i });
 			dense_index_to_sparse_index_map_.insert({ i, indices_.at(i) });
 		}
 
@@ -127,15 +131,15 @@ protected:
 	 */
 	void CalculateValueInner(double& f) override
 	{
-		f = atan2(edge1_.y(), edge1_.x()) - atan2(edge2_.y(), edge2_.x());
+		f = std::atan2(edge1_y_diff_, edge1_x_diff_) - atan2(edge2_y_diff_, edge2_x_diff_);
 	}
 	
-	void CalculateGradientInner(GradientType_& g) override
+	void CalculateGradientInner(Eigen::SparseVector<double>& g) override
 	{
 		for(int i = 0; i < 8; i++)
 		{
 			Partial partial = static_cast<Partial>(i);
-			g.coeffRef(partial_to_sparse_index_map_(partial)) = CalculateFirstPartialDerivative(partial);
+			g.coeffRef(partial_to_sparse_index_map_[partial]) = CalculateFirstPartialDerivative(partial);
 		}
 	}
 	
@@ -148,7 +152,7 @@ protected:
 			for (auto j = 0; j < 8; j++)
 			{
 				Partial second_partial = static_cast<Partial>(j);
-				H_dense(partial_to_dense_index_map_(first_partial), partial_to_dense_index_map_(second_partial)) = CalculateSecondPartialDerivative(first_partial, second_partial);;
+				H_dense.coeffRef(partial_to_dense_index_map_[first_partial], partial_to_dense_index_map_[second_partial]) = CalculateSecondPartialDerivative(first_partial, second_partial);;
 			}
 		}
 
@@ -206,55 +210,55 @@ protected:
 		double e2_y_to_e2_squared_norm = edge2_y_diff_ / edge2_squared_norm_;
 		double e2_x_to_e2_squared_norm = edge2_x_diff_ / edge2_squared_norm_;
 
-		partial_to_first_derivative_value_map_(Partial::E1_V1_X) = e1_y_to_e1_squared_norm;
-		partial_to_first_derivative_value_map_(Partial::E1_V1_Y) = e1_x_to_e1_squared_norm;
-		partial_to_first_derivative_value_map_(Partial::E1_V2_X) = e1_y_to_e1_squared_norm;
-		partial_to_first_derivative_value_map_(Partial::E1_V2_Y) = e1_x_to_e1_squared_norm;
-		partial_to_first_derivative_value_map_(Partial::E2_V1_X) = e2_y_to_e2_squared_norm;
-		partial_to_first_derivative_value_map_(Partial::E2_V1_Y) = e2_x_to_e2_squared_norm;
-		partial_to_first_derivative_value_map_(Partial::E2_V2_X) = e2_y_to_e2_squared_norm;
-		partial_to_first_derivative_value_map_(Partial::E2_V2_Y) = e2_x_to_e2_squared_norm;
+		partial_to_first_derivative_value_map_[Partial::E1_V1_X] = e1_y_to_e1_squared_norm;
+		partial_to_first_derivative_value_map_[Partial::E1_V1_Y] = e1_x_to_e1_squared_norm;
+		partial_to_first_derivative_value_map_[Partial::E1_V2_X] = e1_y_to_e1_squared_norm;
+		partial_to_first_derivative_value_map_[Partial::E1_V2_Y] = e1_x_to_e1_squared_norm;
+		partial_to_first_derivative_value_map_[Partial::E2_V1_X] = e2_y_to_e2_squared_norm;
+		partial_to_first_derivative_value_map_[Partial::E2_V1_Y] = e2_x_to_e2_squared_norm;
+		partial_to_first_derivative_value_map_[Partial::E2_V2_X] = e2_y_to_e2_squared_norm;
+		partial_to_first_derivative_value_map_[Partial::E2_V2_Y] = e2_x_to_e2_squared_norm;
 
 		double e1_diff_prod_to_quad_norm = (2 * edge1_x_diff_ * edge1_y_diff_) / edge1_quadrupled_norm_;
 		double e2_diff_prod_to_quad_norm = (2 * edge2_x_diff_ * edge2_y_diff_) / edge2_quadrupled_norm_;
 		double e1_squares_diff_prod_to_quad_norm = (edge1_x_diff_squared_ - edge1_y_diff_squared_) / edge1_quadrupled_norm_;
 		double e2_squares_diff_prod_to_quad_norm = (edge2_x_diff_squared_ - edge2_y_diff_squared_) / edge2_quadrupled_norm_;
 
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_X, Partial::E1_V1_X }) = e1_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_X, Partial::E1_V1_Y }) = -e1_squares_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_X, Partial::E1_V2_X }) = -e1_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_X, Partial::E1_V2_Y }) = e1_squares_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_X, Partial::E2_V1_X }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_X, Partial::E2_V1_Y }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_X, Partial::E2_V2_X }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_X, Partial::E2_V2_Y }) = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_X, Partial::E1_V1_X }] = e1_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_X, Partial::E1_V1_Y }] = -e1_squares_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_X, Partial::E1_V2_X }] = -e1_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_X, Partial::E1_V2_Y }] = e1_squares_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_X, Partial::E2_V1_X }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_X, Partial::E2_V1_Y }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_X, Partial::E2_V2_X }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_X, Partial::E2_V2_Y }] = 0;
 
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_Y, Partial::E1_V1_X }) = e1_squares_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_Y, Partial::E1_V1_Y }) = e1_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_Y, Partial::E1_V2_X }) = -e1_squares_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_Y, Partial::E1_V2_Y }) = -e1_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_Y, Partial::E2_V1_X }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_Y, Partial::E2_V1_Y }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_Y, Partial::E2_V2_X }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E1_Y, Partial::E2_V2_Y }) = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_Y, Partial::E1_V1_X }] = e1_squares_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_Y, Partial::E1_V1_Y }] = e1_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_Y, Partial::E1_V2_X }] = -e1_squares_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_Y, Partial::E1_V2_Y }] = -e1_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_Y, Partial::E2_V1_X }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_Y, Partial::E2_V1_Y }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_Y, Partial::E2_V2_X }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E1_Y, Partial::E2_V2_Y }] = 0;
 
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_X, Partial::E1_V1_X }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_X, Partial::E1_V1_Y }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_X, Partial::E1_V2_X }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_X, Partial::E1_V2_Y }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_X, Partial::E2_V1_X }) = e2_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_X, Partial::E2_V1_Y }) = -e2_squares_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_X, Partial::E2_V2_X }) = -e2_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_X, Partial::E2_V2_Y }) = e2_squares_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_X, Partial::E1_V1_X }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_X, Partial::E1_V1_Y }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_X, Partial::E1_V2_X }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_X, Partial::E1_V2_Y }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_X, Partial::E2_V1_X }] = e2_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_X, Partial::E2_V1_Y }] = -e2_squares_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_X, Partial::E2_V2_X }] = -e2_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_X, Partial::E2_V2_Y }] = e2_squares_diff_prod_to_quad_norm;
 
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_Y, Partial::E1_V1_X }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_Y, Partial::E1_V1_Y }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_Y, Partial::E1_V2_X }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_Y, Partial::E1_V2_Y }) = 0;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_Y, Partial::E2_V1_X }) = e2_squares_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_Y, Partial::E2_V1_Y }) = e2_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_Y, Partial::E2_V2_X }) = -e2_squares_diff_prod_to_quad_norm;
-		partial_to_second_derivative_value_map_({ PartialCoordinateType::E2_Y, Partial::E2_V2_Y }) = -e2_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_Y, Partial::E1_V1_X }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_Y, Partial::E1_V1_Y }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_Y, Partial::E1_V2_X }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_Y, Partial::E1_V2_Y }] = 0;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_Y, Partial::E2_V1_X }] = e2_squares_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_Y, Partial::E2_V1_Y }] = e2_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_Y, Partial::E2_V2_X }] = -e2_squares_diff_prod_to_quad_norm;
+		partial_to_second_derivative_value_map_[{ PartialCoordinateType::E2_Y, Partial::E2_V2_Y }] = -e2_diff_prod_to_quad_norm;
 	}
 
 private:
@@ -287,10 +291,10 @@ private:
 	void CalculateValuePerVertex(Eigen::SparseVector<double>& f_per_vertex) override
 	{
 		double value = this->GetValue();
-		f_per_vertex(edge1_indices_.first) += value;
-		f_per_vertex(edge1_indices_.second) += value;
-		f_per_vertex(edge2_indices_.first) += value;
-		f_per_vertex(edge2_indices_.second) += value;
+		f_per_vertex.coeffRef(edge1_indices_.first) += value;
+		f_per_vertex.coeffRef(edge1_indices_.second) += value;
+		f_per_vertex.coeffRef(edge2_indices_.first) += value;
+		f_per_vertex.coeffRef(edge2_indices_.second) += value;
 	}
 	
 	/**
@@ -298,13 +302,13 @@ private:
 	 */
 	double CalculateFirstPartialDerivative(const Partial partial)
 	{
-		return partial_to_first_derivative_sign_map_(partial) * partial_to_first_derivative_value_map_(partial);
+		return partial_to_first_derivative_sign_map_[partial] * partial_to_first_derivative_value_map_[partial];
 	}
 
 	
 	double CalculateSecondPartialDerivative(const Partial first_partial, const Partial second_partial)
 	{
-		return partial_to_first_derivative_sign_map_(first_partial) * partial_to_second_derivative_value_map_(partial_to_partial_coordinate_type_(first_partial), second_partial);
+		return partial_to_first_derivative_sign_map_[first_partial] * partial_to_second_derivative_value_map_[{ partial_to_partial_coordinate_type_[first_partial], second_partial }];
 	}
 	
 	/**
@@ -375,7 +379,7 @@ private:
 	std::unordered_map<uint64_t, uint64_t> dense_index_to_sparse_index_map_;
 	std::unordered_map<Partial, double> partial_to_first_derivative_sign_map_;
 	std::unordered_map<Partial, double> partial_to_first_derivative_value_map_;
-	std::unordered_map<std::pair<PartialCoordinateType, Partial>, double> partial_to_second_derivative_value_map_;
+	std::unordered_map<std::pair<PartialCoordinateType, Partial>, double, Utils::PairHash, Utils::PairEquals> partial_to_second_derivative_value_map_;
 };
 
 #endif

@@ -108,8 +108,8 @@ export class AutoquadsSideBar extends SideBar {
                     decrease-key="x"
                     value="${this._seamlessWeight}"
                     min="0"
-                    max="2"
-                    step="0.01"
+                    max="10000"
+                    step="1"
                     label="Seamless Weight"
                     @value-changed="${this._seamlessWeightInputChanged}">
                 </side-bar-parameter-input>

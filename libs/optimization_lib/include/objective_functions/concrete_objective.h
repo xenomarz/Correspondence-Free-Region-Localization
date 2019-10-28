@@ -17,7 +17,7 @@ public:
 	 * Constructors and destructor
 	 */
 	ConcreteObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name) :
-		DenseObjectiveFunction(objective_function_data_provider, name)
+		ObjectiveFunctionType_(objective_function_data_provider, name)
 	{
 
 	}

@@ -366,13 +366,18 @@ export class AutoquadsView extends connect(store)(LitElement) {
     }
 
     set seamlessWeight(value) {
-        const oldValue = this._seamlessWeight;
-        this._seamlessWeight = value;
-        this.requestUpdate('seamlessWeight', oldValue);
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            const oldValue = this._seamlessWeight;
+            this._seamlessWeight = value;
+            this._engine.setObjectiveFunctionProperty('Seamless', 'weight', value);
+            this.requestUpdate('seamlessWeight', oldValue);
+        }
     }
 
     get seamlessWeight() {
-        return this._seamlessWeight;
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            return this._engine.getObjectiveFunctionProperty('Seamless', 'weight');
+        }
     }
     
     set positionWeight(value) {

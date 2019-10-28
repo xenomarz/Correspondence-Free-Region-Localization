@@ -72,16 +72,19 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	// TODO: Expose interface for addition and removal of objective function
 	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
 	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
+	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
   	position_ = std::make_shared<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, std::string("Position"));
 	std::vector<std::shared_ptr<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> objective_functions;
 	objective_functions.push_back(position_);
 	objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
+	objective_functions.push_back(seamless_);
 	composite_objective_ = std::make_shared<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, objective_functions, true);
 	mesh_wrapper_->RegisterModelLoadedCallback([&]() {
 		/**
 		 * Initialize objective functions
 		 */
+		seamless_->AddCorrespondingEdgePairs(mesh_wrapper_->GetCorrespondingEdgeVertices());
 		composite_objective_->Initialize();
 
 		/**
