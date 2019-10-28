@@ -16,45 +16,47 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, bool explicitly_zero_diagonal = false) :
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
 		DenseObjectiveFunction(objective_function_data_provider, "Composite Objective"),
-		explicitly_zero_diagonal_(explicitly_zero_diagonal)
+		explicitly_zero_diagonal_(explicitly_zero_diagonal),
+		parallel_update_(parallel_update)
 	{
 		this->Initialize();
 	}
 
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name, bool explicitly_zero_diagonal = false) :
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
 		DenseObjectiveFunction(objective_function_data_provider, name),
-		explicitly_zero_diagonal_(explicitly_zero_diagonal)
+		explicitly_zero_diagonal_(explicitly_zero_diagonal),
+		parallel_update_(parallel_update)
 	{
 		this->Initialize();
 	}
 
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, bool explicitly_zero_diagonal = false) :
-		CompositeObjective(objective_function_data_provider, name, explicitly_zero_diagonal)
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
+		CompositeObjective(objective_function_data_provider, name, explicitly_zero_diagonal, parallel_update)
 	{
 		AddObjectiveFunctions(objective_functions);
 	}
 
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, bool explicitly_zero_diagonal = false) :
-		CompositeObjective(objective_function_data_provider, std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, explicitly_zero_diagonal)
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
+		CompositeObjective(objective_function_data_provider, std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, explicitly_zero_diagonal, parallel_update)
 	{
 
 	}
 
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, bool explicitly_zero_diagonal = false) :
-		CompositeObjective(objective_function_data_provider, objective_functions, "Composite Objective", explicitly_zero_diagonal)
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
+		CompositeObjective(objective_function_data_provider, objective_functions, "Composite Objective", explicitly_zero_diagonal, parallel_update)
 	{
 
 	}
 
-	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, bool explicitly_zero_diagonal = false) :
-		CompositeObjective(objective_function_data_provider, objective_function, "Composite Objective", explicitly_zero_diagonal)
+	CompositeObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
+		CompositeObjective(objective_function_data_provider, objective_function, "Composite Objective", explicitly_zero_diagonal, parallel_update)
 	{
 
 	}
 
-	~CompositeObjective()
+	virtual ~CompositeObjective()
 	{
 
 	}
@@ -92,13 +94,13 @@ public:
 		}
 	}
 
-	const std::uint32_t GetObjectiveFunctionsCount() const
+	std::uint32_t GetObjectiveFunctionsCount() const
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		return objective_functions_.size();
 	}
 
-	const std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(std::uint32_t index) const
+	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(std::uint32_t index) const
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		if (index < objective_functions_.size())
@@ -109,7 +111,7 @@ public:
 		return nullptr;
 	}
 
-	const std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(const std::string& name) const
+	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(const std::string& name) const
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		for (auto& objective_function : objective_functions_)
@@ -131,7 +133,7 @@ private:
 	void CalculateValue(double& f) override
 	{
 		f = 0;
-		for (const const auto& objective_function : objective_functions_)
+		for (const auto& objective_function : objective_functions_)
 		{
 			auto w = objective_function->GetWeight();
 			if (w != 0)
@@ -190,9 +192,10 @@ private:
 
 	void PreUpdate(const Eigen::VectorXd& x) override
 	{
-		for (const auto& objective_function : objective_functions_)
+		#pragma omp parallel for if(parallel_update_)
+		for(int32_t i = 0; i < objective_functions_.size(); i++)
 		{
-			objective_function->Update(x);
+			objective_functions_[i]->Update(x);
 		}
 	}
 
@@ -201,6 +204,7 @@ private:
 	 */
 	std::vector<std::shared_ptr<ObjectiveFunctionType_>> objective_functions_;
 	bool explicitly_zero_diagonal_;
+	bool parallel_update_;
 };
 
 #endif

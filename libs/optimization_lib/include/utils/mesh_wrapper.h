@@ -38,6 +38,8 @@ public:
 
 	using ModelLoadedCallback = void();
 
+	using EV2EVMap = std::vector<std::pair<std::pair<int64_t, int64_t>, std::pair<int64_t, int64_t>>>;
+
 	/**
 	 * Constructors and destructor
 	 */
@@ -69,6 +71,7 @@ public:
 	const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const override;
 	const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const override;
 	int64_t GetImageVerticesCount() const override;
+	const EV2EVMap& GetCorrespondingEdgeVertices() const;
 
 	/**
 	 * Public methods
@@ -164,7 +167,7 @@ private:
 	// Image corresponding pairs
 	std::vector<std::pair<int64_t, int64_t>> cv_pairs_;
 	std::vector<std::pair<int64_t, int64_t>> ce_pairs_;
-	std::vector<std::pair<std::pair<int64_t, int64_t>, std::pair<int64_t, int64_t>>> cev_pairs_;
+	EV2EVMap cev_pairs_;
 	Eigen::SparseMatrix<double> cv_pairs_coefficients_;
 	Eigen::VectorXd cv_pairs_edge_length_;
 
@@ -179,13 +182,5 @@ private:
 	// Boost signals
 	boost::signals2::signal<ModelLoadedCallback> model_loaded_signal_;
 };
-
-//// https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values/35991300#35991300
-//template <class T>
-//inline void hash_combine(std::size_t& seed, const T& v)
-//{
-//	std::hash<T> hasher;
-//	seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-//}
 
 #endif

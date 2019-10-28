@@ -465,3 +465,8 @@ void MeshWrapper::RegisterModelLoadedCallback(const std::function<ModelLoadedCal
 {
 	model_loaded_signal_.connect(model_loaded_callback);
 }
+
+const MeshWrapper::EV2EVMap& MeshWrapper::GetCorrespondingEdgeVertices() const
+{
+	return cev_pairs_;
+}
