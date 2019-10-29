@@ -158,7 +158,7 @@ protected:
 	
 	void CalculateTripletsOuter(std::vector<Eigen::Triplet<double>>& triplets)
 	{
-		auto g = this->GetGradient();
+		auto g = this->GetGradientInternal();
 		const auto triplets_count = triplets.size();
 		for(std::size_t i = 0; i < triplets_count; i++)
 		{

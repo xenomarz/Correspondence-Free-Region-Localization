@@ -39,85 +39,6 @@ public:
 		edge2_indices_(edge2_indices)
 	{
 		this->Initialize();
-
-		uint64_t edge1_v1_x_index = edge1_indices_.first;
-		uint64_t edge1_v1_y_index = edge1_indices_.first + this->image_vertices_count_;
-		uint64_t edge1_v2_x_index = edge1_indices_.second;
-		uint64_t edge1_v2_y_index = edge1_indices_.second + this->image_vertices_count_;
-
-		uint64_t edge2_v1_x_index = edge2_indices_.first;
-		uint64_t edge2_v1_y_index = edge2_indices_.first + this->image_vertices_count_;
-		uint64_t edge2_v2_x_index = edge2_indices_.second;
-		uint64_t edge2_v2_y_index = edge2_indices_.second + this->image_vertices_count_;
-
-		partial_to_sparse_index_map_.insert({ Partial::E1_V1_X, edge1_v1_x_index });
-		partial_to_sparse_index_map_.insert({ Partial::E1_V1_Y, edge1_v1_y_index });
-		partial_to_sparse_index_map_.insert({ Partial::E1_V2_X, edge1_v2_x_index });
-		partial_to_sparse_index_map_.insert({ Partial::E1_V2_Y, edge1_v2_y_index });
-		partial_to_sparse_index_map_.insert({ Partial::E2_V1_X, edge2_v1_x_index });
-		partial_to_sparse_index_map_.insert({ Partial::E2_V1_Y, edge2_v1_y_index });
-		partial_to_sparse_index_map_.insert({ Partial::E2_V2_X, edge2_v2_x_index });
-		partial_to_sparse_index_map_.insert({ Partial::E2_V2_Y, edge2_v2_y_index });
-
-		sparse_index_to_partial_map_.insert({ edge1_v1_x_index, Partial::E1_V1_X });
-		sparse_index_to_partial_map_.insert({ edge1_v1_y_index, Partial::E1_V1_Y });
-		sparse_index_to_partial_map_.insert({ edge1_v2_x_index, Partial::E1_V2_X });
-		sparse_index_to_partial_map_.insert({ edge1_v2_y_index, Partial::E1_V2_Y });
-		sparse_index_to_partial_map_.insert({ edge2_v1_x_index, Partial::E2_V1_X });
-		sparse_index_to_partial_map_.insert({ edge2_v1_y_index, Partial::E2_V1_Y });
-		sparse_index_to_partial_map_.insert({ edge2_v2_x_index, Partial::E2_V2_X });
-		sparse_index_to_partial_map_.insert({ edge2_v2_y_index, Partial::E2_V2_Y });
-	
-		indices_.resize(8);
-		indices_.push_back(edge1_v1_x_index);
-		indices_.push_back(edge1_v1_y_index);
-		indices_.push_back(edge1_v2_x_index);
-		indices_.push_back(edge1_v2_y_index);
-		indices_.push_back(edge2_v1_x_index);
-		indices_.push_back(edge2_v1_y_index);
-		indices_.push_back(edge2_v2_x_index);
-		indices_.push_back(edge2_v2_y_index);
-		std::sort(indices_.begin(), indices_.end());
-
-		for(std::size_t i = 0; i < indices_.size(); i++)
-		{
-			partial_to_dense_index_map_.insert({ sparse_index_to_partial_map_[indices_.at(i)], i });
-			dense_index_to_sparse_index_map_.insert({ i, indices_.at(i) });
-		}
-
-		partial_to_first_derivative_sign_map_.insert({ Partial::E1_V1_X,  1 });
-		partial_to_first_derivative_sign_map_.insert({ Partial::E1_V1_Y, -1 });
-		partial_to_first_derivative_sign_map_.insert({ Partial::E1_V2_X, -1 });
-		partial_to_first_derivative_sign_map_.insert({ Partial::E1_V2_Y,  1 });
-		partial_to_first_derivative_sign_map_.insert({ Partial::E2_V1_X, -1 });
-		partial_to_first_derivative_sign_map_.insert({ Partial::E2_V1_Y,  1 });
-		partial_to_first_derivative_sign_map_.insert({ Partial::E2_V2_X,  1 });
-		partial_to_first_derivative_sign_map_.insert({ Partial::E2_V2_Y, -1 });
-
-		partial_to_partial_coordinate_type_.insert({ Partial::E1_V1_X, PartialCoordinateType::E1_X });
-		partial_to_partial_coordinate_type_.insert({ Partial::E1_V1_Y, PartialCoordinateType::E1_Y });
-		partial_to_partial_coordinate_type_.insert({ Partial::E1_V2_X, PartialCoordinateType::E1_X });
-		partial_to_partial_coordinate_type_.insert({ Partial::E1_V2_Y, PartialCoordinateType::E1_Y });
-		partial_to_partial_coordinate_type_.insert({ Partial::E2_V1_X, PartialCoordinateType::E2_X });
-		partial_to_partial_coordinate_type_.insert({ Partial::E2_V1_Y, PartialCoordinateType::E2_Y });
-		partial_to_partial_coordinate_type_.insert({ Partial::E2_V2_X, PartialCoordinateType::E2_X });
-		partial_to_partial_coordinate_type_.insert({ Partial::E2_V2_Y, PartialCoordinateType::E2_Y });
-
-		for (int i = 0; i < 8; i++)
-		{
-			auto partial = static_cast<Partial>(i);
-			partial_to_first_derivative_value_map_.insert({ partial, 0 });
-		}
-		
-		for(int i = 0; i < 4; i++)
-		{
-			for (int j = 0; j < 8; j++)
-			{
-				PartialCoordinateType first_partial_type = static_cast<PartialCoordinateType>(i);
-				Partial second_partial = static_cast<Partial>(j);
-				partial_to_second_derivative_value_map_.insert({ std::make_pair(first_partial_type, second_partial), 0 });
-			}
-		}
 	}
 
 	virtual ~EdgePairAngleObjective()
@@ -179,6 +100,94 @@ protected:
 				triplet_index++;
 			}
 		}
+	}
+
+	void PreInitialize() override
+	{
+		PeriodicObjective<StorageOrder_>::PreInitialize();
+		
+		edge1_v1_x_index_ = edge1_indices_.first;
+		edge1_v1_y_index_ = edge1_indices_.first + this->image_vertices_count_;
+		edge1_v2_x_index_ = edge1_indices_.second;
+		edge1_v2_y_index_ = edge1_indices_.second + this->image_vertices_count_;
+
+		edge2_v1_x_index_ = edge2_indices_.first;
+		edge2_v1_y_index_ = edge2_indices_.first + this->image_vertices_count_;
+		edge2_v2_x_index_ = edge2_indices_.second;
+		edge2_v2_y_index_ = edge2_indices_.second + this->image_vertices_count_;
+
+		indices_.push_back(edge1_v1_x_index_);
+		indices_.push_back(edge1_v1_y_index_);
+		indices_.push_back(edge1_v2_x_index_);
+		indices_.push_back(edge1_v2_y_index_);
+		indices_.push_back(edge2_v1_x_index_);
+		indices_.push_back(edge2_v1_y_index_);
+		indices_.push_back(edge2_v2_x_index_);
+		indices_.push_back(edge2_v2_y_index_);
+		std::sort(indices_.begin(), indices_.end());
+	}
+
+	void PostInitialize() override
+	{
+		partial_to_sparse_index_map_.insert({ Partial::E1_V1_X, edge1_v1_x_index_ });
+		partial_to_sparse_index_map_.insert({ Partial::E1_V1_Y, edge1_v1_y_index_ });
+		partial_to_sparse_index_map_.insert({ Partial::E1_V2_X, edge1_v2_x_index_ });
+		partial_to_sparse_index_map_.insert({ Partial::E1_V2_Y, edge1_v2_y_index_ });
+		partial_to_sparse_index_map_.insert({ Partial::E2_V1_X, edge2_v1_x_index_ });
+		partial_to_sparse_index_map_.insert({ Partial::E2_V1_Y, edge2_v1_y_index_ });
+		partial_to_sparse_index_map_.insert({ Partial::E2_V2_X, edge2_v2_x_index_ });
+		partial_to_sparse_index_map_.insert({ Partial::E2_V2_Y, edge2_v2_y_index_ });
+
+		sparse_index_to_partial_map_.insert({ edge1_v1_x_index_, Partial::E1_V1_X });
+		sparse_index_to_partial_map_.insert({ edge1_v1_y_index_, Partial::E1_V1_Y });
+		sparse_index_to_partial_map_.insert({ edge1_v2_x_index_, Partial::E1_V2_X });
+		sparse_index_to_partial_map_.insert({ edge1_v2_y_index_, Partial::E1_V2_Y });
+		sparse_index_to_partial_map_.insert({ edge2_v1_x_index_, Partial::E2_V1_X });
+		sparse_index_to_partial_map_.insert({ edge2_v1_y_index_, Partial::E2_V1_Y });
+		sparse_index_to_partial_map_.insert({ edge2_v2_x_index_, Partial::E2_V2_X });
+		sparse_index_to_partial_map_.insert({ edge2_v2_y_index_, Partial::E2_V2_Y });
+
+		for (std::size_t i = 0; i < indices_.size(); i++)
+		{
+			partial_to_dense_index_map_.insert({ sparse_index_to_partial_map_[indices_.at(i)], i });
+			dense_index_to_sparse_index_map_.insert({ i, indices_.at(i) });
+		}
+
+		partial_to_first_derivative_sign_map_.insert({ Partial::E1_V1_X,  1 });
+		partial_to_first_derivative_sign_map_.insert({ Partial::E1_V1_Y, -1 });
+		partial_to_first_derivative_sign_map_.insert({ Partial::E1_V2_X, -1 });
+		partial_to_first_derivative_sign_map_.insert({ Partial::E1_V2_Y,  1 });
+		partial_to_first_derivative_sign_map_.insert({ Partial::E2_V1_X, -1 });
+		partial_to_first_derivative_sign_map_.insert({ Partial::E2_V1_Y,  1 });
+		partial_to_first_derivative_sign_map_.insert({ Partial::E2_V2_X,  1 });
+		partial_to_first_derivative_sign_map_.insert({ Partial::E2_V2_Y, -1 });
+
+		partial_to_partial_coordinate_type_.insert({ Partial::E1_V1_X, PartialCoordinateType::E1_X });
+		partial_to_partial_coordinate_type_.insert({ Partial::E1_V1_Y, PartialCoordinateType::E1_Y });
+		partial_to_partial_coordinate_type_.insert({ Partial::E1_V2_X, PartialCoordinateType::E1_X });
+		partial_to_partial_coordinate_type_.insert({ Partial::E1_V2_Y, PartialCoordinateType::E1_Y });
+		partial_to_partial_coordinate_type_.insert({ Partial::E2_V1_X, PartialCoordinateType::E2_X });
+		partial_to_partial_coordinate_type_.insert({ Partial::E2_V1_Y, PartialCoordinateType::E2_Y });
+		partial_to_partial_coordinate_type_.insert({ Partial::E2_V2_X, PartialCoordinateType::E2_X });
+		partial_to_partial_coordinate_type_.insert({ Partial::E2_V2_Y, PartialCoordinateType::E2_Y });
+
+		for (int i = 0; i < 8; i++)
+		{
+			auto partial = static_cast<Partial>(i);
+			partial_to_first_derivative_value_map_.insert({ partial, 0 });
+		}
+
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 8; j++)
+			{
+				PartialCoordinateType first_partial_type = static_cast<PartialCoordinateType>(i);
+				Partial second_partial = static_cast<Partial>(j);
+				partial_to_second_derivative_value_map_.insert({ std::make_pair(first_partial_type, second_partial), 0 });
+			}
+		}
+
+		PeriodicObjective<StorageOrder_>::PostInitialize();
 	}
 
 	void PreUpdate(const Eigen::VectorXd& x) override
@@ -290,7 +299,7 @@ private:
 	 */
 	void CalculateValuePerVertex(Eigen::SparseVector<double>& f_per_vertex) override
 	{
-		double value = this->GetValue();
+		double value = this->GetValueInternal();
 		f_per_vertex.coeffRef(edge1_indices_.first) += value;
 		f_per_vertex.coeffRef(edge1_indices_.second) += value;
 		f_per_vertex.coeffRef(edge2_indices_.first) += value;

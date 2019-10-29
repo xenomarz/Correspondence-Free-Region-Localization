@@ -74,7 +74,7 @@ public:
 	}
 
 	/**
-	 * Getters
+	 * Thread-safe getters
 	 */
 	double GetValue() const
 	{
@@ -236,6 +236,39 @@ protected:
 	virtual void PostUpdate(const Eigen::VectorXd& x)
 	{
 		// Empty implementation
+	}
+
+	/**
+	 * Protected Getters
+	 */
+	double GetValueInternal() const
+	{
+		return f_;
+	}
+
+	const VectorType_& GetValuePerVertexInternal() const
+	{
+		return f_per_vertex_;
+	}
+
+	const VectorType_& GetGradientInternal() const
+	{
+		return g_;
+	}
+
+	const Eigen::SparseMatrix<double, StorageOrder_>& GetHessianInternal() const
+	{
+		return H_;
+	}
+
+	double GetWeightInternal() const
+	{
+		return w_;
+	}
+
+	std::string GetNameInternal() const
+	{
+		return name_;
 	}
 
 	/**

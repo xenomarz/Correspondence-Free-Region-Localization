@@ -22,8 +22,16 @@ public:
 
 	}
 
+protected:
+	/**
+	 * Protected overrides
+	 */
+	virtual void PostInitialize() override
+	{
+		InitializeTriplets(triplets_);
+	}
+	
 private:
-
 	/**
 	 * Private overrides
 	 */
@@ -31,11 +39,6 @@ private:
 	{
 		CalculateTriplets(triplets_);
 		H.setFromTriplets(triplets_.begin(), triplets_.end());
-	}
-
-	void PostInitialize() override
-	{
-		InitializeTriplets(triplets_);
 	}
 
 	/**
