@@ -1152,11 +1152,11 @@ void basic_app::initializeSolver(const int index)
 
 	Outputs[index].totalObjective->objectiveList.clear();
 	Outputs[index].totalObjective->objectiveList.push_back(move(lagrange));
-	Outputs[index].totalObjective->objectiveList.push_back(move(areapreservingOneRing));
+	/*Outputs[index].totalObjective->objectiveList.push_back(move(areapreservingOneRing));
 	Outputs[index].totalObjective->objectiveList.push_back(move(areaPreserving));
 	Outputs[index].totalObjective->objectiveList.push_back(move(anglePreserving));
 	Outputs[index].totalObjective->objectiveList.push_back(move(symDirichlet));
-	Outputs[index].totalObjective->objectiveList.push_back(move(constraintsPositional));
+	Outputs[index].totalObjective->objectiveList.push_back(move(constraintsPositional));*/
 	Outputs[index].totalObjective->init();
 
 	// initialize the solver

@@ -120,15 +120,13 @@ void Lagrangian::hessian()
 #pragma omp parallel for num_threads(24)
 	int index2 = 0;
 	for (int i = 0; i < F.rows(); ++i) {
-		double detj_1 = (a(i) * d(i) - b(i) * c(i)) - 1;
-
 		//prepare hessian
 		MatrixXd d2E_dJ2(4, 4);
 		d2E_dJ2 <<
-			d(i)*d(i)			, -c(i)*d(i)			, -b(i)*d(i)		, a(i)*d(i) + detj_1,
-			-c(i)*d(i)			, c(i)*c(i)				, b(i)*c(i) - detj_1, -c(i)*a(i),
-			-b(i)*d(i)			, b(i)*c(i) - detj_1	, b(i)*b(i)			, -b(i)*a(i),
-			a(i)*d(i) + detj_1	, -a(i)*c(i)			, -a(i)*b(i)		, a(i)*a(i);
+			4			, 0				, 0				, -lambda(i),
+			0			, 2				, 2+lambda(i)	, 0			,
+			0			, 2 + lambda(i)	, 2				, 0			,
+			-lambda(i)	, 0				, 0				, 4;
 
 		Hessian[i] = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
 
@@ -140,6 +138,26 @@ void Lagrangian::hessian()
 			}
 		}
 	}
+	cout << "index2 = " << index2 << endl;
+	for (int i = 0; i < F.rows(); ++i) {
+		//prepare hessian
+		Vector4d dE_dJ(
+			-d(i),
+			c(i),
+			b(i),
+			-a(i)
+		);
+		VectorXd hess = Area(i)*(dE_dJ.transpose() * dJ_dX[i]).transpose();
+
+		SS[index2++] = hess[0];
+		SS[index2++] = hess[1];
+		SS[index2++] = hess[2];
+		SS[index2++] = hess[3];
+		SS[index2++] = hess[4];
+		SS[index2++] = hess[5];
+		
+	}
+	cout << "index2 = " << index2 << endl;
 }
 
 bool Lagrangian::update_variables(const VectorXd& X)
@@ -168,11 +186,28 @@ bool Lagrangian::update_variables(const VectorXd& X)
 
 void Lagrangian::init_hessian()
 {
+	cout << "V.rows() = " << V.rows() << < endl;
+	cout << "F.rows() = " << 2 * V.rows() + F.rows() << < endl;
+	cout << "vector size = " << 2 * V.rows() + F.rows() << < endl;
 	II.clear();
 	JJ.clear();
 	auto PushPair = [&](int i, int j) { if (i > j) swap(i, j); II.push_back(i); JJ.push_back(j); };
 	int n = V.rows();
 	for (int i = 0; i < F.rows(); ++i)
 		AddElementToHessian({ F(i, 0), F(i, 1), F(i, 2), F(i, 0) + n, F(i, 1) + n, F(i, 2) + n });
+	cout << "II = " << II.size() << endl;
+	for (int i = 0; i < F.rows(); ++i)
+	{
+		PushPair(i + 2 * n, F(i, 0));
+		PushPair(i + 2 * n, F(i, 1));
+		PushPair(i + 2 * n, F(i, 2));
+		PushPair(i + 2 * n, F(i, 0) + n);
+		PushPair(i + 2 * n, F(i, 1) + n);
+		PushPair(i + 2 * n, F(i, 2) + n);
+	}
+	//we add the indexes of the last element in order to tell the solver the size of the matrix
+	PushPair(2 * n + F.rows() - 1, 2 * n + F.rows() - 1);
+
 	SS = vector<double>(II.size(), 0.);
+	cout << "II = " << II.size() << endl;
 }
