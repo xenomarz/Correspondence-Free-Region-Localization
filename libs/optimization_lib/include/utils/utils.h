@@ -2,12 +2,18 @@
 #ifndef OPTIMIZATION_LIB_UTILS_H
 #define OPTIMIZATION_LIB_UTILS_H
 
+// STL includes
+#include <limits>
+
 // Boost includes
 #include <boost/functional/hash.hpp>
 
 // Eigen includes
 #include <Eigen/Core>
 #include <Eigen/Sparse>
+
+// Optimization lib includes
+#include "../objective_functions/objective_function.h"
 
 class Utils
 {
@@ -222,6 +228,73 @@ public:
 	{
 		auto indices_internal = std::vector<int64_t>(indices.data(), indices.data() + indices.rows());
 		return CalculateBarycenter(indices_internal, X, barycenter);
+	}
+
+	template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
+	static Eigen::VectorXd GetApproximatedGradient(const std::shared_ptr<ObjectiveFunction<StorageOrder_, VectorType_>>& objective_function, const Eigen::VectorXd& x)
+	{
+		Eigen::VectorXd g(x.rows());
+		g.setZero();
+		
+		Eigen::VectorXd perturbation(x.rows());
+
+		const double epsilon = CalculateEpsilon(x);
+		const double epsilon2 = 2 * epsilon;
+		
+		for(uint64_t i = 0; i < x.rows(); i++)
+		{
+			perturbation.setZero();
+			perturbation.coeffRef(i) = epsilon;
+			Eigen::VectorXd x_plus_eps = x + perturbation;
+			Eigen::VectorXd x_minus_eps = x - perturbation;
+
+			objective_function->Update(x_plus_eps);
+			const double value_plus = objective_function->GetValue();
+
+			objective_function->Update(x_minus_eps);
+			const double value_minus = objective_function->GetValue();
+
+			g.coeffRef(i) = (value_plus - value_minus) / epsilon2;
+		}
+
+		return g;
+	}
+
+	template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
+	static Eigen::MatrixXd GetApproximatedHessian(const std::shared_ptr<ObjectiveFunction<StorageOrder_, VectorType_>>& objective_function, const Eigen::VectorXd& x)
+	{
+		Eigen::MatrixXd H(x.rows(), x.rows());
+		H.setZero();
+		
+		Eigen::VectorXd perturbation(x.rows());
+
+		const double epsilon = CalculateEpsilon(x);
+		const double epsilon2 = 2 * epsilon;
+		for (uint64_t i = 0; i < x.rows(); i++)
+		{
+			perturbation.setZero();
+			perturbation.coeffRef(i) = epsilon;
+			Eigen::VectorXd x_plus_eps = x + perturbation;
+			Eigen::VectorXd x_minus_eps = x - perturbation;
+
+			objective_function->Update(x_plus_eps);
+			const Eigen::VectorXd g_plus = objective_function->GetGradient();
+
+			objective_function->Update(x_minus_eps);
+			const Eigen::VectorXd g_minus = objective_function->GetGradient();
+
+			H.col(i) = (g_plus - g_minus) / epsilon2;
+		}
+
+		return H;
+	}
+
+private:
+	static double CalculateEpsilon(const Eigen::VectorXd& x)
+	{
+		const double machine_epsilon = std::numeric_limits<double>::epsilon();
+		const double max = x.cwiseAbs().maxCoeff();
+		return std::cbrt(machine_epsilon) * max;
 	}
 };
 
