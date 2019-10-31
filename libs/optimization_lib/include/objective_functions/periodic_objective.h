@@ -174,7 +174,14 @@ private:
 	void CalculateValue(double& f) override
 	{
 		CalculateValueInner(f);
-		CalculatePolynomialDerivatives(fmod(f, p_));
+
+		double reminder = fmod(f, p_);
+		if (reminder < 0)
+		{
+			reminder = p_ + reminder;
+		}		
+		
+		CalculatePolynomialDerivatives(reminder);
 		CalculateValueOuter(f);
 	}
 	
