@@ -47,3 +47,9 @@ endif()
 
 # Source Tree
 source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${INTERNAL_SOURCES})
+
+# Custom Commands
+add_custom_command(TARGET ${PROJECT_NAME}
+                   POST_BUILD
+                   COMMAND call \"${CMAKE_SOURCE_DIR}/scripts/post_build_optimization_lib_tests.bat\" ARGS \"${CMAKE_SOURCE_DIR}/models\" \"$(ProjectDir)models\\*\"
+                   COMMENT "Copying models folder to optimization_lib_tests build folder")

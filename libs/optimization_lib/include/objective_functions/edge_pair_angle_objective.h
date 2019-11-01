@@ -77,19 +77,19 @@ protected:
 			}
 		}
 
-		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(H_dense);
-		Eigen::MatrixXd D = solver.eigenvalues().asDiagonal();
-		Eigen::MatrixXd V = solver.eigenvectors();
-		for (auto i = 0; i < 8; i++)
-		{
-			auto& value = D.coeffRef(i, i);
-			if (value < 0)
-			{
-				value = 0;
-			}
-		}
+		//Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(H_dense);
+		//Eigen::MatrixXd D = solver.eigenvalues().asDiagonal();
+		//Eigen::MatrixXd V = solver.eigenvectors();
+		//for (auto i = 0; i < 8; i++)
+		//{
+		//	auto& value = D.coeffRef(i, i);
+		//	if (value < 0)
+		//	{
+		//		value = 0;
+		//	}
+		//}
 
-		H_dense = V * D * V.inverse();
+		//H_dense = V * D * V.inverse();
 
 		auto triplet_index = 0;
 		for (auto column = 0; column < 8; column++)
