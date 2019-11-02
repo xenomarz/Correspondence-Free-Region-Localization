@@ -61,7 +61,7 @@ protected:
 		}
 	}
 
-	void AssertHessian() const
+	void AssertHessian(bool symmetric = false) const
 	{
 		objective_function_->Update(x_);
 		Eigen::MatrixXd analytic_H = objective_function_->GetHessian();
@@ -71,7 +71,10 @@ protected:
 		{
 			for (uint64_t col = 0; col < analytic_H.cols(); col++)
 			{
-				AssertComponent(analytic_H.coeffRef(row, col), approx_H.coeffRef(row, col));
+				if((symmetric && col >= row) || !symmetric)
+				{
+					AssertComponent(analytic_H.coeffRef(row, col), approx_H.coeffRef(row, col));
+				}
 			}
 		}
 	}
@@ -110,5 +113,5 @@ TEST_F(EdgePairAngleObjectiveFDTest, Gradient)
 
 TEST_F(EdgePairAngleObjectiveFDTest, Hessian)
 {
-	AssertHessian();
+	AssertHessian(true);
 }

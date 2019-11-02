@@ -33,8 +33,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	EdgePairAngleObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::pair<uint64_t, uint64_t>& edge1_indices, const std::pair<uint64_t, uint64_t>& edge2_indices) :
-		PeriodicObjective(objective_function_data_provider, "Edge Pair Angle Objective", M_PI / 2),
+	EdgePairAngleObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::pair<uint64_t, uint64_t>& edge1_indices, const std::pair<uint64_t, uint64_t>& edge2_indices, bool enforce_psd = true) :
+		PeriodicObjective(objective_function_data_provider, "Edge Pair Angle Objective", M_PI / 2, enforce_psd),
 		edge1_indices_(edge1_indices),
 		edge2_indices_(edge2_indices)
 	{
@@ -67,6 +67,7 @@ protected:
 	void CalculateTripletsInner(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		Eigen::MatrixXd H_dense(8, 8);
+		H_dense.setZero();
 		for (int i = 0; i < 8; i++)
 		{
 			Partial first_partial = static_cast<Partial>(i);
@@ -76,20 +77,6 @@ protected:
 				H_dense.coeffRef(partial_to_dense_index_map_[first_partial], partial_to_dense_index_map_[second_partial]) = CalculateSecondPartialDerivative(first_partial, second_partial);;
 			}
 		}
-
-		//Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(H_dense);
-		//Eigen::MatrixXd D = solver.eigenvalues().asDiagonal();
-		//Eigen::MatrixXd V = solver.eigenvectors();
-		//for (auto i = 0; i < 8; i++)
-		//{
-		//	auto& value = D.coeffRef(i, i);
-		//	if (value < 0)
-		//	{
-		//		value = 0;
-		//	}
-		//}
-
-		//H_dense = V * D * V.inverse();
 
 		auto triplet_index = 0;
 		for (auto column = 0; column < 8; column++)
@@ -388,7 +375,7 @@ private:
 	std::unordered_map<uint64_t, uint64_t> dense_index_to_sparse_index_map_;
 	std::unordered_map<Partial, double> partial_to_first_derivative_sign_map_;
 	std::unordered_map<Partial, double> partial_to_first_derivative_value_map_;
-	std::unordered_map<std::pair<PartialCoordinateType, Partial>, double, Utils::PairHash, Utils::PairEquals> partial_to_second_derivative_value_map_;
+	std::unordered_map<std::pair<PartialCoordinateType, Partial>, double, Utils::OrderedPairHash, Utils::OrderedPairEquals> partial_to_second_derivative_value_map_;
 };
 
 #endif

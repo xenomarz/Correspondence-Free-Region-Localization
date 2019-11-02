@@ -23,7 +23,37 @@ public:
 	 */
 	
 	// https://stackoverflow.com/questions/32685540/why-cant-i-compile-an-unordered-map-with-a-pair-as-key
-	struct PairHash {
+
+	struct OrderedPairHash {
+		template <class T1, class T2>
+		std::size_t operator () (const std::pair<T1, T2>& pair) const
+		{
+			const auto first = static_cast<uint64_t>(pair.first);
+			const auto second = static_cast<uint64_t>(pair.second);
+
+			std::size_t seed = 0;
+
+			// https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values/35991300#35991300
+			boost::hash_combine(seed, first);
+			boost::hash_combine(seed, second);
+			return seed;
+		}
+	};
+
+	struct OrderedPairEquals {
+		template <class T1, class T2>
+		bool operator () (const std::pair<T1, T2>& pair1, const std::pair<T1, T2>& pair2) const
+		{
+			const auto pair1_first = static_cast<uint64_t>(pair1.first);
+			const auto pair1_second = static_cast<uint64_t>(pair1.second);
+			const auto pair2_first = static_cast<uint64_t>(pair2.first);
+			const auto pair2_second = static_cast<uint64_t>(pair2.second);
+
+			return (pair1_first == pair2_first) && (pair1_second == pair2_second);
+		}
+	};
+	
+	struct UnorderedPairHash {
 		template <class T1, class T2>
 		std::size_t operator () (const std::pair<T1, T2>& pair) const
 		{
@@ -40,7 +70,7 @@ public:
 		}
 	};
 
-	struct PairEquals {
+	struct UnorderedPairEquals {
 		template <class T1, class T2>
 		bool operator () (const std::pair<T1, T2>& pair1, const std::pair<T1, T2>& pair2) const
 		{
@@ -283,7 +313,7 @@ public:
 			objective_function->Update(x_minus_eps);
 			const Eigen::VectorXd g_minus = objective_function->GetGradient();
 
-			H.col(i) = (g_plus - g_minus) / epsilon2;
+			H.row(i) = (g_plus - g_minus) / epsilon2;
 		}
 
 		return H;

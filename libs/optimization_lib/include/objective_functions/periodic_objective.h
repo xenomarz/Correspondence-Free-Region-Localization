@@ -25,14 +25,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	PeriodicObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name, const double period) :
-		ConcreteObjective(objective_function_data_provider, name)
+	PeriodicObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name, const double period, bool enforce_psd) :
+		ConcreteObjective(objective_function_data_provider, name),
+		enforce_psd_(enforce_psd)
 	{
 		SetPeriod(period);
 	}
 	
-	PeriodicObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const double period) :
-		PeriodicObjective(objective_function_data_provider, "Periodic", period)
+	PeriodicObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const double period, bool enforce_psd) :
+		PeriodicObjective(objective_function_data_provider, "Periodic", period, enforce_psd)
 	{
 
 	}
@@ -137,6 +138,14 @@ public:
 
 protected:
 	/**
+	 * Protected overrides 
+	 */
+	void PreInitialize() override
+	{
+		g_inner_.resize(this->variables_count_);
+	}
+	
+	/**
 	 * Value, gradient and hessian calculation functions for inner function
 	 */
 	virtual void CalculateValueInner(double& f) = 0;
@@ -153,17 +162,16 @@ protected:
 	
 	void CalculateGradientOuter(Eigen::SparseVector<double>& g)
 	{
-		g = polynomial_first_derivative_ * g;
+		g = polynomial_first_derivative_ * g_inner_;
 	}
 	
 	void CalculateTripletsOuter(std::vector<Eigen::Triplet<double>>& triplets)
 	{
-		auto g = this->GetGradientInternal();
 		const auto triplets_count = triplets.size();
 		for(std::size_t i = 0; i < triplets_count; i++)
 		{
 			auto& value = const_cast<double&>(triplets[i].value());
-			value = (polynomial_first_derivative_ * value) + (polynomial_second_derivative_ * g.coeffRef(triplets[i].row()) * g.coeffRef(triplets[i].col()));
+			value = (polynomial_first_derivative_ * value) + (polynomial_second_derivative_ * g_inner_.coeffRef(triplets[i].row()) * g_inner_.coeffRef(triplets[i].col()));
 		}
 	}
 
@@ -187,7 +195,7 @@ private:
 	
 	void CalculateGradient(Eigen::SparseVector<double>& g) override
 	{
-		CalculateGradientInner(g);
+		CalculateGradientInner(g_inner_);
 		CalculateGradientOuter(g);
 	}
 
@@ -236,6 +244,8 @@ private:
 	double p4_;
 	double p5_;
 	Eigen::VectorXd polynomial_coeffs_;
+	Eigen::SparseVector<double> g_inner_;
+	bool enforce_psd_;
 };
 
 #endif
