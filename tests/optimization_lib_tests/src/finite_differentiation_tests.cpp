@@ -8,8 +8,10 @@
 // Optimization lib includes
 #include <libs/optimization_lib/include/utils/mesh_wrapper.h>
 #include <libs/optimization_lib/include/objective_functions/edge_pair_angle_objective.h>
+#include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
 #include <libs/optimization_lib/include/utils/utils.h>
 
+template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
 class FiniteDifferencesTest : public ::testing::Test
 {
 protected:
@@ -53,7 +55,7 @@ protected:
 	{
 		objective_function_->Update(x_);
 		Eigen::VectorXd analytic_g = objective_function_->GetGradient();
-		Eigen::VectorXd approx_g = Utils::GetApproximatedGradient<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>(objective_function_, x_);
+		Eigen::VectorXd approx_g = Utils::GetApproximatedGradient<StorageOrder_, VectorType_>(objective_function_, x_);
 
 		for (uint64_t i = 0; i < analytic_g.rows(); i++)
 		{
@@ -65,7 +67,7 @@ protected:
 	{
 		objective_function_->Update(x_);
 		Eigen::MatrixXd analytic_H = objective_function_->GetHessian();
-		Eigen::MatrixXd approx_H = Utils::GetApproximatedHessian<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>(objective_function_, x_);
+		Eigen::MatrixXd approx_H = Utils::GetApproximatedHessian<StorageOrder_, VectorType_>(objective_function_, x_);
 
 		for (uint64_t row = 0; row < analytic_H.rows(); row++)
 		{
@@ -79,13 +81,13 @@ protected:
 		}
 	}
 
-	std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>> objective_function_;
+	std::shared_ptr<ObjectiveFunction<StorageOrder_, VectorType_>> objective_function_;
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
 	Eigen::VectorXd x_;
 	std::string filename_;
 };
 
-class EdgePairAngleObjectiveFDTest : public FiniteDifferencesTest
+class EdgePairAngleObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
 {
 protected:
 	EdgePairAngleObjectiveFDTest() :
@@ -102,7 +104,30 @@ protected:
 	void CreateObjectiveFunction() override
 	{
 		auto corresponding_edge_pair = mesh_wrapper_->GetCorrespondingEdgeVertices()[0];
-		objective_function_ = std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, corresponding_edge_pair.first, corresponding_edge_pair.second);
+		objective_function_ = std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, corresponding_edge_pair.first, corresponding_edge_pair.second, false);
+	}
+};
+
+class SeamlessObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>
+{
+protected:
+	SeamlessObjectiveFDTest() :
+		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+	{
+
+	}
+
+	~SeamlessObjectiveFDTest() override
+	{
+
+	}
+
+	void CreateObjectiveFunction() override
+	{
+		auto corresponding_edge_pairs = mesh_wrapper_->GetCorrespondingEdgeVertices();
+		auto seamless_objective = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, false);
+		seamless_objective->AddCorrespondingEdgePairs(corresponding_edge_pairs);
+		objective_function_ = seamless_objective;
 	}
 };
 
@@ -112,6 +137,16 @@ TEST_F(EdgePairAngleObjectiveFDTest, Gradient)
 }
 
 TEST_F(EdgePairAngleObjectiveFDTest, Hessian)
+{
+	AssertHessian(true);
+}
+
+TEST_F(SeamlessObjectiveFDTest, Gradient)
+{
+	AssertGradient();
+}
+
+TEST_F(SeamlessObjectiveFDTest, Hessian)
 {
 	AssertHessian(true);
 }

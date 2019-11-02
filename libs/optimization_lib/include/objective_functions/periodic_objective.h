@@ -9,6 +9,7 @@
 // Optimization lib includes
 #include "./sparse_objective_function.h"
 #include "./concrete_objective.h"
+#include "../utils/utils.h"
 
 template<Eigen::StorageOptions StorageOrder_>
 class PeriodicObjective : public ConcreteObjective<SparseObjectiveFunction<StorageOrder_>>
@@ -173,8 +174,52 @@ protected:
 			auto& value = const_cast<double&>(triplets[i].value());
 			value = (polynomial_first_derivative_ * value) + (polynomial_second_derivative_ * g_inner_.coeffRef(triplets[i].row()) * g_inner_.coeffRef(triplets[i].col()));
 		}
+
+		if (enforce_psd_)
+		{
+			Eigen::MatrixXd H;
+			H.resize(8, 8);
+			H.setZero();
+			for (std::size_t i = 0; i < triplets_count; i++)
+			{
+				auto row = sparse_index_to_dense_index_map_[triplets[i].row()];
+				auto col = sparse_index_to_dense_index_map_[triplets[i].col()];
+				auto value = triplets[i].value();
+				H.coeffRef(row, col) = value;
+				H.coeffRef(col, row) = value;
+			}
+
+			Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(H);
+			Eigen::MatrixXd D = solver.eigenvalues().asDiagonal();
+			Eigen::MatrixXd V = solver.eigenvectors();
+			for (auto i = 0; i < 8; i++)
+			{
+				auto& value = D.coeffRef(i, i);
+				if (value < 0)
+				{
+					value = 0;
+				}
+			}
+
+			H = V * D * V.inverse();
+
+			for (auto column = 0; column < 8; column++)
+			{
+				for (auto row = 0; row <= column; row++)
+				{
+					const auto triplet_index = dense_entry_to_triplet_index_map_[{row, column}];
+					const_cast<double&>(triplets[triplet_index].value()) = H.coeffRef(row, column);
+				}
+			}
+		}
 	}
 
+	/**
+	 * Protected fields
+	 */
+	std::unordered_map<std::pair<uint64_t, uint64_t>, uint64_t, Utils::OrderedPairHash, Utils::UnorderedPairEquals> dense_entry_to_triplet_index_map_;
+	std::unordered_map<uint64_t, uint64_t> sparse_index_to_dense_index_map_;
+	
 private:
 	/**
 	 * Private method overrides

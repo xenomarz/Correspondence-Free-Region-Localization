@@ -66,26 +66,12 @@ protected:
 	
 	void CalculateTripletsInner(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-		Eigen::MatrixXd H_dense(8, 8);
-		H_dense.setZero();
-		for (int i = 0; i < 8; i++)
+		const std::size_t triplets_count = triplets.size();
+		for (uint64_t i = 0; i < triplets_count; i++)
 		{
-			Partial first_partial = static_cast<Partial>(i);
-			for (auto j = 0; j < 8; j++)
-			{
-				Partial second_partial = static_cast<Partial>(j);
-				H_dense.coeffRef(partial_to_dense_index_map_[first_partial], partial_to_dense_index_map_[second_partial]) = CalculateSecondPartialDerivative(first_partial, second_partial);;
-			}
-		}
-
-		auto triplet_index = 0;
-		for (auto column = 0; column < 8; column++)
-		{
-			for (auto row = 0; row <= column; row++)
-			{
-				const_cast<double&>(triplets[triplet_index].value()) = H_dense(row, column);
-				triplet_index++;
-			}
+			auto first_partial = sparse_index_to_partial_map_[triplets[i].col()];
+			auto second_partial = sparse_index_to_partial_map_[triplets[i].row()];
+			const_cast<double&>(triplets[i].value()) = CalculateSecondPartialDerivative(first_partial, second_partial);
 		}
 	}
 
@@ -103,19 +89,6 @@ protected:
 		edge2_v2_x_index_ = edge2_indices_.second;
 		edge2_v2_y_index_ = edge2_indices_.second + this->image_vertices_count_;
 
-		indices_.push_back(edge1_v1_x_index_);
-		indices_.push_back(edge1_v1_y_index_);
-		indices_.push_back(edge1_v2_x_index_);
-		indices_.push_back(edge1_v2_y_index_);
-		indices_.push_back(edge2_v1_x_index_);
-		indices_.push_back(edge2_v1_y_index_);
-		indices_.push_back(edge2_v2_x_index_);
-		indices_.push_back(edge2_v2_y_index_);
-		std::sort(indices_.begin(), indices_.end());
-	}
-
-	void PostInitialize() override
-	{
 		partial_to_sparse_index_map_.insert({ Partial::E1_V1_X, edge1_v1_x_index_ });
 		partial_to_sparse_index_map_.insert({ Partial::E1_V1_Y, edge1_v1_y_index_ });
 		partial_to_sparse_index_map_.insert({ Partial::E1_V2_X, edge1_v2_x_index_ });
@@ -133,12 +106,6 @@ protected:
 		sparse_index_to_partial_map_.insert({ edge2_v1_y_index_, Partial::E2_V1_Y });
 		sparse_index_to_partial_map_.insert({ edge2_v2_x_index_, Partial::E2_V2_X });
 		sparse_index_to_partial_map_.insert({ edge2_v2_y_index_, Partial::E2_V2_Y });
-
-		for (std::size_t i = 0; i < indices_.size(); i++)
-		{
-			partial_to_dense_index_map_.insert({ sparse_index_to_partial_map_[indices_.at(i)], i });
-			dense_index_to_sparse_index_map_.insert({ i, indices_.at(i) });
-		}
 
 		partial_to_first_derivative_sign_map_.insert({ Partial::E1_V1_X,  1 });
 		partial_to_first_derivative_sign_map_.insert({ Partial::E1_V1_Y, -1 });
@@ -173,8 +140,27 @@ protected:
 				partial_to_second_derivative_value_map_.insert({ std::make_pair(first_partial_type, second_partial), 0 });
 			}
 		}
+		
+		indices_.push_back(edge1_v1_x_index_);
+		indices_.push_back(edge1_v1_y_index_);
+		indices_.push_back(edge1_v2_x_index_);
+		indices_.push_back(edge1_v2_y_index_);
+		indices_.push_back(edge2_v1_x_index_);
+		indices_.push_back(edge2_v1_y_index_);
+		indices_.push_back(edge2_v2_x_index_);
+		indices_.push_back(edge2_v2_y_index_);
+		std::sort(indices_.begin(), indices_.end());
+	}
 
+	void PostInitialize() override
+	{
 		PeriodicObjective<StorageOrder_>::PostInitialize();
+
+		for (std::size_t i = 0; i < indices_.size(); i++)
+		{
+			partial_to_dense_index_map_.insert({ sparse_index_to_partial_map_[indices_.at(i)], i });
+			this->sparse_index_to_dense_index_map_.insert({ indices_.at(i), i });
+		}
 	}
 
 	void PreUpdate(const Eigen::VectorXd& x) override
@@ -319,6 +305,7 @@ private:
 			for (auto row = 0; row <= column; row++)
 			{
 				triplets[triplet_index] = Eigen::Triplet<double>(indices_.at(row), indices_.at(column), 0);
+				this->dense_entry_to_triplet_index_map_[{ row, column }] = triplet_index;
 				triplet_index++;
 			}
 		}
@@ -372,7 +359,6 @@ private:
 	std::unordered_map<Partial, uint64_t> partial_to_sparse_index_map_;
 	std::unordered_map<uint64_t, Partial> sparse_index_to_partial_map_;
 	std::unordered_map<Partial, uint64_t> partial_to_dense_index_map_;
-	std::unordered_map<uint64_t, uint64_t> dense_index_to_sparse_index_map_;
 	std::unordered_map<Partial, double> partial_to_first_derivative_sign_map_;
 	std::unordered_map<Partial, double> partial_to_first_derivative_value_map_;
 	std::unordered_map<std::pair<PartialCoordinateType, Partial>, double, Utils::OrderedPairHash, Utils::OrderedPairEquals> partial_to_second_derivative_value_map_;
