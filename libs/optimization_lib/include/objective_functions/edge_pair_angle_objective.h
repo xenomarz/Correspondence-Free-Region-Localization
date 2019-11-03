@@ -2,14 +2,15 @@
 #ifndef OPTIMIZATION_LIB_EDGE_PAIR_ANGLE_OBJECTIVE_H
 #define OPTIMIZATION_LIB_EDGE_PAIR_ANGLE_OBJECTIVE_H
 
+// C includes
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 // STL includes
 #include <utility>
 #include <cmath>
 #include <algorithm>
 #include <unordered_map>
-
-#define _USE_MATH_DEFINES
-#include <cmath>
 
 // Eigen includes
 #include <Eigen/Eigenvalues> 

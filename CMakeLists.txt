@@ -8,6 +8,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(BOOST_ROOT "./boost")
 find_package(Boost REQUIRED QUIET)
 
+#eigen
+add_subdirectory("eigen" EXCLUDE_FROM_ALL)
+set(Eigen3_DIR "${CMAKE_CURRENT_BINARY_DIR}/eigen")
+find_package (Eigen3 3.3 REQUIRED)
+
 # libigl
 option(LIBIGL_WITH_OPENGL            "Use OpenGL"                   ON)
 option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"                     ON)

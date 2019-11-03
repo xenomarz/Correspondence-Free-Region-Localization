@@ -822,7 +822,7 @@ namespace rds
 			Eigen::MatrixXd V_uv;
 			igl::boundary_loop(viewer->data(model_index).F, bnd);
 			b(0) = bnd(0);
-			b(1) = bnd(round(bnd.size() / 2));
+			b(1) = bnd(uint64_t(round(bnd.size() / 2)));
 			MatrixXd bc(2, 2);
 			bc << 0, 0, 1, 0;
 
