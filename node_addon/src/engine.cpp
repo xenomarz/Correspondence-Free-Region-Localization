@@ -678,7 +678,7 @@ Napi::Value Engine::GetObjectiveFunctionsData(const Napi::CallbackInfo& info)
 			value_per_vertex_array[i] = Napi::Number::New(env, value_per_vertex.coeffRef(i));
 		}
 		
-		data_object_internal.Set("valuePerVertex", value_per_vertex_array);
+		//data_object_internal.Set("valuePerVertex", value_per_vertex_array);
 		
 		objective_functions_data_array[index] = data_object;
 	}

@@ -290,10 +290,10 @@ private:
 	{
 		double value = this->GetValueInternal();
 		f_per_vertex.setZero();
-		f_per_vertex.coeffRef(edge1_indices_.first) += value;
-		f_per_vertex.coeffRef(edge1_indices_.second) += value;
-		f_per_vertex.coeffRef(edge2_indices_.first) += value;
-		f_per_vertex.coeffRef(edge2_indices_.second) += value;
+		for(int i = 0; i < indices_.size(); i++)
+		{
+			f_per_vertex.coeffRef(indices_[i]) += value;
+		}
 	}
 	
 	/**

@@ -82,7 +82,15 @@ const INITIAL_STATE = {
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN            
-        }
+        },
+        {
+            objectiveFunctionId: 'Seamless',
+            propertyId: 'value_per_vertex',
+            objectiveFunctionName: 'Seamless',
+            propertyName: 'Value Per Vertex',
+            color: 'rgb(255,0,0)',
+            visibility: EnumsExports.Visibility.HIDDEN            
+        }        
     ]
 };
 

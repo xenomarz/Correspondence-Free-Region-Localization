@@ -24,6 +24,7 @@ public:
 	NewtonMethod(std::shared_ptr<DenseObjectiveFunction<StorageOrder_>> objective_function, const Eigen::VectorXd& x0) :
 		IterativeMethod(objective_function, x0)
 	{
+		// TODO: Call 'AnalyzePattern' after any objective function addition/removal
 		solver_.AnalyzePattern(objective_function->GetHessian());
 	}
 

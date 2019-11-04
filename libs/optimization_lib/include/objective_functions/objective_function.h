@@ -98,10 +98,11 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(m_);
 
-		for(uint64_t i = 0; i < this->variables_count_; i++)
-		{
-			triplets_.push_back(Eigen::Triplet<double>(i,i,0));
-		}
+		// TODO: Add a flag that allows to explicitly zero the main diagonal
+		//for(uint64_t i = 0; i < this->variables_count_; i++)
+		//{
+		//	triplets_.push_back(Eigen::Triplet<double>(i,i,0));
+		//}
 		
 		H_.setFromTriplets(triplets_.begin(), triplets_.end());
 		return H_;
