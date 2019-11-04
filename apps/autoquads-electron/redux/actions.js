@@ -12,6 +12,7 @@ export const CHANGE_SOUP_VIEW_VISIBILITY = 'CHANGE_SOUP_VIEW_VISIBILITY';
 export const CHANGE_DELTA = 'CHANGE_DELTA';
 export const CHANGE_LAMBDA = 'CHANGE_LAMBDA';
 export const CHANGE_SEAMLESS_WEIGHT = 'CHANGE_SEAMLESS_WEIGHT';
+export const CHANGE_SINGULARITY_WEIGHT = 'CHANGE_SINGULARITY_WEIGHT';
 export const CHANGE_POSITION_WEIGHT = 'CHANGE_POSITION_WEIGHT';
 export const CHANGE_GRID_HORIZONTAL_COLOR = 'CHANGE_GRID_HORIZONTAL_COLOR';
 export const CHANGE_GRID_VERTICAL_COLOR = 'CHANGE_GRID_VERTICAL_COLOR';
@@ -128,6 +129,13 @@ export const setLambda = lambda => {
 export const setSeamlessWeight = weight => {
     return {
         type: CHANGE_SEAMLESS_WEIGHT,
+        weight: weight
+    };
+};
+
+export const setSingularityWeight = weight => {
+    return {
+        type: CHANGE_SINGULARITY_WEIGHT,
         weight: weight
     };
 };

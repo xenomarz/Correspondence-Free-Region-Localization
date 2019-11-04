@@ -288,12 +288,12 @@ private:
 	 */
 	void CalculateValuePerVertex(Eigen::SparseVector<double>& f_per_vertex) override
 	{
-		double value = this->GetValueInternal();
-		f_per_vertex.setZero();
-		for(int i = 0; i < indices_.size(); i++)
-		{
-			f_per_vertex.coeffRef(indices_[i]) += value;
-		}
+		//double value = this->GetValueInternal();
+		//f_per_vertex.setZero();
+		//for(int i = 0; i < indices_.size(); i++)
+		//{
+		//	f_per_vertex.coeffRef(indices_[i]) += value;
+		//}
 	}
 	
 	/**

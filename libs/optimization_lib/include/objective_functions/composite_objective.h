@@ -125,6 +125,19 @@ public:
 		return nullptr;
 	}
 
+protected:
+	/**
+	 * Protected overrides
+	 */
+	void PreUpdate(const Eigen::VectorXd& x) override
+	{
+		#pragma omp parallel for if(parallel_update_)
+		for (int32_t i = 0; i < objective_functions_.size(); i++)
+		{
+			objective_functions_[i]->Update(x);
+		}
+	}
+	
 private:
 
 	/**
@@ -187,15 +200,6 @@ private:
 		for (const auto& objective_function : objective_functions_)
 		{
 			objective_function->Initialize();
-		}
-	}
-
-	void PreUpdate(const Eigen::VectorXd& x) override
-	{
-		#pragma omp parallel for if(parallel_update_)
-		for(int32_t i = 0; i < objective_functions_.size(); i++)
-		{
-			objective_functions_[i]->Update(x);
 		}
 	}
 

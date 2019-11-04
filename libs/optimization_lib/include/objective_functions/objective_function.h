@@ -5,7 +5,6 @@
 // STL Includes
 #include <memory>
 #include <atomic>
-#include <type_traits>
 #include <string>
 #include <mutex>
 #include <any>

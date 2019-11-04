@@ -23,6 +23,7 @@
 #include <libs/optimization_lib/include/objective_functions/separation_objective.h>
 #include <libs/optimization_lib/include/objective_functions/symmetric_dirichlet_objective.h>
 #include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
+#include <libs/optimization_lib/include/objective_functions/singularity_objective.h>
 #include <libs/optimization_lib/include/utils/utils.h>
 
 class Engine : public Napi::ObjectWrap<Engine> {
@@ -235,6 +236,7 @@ private:
 	std::shared_ptr<Separation<Eigen::StorageOptions::RowMajor>> separation_;
 	std::shared_ptr<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>> symmetric_dirichlet_;
 	std::shared_ptr<SeamlessObjective<Eigen::StorageOptions::RowMajor>> seamless_;
+	std::shared_ptr<SingularityObjective<Eigen::StorageOptions::RowMajor>> singularity_;
 	std::unique_ptr<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>> newton_method_;
 	std::vector<Eigen::DenseIndex> constrained_faces_indices;
 	Eigen::MatrixX2d image_vertices_;
