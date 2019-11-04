@@ -6,10 +6,10 @@
 #include <vector>
 
 // Optimization lib includes
-#include "./concrete_objective.h"
+#include "./dense_objective_function.h"
 
 template<Eigen::StorageOptions StorageOrder_>
-class Separation : public ConcreteObjective<DenseObjectiveFunction<StorageOrder_>>
+class Separation : public DenseObjectiveFunction<StorageOrder_>
 {
 public:
 	/**
@@ -24,7 +24,7 @@ public:
 	 * Constructors and destructor
 	 */
 	Separation(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider) :
-		ConcreteObjective<DenseObjectiveFunction<StorageOrder_>>(objective_function_data_provider, "Separation")
+		DenseObjectiveFunction(objective_function_data_provider, "Separation")
 	{
 		this->Initialize();
 	}

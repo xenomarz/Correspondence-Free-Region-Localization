@@ -5,8 +5,7 @@ project(optimization_lib)
 file(GLOB SOURCES
 	src/objective_functions/objective_function.cpp
 	src/objective_functions/dense_objective_function.cpp
-	src/objective_functions/sparse_objective_function.cpp		
-	src/objective_functions/concrete_objective.cpp
+	src/objective_functions/sparse_objective_function.cpp
 	src/objective_functions/composite_objective.cpp
 	src/objective_functions/position_objective.cpp
 	src/objective_functions/vertex_position_objective.cpp
@@ -27,8 +26,7 @@ file(GLOB SOURCES
 	src/utils/mesh_wrapper.cpp
 	include/objective_functions/objective_function.h
 	include/objective_functions/sparse_objective_function.h
-	include/objective_functions/dense_objective_function.h		
-	include/objective_functions/concrete_objective.h
+	include/objective_functions/dense_objective_function.h
 	include/objective_functions/composite_objective.h
 	include/objective_functions/position_objective.h
 	include/objective_functions/vertex_position_objective.h

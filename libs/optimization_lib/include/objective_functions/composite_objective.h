@@ -145,41 +145,34 @@ private:
 
 	void CalculateGradient(Eigen::VectorXd& g) override
 	{
-		typename ObjectiveFunctionType_::GradientType g_local(g.size());
-		g_local.setZero();
-
+		g.setZero();
+		//#pragma omp parallel for if(parallel_update_)
 		for (const auto& objective_function : objective_functions_)
 		{
 			auto w = objective_function->GetWeight();
 			if (w != 0)
 			{
-				g_local += w * objective_function->GetGradient();
+				objective_function->AddGradient(g, w);
 			}
 		}
-
-		g = std::move(g_local);
 	}
 
-	void CalculateHessian(Eigen::SparseMatrix<double, ObjectiveFunctionType_::StorageOrder>& H) override
+	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-		H.setZero();
-
-		if (explicitly_zero_diagonal_)
-		{
-			for (int64_t i = 0; i < this->variables_count_; i++)
-			{
-				H.coeffRef(i, i) = 0;
-			}
-		}
-
+		triplets.clear();
 		for (const auto& objective_function : objective_functions_)
 		{
 			auto w = objective_function->GetWeight();
 			if (w != 0)
 			{
-				H += w * objective_function->GetHessian();
+				objective_function->AddTriplets(triplets, w);
 			}
 		}
+	}
+
+	void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
+	{
+		
 	}
 
 	void PreInitialize() override

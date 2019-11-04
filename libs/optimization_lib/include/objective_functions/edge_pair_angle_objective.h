@@ -47,6 +47,21 @@ public:
 
 	}
 
+	/**
+	 * Public overrides
+	 */
+	//void AddValuePerVertex(VectorType_& f_per_vertex, const double w = 1) const override
+	//{
+	//	std::lock_guard<std::mutex> lock(m_);
+	//	f_per_vertex += w * f_per_vertex_;
+	//}
+
+	//void AddGradient(VectorType_& g, const double w = 1) const override
+	//{
+	//	std::lock_guard<std::mutex> lock(m_);
+	//	g += w * g_;
+	//}
+
 protected:
 	/**
 	 * Protected overrides
@@ -274,6 +289,7 @@ private:
 	void CalculateValuePerVertex(Eigen::SparseVector<double>& f_per_vertex) override
 	{
 		double value = this->GetValueInternal();
+		f_per_vertex.setZero();
 		f_per_vertex.coeffRef(edge1_indices_.first) += value;
 		f_per_vertex.coeffRef(edge1_indices_.second) += value;
 		f_per_vertex.coeffRef(edge2_indices_.first) += value;

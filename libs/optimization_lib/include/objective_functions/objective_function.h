@@ -94,10 +94,23 @@ public:
 		return g_;
 	}
 
-	const Eigen::SparseMatrix<double, StorageOrder_>& GetHessian() const
+	const Eigen::SparseMatrix<double, StorageOrder_>& GetHessian()
 	{
 		std::lock_guard<std::mutex> lock(m_);
+
+		for(uint64_t i = 0; i < this->variables_count_; i++)
+		{
+			triplets_.push_back(Eigen::Triplet<double>(i,i,0));
+		}
+		
+		H_.setFromTriplets(triplets_.begin(), triplets_.end());
 		return H_;
+	}
+
+	const std::vector<Eigen::Triplet<double>>& GetTriplets() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return triplets_;
 	}
 
 	double GetWeight() const
@@ -185,6 +198,7 @@ public:
 		InitializeValuePerVertex(f_per_vertex_);
 		InitializeGradient(g_);
 		InitializeHessian(H_);
+		InitializeTriplets(triplets_);
 		PostInitialize();
 	}
 
@@ -207,10 +221,35 @@ public:
 
 		if ((update_options & UpdateOptions::HESSIAN) != UpdateOptions::NONE)
 		{
-			CalculateHessian(H_);
+			CalculateTriplets(triplets_);
 		}
 
 		PostUpdate(x);
+	}
+
+	virtual void AddValuePerVertex(Eigen::VectorXd& f_per_vertex, const double w = 1) const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		f_per_vertex += w * f_per_vertex_;
+	}
+
+	virtual void AddGradient(Eigen::VectorXd& g, const double w = 1) const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		g += w * g_;
+	}
+
+	virtual void AddTriplets(std::vector<Eigen::Triplet<double>>& triplets, const double w = 1) const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		const int64_t start_index = triplets.size();
+		const int64_t end_index = start_index + triplets_.size();
+		triplets.insert(triplets.end(), triplets_.begin(), triplets_.end());
+		for(int64_t i = start_index; i < end_index; i++)
+		{
+			double& value = const_cast<double&>(triplets[i].value());
+			value *= w;
+		}
 	}
 	
 protected:
@@ -317,6 +356,8 @@ private:
 		H.resize(variables_count_, variables_count_);
 	}
 
+	virtual void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) = 0;
+
 	// Value, gradient and hessian calculation functions
 	virtual void CalculateValue(double& f) = 0;
 	
@@ -326,7 +367,7 @@ private:
 	}
 	
 	virtual void CalculateGradient(VectorType_& g) = 0;
-	virtual void CalculateHessian(Eigen::SparseMatrix<double, StorageOrder_>& H) = 0;
+	virtual void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) = 0;
 
 	/**
 	 * Private fields
@@ -334,16 +375,21 @@ private:
 
 	// Value
 	double f_;
+
+	// Value per vertex
 	VectorType_ f_per_vertex_;
 
 	// Gradient
 	VectorType_ g_;
 
+	// Triplets
+	std::vector<Eigen::Triplet<double>> triplets_;
+
 	// Hessian
 	Eigen::SparseMatrix<double, StorageOrder_> H_;
-
+	
 	// Weight
-	std::atomic<double> w_;
+	double w_;
 
 	// Name
 	const std::string name_;

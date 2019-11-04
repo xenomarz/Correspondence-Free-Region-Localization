@@ -9,17 +9,17 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
-#include "./concrete_objective.h"
+#include "./dense_objective_function.h"
 
 template <Eigen::StorageOptions StorageOrder_>
-class PositionObjective : public ConcreteObjective<DenseObjectiveFunction<StorageOrder_>>
+class PositionObjective : public DenseObjectiveFunction<StorageOrder_>
 {
 public:
 	/**
 	 * Constructors and destructor
 	 */
 	PositionObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const int64_t vertices_count, const std::string& name) :
-		ConcreteObjective(objective_function_data_provider, name),
+		DenseObjectiveFunction(objective_function_data_provider, name),
 		objective_vertices_count_(vertices_count),
 		objective_variables_count_(2 * vertices_count)
 	{

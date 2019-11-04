@@ -8,11 +8,10 @@
 
 // Optimization lib includes
 #include "./sparse_objective_function.h"
-#include "./concrete_objective.h"
 #include "../utils/utils.h"
 
 template<Eigen::StorageOptions StorageOrder_>
-class PeriodicObjective : public ConcreteObjective<SparseObjectiveFunction<StorageOrder_>>
+class PeriodicObjective : public SparseObjectiveFunction<StorageOrder_>
 {
 public:
 	/**
@@ -27,7 +26,7 @@ public:
 	 * Constructors and destructor
 	 */
 	PeriodicObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name, const double period, bool enforce_psd) :
-		ConcreteObjective(objective_function_data_provider, name),
+		SparseObjectiveFunction(objective_function_data_provider, name),
 		enforce_psd_(enforce_psd)
 	{
 		SetPeriod(period);

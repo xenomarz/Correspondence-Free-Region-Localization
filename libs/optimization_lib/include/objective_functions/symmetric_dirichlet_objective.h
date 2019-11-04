@@ -13,11 +13,11 @@
 #include <igl/doublearea.h>
 
 // Optimization lib includes
-#include "./concrete_objective.h"
+#include "./dense_objective_function.h"
 #include "../utils/utils.h"
 
 template<Eigen::StorageOptions StorageOrder_>
-class SymmetricDirichlet : public ConcreteObjective<DenseObjectiveFunction<StorageOrder_>>
+class SymmetricDirichlet : public DenseObjectiveFunction<StorageOrder_>
 {
 public:
 
@@ -25,7 +25,7 @@ public:
 	 * Constructors and destructor
 	 */
 	SymmetricDirichlet(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider)
-		: ConcreteObjective<DenseObjectiveFunction<StorageOrder_>>(objective_function_data_provider, "Symmetric Dirichlet")
+		: DenseObjectiveFunction(objective_function_data_provider, "Symmetric Dirichlet")
 	{
 		this->Initialize();
 	}
