@@ -256,6 +256,7 @@ export class MeshView extends LitElement {
         this._createScene();
         this._createOrbitControl();
         this._createRaycaster();
+        // this._createGrid();
     }
 
     /**
@@ -271,6 +272,7 @@ export class MeshView extends LitElement {
             this._initializeMesh();
             this._initializeMeshWireframe();
             this._initializePointcloud();
+            this._initializeGrid();
             this.requestUpdate('meshProvider', oldValue);
         }
         else {
@@ -605,6 +607,13 @@ export class MeshView extends LitElement {
         this._pointcloud.visible = false;
     }
 
+    _initializeGrid() {
+        let size = 500;
+        let divisions = 500;
+        this._grid = new THREE.GridHelper(size, divisions);
+        this._grid.geometry.rotateX(Math.PI / 2);
+        this._scene.add(this._grid);
+    }
 
     _initializeStateMachine() {
         this._interactionMachine = Machine({
@@ -927,6 +936,13 @@ export class MeshView extends LitElement {
         this._raycaster = new THREE.Raycaster();
         this._raycaster.params.Points.threshold = 0.05;
     }
+
+    // _createGrid() {
+    //     let size = 500;
+    //     let divisions = 500;
+    //     this._grid = new THREE.GridHelper(size, divisions);
+    //     this._grid.geometry.rotateX(Math.PI / 2);
+    // }
 
     /**
      * Textures

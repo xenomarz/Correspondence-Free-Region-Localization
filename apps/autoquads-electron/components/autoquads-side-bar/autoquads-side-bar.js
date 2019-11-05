@@ -336,6 +336,10 @@ export class AutoquadsSideBar extends SideBar {
                 type: Number,
                 attribute: 'seamless-weight'
             },
+            singularityWeight: {
+                type: Number,
+                attribute: 'singularity-weight'
+            },            
             positionWeight: {
                 type: Number,
                 attribute: 'position-weight'
@@ -547,6 +551,16 @@ export class AutoquadsSideBar extends SideBar {
     get seamlessWeight() {
         return this._seamlessWeight;
     }
+
+    set singularityWeight(value) {
+        const oldValue = this._singularityWeight;
+        this._singularityWeight = value;
+        this.requestUpdate('singularityWeight', oldValue);
+    }
+
+    get singularityWeight() {
+        return this._singularityWeight;
+    }    
     
     set positionWeight(value) {
         const oldValue = this._positionWeight;

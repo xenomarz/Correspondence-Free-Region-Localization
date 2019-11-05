@@ -86,6 +86,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 		/**
 		 * Initialize objective functions
 		 */
+		composite_objective_->Initialize();
 		seamless_->AddCorrespondingEdgePairs(mesh_wrapper_->GetCorrespondingEdgeVertices());
 
 		auto& dom_v_2_im_v_map = mesh_wrapper_->GetDomainVerticesToImageVerticesMap();
@@ -102,8 +103,8 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 
 			singularity_->AddSingularCorners(singular_corners);
 		}
-		
-		composite_objective_->Initialize();
+		//singularity_->AddSingularCornersTest();
+
 
 		/**
 		 * Create newton method iterator
