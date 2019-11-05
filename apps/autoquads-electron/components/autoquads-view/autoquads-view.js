@@ -152,6 +152,10 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: Number,
                 attribute: 'singularity-weight'
             },
+            singularityInterval: {
+                type: Number,
+                attribute: 'singularity-interval'
+            },
             positionWeight: {
                 type: Number,
                 attribute: 'position-weight'
@@ -388,7 +392,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._singularityWeight;
             this._singularityWeight = value;
-            this._engine.setObjectiveFunctionProperty('Singularity', 'weight', value);
+            this._engine.setObjectiveFunctionProperty('Singularity', 'weight', value / 2);
             this.requestUpdate('singularityWeight', oldValue);
         }
     }
@@ -398,7 +402,22 @@ export class AutoquadsView extends connect(store)(LitElement) {
             return this._engine.getObjectiveFunctionProperty('Singularity', 'weight');
         }
     }
- 
+
+    set singularityInterval(value) {
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            const oldValue = this._singularityInterval;
+            this._singularityInterval = value;
+            this._engine.setObjectiveFunctionProperty('Singularity', 'interval', value);
+            this.requestUpdate('singularityInterval', oldValue);
+        }
+    }
+
+    get singularityInterval() {
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            return this._engine.getObjectiveFunctionProperty('Singularity', 'interval');
+        }
+    }
+
     set positionWeight(value) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._positionWeight;

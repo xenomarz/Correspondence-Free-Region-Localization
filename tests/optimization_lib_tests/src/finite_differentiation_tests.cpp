@@ -125,7 +125,7 @@ protected:
 
 	void CreateObjectiveFunction() override
 	{
-		objective_function_ = std::make_shared<IntegerObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, 9);
+		objective_function_ = std::make_shared<IntegerObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, 9, 1);
 	}
 };
 

@@ -24,10 +24,6 @@ export class AutoquadsSoupMeshProvider extends AutoquadsMeshProvider {
         return this._engine.getImageBufferedVertices(primitiveType);
     }
 
-    getBufferedUvs() {
-        return this._engine.getImageBufferedUvs();
-    }
-
     get debugData() {
         return this._engine.objectiveFunctionsData;
     }

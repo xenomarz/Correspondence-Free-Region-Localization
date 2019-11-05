@@ -125,6 +125,18 @@ export class AutoquadsSideBar extends SideBar {
                     @value-changed="${this._singularityWeightInputChanged}">
                 </side-bar-parameter-input>
                 <side-bar-parameter-input
+                    id="singularity-interval"
+                    increase-key="i"
+                    decrease-key="u"
+                    value="${this._singularityInterval}"
+                    min="0"
+                    max="10000"
+                    step="2"
+                    label="Singularity Interval"
+                    @value-changed="${this._singularityIntervalInputChanged}"
+                    is-exponential>
+                </side-bar-parameter-input>
+                <side-bar-parameter-input
                     id="position-weight"
                     value="${this._positionWeight}"
                     min="0"
@@ -339,7 +351,11 @@ export class AutoquadsSideBar extends SideBar {
             singularityWeight: {
                 type: Number,
                 attribute: 'singularity-weight'
-            },            
+            },
+            singularityInterval: {
+                type: Number,
+                attribute: 'singularity-interval'
+            },        
             positionWeight: {
                 type: Number,
                 attribute: 'position-weight'
@@ -560,7 +576,17 @@ export class AutoquadsSideBar extends SideBar {
 
     get singularityWeight() {
         return this._singularityWeight;
-    }    
+    }
+
+    set singularityInterval(value) {
+        const oldValue = this._singularityInterval;
+        this._singularityInterval = value;
+        this.requestUpdate('singularityInterval', oldValue);
+    }
+
+    get singularityInterval() {
+        return this._singularityInterval;
+    }   
     
     set positionWeight(value) {
         const oldValue = this._positionWeight;
@@ -914,7 +940,11 @@ export class AutoquadsSideBar extends SideBar {
 
     _singularityWeightInputChanged(e) {
         store.dispatch(ActionsExports.setSingularityWeight(e.srcElement.value)); 
-    }    
+    }
+
+    _singularityIntervalInputChanged(e) {
+        store.dispatch(ActionsExports.setSingularityInterval(e.srcElement.value)); 
+    }   
 
     _positionWeightInputChanged(e) {
         store.dispatch(ActionsExports.setPositionWeight(e.srcElement.value)); 

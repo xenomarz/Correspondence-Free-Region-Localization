@@ -21,8 +21,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	IntegerObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const uint64_t index) :
-		PeriodicObjective(objective_function_data_provider, "Integer Objective", 1, false),
+	IntegerObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const uint64_t index, const double period) :
+		PeriodicObjective(objective_function_data_provider, "Integer Objective", period, 1, true),
 		index_(index)
 	{
 		this->Initialize();
@@ -72,7 +72,8 @@ private:
 	 */
 	void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-
+		this->dense_entry_to_triplet_index_map_[{ 0, 0 }] = 0;
+		this->sparse_index_to_dense_index_map_.insert({ index_, 0 });
 	}
 
 	/**

@@ -23,8 +23,4 @@ export class AutoquadsModelMeshProvider extends AutoquadsMeshProvider {
     getBufferedVertices(primitiveType) {
         return this._engine.getDomainBufferedVertices(primitiveType);
     }
-
-    getBufferedUvs() {
-        return this._engine.getDomainBufferedUvs();
-    }  
 }

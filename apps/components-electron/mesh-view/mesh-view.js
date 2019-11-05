@@ -270,9 +270,9 @@ export class MeshView extends LitElement {
             this._initializeTextures();
             this._initializeLights();
             this._initializeMesh();
-            this._initializeMeshWireframe();
+            // this._initializeMeshWireframe();
             this._initializePointcloud();
-            this._initializeGrid();
+            // this._initializeGrid();
             this.requestUpdate('meshProvider', oldValue);
         }
         else {

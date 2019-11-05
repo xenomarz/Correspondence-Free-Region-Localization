@@ -25,9 +25,10 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	PeriodicObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name, const double period, bool enforce_psd) :
+	PeriodicObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name, const double period, const uint64_t objective_variable_count, bool enforce_psd) :
 		SparseObjectiveFunction(objective_function_data_provider, name),
-		enforce_psd_(enforce_psd)
+		enforce_psd_(enforce_psd),
+		objective_variable_count_(objective_variable_count)
 	{
 		SetPeriod(period);
 	}
@@ -177,7 +178,7 @@ protected:
 		if (enforce_psd_)
 		{
 			Eigen::MatrixXd H;
-			H.resize(8, 8);
+			H.resize(objective_variable_count_, objective_variable_count_);
 			H.setZero();
 			for (std::size_t i = 0; i < triplets_count; i++)
 			{
@@ -191,18 +192,18 @@ protected:
 			Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(H);
 			Eigen::MatrixXd D = solver.eigenvalues().asDiagonal();
 			Eigen::MatrixXd V = solver.eigenvectors();
-			for (auto i = 0; i < 8; i++)
+			for (auto i = 0; i < objective_variable_count_; i++)
 			{
 				auto& value = D.coeffRef(i, i);
 				if (value < 0)
 				{
-					value = 0;
+					value = 10e-8;
 				}
 			}
 
 			H = V * D * V.inverse();
 
-			for (auto column = 0; column < 8; column++)
+			for (auto column = 0; column < objective_variable_count_; column++)
 			{
 				for (auto row = 0; row <= column; row++)
 				{
@@ -290,6 +291,7 @@ private:
 	Eigen::VectorXd polynomial_coeffs_;
 	Eigen::SparseVector<double> g_inner_;
 	bool enforce_psd_;
+	uint64_t objective_variable_count_;
 };
 
 #endif

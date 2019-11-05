@@ -42,6 +42,17 @@ export class AutoquadsMeshProvider extends MeshProvider {
         return bufferedVertexColors;
     }
 
+    getBufferedUvs() {
+        let bufferedUvs = this._engine.getImageBufferedUvs();
+        let interval = this._engine.getObjectiveFunctionProperty("Singularity", "interval");
+        for(let i = 0; i < bufferedUvs.length; i++)
+        {
+            bufferedUvs[i] = bufferedUvs[i] / interval;
+        }
+
+        return bufferedUvs;
+    }
+
     set meshColor(value) {
         this._meshColor = new THREE.Color(value);
     }

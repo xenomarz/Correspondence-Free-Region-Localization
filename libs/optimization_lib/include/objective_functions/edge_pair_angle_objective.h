@@ -35,7 +35,7 @@ public:
 	 * Constructors and destructor
 	 */
 	EdgePairAngleObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::pair<uint64_t, uint64_t>& edge1_indices, const std::pair<uint64_t, uint64_t>& edge2_indices, bool enforce_psd = true) :
-		PeriodicObjective(objective_function_data_provider, "Edge Pair Angle Objective", M_PI / 2, enforce_psd),
+		PeriodicObjective(objective_function_data_provider, "Edge Pair Angle Objective", M_PI / 2, 8, enforce_psd),
 		edge1_indices_(edge1_indices),
 		edge2_indices_(edge2_indices)
 	{

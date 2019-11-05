@@ -10,7 +10,8 @@ import {
     CHANGE_DELTA,
     CHANGE_LAMBDA,
     CHANGE_SEAMLESS_WEIGHT,
-    CHANGE_SINGULARITY_WEIGHT,    
+    CHANGE_SINGULARITY_WEIGHT,
+    CHANGE_SINGULARITY_INTERVAL,
     CHANGE_POSITION_WEIGHT,
     CHANGE_GRID_HORIZONTAL_COLOR,
     CHANGE_GRID_VERTICAL_COLOR,
@@ -48,18 +49,19 @@ const INITIAL_STATE = {
     delta: 0.5,
     lambda: 0.2,
     seamlessWeight: 0,
-    singularityWeight: 0,    
+    singularityWeight: 0,
+    singularityInterval: 1,
     positionWeight: 100,
     gridHorizontalColor: 'rgb(0,0,0)',
     gridVerticalColor: 'rgb(0,0,0)',
-    gridBackgroundColor1: 'rgb(0,0,200)',
+    gridBackgroundColor1: 'rgb(200,200,0)',
     gridBackgroundColor2: 'rgb(200,200,0)',
     highlightedFaceColor: 'rgb(0,255,0)',
     draggedFaceColor: 'rgb(0,0,255)',
     fixedFaceColor: 'rgb(255,0,0)',
-    gridSize: 3,
+    gridSize: 7,
     gridTextureSize: 8,
-    gridLineWidth: 0,
+    gridLineWidth: 1,
     unitGridVisibility: EnumsExports.Visibility.HIDDEN,
     soupViewGridTextureVisibility: EnumsExports.Visibility.HIDDEN,
     optimizationDataMonitorVisibility: EnumsExports.Visibility.VISIBLE,
@@ -167,6 +169,11 @@ export const reducer = (state = INITIAL_STATE, action) => {
             return {
                 ...state,
                 singularityWeight: action.weight
+            };
+        case CHANGE_SINGULARITY_INTERVAL:
+            return {
+                ...state,
+                singularityInterval: action.interval
             };
         case CHANGE_POSITION_WEIGHT:
             return {

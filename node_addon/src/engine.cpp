@@ -68,12 +68,13 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "weight", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Weight) });
 	properties_map_.insert({ "name", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Name) });
 	properties_map_.insert({ "delta", static_cast<uint32_t>(Separation<Eigen::StorageOptions::RowMajor>::Properties::Delta) });
-
+	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularityObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
+	
 	// TODO: Expose interface for addition and removal of objective function
 	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
 	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
 	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
-	singularity_ = std::make_shared<SingularityObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
+	singularity_ = std::make_shared<SingularityObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, 1);
   	position_ = std::make_shared<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, std::string("Position"));
 	std::vector<std::shared_ptr<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> objective_functions;
 	objective_functions.push_back(position_);
