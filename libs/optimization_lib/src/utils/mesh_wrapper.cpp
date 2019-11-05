@@ -70,6 +70,16 @@ const Eigen::MatrixX2i& MeshWrapper::GetImageEdges() const
 	return e_im_;
 }
 
+const MeshWrapper::VI2VIsMap& MeshWrapper::GetImageNeighbours() const
+{
+	return v_im_2_neighbours;
+}
+
+const MeshWrapper::VI2VIsMap& MeshWrapper::GetDomainVerticesToImageVerticesMap() const
+{
+	return v_dom_2_v_im_;
+}
+
 const Eigen::MatrixX3d& MeshWrapper::GetD1() const
 {
 	return d1_;
@@ -302,6 +312,17 @@ void MeshWrapper::ComputeVertexIndexMaps()
 	}
 }
 
+void MeshWrapper::ComputeVertexToEdgeIndexMaps()
+{
+	for (int64_t edge_index = 0; edge_index < e_im_.rows(); ++edge_index)
+	{
+		auto current_edge_im = e_im_.row(edge_index);
+
+		v_im_2_e_im[current_edge_im(0)].push_back(edge_index);
+		v_im_2_e_im[current_edge_im(1)].push_back(edge_index);
+	}
+}
+
 void MeshWrapper::ComputeCorrespondingPairs()
 {
 	int64_t current_triplet_index = 0;
@@ -409,9 +430,33 @@ void MeshWrapper::ComputeCorrespondingVertexPairsEdgeLength()
 	}
 }
 
+void MeshWrapper::ComputeVertexNeighbours()
+{
+	for (uint64_t i = 0; i < v_im_.rows(); i++)
+	{
+		for (auto& edge_index : v_im_2_e_im[i])
+		{
+			auto edge = e_im_.row(edge_index);
+			for (int64_t col = 0; col < edge.cols(); col++)
+			{
+				auto vertex_index = edge.coeffRef(col);
+				if (vertex_index != i)
+				{
+					v_im_2_neighbours[i].push_back(vertex_index);
+				}				
+			}
+		}
+	}
+}
+
 int64_t MeshWrapper::GetImageVerticesCount() const
 {
 	return v_im_.rows();
+}
+
+int64_t MeshWrapper::GetDomainVerticesCount() const
+{
+	return v_dom_.rows();
 }
 
 Eigen::VectorXi MeshWrapper::GetImageFaceVerticesIndices(int64_t face_index)
@@ -453,11 +498,14 @@ void MeshWrapper::Initialize()
 
 	ComputeVertexIndexMaps();
 	ComputeEdgeIndexMaps();
+	ComputeVertexToEdgeIndexMaps();
 
 	ComputeCorrespondingPairs();
 
 	ComputeCorrespondingVertexPairsCoefficients();
 	ComputeCorrespondingVertexPairsEdgeLength();
+
+	ComputeVertexNeighbours();
 
 	ComputeSurfaceGradientPerFace(v_dom_, f_dom_, d1_, d2_);
 }

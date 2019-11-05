@@ -8,6 +8,7 @@
 // Optimization lib includes
 #include <libs/optimization_lib/include/utils/mesh_wrapper.h>
 #include <libs/optimization_lib/include/objective_functions/edge_pair_angle_objective.h>
+#include <libs/optimization_lib/include/objective_functions/integer_objective.h>
 #include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
 #include <libs/optimization_lib/include/utils/utils.h>
 
@@ -108,6 +109,26 @@ protected:
 	}
 };
 
+class IntegerObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
+{
+protected:
+	IntegerObjectiveFDTest() :
+		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+	{
+
+	}
+
+	~IntegerObjectiveFDTest() override
+	{
+
+	}
+
+	void CreateObjectiveFunction() override
+	{
+		objective_function_ = std::make_shared<IntegerObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, 9);
+	}
+};
+
 class SeamlessObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>
 {
 protected:
@@ -137,6 +158,16 @@ TEST_F(EdgePairAngleObjectiveFDTest, Gradient)
 }
 
 TEST_F(EdgePairAngleObjectiveFDTest, Hessian)
+{
+	AssertHessian(true);
+}
+
+TEST_F(IntegerObjectiveFDTest, Gradient)
+{
+	AssertGradient();
+}
+
+TEST_F(IntegerObjectiveFDTest, Hessian)
 {
 	AssertHessian(true);
 }

@@ -114,6 +114,17 @@ export class AutoquadsSideBar extends SideBar {
                     @value-changed="${this._seamlessWeightInputChanged}">
                 </side-bar-parameter-input>
                 <side-bar-parameter-input
+                    id="singularity-weight"
+                    increase-key="k"
+                    decrease-key="l"
+                    value="${this._singularityWeight}"
+                    min="0"
+                    max="10000"
+                    step="1"
+                    label="Singularity Weight"
+                    @value-changed="${this._singularityWeightInputChanged}">
+                </side-bar-parameter-input>
+                <side-bar-parameter-input
                     id="position-weight"
                     value="${this._positionWeight}"
                     min="0"
@@ -886,6 +897,10 @@ export class AutoquadsSideBar extends SideBar {
     _seamlessWeightInputChanged(e) {
         store.dispatch(ActionsExports.setSeamlessWeight(e.srcElement.value)); 
     }
+
+    _singularityWeightInputChanged(e) {
+        store.dispatch(ActionsExports.setSingularityWeight(e.srcElement.value)); 
+    }    
 
     _positionWeightInputChanged(e) {
         store.dispatch(ActionsExports.setPositionWeight(e.srcElement.value)); 

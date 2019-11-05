@@ -14,7 +14,9 @@ file(GLOB SOURCES
 	src/objective_functions/separation_objective.cpp
 	src/objective_functions/periodic_objective.cpp
 	src/objective_functions/edge_pair_angle_objective.cpp
+	src/objective_functions/integer_objective.cpp
 	src/objective_functions/seamless_objective.cpp
+	src/objective_functions/singularity_objective.cpp
 	src/iterative_methods/iterative_method.cpp
 	src/iterative_methods/newton_method.cpp
 	src/iterative_methods/gradient_descent.cpp
@@ -35,7 +37,9 @@ file(GLOB SOURCES
 	include/objective_functions/separation_objective.h
 	include/objective_functions/periodic_objective.h
 	include/objective_functions/edge_pair_angle_objective.h
+	include/objective_functions/integer_objective.h
 	include/objective_functions/seamless_objective.h
+	include/objective_functions/singularity_objective.h
 	include/iterative_methods/iterative_method.h
 	include/iterative_methods/newton_method.h
 	include/iterative_methods/gradient_descent.h

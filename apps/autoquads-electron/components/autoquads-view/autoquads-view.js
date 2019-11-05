@@ -148,6 +148,10 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: Number,
                 attribute: 'seamless-weight'
             },
+            singularityWeight: {
+                type: Number,
+                attribute: 'singularity-weight'
+            },
             positionWeight: {
                 type: Number,
                 attribute: 'position-weight'
@@ -379,7 +383,22 @@ export class AutoquadsView extends connect(store)(LitElement) {
             return this._engine.getObjectiveFunctionProperty('Seamless', 'weight');
         }
     }
-    
+
+    set singularityWeight(value) {
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            const oldValue = this._singularityWeight;
+            this._singularityWeight = value;
+            this._engine.setObjectiveFunctionProperty('Singularity', 'weight', value);
+            this.requestUpdate('singularityWeight', oldValue);
+        }
+    }
+
+    get singularityWeight() {
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            return this._engine.getObjectiveFunctionProperty('Singularity', 'weight');
+        }
+    }
+ 
     set positionWeight(value) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._positionWeight;

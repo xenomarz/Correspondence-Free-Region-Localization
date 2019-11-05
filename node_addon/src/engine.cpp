@@ -73,18 +73,36 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
 	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
 	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
+	singularity_ = std::make_shared<SingularityObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
   	position_ = std::make_shared<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, std::string("Position"));
 	std::vector<std::shared_ptr<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> objective_functions;
 	objective_functions.push_back(position_);
 	objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
 	objective_functions.push_back(seamless_);
+	objective_functions.push_back(singularity_);
 	composite_objective_ = std::make_shared<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, objective_functions, true);
 	mesh_wrapper_->RegisterModelLoadedCallback([&]() {
 		/**
 		 * Initialize objective functions
 		 */
 		seamless_->AddCorrespondingEdgePairs(mesh_wrapper_->GetCorrespondingEdgeVertices());
+
+		auto& dom_v_2_im_v_map = mesh_wrapper_->GetDomainVerticesToImageVerticesMap();
+		for(int64_t i = 0; i < mesh_wrapper_->GetDomainVerticesCount(); i++)
+		{
+			std::vector<SingularityObjective<Eigen::StorageOptions::RowMajor>::SingularCorner> singular_corners;
+			auto& image_indices = dom_v_2_im_v_map.at(i);
+			for(int64_t corner_index = 0; corner_index < image_indices.size(); corner_index++)
+			{
+				auto image_index = image_indices[corner_index];
+				auto& neighbours = mesh_wrapper_->GetImageNeighbours().at(image_index);
+				singular_corners.push_back(std::make_pair(image_index, neighbours));
+			}
+
+			singularity_->AddSingularCorners(singular_corners);
+		}
+		
 		composite_objective_->Initialize();
 
 		/**

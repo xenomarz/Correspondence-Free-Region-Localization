@@ -39,7 +39,8 @@ public:
 	using ModelLoadedCallback = void();
 
 	using EV2EVMap = std::vector<std::pair<std::pair<int64_t, int64_t>, std::pair<int64_t, int64_t>>>;
-
+	using VI2VIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
+	
 	/**
 	 * Constructors and destructor
 	 */
@@ -59,6 +60,8 @@ public:
 	const Eigen::MatrixX3i& GetImageFaces() const;
 	const Eigen::MatrixX2d& GetImageVertices() const;
 	const Eigen::MatrixX2i& GetImageEdges() const;
+	const VI2VIsMap& GetImageNeighbours() const;
+	const VI2VIsMap& GetDomainVerticesToImageVerticesMap() const;
 
 	/**
 	 * Overrides
@@ -71,6 +74,7 @@ public:
 	const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const override;
 	const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const override;
 	int64_t GetImageVerticesCount() const override;
+	int64_t GetDomainVerticesCount() const override;
 	const EV2EVMap& GetCorrespondingEdgeVertices() const;
 
 	/**
@@ -87,10 +91,10 @@ private:
 	 */
 	using EdgeDescriptor = std::pair<int64_t, int64_t>;
 	using ED2EIMap = std::unordered_map<EdgeDescriptor, int64_t, Utils::UnorderedPairHash, Utils::UnorderedPairEquals>;
-	using VI2VIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
 	using VI2VIMap = std::unordered_map<int64_t, int64_t>;
 	using EI2EIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
 	using EI2EIMap = std::unordered_map<int64_t, int64_t>;
+	using VI2EIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
 
 	/**
 	 * Private functions
@@ -136,10 +140,16 @@ private:
 	// Domain vertex index <-> image vertex index maps
 	void ComputeVertexIndexMaps();
 
+	// Vertex index -> edge indices maps
+	void ComputeVertexToEdgeIndexMaps();
+
 	// Image vertices corresponding pairs and image edges corresponding pairs
 	void ComputeCorrespondingPairs();
 	void ComputeCorrespondingVertexPairsCoefficients();
 	void ComputeCorrespondingVertexPairsEdgeLength();
+
+	// Compute vertex neighbours
+	void ComputeVertexNeighbours();
 
 	/**
 	 * Private methods
@@ -171,6 +181,9 @@ private:
 	Eigen::SparseMatrix<double> cv_pairs_coefficients_;
 	Eigen::VectorXd cv_pairs_edge_length_;
 
+	// Image neighbour vertices
+	VI2VIsMap v_im_2_neighbours;
+
 	// Maps
 	ED2EIMap ed_im_2_ei_im_;
 	ED2EIMap ed_dom_2_ei_dom_;
@@ -178,6 +191,7 @@ private:
 	VI2VIMap v_im_2_v_dom_;
 	EI2EIsMap e_dom_2_e_im_;
 	EI2EIMap e_im_2_e_dom_;
+	VI2EIsMap v_im_2_e_im;
 
 	// Boost signals
 	boost::signals2::signal<ModelLoadedCallback> model_loaded_signal_;

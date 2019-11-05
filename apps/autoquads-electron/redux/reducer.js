@@ -10,6 +10,7 @@ import {
     CHANGE_DELTA,
     CHANGE_LAMBDA,
     CHANGE_SEAMLESS_WEIGHT,
+    CHANGE_SINGULARITY_WEIGHT,    
     CHANGE_POSITION_WEIGHT,
     CHANGE_GRID_HORIZONTAL_COLOR,
     CHANGE_GRID_VERTICAL_COLOR,
@@ -47,6 +48,7 @@ const INITIAL_STATE = {
     delta: 0.5,
     lambda: 0.2,
     seamlessWeight: 0,
+    singularityWeight: 0,    
     positionWeight: 100,
     gridHorizontalColor: 'rgb(0,0,0)',
     gridVerticalColor: 'rgb(0,0,0)',
@@ -160,6 +162,11 @@ export const reducer = (state = INITIAL_STATE, action) => {
             return {
                 ...state,
                 seamlessWeight: action.weight
+            };
+        case CHANGE_SINGULARITY_WEIGHT:
+            return {
+                ...state,
+                singularityWeight: action.weight
             };
         case CHANGE_POSITION_WEIGHT:
             return {
