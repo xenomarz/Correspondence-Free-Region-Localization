@@ -99,10 +99,10 @@ public:
 		std::lock_guard<std::mutex> lock(m_);
 
 		// TODO: Add a flag that allows to explicitly zero the main diagonal
-		//for(uint64_t i = 0; i < this->variables_count_; i++)
-		//{
-		//	triplets_.push_back(Eigen::Triplet<double>(i,i,0));
-		//}
+		for(uint64_t i = 0; i < this->variables_count_; i++)
+		{
+			triplets_.push_back(Eigen::Triplet<double>(i,i,0));
+		}
 		
 		H_.setFromTriplets(triplets_.begin(), triplets_.end());
 		return H_;
@@ -230,14 +230,24 @@ public:
 
 	virtual void AddValuePerVertex(Eigen::VectorXd& f_per_vertex, const double w = 1) const
 	{
-		std::lock_guard<std::mutex> lock(m_);
 		f_per_vertex += w * f_per_vertex_;
 	}
 
 	virtual void AddGradient(Eigen::VectorXd& g, const double w = 1) const
 	{
-		std::lock_guard<std::mutex> lock(m_);
 		g += w * g_;
+	}
+
+	void AddValuePerVertexSafe(Eigen::VectorXd& f_per_vertex, const double w = 1) const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		AddValuePerVertex(f_per_vertex, w);
+	}
+
+	void AddGradientSafe(Eigen::VectorXd& g, const double w = 1) const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		AddGradient(g, w);
 	}
 
 	virtual void AddTriplets(std::vector<Eigen::Triplet<double>>& triplets, const double w = 1) const

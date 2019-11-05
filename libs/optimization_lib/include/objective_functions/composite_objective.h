@@ -143,27 +143,22 @@ private:
 	void CalculateValuePerVertex(Eigen::VectorXd& f_per_vertex) override
 	{
 		f_per_vertex.setZero();
-		#pragma omp parallel for if(parallel_update_)
 		for (int64_t i = 0; i < objective_functions_.size(); i++)
 		{
 			auto& objective_function = objective_functions_.at(i);
 			auto w = objective_function->GetWeight();
-			objective_function->AddValuePerVertex(f_per_vertex, w);
+			objective_function->AddValuePerVertexSafe(f_per_vertex, w);
 		}
 	}
 
 	void CalculateGradient(Eigen::VectorXd& g) override
 	{
 		g.setZero();
-		//#pragma omp parallel for if(parallel_update_)
-		//for (const auto& objective_function : objective_functions_)
-
-		#pragma omp parallel for if(parallel_update_)
 		for(int64_t i = 0; i < objective_functions_.size(); i++)
 		{
 			auto& objective_function = objective_functions_.at(i);
 			auto w = objective_function->GetWeight();
-			objective_function->AddGradient(g, w);
+			objective_function->AddGradientSafe(g, w);
 		}
 	}
 
