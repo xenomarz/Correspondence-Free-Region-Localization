@@ -11,8 +11,10 @@ solver::solver()
 void solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
 {
 	this->objective = objective;
-	X = X0;
-	ext_x = X;
+	X.resize(X0.rows() + F.rows());
+	X.head(X0.rows()) = X0;
+	X.tail(F.rows()) = VectorXd::Random(F.rows());
+	ext_x = X.head(X.rows() - F.rows());
 	internal_init();
 }
 
@@ -27,10 +29,8 @@ int solver::run()
 	is_running = true;
 	halt = false;
 	int steps = 0;
-	VectorXd prevX;
 	do
 	{
-		prevX = X;
 		currentEnergy = step();
 		linesearch();
 		update_external_data();
@@ -45,8 +45,8 @@ void solver::linesearch()
 	double step_size;
 	if (FlipAvoidingLineSearch)
 	{
-		auto MatX = Map<MatrixX2d>(X.data(), X.rows() / 2, 2);
-		MatrixXd MatP = Map<const MatrixX2d>(p.data(), p.rows() / 2, 2);
+		auto MatX = Map<MatrixX2d>(X.head(X.rows() - F.rows()).data(), X.head(X.rows() - F.rows()).rows() / 2, 2);
+		MatrixXd MatP = Map<const MatrixX2d>(p.head(X.rows() - F.rows()).data(), p.head(X.rows() - F.rows()).rows() / 2, 2);
 		double min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(MatX, F, MatP);
 		step_size = min(1., min_step_to_singularity*0.8);
 	}
@@ -87,7 +87,7 @@ void solver::update_external_data()
 {
 	give_parameter_update_slot();
 	unique_lock<shared_timed_mutex> lock(*data_mutex);
-	ext_x = X;
+	ext_x = X.head(X.rows() - F.rows());
 	progressed = true;
 }
 

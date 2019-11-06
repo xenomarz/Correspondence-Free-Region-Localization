@@ -138,7 +138,7 @@ void Lagrangian::hessian()
 			}
 		}
 	}
-	cout << "index2 = " << index2 << endl;
+	
 	for (int i = 0; i < F.rows(); ++i) {
 		//prepare hessian
 		Vector4d dE_dJ(
@@ -148,16 +148,13 @@ void Lagrangian::hessian()
 			-a(i)
 		);
 		VectorXd hess = Area(i)*(dE_dJ.transpose() * dJ_dX[i]).transpose();
-
 		SS[index2++] = hess[0];
 		SS[index2++] = hess[1];
 		SS[index2++] = hess[2];
 		SS[index2++] = hess[3];
 		SS[index2++] = hess[4];
-		SS[index2++] = hess[5];
-		
+		SS[index2++] = hess[5];	
 	}
-	cout << "index2 = " << index2 << endl;
 }
 
 bool Lagrangian::update_variables(const VectorXd& X)
@@ -186,16 +183,13 @@ bool Lagrangian::update_variables(const VectorXd& X)
 
 void Lagrangian::init_hessian()
 {
-	cout << "V.rows() = " << V.rows() << < endl;
-	cout << "F.rows() = " << 2 * V.rows() + F.rows() << < endl;
-	cout << "vector size = " << 2 * V.rows() + F.rows() << < endl;
 	II.clear();
 	JJ.clear();
 	auto PushPair = [&](int i, int j) { if (i > j) swap(i, j); II.push_back(i); JJ.push_back(j); };
 	int n = V.rows();
 	for (int i = 0; i < F.rows(); ++i)
 		AddElementToHessian({ F(i, 0), F(i, 1), F(i, 2), F(i, 0) + n, F(i, 1) + n, F(i, 2) + n });
-	cout << "II = " << II.size() << endl;
+	
 	for (int i = 0; i < F.rows(); ++i)
 	{
 		PushPair(i + 2 * n, F(i, 0));
@@ -206,8 +200,7 @@ void Lagrangian::init_hessian()
 		PushPair(i + 2 * n, F(i, 2) + n);
 	}
 	//we add the indexes of the last element in order to tell the solver the size of the matrix
-	PushPair(2 * n + F.rows() - 1, 2 * n + F.rows() - 1);
-
+	PushPair(2 * n + F.rows() - 1, 2 * n + F.rows() -1);
+	
 	SS = vector<double>(II.size(), 0.);
-	cout << "II = " << II.size() << endl;
 }

@@ -488,10 +488,10 @@ void basic_app::Draw_menu_for_Solver() {
 				else {
 					Outputs[i].solver = Outputs[i].gradient_descent;
 				}
-				VectorXd initialguessXX = Map<const VectorXd>(OutputModel(i).V.leftCols(2).data(), OutputModel(i).V.leftCols(2).rows() * 2);
-				Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
 				MatrixX3i F = OutputModel(i).F;
 				Outputs[i].solver->setFlipAvoidingLineSearch(F);
+				VectorXd initialguessXX = Map<const VectorXd>(OutputModel(i).V.leftCols(2).data(), OutputModel(i).V.leftCols(2).rows() * 2);
+				Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
 			}
 			start_solver_thread();
 		}
@@ -520,8 +520,8 @@ void basic_app::Draw_menu_for_Solver() {
 					VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
 					for (int i = 0; i < Outputs.size(); i++)
 					{
-						Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
 						Outputs[i].solver->setFlipAvoidingLineSearch(F[i]);
+						Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
 					}
 					
 				}
@@ -547,8 +547,8 @@ void basic_app::Draw_menu_for_Solver() {
 				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
 				for (int i = 0; i < Outputs.size(); i++)
 				{
-					Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
 					Outputs[i].solver->setFlipAvoidingLineSearch(F[i]);
+					Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
 				}
 			}
 			
@@ -1011,8 +1011,6 @@ void basic_app::update_texture(MatrixXd& V_uv, const int index) {
 	
 void basic_app::checkGradients()
 {
-	cout << "#V = " << InputModel().V.rows() << " , #F = " << InputModel().F.rows() << endl;
-
 	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
 		cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << endl;
@@ -1022,11 +1020,12 @@ void basic_app::checkGradients()
 		}
 		int idx = 0;
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
-			VectorXd xxxx; xxxx.resize(2 * InputModel().V.rows());
+			
 			if (!idx++) {
-				xxxx = VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
-				xxxx.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
-				objective->checkGradient(xxxx);
+				VectorXd x;
+				x = VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
+				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
+				objective->checkGradient(x);
 			}
 			else {
 				objective->checkGradient(Outputs[i].solver->ext_x);
@@ -1034,7 +1033,6 @@ void basic_app::checkGradients()
 			
 		}
 	}
-	start_solver_thread();
 }
 
 void basic_app::checkHessians()
@@ -1046,11 +1044,20 @@ void basic_app::checkHessians()
 			solver_on = false;
 			return;
 		}
+		int idx = 0;
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
-			objective->checkHessian(Outputs[i].solver->ext_x);
+			if (!idx++) {
+				VectorXd x;
+				x = VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
+				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
+				objective->checkHessian(x);
+			}
+			else {
+				objective->checkHessian(Outputs[i].solver->ext_x);
+			}
+			
 		}
 	}
-	start_solver_thread();
 }
 
 void basic_app::update_mesh()
@@ -1173,10 +1180,10 @@ void basic_app::initializeSolver(const int index)
 		Update_view();
 	}
 	VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
-	Outputs[index].newton->init(Outputs[index].totalObjective, initialguessXX);
 	Outputs[index].newton->setFlipAvoidingLineSearch(F);
-	Outputs[index].gradient_descent->init(Outputs[index].totalObjective, initialguessXX);
+	Outputs[index].newton->init(Outputs[index].totalObjective, initialguessXX);
 	Outputs[index].gradient_descent->setFlipAvoidingLineSearch(F);
+	Outputs[index].gradient_descent->init(Outputs[index].totalObjective, initialguessXX);
 	
 	cout << "Solver is initialized!" << endl;
 }
