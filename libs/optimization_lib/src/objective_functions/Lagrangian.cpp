@@ -62,7 +62,7 @@ double Lagrangian::value(bool update)
 	VectorXd LSCM = 2 * d.cwiseAbs2() + (b + c).cwiseAbs2() + 2 * a.cwiseAbs2();
 	VectorXd areaE = detJ - VectorXd::Ones(F.rows());
 	
-	VectorXd E = LSCM - lambda.cwiseProduct(areaE);
+	VectorXd E = LSCM + lambda.cwiseProduct(areaE);
 	double value = (Area.asDiagonal() * E).sum();
 	
 	if (update) {
@@ -93,10 +93,10 @@ void Lagrangian::gradient(VectorXd& g)
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		//prepare gradient
 		Vector4d dE_dJ(
-			4 * a(fi) - lambda(fi) * d(fi), 
-			2 * b(fi) + 2 * c(fi) + lambda(fi) * c(fi),
-			2 * b(fi) + 2 * c(fi) + lambda(fi) * b(fi),
-			4 * d(fi) - lambda(fi) * a(fi)
+			4 * a(fi) + lambda(fi) * d(fi), 
+			2 * b(fi) + 2 * c(fi) - lambda(fi) * c(fi),
+			2 * b(fi) + 2 * c(fi) - lambda(fi) * b(fi),
+			4 * d(fi) + lambda(fi) * a(fi)
 		);
 		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
 		
@@ -110,7 +110,7 @@ void Lagrangian::gradient(VectorXd& g)
 		g(F(fi, 1) + V.rows()) += grad(fi, 4);
 		g(F(fi, 2) + V.rows()) += grad(fi, 5);
 		//Update the gradient of lambda
-		g(fi + 2 * V.rows()) += Area(fi)*(1 - detJ(fi));
+		g(fi + 2 * V.rows()) += Area(fi)*(detJ(fi) - 1);
 	}
 	gradient_norm = g.norm();
 }
@@ -123,10 +123,10 @@ void Lagrangian::hessian()
 		//prepare hessian
 		MatrixXd d2E_dJ2(4, 4);
 		d2E_dJ2 <<
-			4			, 0				, 0				, -lambda(i),
-			0			, 2				, 2+lambda(i)	, 0			,
-			0			, 2 + lambda(i)	, 2				, 0			,
-			-lambda(i)	, 0				, 0				, 4;
+			4			, 0				, 0				, lambda(i),
+			0			, 2				, 2-lambda(i)	, 0			,
+			0			, 2 - lambda(i)	, 2				, 0			,
+			lambda(i)	, 0				, 0				, 4;
 
 		Hessian[i] = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
 
@@ -142,10 +142,10 @@ void Lagrangian::hessian()
 	for (int i = 0; i < F.rows(); ++i) {
 		//prepare hessian
 		Vector4d dE_dJ(
-			-d(i),
-			c(i),
-			b(i),
-			-a(i)
+			d(i),
+			-c(i),
+			-b(i),
+			a(i)
 		);
 		VectorXd hess = Area(i)*(dE_dJ.transpose() * dJ_dX[i]).transpose();
 		SS[index2++] = hess[0];

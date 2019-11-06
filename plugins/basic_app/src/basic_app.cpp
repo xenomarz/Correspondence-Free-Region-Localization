@@ -1023,7 +1023,7 @@ void basic_app::checkGradients()
 			
 			if (!idx++) {
 				VectorXd x;
-				x = VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
+				x = VectorXd::Ones(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
 				objective->checkGradient(x);
 			}
@@ -1048,7 +1048,7 @@ void basic_app::checkHessians()
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
 			if (!idx++) {
 				VectorXd x;
-				x = VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
+				x = VectorXd::Ones(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
 				objective->checkHessian(x);
 			}
