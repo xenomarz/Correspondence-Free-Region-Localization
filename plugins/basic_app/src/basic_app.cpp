@@ -1118,9 +1118,9 @@ void basic_app::initializeSolver(const int index)
 	auto areapreservingOneRing = make_unique<AreaDistortionOneRing>();
 	areapreservingOneRing->init_mesh(V, F);
 	areapreservingOneRing->init();
-	auto lagrange = make_unique<Lagrangian>();
-	lagrange->init_mesh(V, F);
-	lagrange->init();
+	auto lagrangianLscmStArea = make_unique<LagrangianLscmStArea>();
+	lagrangianLscmStArea->init_mesh(V, F);
+	lagrangianLscmStArea->init();
 	auto symDirichlet = make_unique<SymmetricDirichlet>();
 	symDirichlet->init_mesh(V, F);
 	symDirichlet->init();
@@ -1158,7 +1158,7 @@ void basic_app::initializeSolver(const int index)
 	Outputs[index].HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
 
 	Outputs[index].totalObjective->objectiveList.clear();
-	Outputs[index].totalObjective->objectiveList.push_back(move(lagrange));
+	Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianLscmStArea));
 	/*Outputs[index].totalObjective->objectiveList.push_back(move(areapreservingOneRing));
 	Outputs[index].totalObjective->objectiveList.push_back(move(areaPreserving));
 	Outputs[index].totalObjective->objectiveList.push_back(move(anglePreserving));

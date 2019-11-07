@@ -1,12 +1,12 @@
-#include <objective_functions/Lagrangian.h>
+#include <objective_functions/LagrangianLscmStArea.h>
 
-Lagrangian::Lagrangian()
+LagrangianLscmStArea::LagrangianLscmStArea()
 {
-	name = "Lagrangian";
+	name = "LagrangianLscmStArea";
 	w = 0;
 }
 
-void Lagrangian::init()
+void LagrangianLscmStArea::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw name + " must define members V,F before init()!";
@@ -48,7 +48,7 @@ void Lagrangian::init()
 	init_hessian();
 }
 
-void Lagrangian::updateX(const VectorXd& X)
+void LagrangianLscmStArea::updateX(const VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
@@ -56,7 +56,7 @@ void Lagrangian::updateX(const VectorXd& X)
 	}
 }
 
-double Lagrangian::value(bool update)
+double LagrangianLscmStArea::value(bool update)
 {
 	// L = LSCM - lambda * area
 	VectorXd LSCM = 2 * d.cwiseAbs2() + (b + c).cwiseAbs2() + 2 * a.cwiseAbs2();
@@ -73,7 +73,7 @@ double Lagrangian::value(bool update)
 	return value;
 }
 
-double Lagrangian::AugmentedValue()
+double LagrangianLscmStArea::AugmentedValue()
 {
 	// L = LSCM - lambda * area
 	double k = 1;
@@ -85,7 +85,7 @@ double Lagrangian::AugmentedValue()
 	return value(false) + k* augmented_part;
 }
 
-void Lagrangian::gradient(VectorXd& g)
+void LagrangianLscmStArea::gradient(VectorXd& g)
 {
 	g.conservativeResize(V.rows() * 2 + F.rows());
 	g.setZero();
@@ -115,7 +115,7 @@ void Lagrangian::gradient(VectorXd& g)
 	gradient_norm = g.norm();
 }
 
-void Lagrangian::hessian()
+void LagrangianLscmStArea::hessian()
 {
 #pragma omp parallel for num_threads(24)
 	int index2 = 0;
@@ -157,7 +157,7 @@ void Lagrangian::hessian()
 	}
 }
 
-bool Lagrangian::update_variables(const VectorXd& X)
+bool LagrangianLscmStArea::update_variables(const VectorXd& X)
 {
 	lambda = X.tail(F.rows());
 	Eigen::Map<const MatrixX2d> x(X.head(2*V.rows()).data(), V.rows(), 2);
@@ -181,7 +181,7 @@ bool Lagrangian::update_variables(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 }
 
-void Lagrangian::init_hessian()
+void LagrangianLscmStArea::init_hessian()
 {
 	II.clear();
 	JJ.clear();

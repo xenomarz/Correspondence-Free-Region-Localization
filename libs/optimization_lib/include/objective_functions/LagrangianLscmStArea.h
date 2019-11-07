@@ -1,7 +1,7 @@
 #pragma once
 #include <libs/optimization_lib/include/objective_functions/TriangleMeshObjectiveFunction.h>
 
-class Lagrangian : public TriangleMeshObjectiveFunction
+class LagrangianLscmStArea : public TriangleMeshObjectiveFunction
 {	
 private:
 	MatrixXd grad;
@@ -11,7 +11,7 @@ private:
 	bool update_variables(const VectorXd& X);
 	void init_hessian() override;
 public:
-	Lagrangian();
+	LagrangianLscmStArea();
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
 	virtual double value(const bool update = true) override;
