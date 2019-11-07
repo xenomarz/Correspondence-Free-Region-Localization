@@ -1021,7 +1021,7 @@ void basic_app::checkGradients()
 		int idx = 0;
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
 			
-			if (!idx++) {
+			if (/*!idx++*/true) {
 				VectorXd x;
 				x = VectorXd::Ones(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
@@ -1046,7 +1046,7 @@ void basic_app::checkHessians()
 		}
 		int idx = 0;
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
-			if (!idx++) {
+			if (/*!idx++*/true) {
 				VectorXd x;
 				x = VectorXd::Ones(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
@@ -1121,6 +1121,9 @@ void basic_app::initializeSolver(const int index)
 	auto lagrangianLscmStArea = make_unique<LagrangianLscmStArea>();
 	lagrangianLscmStArea->init_mesh(V, F);
 	lagrangianLscmStArea->init();
+	auto lagrangianAreaStLscm = make_unique<LagrangianAreaStLscm>();
+	lagrangianAreaStLscm->init_mesh(V, F);
+	lagrangianAreaStLscm->init();
 	auto symDirichlet = make_unique<SymmetricDirichlet>();
 	symDirichlet->init_mesh(V, F);
 	symDirichlet->init();
@@ -1159,6 +1162,7 @@ void basic_app::initializeSolver(const int index)
 
 	Outputs[index].totalObjective->objectiveList.clear();
 	Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianLscmStArea));
+	Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianAreaStLscm));
 	/*Outputs[index].totalObjective->objectiveList.push_back(move(areapreservingOneRing));
 	Outputs[index].totalObjective->objectiveList.push_back(move(areaPreserving));
 	Outputs[index].totalObjective->objectiveList.push_back(move(anglePreserving));

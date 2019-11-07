@@ -1,12 +1,12 @@
-#include <objective_functions/LagrangianLscmStArea.h>
+#include <objective_functions/LagrangianAreaStLscm.h>
 
-LagrangianLscmStArea::LagrangianLscmStArea()
+LagrangianAreaStLscm::LagrangianAreaStLscm()
 {
-	name = "LagrangianLscmStArea";
+	name = "LagrangianAreaStLscm";
 	w = 0;
 }
 
-void LagrangianLscmStArea::init()
+void LagrangianAreaStLscm::init()
 {
 	if (V.size() == 0 || F.size() == 0)
 		throw name + " must define members V,F before init()!";
@@ -48,7 +48,7 @@ void LagrangianLscmStArea::init()
 	init_hessian();
 }
 
-void LagrangianLscmStArea::updateX(const VectorXd& X)
+void LagrangianAreaStLscm::updateX(const VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
@@ -56,13 +56,13 @@ void LagrangianLscmStArea::updateX(const VectorXd& X)
 	}
 }
 
-double LagrangianLscmStArea::value(bool update)
+double LagrangianAreaStLscm::value(bool update)
 {
 	// L = LSCM + lambda * area
 	VectorXd LSCM = 2 * d.cwiseAbs2() + (b + c).cwiseAbs2() + 2 * a.cwiseAbs2();
-	VectorXd areaE = detJ - VectorXd::Ones(F.rows());
+	VectorXd areaE = 0.5 * ((detJ - VectorXd::Ones(F.rows())).cwiseAbs2());
 	
-	VectorXd E = LSCM + lambda.cwiseProduct(areaE);
+	VectorXd E = areaE + lambda.cwiseProduct(LSCM);
 	double value = (Area.asDiagonal() * E).sum();
 	
 	if (update) {
@@ -73,19 +73,19 @@ double LagrangianLscmStArea::value(bool update)
 	return value;
 }
 
-double LagrangianLscmStArea::AugmentedValue()
+double LagrangianAreaStLscm::AugmentedValue()
 {
 	// Augmented_L = L + k * ||LSCM||^2
 	double k = 1;
 
-	VectorXd areaE = detJ - VectorXd::Ones(F.rows());
+	VectorXd LSCM = 2 * d.cwiseAbs2() + (b + c).cwiseAbs2() + 2 * a.cwiseAbs2();
 	//I am not sure of multiplying areaE by Area!!!
-	double augmented_part = (Area.asDiagonal() * areaE.cwiseAbs2()).sum();
+	double augmented_part = (Area.asDiagonal() * LSCM.cwiseAbs2()).sum();
 	
 	return value(false) + k* augmented_part;
 }
 
-void LagrangianLscmStArea::gradient(VectorXd& g)
+void LagrangianAreaStLscm::gradient(VectorXd& g)
 {
 	g.conservativeResize(V.rows() * 2 + F.rows());
 	g.setZero();
@@ -93,10 +93,10 @@ void LagrangianLscmStArea::gradient(VectorXd& g)
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		//prepare gradient
 		Vector4d dE_dJ(
-			4 * a(fi) + lambda(fi) * d(fi), 
-			2 * b(fi) + 2 * c(fi) - lambda(fi) * c(fi),
-			2 * b(fi) + 2 * c(fi) - lambda(fi) * b(fi),
-			4 * d(fi) + lambda(fi) * a(fi)
+			(detJ(fi) - 1)*d(fi) + 4 * lambda(fi)*a(fi),
+			(1 - detJ(fi))*c(fi) + lambda(fi)*(2 * b(fi) + 2 * c(fi)),
+			(1 - detJ(fi))*b(fi) + lambda(fi)*(2 * b(fi) + 2 * c(fi)),
+			(detJ(fi) - 1)*a(fi) + 4 * lambda(fi)*d(fi)
 		);
 		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
 		
@@ -110,12 +110,12 @@ void LagrangianLscmStArea::gradient(VectorXd& g)
 		g(F(fi, 1) + V.rows()) += grad(fi, 4);
 		g(F(fi, 2) + V.rows()) += grad(fi, 5);
 		//Update the gradient of lambda
-		g(fi + 2 * V.rows()) += Area(fi)*(detJ(fi) - 1);
+		g(fi + 2 * V.rows()) += Area(fi)* ( 2 * pow(d(fi),2) + pow(b(fi) + c(fi),2) + 2 * pow(a(fi),2));
 	}
 	gradient_norm = g.norm();
 }
 
-void LagrangianLscmStArea::hessian()
+void LagrangianAreaStLscm::hessian()
 {
 #pragma omp parallel for num_threads(24)
 	int index2 = 0;
@@ -123,10 +123,10 @@ void LagrangianLscmStArea::hessian()
 		//prepare hessian
 		MatrixXd d2E_dJ2(4, 4);
 		d2E_dJ2 <<
-			4			, 0				, 0				, lambda(i),
-			0			, 2				, 2-lambda(i)	, 0			,
-			0			, 2 - lambda(i)	, 2				, 0			,
-			lambda(i)	, 0				, 0				, 4;
+			pow(d(i), 2) + 4 * lambda(i)	, -c(i)*d(i)									, -b(i)*d(i)									, 2*a(i)*d(i)-b(i)*c(i)-1,
+			-c(i)*d(i)						, pow(c(i), 2) + 2 * lambda(i)					, -a(i)*d(i) + 2 * b(i)*c(i) + 1 + 2 * lambda(i), -a(i)*c(i),
+			-b(i)*d(i)						, -a(i)*d(i) + 2 * b(i)*c(i) + 1 + 2 * lambda(i), pow(b(i), 2) + 2 * lambda(i)					, -a(i)*b(i),
+			2 * a(i)*d(i) - b(i)*c(i) - 1	, -a(i)*c(i)									, -a(i)*b(i)									, pow(a(i), 2) + 4 * lambda(i);
 
 		Hessian[i] = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
 
@@ -142,10 +142,10 @@ void LagrangianLscmStArea::hessian()
 	for (int i = 0; i < F.rows(); ++i) {
 		//prepare hessian
 		Vector4d dE_dJ(
-			d(i),
-			-c(i),
-			-b(i),
-			a(i)
+			4 * a(i),
+			2 * b(i) + 2 * c(i),
+			2 * b(i) + 2 * c(i),
+			4 * d(i)
 		);
 		VectorXd hess = Area(i)*(dE_dJ.transpose() * dJ_dX[i]).transpose();
 		SS[index2++] = hess[0];
@@ -157,7 +157,7 @@ void LagrangianLscmStArea::hessian()
 	}
 }
 
-bool LagrangianLscmStArea::update_variables(const VectorXd& X)
+bool LagrangianAreaStLscm::update_variables(const VectorXd& X)
 {
 	lambda = X.tail(F.rows());
 	Eigen::Map<const MatrixX2d> x(X.head(2*V.rows()).data(), V.rows(), 2);
@@ -181,7 +181,7 @@ bool LagrangianLscmStArea::update_variables(const VectorXd& X)
 	return ((detJ.array() < 0).any());
 }
 
-void LagrangianLscmStArea::init_hessian()
+void LagrangianAreaStLscm::init_hessian()
 {
 	II.clear();
 	JJ.clear();

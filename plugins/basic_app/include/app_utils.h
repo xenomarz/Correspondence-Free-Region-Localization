@@ -44,6 +44,7 @@
 #include "../../libs/optimization_lib/include/objective_functions/LeastSquaresConformal.h"
 #include "../../libs/optimization_lib/include/objective_functions/PenaltyPositionalConstraints.h"
 #include "../../libs/optimization_lib/include/objective_functions/LagrangianLscmStArea.h"
+#include "../../libs/optimization_lib/include/objective_functions/LagrangianAreaStLscm.h"
 #include <atomic>
 
 #define RED_COLOR Vector3f(1, 0, 0)

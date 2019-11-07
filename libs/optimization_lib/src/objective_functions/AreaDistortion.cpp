@@ -58,7 +58,7 @@ void AreaDistortion::updateX(const VectorXd& X)
 double AreaDistortion::value(bool update)
 {
 	// E = 0.5(det(J) - 1)^2
-	VectorXd E = (detJ - VectorXd::Ones(detJ.rows())).cwiseAbs2();
+	VectorXd E = (detJ - VectorXd::Ones(F.rows())).cwiseAbs2();
 	double value = 0.5 * (Area.asDiagonal() * E).sum();
 	
 	if (update) {
