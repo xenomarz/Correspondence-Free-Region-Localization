@@ -35,7 +35,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		viewer->core(inputCoreID).lighting_factor = 0.2;
 
 		//Load multiple views
-		Outputs.push_back(Output(viewer,false));
+		Outputs.push_back(Output(viewer,false, solver_type));
 		core_size = 1.0 / (Outputs.size() + 1.0);
 		
 		//maximize window
@@ -114,11 +114,8 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 			add_output(false);
 		ImGui::SameLine(0, p);
 		if (ImGui::Button("Remove Output", ImVec2((w - p) / 2.f, 0)) && (Outputs.size() > 1))
-			remove_output();
-		
-			
+			remove_output();	
 	}
-	
 	
 	if (ImGui::Combo("View", (int *)(&view), app_utils::build_view_names_list(Outputs.size()))) {
 		// That's how you get the current width/height of the frame buffer (for example, after the window was resized)
@@ -172,7 +169,7 @@ void basic_app::remove_output() {
 
 void basic_app::add_output(const bool isConstrObjFunc) {
 	stop_solver_thread();
-	Outputs.push_back(Output(viewer, isConstrObjFunc));
+	Outputs.push_back(Output(viewer, isConstrObjFunc, solver_type));
 	core_size = 1.0 / (Outputs.size() + 1.0);
 
 	viewer->load_mesh_from_file(modelPath.c_str());
