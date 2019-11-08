@@ -35,7 +35,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		viewer->core(inputCoreID).lighting_factor = 0.2;
 
 		//Load multiple views
-		Outputs.push_back(Output(viewer));
+		Outputs.push_back(Output(viewer,false));
 		core_size = 1.0 / (Outputs.size() + 1.0);
 		
 		//maximize window
@@ -76,7 +76,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 
 			if (model_loaded) {
 				//add new data
-				add_output();
+				add_output(false);
 			}
 
 			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
@@ -108,8 +108,10 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	}
 	
 	if (model_loaded) {
-		if (ImGui::Button("Add Output", ImVec2((w - p) / 2.f, 0)))
-			add_output();
+		if (ImGui::Button("Add Output con", ImVec2((w - p) / 2.f, 0)))
+			add_output(true);
+		if (ImGui::Button("Add Output uncon", ImVec2((w - p) / 2.f, 0)))
+			add_output(false);
 		ImGui::SameLine(0, p);
 		if (ImGui::Button("Remove Output", ImVec2((w - p) / 2.f, 0)) && Outputs.size()>1)
 			remove_output();
@@ -169,9 +171,9 @@ void basic_app::remove_output() {
 	post_resize(frameBufferWidth, frameBufferHeight);
 }
 
-void basic_app::add_output() {
+void basic_app::add_output(const bool isConstrObjFunc) {
 	stop_solver_thread();
-	Outputs.push_back(Output(viewer));
+	Outputs.push_back(Output(viewer, isConstrObjFunc));
 	core_size = 1.0 / (Outputs.size() + 1.0);
 
 	viewer->load_mesh_from_file(modelPath.c_str());
@@ -1018,10 +1020,8 @@ void basic_app::checkGradients()
 			solver_on = false;
 			return;
 		}
-		int idx = 0;
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
-			
-			if (/*!idx++*/true) {
+			if (Outputs[i].solver->IsConstrObjFunc) {
 				VectorXd x;
 				x = VectorXd::Ones(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
@@ -1044,9 +1044,8 @@ void basic_app::checkHessians()
 			solver_on = false;
 			return;
 		}
-		int idx = 0;
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
-			if (/*!idx++*/true) {
+			if (Outputs[i].solver->IsConstrObjFunc) {
 				VectorXd x;
 				x = VectorXd::Ones(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
@@ -1055,7 +1054,6 @@ void basic_app::checkHessians()
 			else {
 				objective->checkHessian(Outputs[i].solver->ext_x);
 			}
-			
 		}
 	}
 }
@@ -1137,37 +1135,41 @@ void basic_app::initializeSolver(const int index)
 	constraintsPositional->numV = V.rows();
 	constraintsPositional->init();
 
-	//weights
-	if (index == 0) {
-		areapreservingOneRing->w = 1;
-		areaPreserving->w = 0;
-		anglePreserving->w = 0.1;
-		symDirichlet->w = 0;
-	}
-	else if (index == 1) {
-		areapreservingOneRing->w = 0;
-		areaPreserving->w = 1;
-		anglePreserving->w = 0.1;
-		symDirichlet->w = 0;
-	}
-	else if (index == 2) {
-		areapreservingOneRing->w = 0;
-		areaPreserving->w = 0;
-		anglePreserving->w = 0;
-		symDirichlet->w = 1;
-	}
+	////weights
+	//if (index == 0) {
+	//	areapreservingOneRing->w = 1;
+	//	areaPreserving->w = 0;
+	//	anglePreserving->w = 0.1;
+	//	symDirichlet->w = 0;
+	//}
+	//else if (index == 1) {
+	//	areapreservingOneRing->w = 0;
+	//	areaPreserving->w = 1;
+	//	anglePreserving->w = 0.1;
+	//	symDirichlet->w = 0;
+	//}
+	//else if (index == 2) {
+	//	areapreservingOneRing->w = 0;
+	//	areaPreserving->w = 0;
+	//	anglePreserving->w = 0;
+	//	symDirichlet->w = 1;
+	//}
 
 	Outputs[index].HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
 	Outputs[index].HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
 
 	Outputs[index].totalObjective->objectiveList.clear();
-	Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianLscmStArea));
-	Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianAreaStLscm));
-	/*Outputs[index].totalObjective->objectiveList.push_back(move(areapreservingOneRing));
-	Outputs[index].totalObjective->objectiveList.push_back(move(areaPreserving));
-	Outputs[index].totalObjective->objectiveList.push_back(move(anglePreserving));
-	Outputs[index].totalObjective->objectiveList.push_back(move(symDirichlet));
-	Outputs[index].totalObjective->objectiveList.push_back(move(constraintsPositional));*/
+	if (Outputs[index].solver->IsConstrObjFunc) {
+		Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianLscmStArea));
+		Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianAreaStLscm));
+	}
+	else {
+		Outputs[index].totalObjective->objectiveList.push_back(move(areapreservingOneRing));
+		Outputs[index].totalObjective->objectiveList.push_back(move(areaPreserving));
+		Outputs[index].totalObjective->objectiveList.push_back(move(anglePreserving));
+		Outputs[index].totalObjective->objectiveList.push_back(move(symDirichlet));
+		Outputs[index].totalObjective->objectiveList.push_back(move(constraintsPositional));
+	}
 	Outputs[index].totalObjective->init();
 
 	// initialize the solver

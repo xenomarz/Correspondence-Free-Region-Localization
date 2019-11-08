@@ -5,7 +5,7 @@
 class GradientDescentSolver : public solver
 {
 public:
-	GradientDescentSolver() {}
+	GradientDescentSolver(const bool isConstrObjFunc) : solver(isConstrObjFunc) {}
 	virtual double step() override;
 	virtual bool test_progress() override;
 	virtual void internal_init() override;

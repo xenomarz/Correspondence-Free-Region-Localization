@@ -12,7 +12,7 @@
 class NewtonSolver : public solver
 {
 public:
-	NewtonSolver() {}
+	NewtonSolver(const bool isConstrObjFunc): solver(isConstrObjFunc) {}
 	virtual double step() override;
 	virtual bool test_progress() override;
 	virtual void internal_init() override;

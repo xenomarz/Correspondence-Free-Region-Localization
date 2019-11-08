@@ -341,10 +341,10 @@ public:
 	shared_ptr<TotalObjective> totalObjective;
 
 	//Constructor & initialization
-	Output(igl::opengl::glfw::Viewer* viewer) {
+	Output(igl::opengl::glfw::Viewer* viewer, const bool isConstrObjFunc) {
 		// Initialize solver thread
-		newton = make_shared<NewtonSolver>();
-		gradient_descent = make_shared<GradientDescentSolver>();
+		newton = make_shared<NewtonSolver>(isConstrObjFunc);
+		gradient_descent = make_shared<GradientDescentSolver>(isConstrObjFunc);
 		solver = newton;
 		totalObjective = make_shared<TotalObjective>();
 

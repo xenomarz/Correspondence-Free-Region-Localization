@@ -3,7 +3,7 @@
 AreaDistortion::AreaDistortion()
 {
 	name = "Area Preserving";
-	w = 1;
+	w = 0;
 }
 
 void AreaDistortion::init()

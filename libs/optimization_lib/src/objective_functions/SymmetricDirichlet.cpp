@@ -3,7 +3,7 @@
 SymmetricDirichlet::SymmetricDirichlet()
 {
 	name = "symmetric dirichlet";
-	w = 0.1;
+	w = 0;
 }
 
 void SymmetricDirichlet::init()

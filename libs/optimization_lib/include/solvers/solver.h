@@ -9,7 +9,7 @@
 class solver
 {
 public:
-	solver();
+	solver(const bool IsConstrObjFunc);
 	int run();
 	void stop();
 	void get_data(VectorXd& X);
@@ -34,7 +34,7 @@ public:
 	VectorXd ext_x, X;
 	MatrixX3i F;
 	int num_steps;
-
+	bool IsConstrObjFunc;
 protected:
 	// Give the wrapper a chance to intersect gracefully
 	void give_parameter_update_slot();

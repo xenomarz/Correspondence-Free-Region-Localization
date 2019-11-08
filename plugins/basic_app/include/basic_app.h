@@ -97,7 +97,7 @@ public:
 	void checkHessians();
 
 	//outputs
-	void add_output();
+	void add_output(const bool isConstrObjFunc);
 	void remove_output();
 };
 

@@ -1,20 +1,27 @@
 #include <solvers/solver.h>
 
-solver::solver()
+solver::solver(const bool isConstrObjFunc)
 	:
 	parameters_mutex(make_unique<mutex>()),
 	data_mutex(make_unique<shared_timed_mutex>()),
 	param_cv(make_unique<condition_variable>()),
-	num_steps(2147483647)
+	num_steps(2147483647),
+	IsConstrObjFunc(isConstrObjFunc)
 {}
 
 void solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
 {
 	this->objective = objective;
-	X.resize(X0.rows() + F.rows());
-	X.head(X0.rows()) = X0;
-	X.tail(F.rows()) = VectorXd::Random(F.rows());
-	ext_x = X.head(X.rows() - F.rows());
+	if (IsConstrObjFunc) { //for constraint objective function
+		X.resize(X0.rows() + F.rows());
+		X.head(X0.rows()) = X0;
+		X.tail(F.rows()) = VectorXd::Random(F.rows());
+		ext_x = X.head(X.rows() - F.rows());
+	}
+	else { //for unconstraint objective function
+		X = X0;
+		ext_x = X;
+	}
 	internal_init();
 }
 
@@ -45,9 +52,17 @@ void solver::linesearch()
 	double step_size;
 	if (FlipAvoidingLineSearch)
 	{
-		auto MatX = Map<MatrixX2d>(X.head(X.rows() - F.rows()).data(), X.head(X.rows() - F.rows()).rows() / 2, 2);
-		MatrixXd MatP = Map<const MatrixX2d>(p.head(X.rows() - F.rows()).data(), p.head(X.rows() - F.rows()).rows() / 2, 2);
-		double min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(MatX, F, MatP);
+		double min_step_to_singularity;
+		if (IsConstrObjFunc) {
+			auto MatX = Map<MatrixX2d>(X.head(X.rows() - F.rows()).data(), X.head(X.rows() - F.rows()).rows() / 2, 2);
+			MatrixXd MatP = Map<const MatrixX2d>(p.head(X.rows() - F.rows()).data(), p.head(X.rows() - F.rows()).rows() / 2, 2);
+			min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(MatX, F, MatP);
+		}
+		else {
+			auto MatX = Map<MatrixX2d>(X.data(), X.rows() / 2, 2);
+			MatrixXd MatP = Map<const MatrixX2d>(p.data(), p.rows() / 2, 2);
+			min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(MatX, F, MatP);
+		}
 		step_size = min(1., min_step_to_singularity*0.8);
 	}
 	else
@@ -87,7 +102,10 @@ void solver::update_external_data()
 {
 	give_parameter_update_slot();
 	unique_lock<shared_timed_mutex> lock(*data_mutex);
-	ext_x = X.head(X.rows() - F.rows());
+	if(IsConstrObjFunc)
+		ext_x = X.head(X.rows() - F.rows());
+	else 
+		ext_x = X;
 	progressed = true;
 }
 
