@@ -113,8 +113,10 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		if (ImGui::Button("Add Output uncon", ImVec2((w - p) / 2.f, 0)))
 			add_output(false);
 		ImGui::SameLine(0, p);
-		if (ImGui::Button("Remove Output", ImVec2((w - p) / 2.f, 0)) && Outputs.size()>1)
+		if (ImGui::Button("Remove Output", ImVec2((w - p) / 2.f, 0)) && (Outputs.size() > 1))
 			remove_output();
+		
+			
 	}
 	
 	
@@ -158,13 +160,10 @@ void basic_app::remove_output() {
 	viewer->data_list.pop_back();
 	Outputs.pop_back();
 
-	core_size = 1.0 / (Outputs.size() + 1.0);
-
 	viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
 	for (int i = 0; i < Outputs.size(); i++)
 		viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
 
-	//TODO: remove output
 	core_size = 1.0 / (Outputs.size() + 1.0);
 	int frameBufferWidth, frameBufferHeight;
 	glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
@@ -1135,25 +1134,6 @@ void basic_app::initializeSolver(const int index)
 	constraintsPositional->numV = V.rows();
 	constraintsPositional->init();
 
-	////weights
-	//if (index == 0) {
-	//	areapreservingOneRing->w = 1;
-	//	areaPreserving->w = 0;
-	//	anglePreserving->w = 0.1;
-	//	symDirichlet->w = 0;
-	//}
-	//else if (index == 1) {
-	//	areapreservingOneRing->w = 0;
-	//	areaPreserving->w = 1;
-	//	anglePreserving->w = 0.1;
-	//	symDirichlet->w = 0;
-	//}
-	//else if (index == 2) {
-	//	areapreservingOneRing->w = 0;
-	//	areaPreserving->w = 0;
-	//	anglePreserving->w = 0;
-	//	symDirichlet->w = 1;
-	//}
 
 	Outputs[index].HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
 	Outputs[index].HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
