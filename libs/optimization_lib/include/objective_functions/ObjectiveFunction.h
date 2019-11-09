@@ -28,6 +28,7 @@ public:
 	virtual void init_hessian() = 0;
 	virtual void updateX(const VectorXd& X) = 0;
 	virtual double value(const bool update = true) = 0;
+	virtual double AugmentedValue() { return -1; }
 	virtual void gradient(VectorXd& g) = 0;
 	virtual void hessian() = 0;
 	

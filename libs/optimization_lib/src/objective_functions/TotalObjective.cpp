@@ -33,6 +33,14 @@ double TotalObjective::value(bool update)
 	return f;
 }
 
+double TotalObjective::AugmentedValue() {
+	double f = 0;
+	for (auto &objective : objectiveList)
+		if (objective->w != 0)
+			f += objective->w*objective->AugmentedValue();
+	return f;
+}
+
 void TotalObjective::gradient(VectorXd& g)
 {
 	VectorXd gi;

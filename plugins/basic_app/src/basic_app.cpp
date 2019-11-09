@@ -170,8 +170,7 @@ void basic_app::remove_output() {
 void basic_app::add_output(const bool isConstrObjFunc) {
 	stop_solver_thread();
 	Outputs.push_back(Output(viewer, isConstrObjFunc, solver_type));
-	core_size = 1.0 / (Outputs.size() + 1.0);
-
+	
 	viewer->load_mesh_from_file(modelPath.c_str());
 	Outputs[Outputs.size() - 1].ModelID = viewer->data_list[Outputs.size()].id;
 	initializeSolver(Outputs.size() - 1);
@@ -180,7 +179,6 @@ void basic_app::add_output(const bool isConstrObjFunc) {
 	for (int i = 0; i < Outputs.size(); i++)
 		viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
 
-	//TODO: add output
 	core_size = 1.0 / (Outputs.size() + 1.0);
 	int frameBufferWidth, frameBufferHeight;
 	glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
@@ -698,17 +696,28 @@ void basic_app::Draw_menu_for_models(ViewerData& data) {
 void basic_app::Draw_menu_for_solver_settings() {
 	ImGui::SetNextWindowSize(ImVec2(800, 150), ImGuiSetCond_FirstUseEver);
 	ImGui::Begin("solver settings", NULL);
+	if (!model_loaded) {
+		ImGui::End();
+		return;
+	}
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 8));
 	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
+	int id = 0;
+	
+	int firstConstrIndex = -1, firstUnconstrIndex = -1;
+	for (int i = Outputs.size() - 1; i >= 0; i--) {
+		if (Outputs[i].solver->IsConstrObjFunc)
+			firstConstrIndex = i;
+		else
+			firstUnconstrIndex = i;
+	}
 
-	if (model_loaded) {
-		Draw_menu_for_colors();
-		ImGui::PushItemWidth(80 * menu_scaling());
-		ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.01f, 10000.0f);
-		ImGui::Columns(Outputs[0].totalObjective->objectiveList.size() + 2, "weights table", true);
+	if (firstUnconstrIndex != -1) {
+		// prepare the first column
+		ImGui::Columns(Outputs[firstUnconstrIndex].totalObjective->objectiveList.size() + 2, "Unconstrained weights table", true);
 		ImGui::Separator();
 		ImGui::NextColumn();
-		for (auto & obj : Outputs[0].totalObjective->objectiveList) {
+		for (auto & obj : Outputs[firstUnconstrIndex].totalObjective->objectiveList) {
 			ImGui::Text(obj->name.c_str());
 			ImGui::NextColumn();
 		}
@@ -716,25 +725,73 @@ void basic_app::Draw_menu_for_solver_settings() {
 		ImGui::NextColumn();
 		ImGui::Separator();
 
-		int id = 0;
+		// fill the table
 		for (auto& out : Outputs) {
-			ImGui::Text(("Output " + std::to_string(out.CoreID)).c_str());
-			ImGui::NextColumn();
-			for (auto& obj : out.totalObjective->objectiveList) {
+			if (!out.solver->IsConstrObjFunc) {
+				ImGui::Text(("Output " + std::to_string(out.CoreID)).c_str());
+				ImGui::NextColumn();
+				for (auto& obj : out.totalObjective->objectiveList) {
+					ImGui::PushID(id++);
+					ImGui::PushItemWidth(80 * menu_scaling());
+					ImGui::DragFloat("", &(obj->w), 0.05f, 0.0f, 100000.0f);
+					ImGui::NextColumn();
+					ImGui::PopID();
+				}
 				ImGui::PushID(id++);
 				ImGui::PushItemWidth(80 * menu_scaling());
-				ImGui::DragFloat("", &(obj->w), 0.05f, 0.0f, 100000.0f);
+				ImGui::DragFloat("", &(out.totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
 				ImGui::NextColumn();
 				ImGui::PopID();
+				ImGui::Separator();
 			}
-			ImGui::PushID(id++);
-			ImGui::PushItemWidth(80 * menu_scaling());
-			ImGui::DragFloat("", &(out.totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
-			ImGui::NextColumn();
-			ImGui::PopID();
-			ImGui::Separator();
 		}
+		ImGui::Columns(1);
 	}
+
+	if (firstConstrIndex != -1) {
+		// prepare the first column
+		ImGui::Columns(Outputs[firstConstrIndex].totalObjective->objectiveList.size() + 2, "Constrained weights table", true);
+		ImGui::Separator();
+		ImGui::NextColumn();
+		for (auto & obj : Outputs[firstConstrIndex].totalObjective->objectiveList) {
+			ImGui::Text(obj->name.c_str());
+			ImGui::NextColumn();
+		}
+		ImGui::Text("shift eigen values");
+		ImGui::NextColumn();
+		ImGui::Separator();
+
+		// fill the table
+		for (auto& out : Outputs) {
+			if (out.solver->IsConstrObjFunc) {
+				ImGui::Text(("Output " + std::to_string(out.CoreID)).c_str());
+				ImGui::NextColumn();
+				for (auto& obj : out.totalObjective->objectiveList) {
+					ImGui::PushID(id++);
+					ImGui::PushItemWidth(80 * menu_scaling());
+					ImGui::DragFloat("", &(obj->w), 0.05f, 0.0f, 100000.0f);
+					ImGui::NextColumn();
+					ImGui::PopID();
+				}
+				ImGui::PushID(id++);
+				ImGui::PushItemWidth(80 * menu_scaling());
+				ImGui::DragFloat("", &(out.totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
+				ImGui::NextColumn();
+				ImGui::PopID();
+				ImGui::Separator();
+			}
+		}
+		ImGui::Columns(1);
+	}
+	
+	
+	
+	//add more features
+	Draw_menu_for_colors();
+	ImGui::PushItemWidth(80 * menu_scaling());
+	ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.01f, 10000.0f);
+
+	//close the window
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
 	ImGui::End();

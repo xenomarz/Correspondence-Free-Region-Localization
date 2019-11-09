@@ -77,7 +77,14 @@ void solver::linesearch()
 		MatrixXd curr_x = X + step_size * p;
 
 		objective->updateX(curr_x);
-		new_energy = objective->value();
+
+		if (IsConstrObjFunc) 
+			new_energy = objective->AugmentedValue();
+		else
+			new_energy = objective->value();
+		
+
+
 		if (new_energy >= currentEnergy)
 		{
 			step_size /= 2;

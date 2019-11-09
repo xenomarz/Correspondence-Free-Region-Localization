@@ -17,5 +17,5 @@ public:
 	virtual double value(const bool update = true) override;
 	virtual void gradient(VectorXd& g) override;
 	virtual void hessian() override;
-	double AugmentedValue();
+	virtual double AugmentedValue() override;
 };

@@ -8,8 +8,7 @@ class TriangleMeshObjectiveFunction: public ObjectiveFunction
 public:
 	TriangleMeshObjectiveFunction() {}
 	virtual ~TriangleMeshObjectiveFunction(){}
-	
-	void init_mesh(const MatrixXd& V, const MatrixX3i& F);
 
+	void init_mesh(const MatrixXd& V, const MatrixX3i& F);
 	void AddElementToHessian(std::vector<int> ind);
 };

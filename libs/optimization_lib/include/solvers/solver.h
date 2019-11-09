@@ -23,8 +23,8 @@ public:
 	atomic_bool is_running = {false};
 	atomic_bool progressed = {false};
 
-	// energy output from the last step
-	double currentEnergy;
+	//// energy output from the last step
+	//double currentEnergy;
 
 	// Synchronization functions used by the wrapper
 	void wait_for_parameter_update_slot();
@@ -61,6 +61,8 @@ protected:
 	vector<double> SS;
 
 private:
+	// energy output from the last step
+	double currentEnergy;
 	virtual double step() = 0;
 	virtual void linesearch();
 	virtual bool test_progress() = 0;
