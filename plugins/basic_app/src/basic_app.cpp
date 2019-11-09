@@ -108,12 +108,13 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	}
 	
 	if (model_loaded) {
-		if (ImGui::Button("Add Output con", ImVec2((w - p) / 2.f, 0)))
+		if (ImGui::Button("Add Contr", ImVec2((w - p) / 3.f, 0)))
 			add_output(true);
-		if (ImGui::Button("Add Output uncon", ImVec2((w - p) / 2.f, 0)))
+		ImGui::SameLine(0, p);
+		if (ImGui::Button("Add Unconstr", ImVec2((w - p) / 3.f, 0)))
 			add_output(false);
 		ImGui::SameLine(0, p);
-		if (ImGui::Button("Remove Output", ImVec2((w - p) / 2.f, 0)) && (Outputs.size() > 1))
+		if (ImGui::Button("Remove", ImVec2((w - p) / 3.f, 0)) && (Outputs.size() > 1))
 			remove_output();	
 	}
 	
@@ -138,6 +139,8 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	Draw_menu_for_models(viewer->data(inputModelID));
 	Draw_menu_for_output_settings();
 	Draw_menu_for_text_results();
+	if (solver_settings)
+		Draw_menu_for_solver_settings();
 
 	follow_and_mark_selected_faces();
 	Update_view();
@@ -225,7 +228,7 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 			Outputs[view - app_utils::OutputOnly0].text_position = ImVec2(w*0.8, 0);
 		}		
 		for (auto& o : Outputs)
-			viewer->core(o.CoreID).viewport = Vector4f(o.window_position[0], o.window_position[1], o.window_size[0], o.window_size[1]);
+			viewer->core(o.CoreID).viewport = Vector4f(o.window_position[0], o.window_position[1], o.window_size[0]+1, o.window_size[1]+1);
 	}
 }
 
@@ -472,8 +475,6 @@ void basic_app::Draw_menu_for_Solver() {
 			solver_on ? start_solver_thread() : stop_solver_thread();
 		}
 		ImGui::Checkbox("Solver settings", &solver_settings);
-		if (solver_settings)
-			Draw_menu_for_solver_settings();
 
 		if (ImGui::Combo("step", (int *)(&solver_type), "NEWTON\0Gradient Descent\0\0")) {
 			stop_solver_thread();
