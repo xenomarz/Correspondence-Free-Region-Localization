@@ -46,6 +46,7 @@ public:
 
 	//weight for each objective function
 	float w;
+	float augmented_value_parameter;
 	VectorXd Efi;     
 	double energy_value = 0;
 	double gradient_norm = 0;

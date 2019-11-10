@@ -3,6 +3,7 @@
 LagrangianAreaStLscm::LagrangianAreaStLscm()
 {
 	name = "LagrangianAreaStLscm";
+	augmented_value_parameter = 1;
 	w = 0;
 }
 
@@ -76,13 +77,11 @@ double LagrangianAreaStLscm::value(bool update)
 double LagrangianAreaStLscm::AugmentedValue()
 {
 	// Augmented_L = L + k * ||LSCM||^2
-	double k = 1;
-
 	VectorXd LSCM = 2 * d.cwiseAbs2() + (b + c).cwiseAbs2() + 2 * a.cwiseAbs2();
 	//I am not sure of multiplying areaE by Area!!!
 	double augmented_part = (Area.asDiagonal() * LSCM.cwiseAbs2()).sum();
 	
-	return value(false) + k* augmented_part;
+	return value(false) + augmented_value_parameter * augmented_part;
 }
 
 void LagrangianAreaStLscm::gradient(VectorXd& g)

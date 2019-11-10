@@ -98,7 +98,7 @@ public:
 
 	//outputs
 	void add_output(const bool isConstrObjFunc);
-	void remove_output();
+	void remove_output(const int output_index);
 };
 
 #endif

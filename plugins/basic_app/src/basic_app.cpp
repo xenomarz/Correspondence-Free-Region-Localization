@@ -60,7 +60,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 			if (model_loaded) {
 				//remove previous data
 				while (Outputs.size() > 0)
-					remove_output();
+					remove_output(0);
 				viewer->data_list.clear();
 			}
 
@@ -107,17 +107,6 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		}
 	}
 	
-	if (model_loaded) {
-		if (ImGui::Button("Add Contr", ImVec2((w - p) / 3.f, 0)))
-			add_output(true);
-		ImGui::SameLine(0, p);
-		if (ImGui::Button("Add Unconstr", ImVec2((w - p) / 3.f, 0)))
-			add_output(false);
-		ImGui::SameLine(0, p);
-		if (ImGui::Button("Remove", ImVec2((w - p) / 3.f, 0)) && (Outputs.size() > 1))
-			remove_output();	
-	}
-	
 	if (ImGui::Combo("View", (int *)(&view), app_utils::build_view_names_list(Outputs.size()))) {
 		// That's how you get the current width/height of the frame buffer (for example, after the window was resized)
 		int frameBufferWidth, frameBufferHeight;
@@ -154,12 +143,14 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		IsMouseHoveringAnyWindow = true;
 }
 
-void basic_app::remove_output() {
+void basic_app::remove_output(const int output_index) {
 	stop_solver_thread();
-	viewer->core_list.pop_back();
-	viewer->data_list.pop_back();
-	Outputs.pop_back();
+	
+	viewer->core_list.erase(viewer->core_list.begin() + 1 + output_index);
+	viewer->data_list.erase(viewer->data_list.begin() + 1 + output_index);
+	Outputs.erase(Outputs.begin() + output_index);
 
+	//Update the scene
 	viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
 	for (int i = 0; i < Outputs.size(); i++)
 		viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
@@ -178,6 +169,7 @@ void basic_app::add_output(const bool isConstrObjFunc) {
 	Outputs[Outputs.size() - 1].ModelID = viewer->data_list[Outputs.size()].id;
 	initializeSolver(Outputs.size() - 1);
 
+	//Update the scene
 	viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
 	for (int i = 0; i < Outputs.size(); i++)
 		viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
@@ -711,7 +703,8 @@ void basic_app::Draw_menu_for_solver_settings() {
 
 	if (firstUnconstrIndex != -1) {
 		// prepare the first column
-		ImGui::Columns(Outputs[firstUnconstrIndex].totalObjective->objectiveList.size() + 2, "Unconstrained weights table", true);
+		ImGui::PushStyleColor(ImGuiCol_WindowBg | ImGuiCol_FrameBg, ImVec4(1.0f, 0.0f, 0.0f, 1.00f));
+		ImGui::Columns(Outputs[firstUnconstrIndex].totalObjective->objectiveList.size() + 3, "Unconstrained weights table", true);
 		ImGui::Separator();
 		ImGui::NextColumn();
 		for (auto & obj : Outputs[firstUnconstrIndex].totalObjective->objectiveList) {
@@ -720,14 +713,16 @@ void basic_app::Draw_menu_for_solver_settings() {
 		}
 		ImGui::Text("shift eigen values");
 		ImGui::NextColumn();
+		ImGui::NextColumn();
 		ImGui::Separator();
+		ImGui::PopStyleColor();
 
 		// fill the table
-		for (auto& out : Outputs) {
-			if (!out.solver->IsConstrObjFunc) {
-				ImGui::Text(("Output " + std::to_string(out.CoreID)).c_str());
+		for (int i = 0; i < Outputs.size();i++) {
+			if (!Outputs[i].solver->IsConstrObjFunc) {
+				ImGui::Text(("Output " + std::to_string(Outputs[i].CoreID)).c_str());
 				ImGui::NextColumn();
-				for (auto& obj : out.totalObjective->objectiveList) {
+				for (auto& obj : Outputs[i].totalObjective->objectiveList) {
 					ImGui::PushID(id++);
 					ImGui::PushItemWidth(80 * menu_scaling());
 					ImGui::DragFloat("", &(obj->w), 0.05f, 0.0f, 100000.0f);
@@ -736,7 +731,16 @@ void basic_app::Draw_menu_for_solver_settings() {
 				}
 				ImGui::PushID(id++);
 				ImGui::PushItemWidth(80 * menu_scaling());
-				ImGui::DragFloat("", &(out.totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
+				ImGui::DragFloat("", &(Outputs[i].totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
+				ImGui::NextColumn();
+				if (Outputs.size() > 1)
+				{
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
+					if (ImGui::Button("Remove"))
+						remove_output(i);
+					ImGui::PopStyleColor();
+				}
+					
 				ImGui::NextColumn();
 				ImGui::PopID();
 				ImGui::Separator();
@@ -744,10 +748,12 @@ void basic_app::Draw_menu_for_solver_settings() {
 		}
 		ImGui::Columns(1);
 	}
+	
+	ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
 
 	if (firstConstrIndex != -1) {
 		// prepare the first column
-		ImGui::Columns(Outputs[firstConstrIndex].totalObjective->objectiveList.size() + 2, "Constrained weights table", true);
+		ImGui::Columns(Outputs[firstConstrIndex].totalObjective->objectiveList.size() + 3, "Constrained weights table", true);
 		ImGui::Separator();
 		ImGui::NextColumn();
 		for (auto & obj : Outputs[firstConstrIndex].totalObjective->objectiveList) {
@@ -756,23 +762,33 @@ void basic_app::Draw_menu_for_solver_settings() {
 		}
 		ImGui::Text("shift eigen values");
 		ImGui::NextColumn();
+		ImGui::NextColumn();
 		ImGui::Separator();
 
 		// fill the table
-		for (auto& out : Outputs) {
-			if (out.solver->IsConstrObjFunc) {
-				ImGui::Text(("Output " + std::to_string(out.CoreID)).c_str());
+		for (int i = 0; i < Outputs.size();i++) {
+			if (Outputs[i].solver->IsConstrObjFunc) {
+				ImGui::Text(("Output " + std::to_string(Outputs[i].CoreID)).c_str());
 				ImGui::NextColumn();
-				for (auto& obj : out.totalObjective->objectiveList) {
+				for (auto& obj : Outputs[i].totalObjective->objectiveList) {
 					ImGui::PushID(id++);
 					ImGui::PushItemWidth(80 * menu_scaling());
-					ImGui::DragFloat("", &(obj->w), 0.05f, 0.0f, 100000.0f);
+					ImGui::DragFloat("w", &(obj->w), 0.05f, 0.0f, 100000.0f);
+					ImGui::DragFloat("augmented param.", &(obj->augmented_value_parameter), 0.05f, 0.0f, 100000.0f);
 					ImGui::NextColumn();
 					ImGui::PopID();
 				}
 				ImGui::PushID(id++);
 				ImGui::PushItemWidth(80 * menu_scaling());
-				ImGui::DragFloat("", &(out.totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
+				ImGui::DragFloat("", &(Outputs[i].totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
+				ImGui::NextColumn();
+				if (Outputs.size() > 1) {
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
+					if (ImGui::Button("Remove"))
+						remove_output(i);
+					ImGui::PopStyleColor();
+				}
+
 				ImGui::NextColumn();
 				ImGui::PopID();
 				ImGui::Separator();
@@ -780,9 +796,18 @@ void basic_app::Draw_menu_for_solver_settings() {
 		}
 		ImGui::Columns(1);
 	}
-	
-	
-	
+
+	//add outputs buttons
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
+	if (ImGui::Button("Add Constrained Output"))
+		add_output(true);
+	ImGui::PopStyleColor();
+	ImGui::SameLine(0, 10);
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
+	if (ImGui::Button("Add Unconstrained Output"))
+		add_output(false);
+	ImGui::PopStyleColor();
+
 	//add more features
 	Draw_menu_for_colors();
 	ImGui::PushItemWidth(80 * menu_scaling());

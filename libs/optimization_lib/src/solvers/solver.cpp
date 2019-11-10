@@ -83,8 +83,6 @@ void solver::linesearch()
 		else
 			new_energy = objective->value();
 		
-
-
 		if (new_energy >= currentEnergy)
 		{
 			step_size /= 2;
