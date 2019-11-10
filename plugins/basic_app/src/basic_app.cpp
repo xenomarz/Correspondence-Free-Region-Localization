@@ -125,13 +125,13 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		post_resize(frameBufferWidth, frameBufferHeight);
 	}
 
-	if(ImGui::Combo("Mouse Mode", (int *)(&mouse_mode), "NONE\0FACE_SELECT\0VERTEX_SELECT\0CLEAR\0\0")) {
-		if (mouse_mode == app_utils::CLEAR) {
-			selected_faces.clear();
-			selected_vertices.clear();
-			UpdateHandles();
-		}
+	ImGui::Combo("Mouse Mode", (int *)(&mouse_mode), "NONE\0FACE_SELECT\0VERTEX_SELECT\0CLEAR\0\0");
+	if (mouse_mode == app_utils::CLEAR) {
+		selected_faces.clear();
+		selected_vertices.clear();
+		UpdateHandles();
 	}
+	
 
 	if(model_loaded)
 		Draw_menu_for_Solver();
@@ -411,14 +411,10 @@ IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 	}
 	if (key == 'C' || key == 'c') {
 		mouse_mode = app_utils::CLEAR;
-		selected_faces.clear();
-		selected_vertices.clear();
-		UpdateHandles();
 	}
 	if (key == ' ')
 		solver_on ? stop_solver_thread() : start_solver_thread();
 			
-
 	return ImGuiMenu::key_pressed(key, modifiers);
 }
 
@@ -922,16 +918,16 @@ void basic_app::follow_and_mark_selected_faces() {
 		for (int i = 0; i < Outputs.size(); i++) {
 			Outputs[i].color_per_face.resize(InputModel().F.rows(), 3);
 			UpdateEnergyColors(i);
-			//Mark the fixed faces
+
+			//Mark the highlighted face
 			if (f != -1 && Highlighted_face)
-			{
 				Outputs[i].color_per_face.row(f) = Highlighted_face_color.cast<double>();
-			}
-			for (auto fi : selected_faces) { Outputs[i].color_per_face.row(fi) = Fixed_face_color.cast<double>(); }
+			//Mark the fixed faces
+			for (auto fi : selected_faces)
+				Outputs[i].color_per_face.row(fi) = Fixed_face_color.cast<double>(); 
 			//Mark the Dragged face
-			if (IsTranslate && (mouse_mode == app_utils::FACE_SELECT)) {
+			if (IsTranslate && (mouse_mode == app_utils::FACE_SELECT))
 				Outputs[i].color_per_face.row(Translate_Index) = Dragged_face_color.cast<double>();
-			}
 			//Mark the vertices
 			int idx = 0;
 			Vertices_Input.resize(selected_vertices.size(), 3);
