@@ -276,10 +276,6 @@ protected:
 	using HessianEntryToTripletIndexMap = std::unordered_map<RDS::HessianEntry, RDS::HessianTripletIndex, RDS::HessianEntryHash, RDS::HessianEntryEquals>;
 	using SparseVariableIndexToDenseVariableIndexMap = std::unordered_map<RDS::SparseVariableIndex, RDS::DenseVariableIndex>;
 	using DenseVariableIndexToSparseVariableIndexMap = std::unordered_map<RDS::DenseVariableIndex, RDS::SparseVariableIndex>;	
-	using PartialToSparseIndexMap = std::unordered_map<RDS::PartialDerivativeIndex, RDS::SparseVariableIndex>;
-	using SparseIndexToPartialMap = std::unordered_map<RDS::SparseVariableIndex, RDS::PartialDerivativeIndex>;
-	using PartialToDenseIndexMap = std::unordered_map<RDS::PartialDerivativeIndex, RDS::DenseVariableIndex>;
-	using DenseToPartialIndexMap = std::unordered_map<RDS::DenseVariableIndex, RDS::PartialDerivativeIndex>;
 
 	/**
 	 * Protected methods
@@ -394,8 +390,8 @@ private:
 	{
 		for (std::size_t i = 0; i < sparse_variable_indices_.size(); i++)
 		{
-			dense_variable_index_to_sparse_variable_index_map_.insert({ i, sparse_variable_indices[i] });
-			sparse_variable_index_to_dense_variable_index_map_.insert({ sparse_variable_indices[i], i });
+			dense_variable_index_to_sparse_variable_index_map_.insert({ i, sparse_variable_indices_[i] });
+			sparse_variable_index_to_dense_variable_index_map_.insert({ sparse_variable_indices_[i], i });
 		}
 	}
 
@@ -498,10 +494,6 @@ private:
 	HessianEntryToTripletIndexMap hessian_entry_to_triplet_index_map_;
 	SparseVariableIndexToDenseVariableIndexMap sparse_variable_index_to_dense_variable_index_map_;
 	DenseVariableIndexToSparseVariableIndexMap dense_variable_index_to_sparse_variable_index_map_;
-	PartialToSparseIndexMap partial_to_sparse_index_map_;
-	SparseIndexToPartialMap sparse_index_to_partial_map_;
-	PartialToDenseIndexMap partial_to_dense_index_map_;
-	DenseToPartialIndexMap dense_to_partial_index_map_;
 
 	// Name
 	const std::string name_;

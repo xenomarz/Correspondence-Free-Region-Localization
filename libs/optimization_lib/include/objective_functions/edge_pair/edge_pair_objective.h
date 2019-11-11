@@ -2,18 +2,9 @@
 #ifndef OPTIMIZATION_LIB_EDGE_PAIR_ANGLE_OBJECTIVE_H
 #define OPTIMIZATION_LIB_EDGE_PAIR_ANGLE_OBJECTIVE_H
 
-// C includes
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 // STL includes
 #include <utility>
-#include <cmath>
-#include <algorithm>
 #include <unordered_map>
-
-// Eigen includes
-#include <Eigen/Eigenvalues> 
 
 // Optimization lib includes
 #include "../../utils/type_definitions.h"
@@ -59,93 +50,33 @@ protected:
 		edge2_v2_x_index_ = this->mesh_data_provider_->GetVertexXIndex(edge_pair_descriptor_.second.second);
 		edge2_v2_y_index_ = this->mesh_data_provider_->GetVertexYIndex(edge_pair_descriptor_.second.second);
 
-		//partial_to_sparse_index_map_.insert({ Partial::E1_V1_X, edge1_v1_x_index_ });
-		//partial_to_sparse_index_map_.insert({ Partial::E1_V1_Y, edge1_v1_y_index_ });
-		//partial_to_sparse_index_map_.insert({ Partial::E1_V2_X, edge1_v2_x_index_ });
-		//partial_to_sparse_index_map_.insert({ Partial::E1_V2_Y, edge1_v2_y_index_ });
-		//partial_to_sparse_index_map_.insert({ Partial::E2_V1_X, edge2_v1_x_index_ });
-		//partial_to_sparse_index_map_.insert({ Partial::E2_V1_Y, edge2_v1_y_index_ });
-		//partial_to_sparse_index_map_.insert({ Partial::E2_V2_X, edge2_v2_x_index_ });
-		//partial_to_sparse_index_map_.insert({ Partial::E2_V2_Y, edge2_v2_y_index_ });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge1_v1_x_index_,  1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge1_v1_y_index_, -1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge1_v2_x_index_, -1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge1_v2_y_index_,  1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge2_v1_x_index_, -1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge2_v1_y_index_,  1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge2_v2_x_index_,  1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge2_v2_y_index_, -1 });
 
-		//sparse_index_to_partial_map_.insert({ edge1_v1_x_index_, Partial::E1_V1_X });
-		//sparse_index_to_partial_map_.insert({ edge1_v1_y_index_, Partial::E1_V1_Y });
-		//sparse_index_to_partial_map_.insert({ edge1_v2_x_index_, Partial::E1_V2_X });
-		//sparse_index_to_partial_map_.insert({ edge1_v2_y_index_, Partial::E1_V2_Y });
-		//sparse_index_to_partial_map_.insert({ edge2_v1_x_index_, Partial::E2_V1_X });
-		//sparse_index_to_partial_map_.insert({ edge2_v1_y_index_, Partial::E2_V1_Y });
-		//sparse_index_to_partial_map_.insert({ edge2_v2_x_index_, Partial::E2_V2_X });
-		//sparse_index_to_partial_map_.insert({ edge2_v2_y_index_, Partial::E2_V2_Y });
-
-		sparse_index_to_first_derivative_sign_map_.insert({ Partial::E1_V1_X,  1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ Partial::E1_V1_Y, -1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ Partial::E1_V2_X, -1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ Partial::E1_V2_Y,  1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ Partial::E2_V1_X, -1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ Partial::E2_V1_Y,  1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ Partial::E2_V2_X,  1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ Partial::E2_V2_Y, -1 });
-
-		partial_to_partial_coordinate_type_.insert({ Partial::E1_V1_X, PartialCoordinateType::E1_X });
-		partial_to_partial_coordinate_type_.insert({ Partial::E1_V1_Y, PartialCoordinateType::E1_Y });
-		partial_to_partial_coordinate_type_.insert({ Partial::E1_V2_X, PartialCoordinateType::E1_X });
-		partial_to_partial_coordinate_type_.insert({ Partial::E1_V2_Y, PartialCoordinateType::E1_Y });
-		partial_to_partial_coordinate_type_.insert({ Partial::E2_V1_X, PartialCoordinateType::E2_X });
-		partial_to_partial_coordinate_type_.insert({ Partial::E2_V1_Y, PartialCoordinateType::E2_Y });
-		partial_to_partial_coordinate_type_.insert({ Partial::E2_V2_X, PartialCoordinateType::E2_X });
-		partial_to_partial_coordinate_type_.insert({ Partial::E2_V2_Y, PartialCoordinateType::E2_Y });
-
-		for (int i = 0; i < this->objective_variable_count_; i++)
+		for (RDS::DenseVariableIndex dense_variable_index = 0; dense_variable_index < this->objective_variables_count_; dense_variable_index++)
 		{
-			auto partial = static_cast<Partial>(i);
-			sparse_index_to_first_derivative_value_map_.insert({ partial, 0 });
+			const RDS::SparseVariableIndex sparse_variable_index = this->dense_variable_index_to_sparse_variable_index_map_[dense_variable_index];
+			sparse_index_to_first_derivative_value_map_.insert({ sparse_variable_index, 0 });
 		}
 
-		for (int i = 0; i < this->objective_vertices_count_; i++)
+		for (RDS::DenseVariableIndex dense_variable_index1 = 0; dense_variable_index1 < this->objective_variable_count_; dense_variable_index1++)
 		{
-			for (int j = 0; j < this->objective_variable_count_; j++)
+			for (RDS::DenseVariableIndex dense_variable_index2 = 0; dense_variable_index2 < this->objective_variable_count_; dense_variable_index2++)
 			{
-				//PartialCoordinateType first_partial_type = static_cast<PartialCoordinateType>(i);
-				//Partial second_partial = static_cast<Partial>(j);
-				vertex_index_sparse_index_to_second_derivative_value_map_.insert({ std::make_pair(first_partial_type, second_partial), 0 });
+				const RDS::SparseVariableIndex sparse_variable_index1 = this->dense_variable_index_to_sparse_variable_index_map_[dense_variable_index1];
+				const RDS::SparseVariableIndex sparse_variable_index2 = this->dense_variable_index_to_sparse_variable_index_map_[dense_variable_index2];
+				sparse_indices_to_second_derivative_value_map_.insert({ std::make_pair(sparse_variable_index1, sparse_variable_index2), 0 });
 			}
 		}
 	}
 
-	void PostInitialize() override
-	{
-		SparseObjectiveFunction<StorageOrder_>::PostInitialize();
-
-		//for (std::size_t i = 0; i < sparse.size(); i++)
-		//{
-		//	partial_to_dense_index_map_.insert({ sparse_index_to_partial_map_[indices_.at(i)], i });
-		//}
-	}
-
 private:
-	/**
-	 * Private type declarations
-	 */
-	//enum class Partial
-	//{
-	//	E1_V1_X,
-	//	E1_V1_Y,
-	//	E1_V2_X,
-	//	E1_V2_Y,
-	//	E2_V1_X,
-	//	E2_V1_Y,
-	//	E2_V2_X,
-	//	E2_V2_Y
-	//};
-
-	//enum class PartialCoordinateType
-	//{
-	//	E1_X,
-	//	E1_Y,
-	//	E2_X,
-	//	E2_Y
-	//};
-
 	/**
 	 * Private overrides
 	 */
@@ -161,11 +92,6 @@ private:
 		sparse_variable_indices.push_back(edge2_v2_y_index_);
 	}
 
-	void CalculateValue(double& f) override
-	{
-		f = std::atan2(edge1_y_diff_, edge1_x_diff_) - atan2(edge2_y_diff_, edge2_x_diff_);
-	}
-
 	void CalculateValuePerVertex(Eigen::SparseVector<double>& f_per_vertex) override
 	{
 		//double value = this->GetValueInternal();
@@ -178,20 +104,19 @@ private:
 
 	void CalculateGradient(Eigen::SparseVector<double>& g) override
 	{
-		for (int i = 0; i < 8; i++)
+		auto objective_variables_count = this->objective_variables_count_;
+		for (RDS::DenseVariableIndex dense_variable_index = 0; dense_variable_index < objective_variables_count; dense_variable_index++)
 		{
-			Partial partial = static_cast<Partial>(i);
-			g.coeffRef(partial_to_sparse_index_map_[partial]) = CalculateFirstPartialDerivative(partial);
+			const RDS::SparseVariableIndex sparse_variable_index = this->dense_variable_index_to_sparse_variable_index_map_[dense_variable_index];
+			g.coeffRef(sparse_variable_index) = CalculateFirstPartialDerivative(sparse_variable_index);
 		}
 	}
 
 	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-		const std::size_t triplets_count = triplets.size();
-		for (int64_t i = 0; i < triplets_count; i++)
+		const auto triplets_count = triplets.size();
+		for (RDS::HessianTripletIndex i = 0; i < triplets_count; i++)
 		{
-			auto first_partial = sparse_index_to_partial_map_[triplets[i].col()];
-			auto second_partial = sparse_index_to_partial_map_[triplets[i].row()];
 			const_cast<double&>(triplets[i].value()) = CalculateSecondPartialDerivative(triplets[i].col(), triplets[i].row());
 		}
 	}
@@ -199,15 +124,15 @@ private:
 	/**
 	 * Private methods
 	 */
-	double CalculateFirstPartialDerivative(const RDS::SparseVariableIndex partial)
+	double CalculateFirstPartialDerivative(const RDS::SparseVariableIndex sparse_variable_index)
 	{
-		return sparse_index_to_first_derivative_sign_map_[partial] * sparse_index_to_first_derivative_value_map_[partial];
+		return sparse_index_to_first_derivative_sign_map_[sparse_variable_index] * sparse_index_to_first_derivative_value_map_[sparse_variable_index];
 	}
 
 
-	double CalculateSecondPartialDerivative(const RDS::SparseVariableIndex first_partial, const RDS::SparseVariableIndex second_partial)
+	double CalculateSecondPartialDerivative(const RDS::SparseVariableIndex sparse_variable_index1, const RDS::SparseVariableIndex sparse_variable_index2)
 	{
-		return sparse_index_to_first_derivative_sign_map_[first_partial] * vertex_index_sparse_index_to_second_derivative_value_map_[{ partial_to_partial_coordinate_type_[first_partial], second_partial }];
+		return sparse_index_to_first_derivative_sign_map_[sparse_variable_index1] * sparse_indices_to_second_derivative_value_map_[{ sparse_variable_index1, sparse_variable_index2 }];
 	}
 
 	/**
@@ -219,19 +144,14 @@ private:
 	RDS::SparseVariableIndex edge1_v1_y_index_;
 	RDS::SparseVariableIndex edge1_v2_x_index_;
 	RDS::SparseVariableIndex edge1_v2_y_index_;
-
 	RDS::SparseVariableIndex edge2_v1_x_index_;
 	RDS::SparseVariableIndex edge2_v1_y_index_;
 	RDS::SparseVariableIndex edge2_v2_x_index_;
 	RDS::SparseVariableIndex edge2_v2_y_index_;
 
-	//std::unordered_map<Partial, PartialCoordinateType> partial_to_partial_coordinate_type_;
-	//std::unordered_map<Partial, int64_t> partial_to_sparse_index_map_;
-	//std::unordered_map<int64_t, Partial> sparse_index_to_partial_map_;
-	//std::unordered_map<Partial, int64_t> partial_to_dense_index_map_;
 	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_sign_map_;
 	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_value_map_;
-	std::unordered_map<std::pair<RDS::VertexIndex, RDS::SparseVariableIndex>, double, RDS::OrderedPairHash, RDS::OrderedPairEquals> vertex_index_sparse_index_to_second_derivative_value_map_;
+	std::unordered_map<std::pair<RDS::SparseVariableIndex, RDS::SparseVariableIndex>, double, RDS::OrderedPairHash, RDS::OrderedPairEquals> sparse_indices_to_second_derivative_value_map_;
 };
 
 #endif
