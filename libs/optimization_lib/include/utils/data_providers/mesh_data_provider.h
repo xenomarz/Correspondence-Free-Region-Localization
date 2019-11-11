@@ -6,6 +6,9 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
+// Optimization lib includes
+#include "../type_definitions.h"
+
 class MeshDataProvider
 {
 public:
@@ -17,6 +20,16 @@ public:
 	virtual int64_t GetDomainVerticesCount() const = 0;
 	virtual const Eigen::MatrixX3d& GetD1() const = 0;
 	virtual const Eigen::MatrixX3d& GetD2() const = 0;
+
+	RDS::SparseVariableIndex GetVertexXIndex(RDS::VertexIndex vertex_index)
+	{
+		return vertex_index;
+	}
+
+	RDS::SparseVariableIndex GetVertexYIndex(RDS::VertexIndex vertex_index)
+	{
+		return vertex_index + GetImageVerticesCount();
+	}
 
 	// Relevant for objective functions that operate on triangle soups
 	virtual const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const = 0;

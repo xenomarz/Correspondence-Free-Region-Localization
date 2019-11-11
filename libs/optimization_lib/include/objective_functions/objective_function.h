@@ -136,13 +136,7 @@ public:
 		switch (properties)
 		{
 		case Properties::Value:
-			property_value = GetName();
-			return true;
-		case Properties::GradientNorm:
-			property_value = GetGradient().norm();
-			return true;
-		case Properties::Weight:
-			property_value = GetWeight();
+			property_value = GetValue();
 			return true;
 		case Properties::ValuePerVertex:
 			property_value = GetValuePerVertex();
@@ -150,11 +144,17 @@ public:
 		case Properties::Gradient:
 			property_value = GetGradient();
 			return true;
-		case Properties::Name:
-			property_value = GetName();
-			return true;
 		case Properties::Hessian:
 			property_value = GetHessian();
+			return true;
+		case Properties::GradientNorm:
+			property_value = GetGradient().norm();
+			return true;
+		case Properties::Weight:
+			property_value = GetWeight();
+			return true;
+		case Properties::Name:
+			property_value = GetName();
 			return true;
 		}
 
@@ -202,8 +202,9 @@ public:
 		InitializeValuePerVertex(f_per_vertex_);
 		InitializeGradient(g_);
 		InitializeHessian(H_);
+		InitializeSparseVariableIndices(sparse_variable_indices_);
+		InitializeMappings(sparse_variable_index_to_dense_variable_index_map_, dense_variable_index_to_sparse_variable_index_map_);
 		InitializeTriplets(triplets_);
-		InitializeMappings(hessian_entry_to_triplet_index_map_, sparse_variable_index_to_dense_variable_index_map_);
 		PostInitialize();
 	}
 
@@ -274,7 +275,12 @@ protected:
 	 */
 	using HessianEntryToTripletIndexMap = std::unordered_map<RDS::HessianEntry, RDS::HessianTripletIndex, RDS::HessianEntryHash, RDS::HessianEntryEquals>;
 	using SparseVariableIndexToDenseVariableIndexMap = std::unordered_map<RDS::SparseVariableIndex, RDS::DenseVariableIndex>;
-	
+	using DenseVariableIndexToSparseVariableIndexMap = std::unordered_map<RDS::DenseVariableIndex, RDS::SparseVariableIndex>;	
+	using PartialToSparseIndexMap = std::unordered_map<RDS::PartialDerivativeIndex, RDS::SparseVariableIndex>;
+	using SparseIndexToPartialMap = std::unordered_map<RDS::SparseVariableIndex, RDS::PartialDerivativeIndex>;
+	using PartialToDenseIndexMap = std::unordered_map<RDS::PartialDerivativeIndex, RDS::DenseVariableIndex>;
+	using DenseToPartialIndexMap = std::unordered_map<RDS::DenseVariableIndex, RDS::PartialDerivativeIndex>;
+
 	/**
 	 * Protected methods
 	 */
@@ -379,12 +385,39 @@ private:
 		H.resize(variables_count_, variables_count_);
 	}
 
-	virtual void InitializeMappings(HessianEntryToTripletIndexMap& hessian_entry_to_triplet_index_map, SparseVariableIndexToDenseVariableIndexMap& sparse_variable_index_to_dense_variable_index_map)
+	virtual void InitializeSparseVariableIndices(std::vector<RDS::SparseVariableIndex>& sparse_variable_indices)
 	{
 		// Empty implementation
 	}
 
-	virtual void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) = 0;
+	void InitializeMappings(SparseVariableIndexToDenseVariableIndexMap& sparse_variable_index_to_dense_variable_index_map_, DenseVariableIndexToSparseVariableIndexMap& dense_variable_index_to_sparse_variable_index_map_)
+	{
+		for (std::size_t i = 0; i < sparse_variable_indices_.size(); i++)
+		{
+			dense_variable_index_to_sparse_variable_index_map_.insert({ i, sparse_variable_indices[i] });
+			sparse_variable_index_to_dense_variable_index_map_.insert({ sparse_variable_indices[i], i });
+		}
+	}
+
+	virtual void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets)
+	{
+		std::sort(sparse_variable_indices_.begin(), sparse_variable_indices_.end());
+		triplets.resize(objective_variables_count_* objective_variables_count_ - objective_variables_count_);
+		auto triplet_index = 0;
+		for (auto column = 0; column < objective_variables_count_; column++)
+		{
+			for (auto row = 0; row <= column; row++)
+			{
+				triplets[triplet_index] = Eigen::Triplet<double>(
+					dense_variable_index_to_sparse_variable_index_map_[row],
+					dense_variable_index_to_sparse_variable_index_map_[column],
+					0);
+
+				hessian_entry_to_triplet_index_map_[{ row, column }] = triplet_index;
+				triplet_index++;
+			}
+		}
+	}
 
 	// Value, gradient and hessian calculation functions
 	virtual void CalculateValue(double& f) = 0;
@@ -458,9 +491,17 @@ private:
 	// Enforce PSD
 	bool enforce_psd_;
 
+	// Sparse variable indices
+	std::vector<RDS::SparseVariableIndex> sparse_variable_indices_;
+
 	// Mappings
 	HessianEntryToTripletIndexMap hessian_entry_to_triplet_index_map_;
 	SparseVariableIndexToDenseVariableIndexMap sparse_variable_index_to_dense_variable_index_map_;
+	DenseVariableIndexToSparseVariableIndexMap dense_variable_index_to_sparse_variable_index_map_;
+	PartialToSparseIndexMap partial_to_sparse_index_map_;
+	SparseIndexToPartialMap sparse_index_to_partial_map_;
+	PartialToDenseIndexMap partial_to_dense_index_map_;
+	DenseToPartialIndexMap dense_to_partial_index_map_;
 
 	// Name
 	const std::string name_;

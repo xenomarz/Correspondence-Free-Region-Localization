@@ -9,7 +9,7 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
-#include "./dense_objective_function.h"
+#include "../dense_objective_function.h"
 
 template <Eigen::StorageOptions StorageOrder_>
 class PositionObjective : public DenseObjectiveFunction<StorageOrder_>

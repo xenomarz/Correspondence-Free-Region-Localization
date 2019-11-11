@@ -7,7 +7,7 @@
 
 // Optimization lib includes
 #include <libs/optimization_lib/include/utils/mesh_wrapper.h>
-#include <libs/optimization_lib/include/objective_functions/edge_pair_angle_objective.h>
+#include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h>
 #include <libs/optimization_lib/include/objective_functions/integer_objective.h>
 #include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
 #include <libs/optimization_lib/include/utils/utils.h>

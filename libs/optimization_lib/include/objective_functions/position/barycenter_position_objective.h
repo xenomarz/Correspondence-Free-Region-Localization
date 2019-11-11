@@ -9,7 +9,7 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
-#include "../utils/type_definitions.h"
+#include "../../utils/type_definitions.h"
 #include "./position_objective.h"
 
 template<Eigen::StorageOptions StorageOrder_>

@@ -27,6 +27,7 @@ namespace RDS
 	using SparseVariableIndex = std::int64_t;
 	using DenseVariableIndex = std::int64_t;
 	using HessianTripletIndex = std::int64_t;
+	using PartialDerivativeIndex = std::int64_t;
 	using HessianEntry = std::pair<DenseVariableIndex, DenseVariableIndex>;
 	
 	/**
@@ -168,7 +169,6 @@ namespace RDS
 
 	struct EdgePairDescriptorEquals
 	{
-		template <class T1, class T2>
 		bool operator () (const EdgePairDescriptor& edge_pair_descriptor1, const EdgePairDescriptor& edge_pair_descriptor2) const
 		{
 			const auto edge_descriptor1_1 = static_cast<EdgeDescriptor>(edge_pair_descriptor1.first);

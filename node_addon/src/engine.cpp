@@ -10,8 +10,8 @@
 #include "../include/engine.h"
 #include "libs/optimization_lib/include/objective_functions/objective_function.h"
 #include "libs/optimization_lib/include/objective_functions/dense_objective_function.h"
-#include "libs/optimization_lib/include/objective_functions/barycenter_position_objective.h"
-#include "libs/optimization_lib/include/objective_functions/vertex_position_objective.h"
+#include "libs/optimization_lib/include/objective_functions/position/barycenter_position_objective.h"
+#include "libs/optimization_lib/include/objective_functions/position/vertex_position_objective.h"
 
 Napi::FunctionReference Engine::constructor;
 
