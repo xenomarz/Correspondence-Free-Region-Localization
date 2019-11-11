@@ -15,7 +15,7 @@ void solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
 	if (IsConstrObjFunc) { //for constraint objective function
 		X.resize(X0.rows() + F.rows());
 		X.head(X0.rows()) = X0;
-		X.tail(F.rows()) = VectorXd::Random(F.rows());
+		X.tail(F.rows()) = VectorXd::Zero(F.rows());
 		ext_x = X.head(X.rows() - F.rows());
 	}
 	else { //for unconstraint objective function

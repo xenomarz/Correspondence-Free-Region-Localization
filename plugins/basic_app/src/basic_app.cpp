@@ -61,10 +61,14 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 				//remove previous data
 				while (Outputs.size() > 0)
 					remove_output(0);
-				viewer->data_list.clear();
-			}
 
-			viewer->load_mesh_from_file(modelPath.c_str());
+				viewer->load_mesh_from_file(modelPath.c_str());
+				viewer->erase_mesh(0);
+			}
+			else {
+				viewer->load_mesh_from_file(modelPath.c_str());
+			}
+			
 			inputModelID = viewer->data_list[0].id;
 			
 			for (int i = 0; i < Outputs.size(); i++)
@@ -146,8 +150,8 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 void basic_app::remove_output(const int output_index) {
 	stop_solver_thread();
 	
-	viewer->core_list.erase(viewer->core_list.begin() + 1 + output_index);
-	viewer->data_list.erase(viewer->data_list.begin() + 1 + output_index);
+	viewer->erase_core(1 + output_index);
+	viewer->erase_mesh(1 + output_index);
 	Outputs.erase(Outputs.begin() + output_index);
 
 	//Update the scene
@@ -580,12 +584,9 @@ void basic_app::Draw_menu_for_cores(ViewerCore& core) {
 			viewer->snap_to_canonical_quaternion();
 		}
 
-		// Zoom
+		// Zoom & Lightining factor
 		ImGui::PushItemWidth(80 * menu_scaling());
 		ImGui::DragFloat("Zoom", &(core.camera_zoom), 0.05f, 0.1f, 100000.0f);
-
-		// Lightining factor
-		ImGui::PushItemWidth(80 * menu_scaling());
 		ImGui::DragFloat("Lighting factor", &(core.lighting_factor), 0.05f, 0.1f, 20.0f);
 
 		// Select rotation type
@@ -689,10 +690,8 @@ void basic_app::Draw_menu_for_solver_settings() {
 		ImGui::End();
 		return;
 	}
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 8));
-	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
 	int id = 0;
-	
+	bool stop = false;
 	int firstConstrIndex = -1, firstUnconstrIndex = -1;
 	for (int i = Outputs.size() - 1; i >= 0; i--) {
 		if (Outputs[i].solver->IsConstrObjFunc)
@@ -700,6 +699,9 @@ void basic_app::Draw_menu_for_solver_settings() {
 		else
 			firstUnconstrIndex = i;
 	}
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 8));
+	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
 
 	if (firstUnconstrIndex != -1) {
 		// prepare the first column
@@ -726,6 +728,7 @@ void basic_app::Draw_menu_for_solver_settings() {
 					ImGui::PushID(id++);
 					ImGui::PushItemWidth(80 * menu_scaling());
 					ImGui::DragFloat("", &(obj->w), 0.05f, 0.0f, 100000.0f);
+					ImGui::PopItemWidth();
 					ImGui::NextColumn();
 					ImGui::PopID();
 				}
@@ -736,12 +739,16 @@ void basic_app::Draw_menu_for_solver_settings() {
 				if (Outputs.size() > 1)
 				{
 					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
-					if (ImGui::Button("Remove"))
+					if (ImGui::Button("Remove")) {
 						remove_output(i);
+						stop = true;
+					}
+						
 					ImGui::PopStyleColor();
 				}
 					
 				ImGui::NextColumn();
+				ImGui::PopItemWidth();
 				ImGui::PopID();
 				ImGui::Separator();
 			}
@@ -751,7 +758,7 @@ void basic_app::Draw_menu_for_solver_settings() {
 	
 	ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
 
-	if (firstConstrIndex != -1) {
+	if ((!stop) && (firstConstrIndex != -1)) {
 		// prepare the first column
 		ImGui::Columns(Outputs[firstConstrIndex].totalObjective->objectiveList.size() + 3, "Constrained weights table", true);
 		ImGui::Separator();
@@ -777,6 +784,7 @@ void basic_app::Draw_menu_for_solver_settings() {
 					ImGui::DragFloat("augmented param.", &(obj->augmented_value_parameter), 0.05f, 0.0f, 100000.0f);
 					ImGui::NextColumn();
 					ImGui::PopID();
+					ImGui::PopItemWidth();
 				}
 				ImGui::PushID(id++);
 				ImGui::PushItemWidth(80 * menu_scaling());
@@ -790,6 +798,7 @@ void basic_app::Draw_menu_for_solver_settings() {
 				}
 
 				ImGui::NextColumn();
+				ImGui::PopItemWidth();
 				ImGui::PopID();
 				ImGui::Separator();
 			}
@@ -812,7 +821,7 @@ void basic_app::Draw_menu_for_solver_settings() {
 	Draw_menu_for_colors();
 	ImGui::PushItemWidth(80 * menu_scaling());
 	ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.01f, 10000.0f);
-
+	ImGui::PopItemWidth();
 	//close the window
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
