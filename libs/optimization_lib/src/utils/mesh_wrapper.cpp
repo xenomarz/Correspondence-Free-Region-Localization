@@ -432,7 +432,7 @@ void MeshWrapper::ComputeCorrespondingVertexPairsEdgeLength()
 
 void MeshWrapper::ComputeVertexNeighbours()
 {
-	for (uint64_t i = 0; i < v_im_.rows(); i++)
+	for (int64_t i = 0; i < v_im_.rows(); i++)
 	{
 		for (auto& edge_index : v_im_2_e_im[i])
 		{

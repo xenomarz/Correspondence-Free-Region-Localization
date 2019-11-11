@@ -75,19 +75,19 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
 	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
 	singularity_ = std::make_shared<SingularityObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, 1);
-  	position_ = std::make_shared<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, std::string("Position"));
+  	position_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, std::string("Position"));
 	std::vector<std::shared_ptr<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> objective_functions;
 	objective_functions.push_back(position_);
 	objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
 	objective_functions.push_back(seamless_);
 	objective_functions.push_back(singularity_);
-	composite_objective_ = std::make_shared<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, objective_functions, true);
+	summation_objective_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, objective_functions, true);
 	mesh_wrapper_->RegisterModelLoadedCallback([&]() {
 		/**
 		 * Initialize objective functions
 		 */
-		composite_objective_->Initialize();
+		summation_objective_->Initialize();
 		seamless_->AddCorrespondingEdgePairs(mesh_wrapper_->GetCorrespondingEdgeVertices());
 
 		auto& dom_v_2_im_v_map = mesh_wrapper_->GetDomainVerticesToImageVerticesMap();
@@ -112,7 +112,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 		 */
 		auto image_vertices = mesh_wrapper_->GetImageVertices();
 		auto x0 = Eigen::Map<const Eigen::VectorXd>(image_vertices.data(), image_vertices.cols() * image_vertices.rows());
-		newton_method_ = std::make_unique<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>>(composite_objective_, x0);
+		newton_method_ = std::make_unique<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>>(summation_objective_, x0);
 		newton_method_->EnableFlipAvoidingLineSearch(mesh_wrapper_->GetImageFaces());
 	});
 }
@@ -340,7 +340,7 @@ Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	/**
 	 * Get objective function by name
 	 */
-	const auto objective_function = composite_objective_->GetObjectiveFunction(info[0].ToString());
+	const auto objective_function = summation_objective_->GetObjectiveFunction(info[0].ToString());
 	if(objective_function == nullptr)
 	{
 		Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
@@ -408,7 +408,7 @@ Napi::Value Engine::SetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	/**
 	 * Get objective function by name
 	 */
-	const auto objective_function = composite_objective_->GetObjectiveFunction(info[0].ToString());
+	const auto objective_function = summation_objective_->GetObjectiveFunction(info[0].ToString());
 	if (objective_function == nullptr)
 	{
 		Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
@@ -678,15 +678,15 @@ Napi::Value Engine::GetObjectiveFunctionsData(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	auto objective_functions_count = composite_objective_->GetObjectiveFunctionsCount();
+	auto objective_functions_count = summation_objective_->GetObjectiveFunctionsCount();
 	Napi::Array objective_functions_data_array = Napi::Array::New(env, objective_functions_count);
-	for (std::uint32_t index = 0; index < composite_objective_->GetObjectiveFunctionsCount(); index++)
+	for (std::uint32_t index = 0; index < summation_objective_->GetObjectiveFunctionsCount(); index++)
 	{
 		Napi::Object data_object = Napi::Object::New(env);
 		Napi::Object data_object_internal = Napi::Object::New(env);
 		Napi::Array value_per_vertex_array = Napi::Array::New(env, mesh_wrapper_->GetImageVerticesCount());
 
-		auto current_objective_function = composite_objective_->GetObjectiveFunction(index);
+		auto current_objective_function = summation_objective_->GetObjectiveFunction(index);
 		data_object.Set("name", current_objective_function->GetName());
 		data_object.Set("data", data_object_internal);
 		data_object_internal.Set("value", current_objective_function->GetValue());

@@ -15,7 +15,7 @@ public:
 	/**
 	 * Public type definitions
 	 */
-	enum class Properties : uint32_t
+	enum class Properties : int32_t
 	{
 		Delta = DenseObjectiveFunction<StorageOrder_>::Properties::Count_
 	};
@@ -23,8 +23,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	Separation(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider) :
-		DenseObjectiveFunction(objective_function_data_provider, "Separation")
+	Separation(const std::shared_ptr<MeshDataProvider>& mesh_data_provider) :
+		DenseObjectiveFunction(mesh_data_provider, "Separation", 0, false)
 	{
 		this->Initialize();
 	}
@@ -42,7 +42,7 @@ public:
 		delta_ = delta;
 	}
 
-	bool SetProperty(const uint32_t property_id, const std::any& property_value) override
+	bool SetProperty(const int32_t property_id, const std::any& property_value) override
 	{
 		if(DenseObjectiveFunction<StorageOrder_>::SetProperty(property_id, property_value))
 		{
@@ -68,7 +68,7 @@ public:
 		return delta_;
 	}
 
-	bool GetProperty(const uint32_t property_id, std::any& property_value) override
+	bool GetProperty(const int32_t property_id, std::any& property_value) override
 	{
 		if (DenseObjectiveFunction<StorageOrder_>::GetProperty(property_id, property_value))
 		{
@@ -141,9 +141,9 @@ private:
 	
 	void PreInitialize() override
 	{
-		Esep = this->objective_function_data_provider_->GetCorrespondingVertexPairsCoefficients();
+		Esep = this->mesh_data_provider_->GetCorrespondingVertexPairsCoefficients();
 		Esept = Esep.transpose();
-		edge_lenghts_per_pair = this->objective_function_data_provider_->GetCorrespondingVertexPairsEdgeLength();
+		edge_lenghts_per_pair = this->mesh_data_provider_->GetCorrespondingVertexPairsEdgeLength();
 	}
 	
 	void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) override

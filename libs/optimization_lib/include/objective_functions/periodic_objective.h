@@ -7,17 +7,18 @@
 #include <cmath>
 
 // Optimization lib includes
-#include "./sparse_objective_function.h"
+#include "../utils/type_definitions.h"
 #include "../utils/utils.h"
+#include "./composite_objective.h"
 
 template<Eigen::StorageOptions StorageOrder_>
-class PeriodicObjective : public SparseObjectiveFunction<StorageOrder_>
+class PeriodicObjective : public CompositeObjective<StorageOrder_>
 {
 public:
 	/**
 	 * Public type definitions
 	 */
-	enum class Properties : uint32_t
+	enum class Properties : int32_t
 	{
 		Period = SparseObjectiveFunction<StorageOrder_>::Properties::Count_
 	};
@@ -25,21 +26,19 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	PeriodicObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name, const double period, const uint64_t objective_variable_count, bool enforce_psd) :
-		SparseObjectiveFunction(objective_function_data_provider, name),
-		enforce_psd_(enforce_psd),
-		objective_variable_count_(objective_variable_count)
+	PeriodicObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period) :
+		CompositeObjective(mesh_data_provider, name, objective_vertices_count, enforce_psd, inner_objective)
 	{
 		SetPeriod(period);
 	}
 	
-	PeriodicObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const double period, bool enforce_psd) :
-		PeriodicObjective(objective_function_data_provider, "Periodic", period, enforce_psd)
+	PeriodicObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const int64_t objective_vertices_count, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period) :
+		PeriodicObjective(mesh_data_provider, "Periodic Objective", objective_vertices_count, enforce_psd, period, inner_objective)
 	{
 
 	}
 
-	virtual ~PeriodicObjective()
+	virtual ~PeriodicObjective() override
 	{
 
 	}
@@ -78,7 +77,7 @@ public:
 		polynomial_coeffs_.coeffRef(5) = 0;
 	}
 
-	bool SetProperty(const uint32_t property_id, const std::any& property_value) override
+	bool SetProperty(const int32_t property_id, const std::any& property_value) override
 	{
 		if (SparseObjectiveFunction<StorageOrder_>::SetProperty(property_id, property_value))
 		{
@@ -119,7 +118,7 @@ public:
 		return polynomial_coeffs_;
 	}
 
-	bool GetProperty(const uint32_t property_id, std::any& property_value) override
+	bool GetProperty(const int32_t property_id, std::any& property_value) override
 	{
 		if (SparseObjectiveFunction<StorageOrder_>::GetProperty(property_id, property_value))
 		{
@@ -137,124 +136,18 @@ public:
 		return false;
 	}
 
-protected:
-	/**
-	 * Protected overrides 
-	 */
-	void PreInitialize() override
-	{
-		g_inner_.resize(this->variables_count_);
-	}
-	
-	/**
-	 * Value, gradient and hessian calculation functions for inner function
-	 */
-	virtual void CalculateValueInner(double& f) = 0;
-	virtual void CalculateGradientInner(Eigen::SparseVector<double>& g) = 0;
-	virtual void CalculateTripletsInner(std::vector<Eigen::Triplet<double>>& triplets) = 0;
-
-	/**
-	 * Value, gradient and hessian calculation functions for outer function
-	 */
-	void CalculateValueOuter(double& f)
-	{
-		f = polynomial_value_;
-	}
-	
-	void CalculateGradientOuter(Eigen::SparseVector<double>& g)
-	{
-		g = polynomial_first_derivative_ * g_inner_;
-	}
-	
-	void CalculateTripletsOuter(std::vector<Eigen::Triplet<double>>& triplets)
-	{
-		const auto triplets_count = triplets.size();
-		for(std::size_t i = 0; i < triplets_count; i++)
-		{
-			auto& value = const_cast<double&>(triplets[i].value());
-			value = (polynomial_first_derivative_ * value) + (polynomial_second_derivative_ * g_inner_.coeffRef(triplets[i].row()) * g_inner_.coeffRef(triplets[i].col()));
-		}
-
-		if (enforce_psd_)
-		{
-			Eigen::MatrixXd H;
-			H.resize(objective_variable_count_, objective_variable_count_);
-			H.setZero();
-			for (std::size_t i = 0; i < triplets_count; i++)
-			{
-				auto row = sparse_index_to_dense_index_map_[triplets[i].row()];
-				auto col = sparse_index_to_dense_index_map_[triplets[i].col()];
-				auto value = triplets[i].value();
-				H.coeffRef(row, col) = value;
-				H.coeffRef(col, row) = value;
-			}
-
-			Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(H);
-			Eigen::MatrixXd D = solver.eigenvalues().asDiagonal();
-			Eigen::MatrixXd V = solver.eigenvectors();
-			for (auto i = 0; i < objective_variable_count_; i++)
-			{
-				auto& value = D.coeffRef(i, i);
-				if (value < 0)
-				{
-					value = 10e-8;
-				}
-			}
-
-			H = V * D * V.inverse();
-
-			for (auto column = 0; column < objective_variable_count_; column++)
-			{
-				for (auto row = 0; row <= column; row++)
-				{
-					const auto triplet_index = dense_entry_to_triplet_index_map_[{row, column}];
-					const_cast<double&>(triplets[triplet_index].value()) = H.coeffRef(row, column);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Protected fields
-	 */
-	std::unordered_map<std::pair<uint64_t, uint64_t>, uint64_t, Utils::OrderedPairHash, Utils::UnorderedPairEquals> dense_entry_to_triplet_index_map_;
-	std::unordered_map<uint64_t, uint64_t> sparse_index_to_dense_index_map_;
-	
 private:
 	/**
-	 * Private method overrides
+	 * Private overrides
 	 */
-	void CalculateValue(double& f) override
+	void CalculateDerivativesOuter(const double f, double& outer_value, double& outer_first_derivative, double& outer_second_derivative) override
 	{
-		CalculateValueInner(f);
-
-		double reminder = fmod(f, p_);
-		if (reminder < 0)
+		double f = fmod(x, p_);
+		if (f < 0)
 		{
-			reminder = p_ + reminder;
-		}		
+			f = p_ + f;
+		}
 		
-		CalculatePolynomialDerivatives(reminder);
-		CalculateValueOuter(f);
-	}
-	
-	void CalculateGradient(Eigen::SparseVector<double>& g) override
-	{
-		CalculateGradientInner(g_inner_);
-		CalculateGradientOuter(g);
-	}
-
-	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
-	{
-		CalculateTripletsInner(triplets);
-		CalculateTripletsOuter(triplets);
-	}
-	
-	/**
-	 * Private methods
-	 */
-	void CalculatePolynomialDerivatives(const double f)
-	{
 		const double f2 = f * f;
 		const double f3 = f2 * f;
 		const double f4 = f3 * f;
@@ -263,21 +156,18 @@ private:
 		Eigen::VectorXd values(6);
 
 		values << f5, f4, f3, f2, f, 1;
-		polynomial_value_ = values.dot(polynomial_coeffs_);
+		outer_value = values.dot(polynomial_coeffs_);
 
 		values << 5 * f4, 4 * f3, 3 * f2, 2 * f, 1, 0;
-		polynomial_first_derivative_ = values.dot(polynomial_coeffs_);
+		outer_first_derivative = values.dot(polynomial_coeffs_);
 
 		values << 20 * f3, 12 * f2, 6 * f, 2, 0, 0;
-		polynomial_second_derivative_ = values.dot(polynomial_coeffs_);
+		outer_second_derivative = values.dot(polynomial_coeffs_);
 	}
 	
 	/**
 	 * Private fields
 	 */
-	double polynomial_value_;
-	double polynomial_first_derivative_;
-	double polynomial_second_derivative_;
 	double hp_;
 	double hp2_;
 	double hp3_;
@@ -289,9 +179,6 @@ private:
 	double p4_;
 	double p5_;
 	Eigen::VectorXd polynomial_coeffs_;
-	Eigen::SparseVector<double> g_inner_;
-	bool enforce_psd_;
-	uint64_t objective_variable_count_;
 };
 
 #endif

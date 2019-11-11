@@ -24,8 +24,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SymmetricDirichlet(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider)
-		: DenseObjectiveFunction(objective_function_data_provider, "Symmetric Dirichlet")
+	SymmetricDirichlet(const std::shared_ptr<MeshDataProvider>& mesh_data_provider)
+		: DenseObjectiveFunction(mesh_data_provider, "Symmetric Dirichlet", 0, false)
 	{
 		this->Initialize();
 	}
@@ -93,17 +93,17 @@ private:
 	
 	void PreInitialize() override
 	{
-		auto F = this->objective_function_data_provider_->GetDomainFaces();
-		auto V = this->objective_function_data_provider_->GetDomainVertices();
+		auto F = this->mesh_data_provider_->GetDomainFaces();
+		auto V = this->mesh_data_provider_->GetDomainVertices();
 
-		auto D1 = this->objective_function_data_provider_->GetD1();
-		auto D2 = this->objective_function_data_provider_->GetD2();
+		auto D1 = this->mesh_data_provider_->GetD1();
+		auto D2 = this->mesh_data_provider_->GetD2();
 
-		auto Fs = this->objective_function_data_provider_->GetImageFaces();
-		this->F = this->objective_function_data_provider_->GetImageFaces();
+		auto Fs = this->mesh_data_provider_->GetImageFaces();
+		this->F = this->mesh_data_provider_->GetImageFaces();
 
 		numF = Fs.rows();
-		numV = this->objective_function_data_provider_->GetImageVerticesCount();
+		numV = this->mesh_data_provider_->GetImageVerticesCount();
 
 		Fuv.resize(6, numF);
 		Fuv.topRows(3) = Fs.transpose();
@@ -155,8 +155,8 @@ private:
 
 	void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-		auto nfs = this->objective_function_data_provider_->GetImageFaces().rows();
-		auto nvs = this->objective_function_data_provider_->GetImageVerticesCount();
+		auto nfs = this->mesh_data_provider_->GetImageFaces().rows();
+		auto nvs = this->mesh_data_provider_->GetImageVerticesCount();
 		triplets.reserve(21 * nfs);
 		for (int i = 0; i < nfs; ++i)
 		{

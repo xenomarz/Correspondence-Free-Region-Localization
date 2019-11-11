@@ -9,6 +9,7 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
+#include "../utils/type_definitions.h"
 #include "./position_objective.h"
 
 template<Eigen::StorageOptions StorageOrder_>
@@ -18,8 +19,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	BarycenterPositionObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<int64_t>& indices, const Eigen::Vector2d& objective_barycenter) :
-		PositionObjective(objective_function_data_provider, indices.size(), "Barycenter Position Objective"),
+	BarycenterPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::vector<RDS::VertexIndex>& indices, const Eigen::Vector2d& objective_barycenter) :
+		PositionObjective(mesh_data_provider, "Barycenter Position Objective", indices.size()),
 		indices_(indices),
 		objective_barycenter_(objective_barycenter)
 	{
@@ -29,8 +30,8 @@ public:
 		this->Initialize();
 	}
 
-	BarycenterPositionObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const Eigen::VectorXi& indices, const Eigen::Vector2d& objective_barycenter) :
-		BarycenterPositionObjective(objective_function_data_provider, std::vector<int64_t>(indices.data(), indices.data() + indices.rows()), objective_barycenter)
+	BarycenterPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const Eigen::VectorXi& indices, const Eigen::Vector2d& objective_barycenter) :
+		BarycenterPositionObjective(mesh_data_provider, std::vector<int64_t>(indices.data(), indices.data() + indices.rows()), objective_barycenter)
 	{
 
 	}
@@ -60,7 +61,7 @@ private:
 	void CalculateGradient(Eigen::VectorXd& g) override
 	{
 		g.setZero();
-		for (uint64_t i = 0; i < this->objective_vertices_count_; i++)
+		for (int64_t i = 0; i < this->objective_vertices_count_; i++)
 		{
 			const auto current_index = indices_[i];
 			g(current_index) = gradient_coeff_ * barycenters_diff_(0,0);
@@ -76,7 +77,7 @@ private:
 		int64_t vertex_index_shifted;
 		int64_t i_shifted;
 
-		for (uint64_t i = 0; i < this->objective_vertices_count_; i++)
+		for (int64_t i = 0; i < this->objective_vertices_count_; i++)
 		{
 			vertex_index = indices_[i];
 			vertex_index_shifted = vertex_index + this->image_vertices_count_;
@@ -90,7 +91,7 @@ private:
 	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		int64_t vertex_index;
-		for (uint64_t i = 0; i < this->objective_vertices_count_; i++)
+		for (int64_t i = 0; i < this->objective_vertices_count_; i++)
 		{
 			const_cast<double&>(triplets[i].value()) = hessian_coeff_;
 			const_cast<double&>(triplets[i + this->objective_vertices_count_].value()) = hessian_coeff_;
@@ -109,7 +110,7 @@ private:
 	 */
 	double gradient_coeff_;
 	double hessian_coeff_;
-	std::vector<int64_t> indices_;
+	std::vector<RDS::VertexIndex> indices_;
 	Eigen::Vector2d objective_barycenter_;
 	Eigen::Vector2d current_barycenter_;
 	Eigen::Vector2d barycenters_diff_;

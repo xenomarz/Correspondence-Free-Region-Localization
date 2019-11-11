@@ -9,6 +9,7 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
+#include "../utils/type_definitions.h"
 #include "./position_objective.h"
 
 template<Eigen::StorageOptions StorageOrder_>
@@ -18,8 +19,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	VertexPositionObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::vector<std::pair<int64_t, Eigen::Vector2d>>& index_vertex_pairs) :
-		PositionObjective(objective_function_data_provider, index_vertex_pairs.size(), "Vertex Position Objective"),
+	VertexPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::vector<std::pair<RDS::VertexIndex, Eigen::Vector2d>>& index_vertex_pairs) :
+		PositionObjective(mesh_data_provider, "Vertex Position Objective", index_vertex_pairs.size()),
 		index_vertex_pairs_(index_vertex_pairs)
 	{
 		X_current_.resize(this->objective_vertices_count_, 2);
@@ -54,7 +55,7 @@ private:
 	void CalculateGradient(Eigen::VectorXd& g) override
 	{
 		g.setZero();
-		for (uint64_t i = 0; i < this->objective_vertices_count_; i++)
+		for (int64_t i = 0; i < this->objective_vertices_count_; i++)
 		{
 			const auto current_index = index_vertex_pairs_[i].first;
 			g(current_index) = 2.0 * X_diff_(i, 0);
@@ -67,7 +68,7 @@ private:
 		triplets.resize(this->objective_variables_count_);
 		int64_t current_index;
 		int64_t current_index_shifted;
-		for (uint64_t i = 0; i < this->objective_vertices_count_; i++)
+		for (int64_t i = 0; i < this->objective_vertices_count_; i++)
 		{
 			current_index = index_vertex_pairs_[i].first;
 			current_index_shifted = index_vertex_pairs_[i].first + this->image_vertices_count_;
@@ -78,7 +79,7 @@ private:
 
 	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-		for (uint64_t i = 0; i < this->objective_variables_count_; i++)
+		for (int64_t i = 0; i < this->objective_variables_count_; i++)
 		{
 			const_cast<double&>(triplets[i].value()) = 2.0;
 		}
@@ -97,7 +98,7 @@ private:
 	/**
 	 * Fields
 	 */
-	std::vector<std::pair<int64_t, Eigen::Vector2d>> index_vertex_pairs_;
+	std::vector<std::pair<RDS::VertexIndex, Eigen::Vector2d>> index_vertex_pairs_;
 	Eigen::MatrixX2d X_objective_;
 	Eigen::MatrixX2d X_current_;
 	Eigen::MatrixX2d X_diff_;

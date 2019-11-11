@@ -14,11 +14,12 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
+#include <libs/optimization_lib/include/utils/type_definitions.h>
 #include <libs/optimization_lib/include/utils/mesh_wrapper.h>
 #include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
 #include <libs/optimization_lib/include/solvers/pardiso_solver.h>
 #include <libs/optimization_lib/include/iterative_methods/newton_method.h>
-#include <libs/optimization_lib/include/objective_functions/composite_objective.h>
+#include <libs/optimization_lib/include/objective_functions/summation_objective.h>
 #include <libs/optimization_lib/include/objective_functions/position_objective.h>
 #include <libs/optimization_lib/include/objective_functions/separation_objective.h>
 #include <libs/optimization_lib/include/objective_functions/symmetric_dirichlet_objective.h>
@@ -229,10 +230,10 @@ private:
 	/**
 	 * Fields
 	 */
-	std::unordered_map<Eigen::VectorXi, std::shared_ptr<PositionObjective<Eigen::StorageOptions::RowMajor>>, Utils::VectorHash, Utils::VectorEquals> indices_2_position_objective_map;
+	std::unordered_map<Eigen::VectorXi, std::shared_ptr<PositionObjective<Eigen::StorageOptions::RowMajor>>, RDS::VectorHash, RDS::VectorEquals> indices_2_position_objective_map;
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
-	std::shared_ptr<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> composite_objective_;
-	std::shared_ptr<CompositeObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> position_;
+	std::shared_ptr<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> summation_objective_;
+	std::shared_ptr<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> position_;
 	std::shared_ptr<Separation<Eigen::StorageOptions::RowMajor>> separation_;
 	std::shared_ptr<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>> symmetric_dirichlet_;
 	std::shared_ptr<SeamlessObjective<Eigen::StorageOptions::RowMajor>> seamless_;

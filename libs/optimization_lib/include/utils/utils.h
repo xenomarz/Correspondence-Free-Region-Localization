@@ -19,121 +19,6 @@ class Utils
 {
 public:
 	/**
-	 * Custom hash and equals function objects for unordered_map
-	 */
-	
-	// https://stackoverflow.com/questions/32685540/why-cant-i-compile-an-unordered-map-with-a-pair-as-key
-
-	struct OrderedPairHash {
-		template <class T1, class T2>
-		std::size_t operator () (const std::pair<T1, T2>& pair) const
-		{
-			const auto first = static_cast<uint64_t>(pair.first);
-			const auto second = static_cast<uint64_t>(pair.second);
-
-			std::size_t seed = 0;
-
-			// https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values/35991300#35991300
-			boost::hash_combine(seed, first);
-			boost::hash_combine(seed, second);
-			return seed;
-		}
-	};
-
-	struct OrderedPairEquals {
-		template <class T1, class T2>
-		bool operator () (const std::pair<T1, T2>& pair1, const std::pair<T1, T2>& pair2) const
-		{
-			const auto pair1_first = static_cast<uint64_t>(pair1.first);
-			const auto pair1_second = static_cast<uint64_t>(pair1.second);
-			const auto pair2_first = static_cast<uint64_t>(pair2.first);
-			const auto pair2_second = static_cast<uint64_t>(pair2.second);
-
-			return (pair1_first == pair2_first) && (pair1_second == pair2_second);
-		}
-	};
-	
-	struct UnorderedPairHash {
-		template <class T1, class T2>
-		std::size_t operator () (const std::pair<T1, T2>& pair) const
-		{
-			const auto first = static_cast<uint64_t>(pair.first);
-			const auto second = static_cast<uint64_t>(pair.second);
-
-			const auto minmax_pair = std::minmax(first, second);
-			std::size_t seed = 0;
-
-			// https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values/35991300#35991300
-			boost::hash_combine(seed, minmax_pair.first);
-			boost::hash_combine(seed, minmax_pair.second);
-			return seed;
-		}
-	};
-
-	struct UnorderedPairEquals {
-		template <class T1, class T2>
-		bool operator () (const std::pair<T1, T2>& pair1, const std::pair<T1, T2>& pair2) const
-		{
-			const auto pair1_first = static_cast<uint64_t>(pair1.first);
-			const auto pair1_second = static_cast<uint64_t>(pair1.second);
-			const auto pair2_first = static_cast<uint64_t>(pair2.first);
-			const auto pair2_second = static_cast<uint64_t>(pair2.second);
-
-			const auto minmax_pair1 = std::minmax(pair1_first, pair1_second);
-			const auto minmax_pair2 = std::minmax(pair2_first, pair2_second);
-			return (minmax_pair1.first == minmax_pair2.first) && (minmax_pair1.second == minmax_pair2.second);
-		}
-	};
-	
-	struct VectorHash {
-		template <class T>
-		std::size_t operator () (const std::vector<T>& vector) const
-		{
-			std::size_t seed = 0;
-			std::vector<T> sorted_vector = vector;
-			std::sort(sorted_vector.begin(), sorted_vector.end());
-
-			for (auto value : sorted_vector)
-			{
-				boost::hash_combine(seed, value);
-			}
-
-			return seed;
-		}
-
-		std::size_t operator () (const Eigen::VectorXi& vector) const
-		{
-			const auto vector_internal = std::vector<int64_t>(vector.data(), vector.data() + vector.rows());
-			return this->operator()(vector_internal);
-		}
-	};
-
-	struct VectorEquals {
-		template <class T>
-		bool operator () (const std::vector<T>& vector1, const std::vector<T>& vector2) const
-		{
-			if (vector1.size() != vector2.size())
-			{
-				return false;
-			}
-
-			std::vector<T> sorted_vector1 = vector1;
-			std::vector<T> sorted_vector2 = vector2;
-			std::sort(sorted_vector1.begin(), sorted_vector1.end());
-			std::sort(sorted_vector2.begin(), sorted_vector2.end());
-
-			return sorted_vector1 == sorted_vector2;
-		}
-
-		bool operator () (const Eigen::VectorXi& vector1, const Eigen::VectorXi& vector2) const
-		{
-			const auto vector1_internal = std::vector<int64_t>(vector1.data(), vector1.data() + vector1.rows());
-			const auto vector2_internal = std::vector<int64_t>(vector2.data(), vector2.data() + vector2.rows());
-			return this->operator()(vector1_internal, vector2_internal);
-		}
-	};
-
-	/**
 	 * SVD
 	 */
 	static inline void SSVD2x2(const Eigen::Matrix2d& A, Eigen::Matrix2d& U, Eigen::Matrix2d& S, Eigen::Matrix2d& V)
@@ -271,7 +156,7 @@ public:
 		const double epsilon = CalculateEpsilon(x);
 		const double epsilon2 = 2 * epsilon;
 		
-		for(uint64_t i = 0; i < x.rows(); i++)
+		for(int64_t i = 0; i < x.rows(); i++)
 		{
 			perturbation.setZero();
 			perturbation.coeffRef(i) = epsilon;
@@ -300,7 +185,7 @@ public:
 
 		const double epsilon = CalculateEpsilon(x);
 		const double epsilon2 = 2 * epsilon;
-		for (uint64_t i = 0; i < x.rows(); i++)
+		for (int64_t i = 0; i < x.rows(); i++)
 		{
 			perturbation.setZero();
 			perturbation.coeffRef(i) = epsilon;

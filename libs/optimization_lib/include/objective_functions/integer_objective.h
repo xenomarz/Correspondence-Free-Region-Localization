@@ -13,7 +13,7 @@ public:
 	/**
 	 * Public type definitions
 	 */
-	enum class Properties : uint32_t
+	enum class Properties : int32_t
 	{
 		Period = SparseObjectiveFunction<StorageOrder_>::Properties::Count_
 	};
@@ -21,8 +21,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	IntegerObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const uint64_t index, const double period) :
-		PeriodicObjective(objective_function_data_provider, "Integer Objective", period, 1, true),
+	IntegerObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const int64_t index, const double period) :
+		PeriodicObjective(mesh_data_provider, "Integer Objective", period, 1, true),
 		index_(index)
 	{
 		this->Initialize();
@@ -79,7 +79,7 @@ private:
 	/**
 	 * Private fields
 	 */
-	uint64_t index_;
+	int64_t index_;
 	double value_;
 };
 

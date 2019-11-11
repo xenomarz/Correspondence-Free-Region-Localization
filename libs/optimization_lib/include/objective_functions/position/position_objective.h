@@ -18,16 +18,14 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	PositionObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const int64_t vertices_count, const std::string& name) :
-		DenseObjectiveFunction(objective_function_data_provider, name),
-		objective_vertices_count_(vertices_count),
-		objective_variables_count_(2 * vertices_count)
+	PositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::string& name, const int64_t objective_vertices_count) :
+		DenseObjectiveFunction(mesh_data_provider, name, objective_vertices_count, false)
 	{
 
 	}
 
-	PositionObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const double coefficient, const int64_t vertices_count) :
-		PositionObjective(objective_function_data_provider, coefficient, vertices_count, "Position Objective")
+	PositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const int64_t objective_vertices_count) :
+		PositionObjective(mesh_data_provider, "Position Objective", objective_vertices_count)
 	{
 
 	}

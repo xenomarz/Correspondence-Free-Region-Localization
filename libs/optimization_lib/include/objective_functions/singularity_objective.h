@@ -9,20 +9,20 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
-#include "./composite_objective.h"
+#include "./summation_objective.h"
 #include "./integer_objective.h"
 #include <corecrt_math_defines.h>
 
 template <Eigen::StorageOptions StorageOrder_>
-class SingularityObjective : public CompositeObjective<IntegerObjective<StorageOrder_>>
+class SingularityObjective : public SummationObjective<IntegerObjective<StorageOrder_>>
 {
 public:
 	/**
 	 * Public type definitions
 	 */
-	enum class Properties : uint32_t
+	enum class Properties : int32_t
 	{
-		Interval = CompositeObjective<IntegerObjective<StorageOrder_>>::Properties::Count_
+		Interval = SummationObjective<IntegerObjective<StorageOrder_>>::Properties::Count_
 	};
 	
 	using SingularCorner = std::pair<int64_t, std::vector<int64_t>>;
@@ -30,15 +30,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SingularityObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name, double interval) :
-		CompositeObjective(objective_function_data_provider, name, false, true),
+	SingularityObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::string& name, double interval) :
+		SummationObjective(mesh_data_provider, name, false, true),
 		interval_(interval)
 	{
 		this->Initialize();
 	}
 
-	SingularityObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, double interval) :
-		SingularityObjective(objective_function_data_provider, "Singularity", interval)
+	SingularityObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, double interval) :
+		SingularityObjective(mesh_data_provider, "Singularity", interval)
 	{
 
 	}
@@ -53,16 +53,16 @@ public:
 	 */
 	void SetInterval(const double interval)
 	{
-		for(uint64_t i = 0; i < this->GetObjectiveFunctionsCount(); i++)
+		for(int64_t i = 0; i < this->GetObjectiveFunctionsCount(); i++)
 		{
 			this->GetObjectiveFunction(i)->SetPeriod(interval);
 		}
 		interval_ = interval;
 	}
 
-	bool SetProperty(const uint32_t property_id, const std::any& property_value) override
+	bool SetProperty(const int32_t property_id, const std::any& property_value) override
 	{
-		if (CompositeObjective<IntegerObjective<StorageOrder_>>::SetProperty(property_id, property_value))
+		if (SummationObjective<IntegerObjective<StorageOrder_>>::SetProperty(property_id, property_value))
 		{
 			return true;
 		}
@@ -86,9 +86,9 @@ public:
 		return interval_;
 	}
 
-	bool GetProperty(const uint32_t property_id, std::any& property_value) override
+	bool GetProperty(const int32_t property_id, std::any& property_value) override
 	{
-		if (CompositeObjective<IntegerObjective<StorageOrder_>>::GetProperty(property_id, property_value))
+		if (SummationObjective<IntegerObjective<StorageOrder_>>::GetProperty(property_id, property_value))
 		{
 			return true;
 		}
@@ -113,8 +113,8 @@ public:
 
 		for(auto& singular_corner : singular_corners)
 		{
-			auto x_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->objective_function_data_provider_, singular_corner.first, interval_);
-			auto y_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->objective_function_data_provider_, singular_corner.first + this->image_vertices_count_, interval_);
+			auto x_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, singular_corner.first, interval_);
+			auto y_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, singular_corner.first + this->image_vertices_count_, interval_);
 			
 			this->AddObjectiveFunction(x_component_objective);
 			this->AddObjectiveFunction(y_component_objective);
@@ -126,8 +126,8 @@ public:
 
 	void AddSingularCornersTest()
 	{
-		auto x_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->objective_function_data_provider_, 0);
-		auto y_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->objective_function_data_provider_, this->image_vertices_count_);
+		auto x_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, 0);
+		auto y_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, this->image_vertices_count_);
 		
 		this->AddObjectiveFunction(x_component_objective);
 		this->AddObjectiveFunction(y_component_objective);
@@ -195,7 +195,7 @@ private:
 			}
 		}
 
-		CompositeObjective<IntegerObjective<StorageOrder_>>::PreUpdate(x);
+		SummationObjective<IntegerObjective<StorageOrder_>>::PreUpdate(x);
 	}
 	
 	/**

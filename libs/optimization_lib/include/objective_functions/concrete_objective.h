@@ -7,6 +7,7 @@
 #include <vector>
 
 // Optimization lib includes
+#include "../utils/data_providers/mesh_data_provider.h"
 #include "./dense_objective_function.h"
 
 template<typename ObjectiveFunctionType_>
@@ -16,8 +17,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	ConcreteObjective(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name) :
-		ObjectiveFunctionType_(objective_function_data_provider, name)
+	ConcreteObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::string& name) :
+		ObjectiveFunctionType_(mesh_data_provider, name)
 	{
 
 	}

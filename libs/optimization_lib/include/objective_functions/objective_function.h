@@ -13,7 +13,8 @@
 #include <Eigen/Core>
 
 // Optimization Lib Includes
-#include "../utils/objective_function_data_provider.h"
+#include "../utils/type_definitions.h"
+#include "../utils/data_providers/mesh_data_provider.h"
 
 template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
 class ObjectiveFunction
@@ -29,7 +30,7 @@ public:
 		StorageOrder = StorageOrder_
 	};
 	
-	enum class UpdateOptions : uint32_t
+	enum class UpdateOptions : int32_t
 	{
 		NONE = 0,
 		VALUE = 1,
@@ -38,7 +39,7 @@ public:
 		ALL = 7
 	};
 
-	enum class Properties : uint32_t
+	enum class Properties : int32_t
 	{
 		Value,
 		ValuePerVertex,
@@ -53,7 +54,7 @@ public:
 	/**
 	 * Constructor and destructor
 	 */
-	ObjectiveFunction(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name) :
+	ObjectiveFunction(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd) :
 		f_(0),
 		w_(1),
 		domain_faces_count_(0),
@@ -61,8 +62,11 @@ public:
 		image_faces_count_(0),
 		image_vertices_count_(0),
 		variables_count_(0),
+		objective_vertices_count_(objective_vertices_count),
+		objective_variables_count_(2 * objective_vertices_count),
+		enforce_psd_(enforce_psd),
 		name_(name),
-		objective_function_data_provider_(objective_function_data_provider)
+		mesh_data_provider_(mesh_data_provider)
 	{
 		
 	}
@@ -98,7 +102,7 @@ public:
 		std::lock_guard<std::mutex> lock(m_);
 
 		// TODO: Add a flag that allows to explicitly zero the main diagonal
-		for(uint64_t i = 0; i < this->variables_count_; i++)
+		for(int64_t i = 0; i < this->variables_count_; i++)
 		{
 			triplets_.push_back(Eigen::Triplet<double>(i,i,0));
 		}
@@ -126,7 +130,7 @@ public:
 	}
 
 	// Generic property getter
-	virtual bool GetProperty(const uint32_t property_id, std::any& property_value)
+	virtual bool GetProperty(const int32_t property_id, std::any& property_value)
 	{
 		const Properties properties = static_cast<Properties>(property_id);
 		switch (properties)
@@ -167,7 +171,7 @@ public:
 	}
 
 	// Generic property setter
-	virtual bool SetProperty(const uint32_t property_id, const std::any& property_value)
+	virtual bool SetProperty(const int32_t property_id, const std::any& property_value)
 	{
 		const Properties properties = static_cast<Properties>(property_id);
 		switch (properties)
@@ -187,10 +191,10 @@ public:
 	// Initializes the objective function object. Must be called from any derived class constructor.
 	void Initialize()
 	{
-		domain_faces_count_ = objective_function_data_provider_->GetDomainFaces().rows();
-		domain_vertices_count_ = objective_function_data_provider_->GetDomainVertices().rows();
-		image_faces_count_ = objective_function_data_provider_->GetImageFaces().rows();
-		image_vertices_count_ = objective_function_data_provider_->GetImageVerticesCount();
+		domain_faces_count_ = mesh_data_provider_->GetDomainFaces().rows();
+		domain_vertices_count_ = mesh_data_provider_->GetDomainVertices().rows();
+		image_faces_count_ = mesh_data_provider_->GetImageFaces().rows();
+		image_vertices_count_ = mesh_data_provider_->GetImageVerticesCount();
 		variables_count_ = 2 * image_vertices_count_;
 		
 		PreInitialize();
@@ -199,6 +203,7 @@ public:
 		InitializeGradient(g_);
 		InitializeHessian(H_);
 		InitializeTriplets(triplets_);
+		InitializeMappings(hessian_entry_to_triplet_index_map_, sparse_variable_index_to_dense_variable_index_map_);
 		PostInitialize();
 	}
 
@@ -222,6 +227,7 @@ public:
 		if ((update_options & UpdateOptions::HESSIAN) != UpdateOptions::NONE)
 		{
 			CalculateTriplets(triplets_);
+			CalculateConvexTriplets(triplets_);
 		}
 
 		PostUpdate(x);
@@ -263,7 +269,12 @@ public:
 	}
 	
 protected:
-
+	/**
+	 * Protected type definitions
+	 */
+	using HessianEntryToTripletIndexMap = std::unordered_map<RDS::HessianEntry, RDS::HessianTripletIndex, RDS::HessianEntryHash, RDS::HessianEntryEquals>;
+	using SparseVariableIndexToDenseVariableIndexMap = std::unordered_map<RDS::SparseVariableIndex, RDS::DenseVariableIndex>;
+	
 	/**
 	 * Protected methods
 	 */
@@ -324,18 +335,20 @@ protected:
 	 * Protected Fields
 	 */
 
-	// Objective function data provider
-	std::shared_ptr<ObjectiveFunctionDataProvider> objective_function_data_provider_;
+	// Mesh data provider
+	std::shared_ptr<MeshDataProvider> mesh_data_provider_;
 
 	// Mutex
 	mutable std::mutex m_;
 
 	// Elements count
-	uint64_t domain_faces_count_;
-	uint64_t domain_vertices_count_;
-	uint64_t image_faces_count_;
-	uint64_t image_vertices_count_;
-	uint64_t variables_count_;
+	int64_t domain_faces_count_;
+	int64_t domain_vertices_count_;
+	int64_t image_faces_count_;
+	int64_t image_vertices_count_;
+	int64_t variables_count_;
+	int64_t objective_vertices_count_;
+	int64_t objective_variables_count_;
 
 private:
 
@@ -366,18 +379,59 @@ private:
 		H.resize(variables_count_, variables_count_);
 	}
 
+	virtual void InitializeMappings(HessianEntryToTripletIndexMap& hessian_entry_to_triplet_index_map, SparseVariableIndexToDenseVariableIndexMap& sparse_variable_index_to_dense_variable_index_map)
+	{
+		// Empty implementation
+	}
+
 	virtual void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) = 0;
 
 	// Value, gradient and hessian calculation functions
 	virtual void CalculateValue(double& f) = 0;
-	
-	virtual void CalculateValuePerVertex(VectorType_& f_per_vertex)
-	{
-		// Empty implementation
-	}
-	
+	virtual void CalculateValuePerVertex(VectorType_& f_per_vertex) { /* Empty implementation */ };
 	virtual void CalculateGradient(VectorType_& g) = 0;
 	virtual void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) = 0;
+	void CalculateConvexTriplets(std::vector<Eigen::Triplet<double>>& triplets)
+	{
+		if (enforce_psd_)
+		{
+			Eigen::MatrixXd H;
+			H.resize(objective_variables_count_, objective_variables_count_);
+			H.setZero();
+			
+			for (std::size_t i = 0; i < triplets_count; i++)
+			{
+				auto row = sparse_variable_index_to_dense_variable_index_map_[triplets[i].row()];
+				auto col = sparse_variable_index_to_dense_variable_index_map_[triplets[i].col()];
+				auto value = triplets[i].value();
+				H.coeffRef(row, col) = value;
+				H.coeffRef(col, row) = value;
+			}
+
+			Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(H);
+			Eigen::MatrixXd D = solver.eigenvalues().asDiagonal();
+			Eigen::MatrixXd V = solver.eigenvectors();
+			for (auto i = 0; i < objective_variables_count_; i++)
+			{
+				auto& value = D.coeffRef(i, i);
+				if (value < 0)
+				{
+					value = 10e-8;
+				}
+			}
+
+			H = V * D * V.inverse();
+
+			for (auto column = 0; column < objective_variables_count_; column++)
+			{
+				for (auto row = 0; row <= column; row++)
+				{
+					const auto triplet_index = hessian_entry_to_triplet_index_map_[{row, column}];
+					const_cast<double&>(triplets[triplet_index].value()) = H.coeffRef(row, column);
+				}
+			}
+		}
+	}
 
 	/**
 	 * Private fields
@@ -400,6 +454,13 @@ private:
 	
 	// Weight
 	double w_;
+
+	// Enforce PSD
+	bool enforce_psd_;
+
+	// Mappings
+	HessianEntryToTripletIndexMap hessian_entry_to_triplet_index_map_;
+	SparseVariableIndexToDenseVariableIndexMap sparse_variable_index_to_dense_variable_index_map_;
 
 	// Name
 	const std::string name_;

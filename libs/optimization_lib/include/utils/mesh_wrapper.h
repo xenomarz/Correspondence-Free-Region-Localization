@@ -21,10 +21,11 @@
 #include <Eigen/Sparse>
 
 // Optimization lib includes
-#include "./objective_function_data_provider.h"
+#include "../utils/type_definitions.h"
+#include "./data_providers/mesh_data_provider.h"
 #include "../utils/utils.h"
 
-class MeshWrapper : public ObjectiveFunctionDataProvider
+class MeshWrapper : public MeshDataProvider
 {
 public:
 
@@ -90,7 +91,7 @@ private:
 	 * Private type definitions
 	 */
 	using EdgeDescriptor = std::pair<int64_t, int64_t>;
-	using ED2EIMap = std::unordered_map<EdgeDescriptor, int64_t, Utils::UnorderedPairHash, Utils::UnorderedPairEquals>;
+	using ED2EIMap = std::unordered_map<EdgeDescriptor, int64_t, RDS::UnorderedPairHash, RDS::UnorderedPairEquals>;
 	using VI2VIMap = std::unordered_map<int64_t, int64_t>;
 	using EI2EIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
 	using EI2EIMap = std::unordered_map<int64_t, int64_t>;

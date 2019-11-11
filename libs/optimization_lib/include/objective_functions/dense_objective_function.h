@@ -12,8 +12,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	DenseObjectiveFunction(const std::shared_ptr<ObjectiveFunctionDataProvider>& objective_function_data_provider, const std::string& name) :
-		ObjectiveFunction(objective_function_data_provider, name)
+	DenseObjectiveFunction(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd) :
+		ObjectiveFunction(mesh_data_provider, name, objective_vertices_count, enforce_psd)
 	{
 
 	}
