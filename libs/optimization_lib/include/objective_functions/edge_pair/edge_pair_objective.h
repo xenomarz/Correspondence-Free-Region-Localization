@@ -1,6 +1,6 @@
 #pragma once
-#ifndef OPTIMIZATION_LIB_EDGE_PAIR_ANGLE_OBJECTIVE_H
-#define OPTIMIZATION_LIB_EDGE_PAIR_ANGLE_OBJECTIVE_H
+#ifndef OPTIMIZATION_LIB_EDGE_PAIR_OBJECTIVE_H
+#define OPTIMIZATION_LIB_EDGE_PAIR_OBJECTIVE_H
 
 // STL includes
 #include <utility>
@@ -9,7 +9,7 @@
 // Optimization lib includes
 #include "../../utils/type_definitions.h"
 #include "../../utils/utils.h"
-#include "./utils/data_providers/edge_pair_data_provider.h"
+#include "../../utils/data_providers/edge_pair_data_provider.h"
 #include "../sparse_objective_function.h"
 
 
@@ -76,6 +76,45 @@ protected:
 		}
 	}
 
+	/**
+	 * Protected fields
+	 */
+	RDS::EdgePairDescriptor edge_pair_descriptor_;
+
+	RDS::SparseVariableIndex edge1_v1_x_index_;
+	RDS::SparseVariableIndex edge1_v1_y_index_;
+	RDS::SparseVariableIndex edge1_v2_x_index_;
+	RDS::SparseVariableIndex edge1_v2_y_index_;
+	RDS::SparseVariableIndex edge2_v1_x_index_;
+	RDS::SparseVariableIndex edge2_v1_y_index_;
+	RDS::SparseVariableIndex edge2_v2_x_index_;
+	RDS::SparseVariableIndex edge2_v2_y_index_;
+
+	double edge1_x_diff_;
+	double edge1_y_diff_;
+	double edge2_x_diff_;
+	double edge2_y_diff_;
+
+	double edge1_x_diff_squared_;
+	double edge1_y_diff_squared_;
+	double edge2_x_diff_squared_;
+	double edge2_y_diff_squared_;
+
+	double edge1_atan2_dx_;
+	double edge1_atan2_dy_;
+	double edge2_atan2_dx_;
+	double edge2_atan2_dy_;
+
+	double edge1_squared_norm_;
+	double edge2_squared_norm_;
+
+	double edge1_quadrupled_norm_;
+	double edge2_quadrupled_norm_;
+
+	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_sign_map_;
+	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_value_map_;
+	std::unordered_map<std::pair<RDS::SparseVariableIndex, RDS::SparseVariableIndex>, double, RDS::OrderedPairHash, RDS::OrderedPairEquals> sparse_indices_to_second_derivative_value_map_;
+
 private:
 	/**
 	 * Private overrides
@@ -134,24 +173,6 @@ private:
 	{
 		return sparse_index_to_first_derivative_sign_map_[sparse_variable_index1] * sparse_indices_to_second_derivative_value_map_[{ sparse_variable_index1, sparse_variable_index2 }];
 	}
-
-	/**
-	 * Private fields
-	 */
-	RDS::EdgePairDescriptor edge_pair_descriptor_;
-
-	RDS::SparseVariableIndex edge1_v1_x_index_;
-	RDS::SparseVariableIndex edge1_v1_y_index_;
-	RDS::SparseVariableIndex edge1_v2_x_index_;
-	RDS::SparseVariableIndex edge1_v2_y_index_;
-	RDS::SparseVariableIndex edge2_v1_x_index_;
-	RDS::SparseVariableIndex edge2_v1_y_index_;
-	RDS::SparseVariableIndex edge2_v2_x_index_;
-	RDS::SparseVariableIndex edge2_v2_y_index_;
-
-	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_sign_map_;
-	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_value_map_;
-	std::unordered_map<std::pair<RDS::SparseVariableIndex, RDS::SparseVariableIndex>, double, RDS::OrderedPairHash, RDS::OrderedPairEquals> sparse_indices_to_second_derivative_value_map_;
 };
 
 #endif
