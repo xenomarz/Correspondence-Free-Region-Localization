@@ -28,9 +28,9 @@ file(GLOB SOURCES
 	src/solvers/pardiso_solver.cpp
 	src/utils/utils.cpp
 	src/utils/mesh_wrapper.cpp
-	src/utils/data_providers/data_provider.cpp
-	src/utils/data_providers/image_data_provider.cpp
 	src/utils/data_providers/mesh_data_provider.cpp
+	src/utils/data_providers/data_provider.cpp
+	src/utils/data_providers/plain_data_provider.cpp
 	src/utils/data_providers/edge_pair_data_provider.cpp
 	include/objective_functions/objective_function.h
 	include/objective_functions/sparse_objective_function.h
@@ -58,9 +58,9 @@ file(GLOB SOURCES
 	include/utils/utils.h
 	include/utils/mesh_wrapper.h
 	include/utils/type_definitions.h
-	include/utils/data_providers/data_provider.h
-	include/utils/data_providers/image_data_provider.h
 	include/utils/data_providers/mesh_data_provider.h
+	include/utils/data_providers/data_provider.h
+	include/utils/data_providers/plain_data_provider.h
 	include/utils/data_providers/edge_pair_data_provider.h)
 
 # Add Library Target

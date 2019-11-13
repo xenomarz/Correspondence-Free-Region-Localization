@@ -10,3 +10,8 @@ DataProvider::~DataProvider()
 {
 	
 }
+
+const MeshDataProvider& DataProvider::GetMeshDataProvider() const
+{
+	return *mesh_data_provider_;
+}

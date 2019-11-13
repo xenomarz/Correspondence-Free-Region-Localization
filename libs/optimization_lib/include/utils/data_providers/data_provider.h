@@ -21,6 +21,7 @@ public:
 	 * Public methods
 	 */
 	virtual void Update(const Eigen::VectorXd& x) = 0;
+	const MeshDataProvider& GetMeshDataProvider() const;
 
 protected:
 	/**
@@ -29,13 +30,6 @@ protected:
 
 	// Mesh data provider
 	std::shared_ptr<MeshDataProvider> mesh_data_provider_;
-	
-	// Elements count
-	int64_t domain_faces_count_;
-	int64_t domain_vertices_count_;
-	int64_t image_faces_count_;
-	int64_t image_vertices_count_;
-	int64_t variables_count_;
 };
 
 #endif

@@ -21,7 +21,7 @@
 
 // Optimization lib includes
 #include "../objective_functions/dense_objective_function.h"
-//#include "../objective_functions/objective_function.h"
+#include "../utils/data_providers/data_provider.h"
 
 // https://en.wikipedia.org/wiki/Iterative_method
 template <Eigen::StorageOptions StorageOrder_>

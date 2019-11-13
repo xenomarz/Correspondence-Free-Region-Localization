@@ -4,15 +4,15 @@ EdgePairDataProvider::EdgePairDataProvider(const std::shared_ptr<MeshDataProvide
 	DataProvider(mesh_data_provider),
 	edge_pair_descriptor_(edge_pair_descriptor)
 {
-	edge1_v1_x_index_ = edge_pair_descriptor.first.first;
-	edge1_v1_y_index_ = edge_pair_descriptor.first.first + this->image_vertices_count_;
-	edge1_v2_x_index_ = edge_pair_descriptor.first.second;
-	edge1_v2_y_index_ = edge_pair_descriptor.first.second + this->image_vertices_count_;
+	edge1_v1_x_index_ = mesh_data_provider->GetVertexXIndex(edge_pair_descriptor.first.first);
+	edge1_v1_y_index_ = mesh_data_provider->GetVertexYIndex(edge_pair_descriptor.first.first);
+	edge1_v2_x_index_ = mesh_data_provider->GetVertexXIndex(edge_pair_descriptor.first.second);
+	edge1_v2_y_index_ = mesh_data_provider->GetVertexYIndex(edge_pair_descriptor.first.second);
 
-	edge2_v1_x_index_ = edge_pair_descriptor.second.first;
-	edge2_v1_y_index_ = edge_pair_descriptor.second.first + this->image_vertices_count_;
-	edge2_v2_x_index_ = edge_pair_descriptor.second.second;
-	edge2_v2_y_index_ = edge_pair_descriptor.second.second + this->image_vertices_count_;
+	edge2_v1_x_index_ = mesh_data_provider->GetVertexXIndex(edge_pair_descriptor.second.first);
+	edge2_v1_y_index_ = mesh_data_provider->GetVertexYIndex(edge_pair_descriptor.second.first);
+	edge2_v2_x_index_ = mesh_data_provider->GetVertexXIndex(edge_pair_descriptor.second.second);
+	edge2_v2_y_index_ = mesh_data_provider->GetVertexYIndex(edge_pair_descriptor.second.second);
 }
 
 EdgePairDataProvider::~EdgePairDataProvider()
