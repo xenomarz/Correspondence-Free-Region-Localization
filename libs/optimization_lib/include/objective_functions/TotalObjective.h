@@ -16,6 +16,6 @@ public:
 	virtual double AugmentedValue() override;
 
 	// sub objectives
-	float Shift_eigen_values = 1e-6;
+	float Shift_eigen_values = 0;
 	vector<shared_ptr<ObjectiveFunction>> objectiveList;
 };

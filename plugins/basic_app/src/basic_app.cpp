@@ -491,12 +491,12 @@ void basic_app::Draw_menu_for_Solver() {
 		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
 			MatrixXd initialguess;
 			vector<MatrixX3i> F;
-			for (auto& out : Outputs)
-				F.push_back(OutputModel(out.ModelID).F);
+			for (int i=0;i<Outputs.size();i++)
+				F.push_back(OutputModel(i).F);
 			
 			app_utils::Parametrization temp = param_type;
 			param_type = prev_type;
-			if (temp == app_utils::None || !InputModel().F.size()) {
+			if (temp == app_utils::None) {
 				param_type = app_utils::None;
 			}
 			else if (app_utils::IsMesh2D(InputModel().V)) {

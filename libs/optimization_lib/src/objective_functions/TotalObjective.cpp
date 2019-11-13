@@ -58,6 +58,7 @@ void TotalObjective::gradient(VectorXd& g)
 void TotalObjective::hessian()
 {
 	SS.clear();
+	
 	for (auto const &objective : objectiveList)
 	{
         //if (objective->w != 0) //Just don't update the hessian, but we still must enter those elements into the big hessian to have the same sparsity pattern
@@ -65,16 +66,19 @@ void TotalObjective::hessian()
         vector<double> SSi; SSi.resize(objective->SS.size());
         for (int i = 0; i < objective->SS.size(); i++)
             SSi[i] = objective->w * objective->SS[i];
+
 		SS.insert(SS.end(), SSi.begin(), SSi.end());
 	}
 
-	for (int i = 0; i < SS.size(); i++)
-	{
-		// shift the diagonal of the hessian
-		if (II[i] == JJ[i]) {
-			SS[i] += Shift_eigen_values;
-		}
+
+	// shift the diagonal of the hessian
+	int rows = *std::max_element(II.begin(), II.end()) + 1;
+	vector<double> SSi; SSi.resize(rows);
+	for (int i = 0; i < rows; i++) {
+		SSi[i] = 1e-6 + Shift_eigen_values;
 	}
+	SS.insert(SS.end(), SSi.begin(), SSi.end());
+	assert(SS.size() == II.size() && SS.size() == JJ.size());
 }
 
 void TotalObjective::init_hessian()
@@ -87,4 +91,19 @@ void TotalObjective::init_hessian()
 		JJ.insert(JJ.end(), objective->JJ.begin(), objective->JJ.end());
 		SS.insert(SS.end(), objective->SS.begin(), objective->SS.end());
 	}
+
+
+	// shift the diagonal of the hessian
+	int rows = *std::max_element(II.begin(), II.end()) + 1;
+	vector<double> SSi; SSi.resize(rows);
+	vector<double> IIi; IIi.resize(rows);
+	vector<double> JJi; JJi.resize(rows);
+	for (int i = 0; i < rows; i++) {
+		IIi[i] = i;
+		JJi[i] = i;
+		SSi[i] = 1e-6;
+	}
+	SS.insert(SS.end(), SSi.begin(), SSi.end());
+	II.insert(II.end(), IIi.begin(), IIi.end());
+	JJ.insert(JJ.end(), JJi.begin(), JJi.end());
 }
