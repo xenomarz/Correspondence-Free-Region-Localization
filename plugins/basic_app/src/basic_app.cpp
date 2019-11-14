@@ -688,10 +688,17 @@ void basic_app::Draw_menu_for_models(ViewerData& data) {
 void basic_app::Draw_menu_for_solver_settings() {
 	ImGui::SetNextWindowSize(ImVec2(800, 150), ImGuiSetCond_FirstUseEver);
 	ImGui::Begin("solver settings", NULL);
-	if (!model_loaded) {
-		ImGui::End();
-		return;
-	}
+	
+	//add outputs buttons
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
+	if (ImGui::Button("Add Constrained Output"))
+		add_output(true);
+	ImGui::SameLine(0, 10);
+	if (ImGui::Button("Add Unconstrained Output"))
+		add_output(false);
+	ImGui::PopStyleColor();
+
+
 	int id = 0;
 	bool stop = false;
 	int firstConstrIndex = -1, firstUnconstrIndex = -1;
@@ -702,12 +709,9 @@ void basic_app::Draw_menu_for_solver_settings() {
 			firstUnconstrIndex = i;
 	}
 
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 8));
-	ImGui::PushStyleColor(ImGuiCol_ChildWindowBg, ImVec4(0.16f, 0.16f, 0.16f, 1.00f));
 
 	if (firstUnconstrIndex != -1) {
 		// prepare the first column
-		ImGui::PushStyleColor(ImGuiCol_WindowBg | ImGuiCol_FrameBg, ImVec4(1.0f, 0.0f, 0.0f, 1.00f));
 		ImGui::Columns(Outputs[firstUnconstrIndex].totalObjective->objectiveList.size() + 3, "Unconstrained weights table", true);
 		ImGui::Separator();
 		ImGui::NextColumn();
@@ -719,7 +723,6 @@ void basic_app::Draw_menu_for_solver_settings() {
 		ImGui::NextColumn();
 		ImGui::NextColumn();
 		ImGui::Separator();
-		ImGui::PopStyleColor();
 
 		// fill the table
 		for (int i = 0; i < Outputs.size();i++) {
@@ -728,14 +731,11 @@ void basic_app::Draw_menu_for_solver_settings() {
 				ImGui::NextColumn();
 				for (auto& obj : Outputs[i].totalObjective->objectiveList) {
 					ImGui::PushID(id++);
-					ImGui::PushItemWidth(80 * menu_scaling());
 					ImGui::DragFloat("", &(obj->w), 0.05f, 0.0f, 100000.0f);
-					ImGui::PopItemWidth();
 					ImGui::NextColumn();
 					ImGui::PopID();
 				}
 				ImGui::PushID(id++);
-				ImGui::PushItemWidth(80 * menu_scaling());
 				ImGui::DragFloat("", &(Outputs[i].totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
 				ImGui::NextColumn();
 				if (Outputs.size() > 1)
@@ -745,12 +745,10 @@ void basic_app::Draw_menu_for_solver_settings() {
 						remove_output(i);
 						stop = true;
 					}
-						
 					ImGui::PopStyleColor();
 				}
 					
 				ImGui::NextColumn();
-				ImGui::PopItemWidth();
 				ImGui::PopID();
 				ImGui::Separator();
 			}
@@ -781,15 +779,12 @@ void basic_app::Draw_menu_for_solver_settings() {
 				ImGui::NextColumn();
 				for (auto& obj : Outputs[i].totalObjective->objectiveList) {
 					ImGui::PushID(id++);
-					ImGui::PushItemWidth(80 * menu_scaling());
 					ImGui::DragFloat("w", &(obj->w), 0.05f, 0.0f, 100000.0f);
 					ImGui::DragFloat("augmented param.", &(obj->augmented_value_parameter), 0.05f, 0.0f, 100000.0f);
 					ImGui::NextColumn();
 					ImGui::PopID();
-					ImGui::PopItemWidth();
 				}
 				ImGui::PushID(id++);
-				ImGui::PushItemWidth(80 * menu_scaling());
 				ImGui::DragFloat("", &(Outputs[i].totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
 				ImGui::NextColumn();
 				if (Outputs.size() > 1) {
@@ -800,7 +795,6 @@ void basic_app::Draw_menu_for_solver_settings() {
 				}
 
 				ImGui::NextColumn();
-				ImGui::PopItemWidth();
 				ImGui::PopID();
 				ImGui::Separator();
 			}
@@ -808,25 +802,13 @@ void basic_app::Draw_menu_for_solver_settings() {
 		ImGui::Columns(1);
 	}
 
-	//add outputs buttons
-	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
-	if (ImGui::Button("Add Constrained Output"))
-		add_output(true);
-	ImGui::PopStyleColor();
-	ImGui::SameLine(0, 10);
-	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
-	if (ImGui::Button("Add Unconstrained Output"))
-		add_output(false);
-	ImGui::PopStyleColor();
-
 	//add more features
 	Draw_menu_for_colors();
 	ImGui::PushItemWidth(80 * menu_scaling());
 	ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.01f, 10000.0f);
 	ImGui::PopItemWidth();
+
 	//close the window
-	ImGui::PopStyleColor();
-	ImGui::PopStyleVar();
 	ImGui::End();
 }
 
