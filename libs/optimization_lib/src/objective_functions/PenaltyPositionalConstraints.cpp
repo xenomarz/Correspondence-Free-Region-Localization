@@ -1,15 +1,16 @@
 #include <objective_functions/PenaltyPositionalConstraints.h>
 
-PenaltyPositionalConstraints::PenaltyPositionalConstraints()
+PenaltyPositionalConstraints::PenaltyPositionalConstraints(bool isConstrObjFunc)
 {
     name = "Positional Constraints";
 	w = 10000;
+	IsConstrObjFunc = isConstrObjFunc;
 }
 
 void PenaltyPositionalConstraints::init()
 {
-	if(numV==0)
-		throw name + " must define members numV before init()!";
+	if(numV==0 || numF == 0)
+		throw name + " must define members numV & numF before init()!";
 	init_hessian();
 }
 
@@ -37,7 +38,13 @@ double PenaltyPositionalConstraints::value(bool update)
 
 void PenaltyPositionalConstraints::gradient(VectorXd& g)
 {
-	g.conservativeResize(numV * 2);
+	if (IsConstrObjFunc) {
+		g.conservativeResize(numV * 2 + numF);
+	}
+	else {
+		g.conservativeResize(numV * 2);
+	}
+	
 	g.setZero();
 
 	if (CurrConstrainedVerticesPos.rows() == ConstrainedVerticesPos.rows()) {
@@ -62,12 +69,24 @@ void PenaltyPositionalConstraints::hessian()
 
 void PenaltyPositionalConstraints::init_hessian()
 {
-	II.resize(2*numV);
-	JJ.resize(2*numV);
+	if (IsConstrObjFunc) {
+		II.resize(2 * numV + 1);
+		JJ.resize(2 * numV + 1);
+	}
+	else {
+		II.resize(2 * numV);
+		JJ.resize(2 * numV);
+	}
+	
 	for (int i = 0; i < 2*numV; i++)
 	{
 		II[i] = i;
 		JJ[i] = i;
+	}
+
+	if (IsConstrObjFunc) {
+		II[2 * numV] = 2 * numV + numF - 1;
+		JJ[2 * numV] = 2 * numV + numF - 1;
 	}
 	SS = vector<double>(II.size(), 0.);
 }

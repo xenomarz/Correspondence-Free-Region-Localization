@@ -488,7 +488,9 @@ void basic_app::Draw_menu_for_Solver() {
 		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");
 		
 		app_utils::Parametrization prev_type = param_type;
-		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) {
+		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) 
+		{
+			stop_solver_thread();
 			MatrixXd initialguess;
 			vector<MatrixX3i> F;
 			for (int i=0;i<Outputs.size();i++)
@@ -1215,18 +1217,20 @@ void basic_app::initializeSolver(const int index)
 	auto anglePreserving = make_unique<LeastSquaresConformal>();
 	anglePreserving->init_mesh(V, F);
 	anglePreserving->init();
-	auto constraintsPositional = make_shared<PenaltyPositionalConstraints>();
+	auto constraintsPositional = make_shared<PenaltyPositionalConstraints>(Outputs[index].solver->IsConstrObjFunc);
 	constraintsPositional->numV = V.rows();
+	constraintsPositional->numF = F.rows();
 	constraintsPositional->init();
-
-
 	Outputs[index].HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
 	Outputs[index].HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
 
+
 	Outputs[index].totalObjective->objectiveList.clear();
+
 	if (Outputs[index].solver->IsConstrObjFunc) {
 		Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianLscmStArea));
 		Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianAreaStLscm));
+		Outputs[index].totalObjective->objectiveList.push_back(move(constraintsPositional));
 	}
 	else {
 		Outputs[index].totalObjective->objectiveList.push_back(move(areapreservingOneRing));
