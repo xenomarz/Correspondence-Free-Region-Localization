@@ -20,9 +20,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	EdgePairObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::string& name, const RDS::EdgePairDescriptor& edge_pair_descriptor) :
-		SparseObjectiveFunction(mesh_data_provider, name, 4, false),
-		edge_pair_descriptor_(edge_pair_descriptor)
+	EdgePairObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider, const std::string& name) :
+		SparseObjectiveFunction(mesh_data_provider, edge_pair_data_provider, name, 4, false)
 	{
 
 	}
@@ -30,6 +29,11 @@ public:
 	virtual ~EdgePairObjective()
 	{
 
+	}
+
+	const EdgePairDataProvider& GetEdgePairDataProvider() const
+	{
+		return *std::dynamic_pointer_cast<EdgePairDataProvider>(this->data_provider_);
 	}
 
 protected:
@@ -40,24 +44,15 @@ protected:
 	{
 		SparseObjectiveFunction<StorageOrder_>::PreInitialize();
 
-		edge1_v1_x_index_ = this->mesh_data_provider_->GetVertexXIndex(edge_pair_descriptor_.first.first);
-		edge1_v1_y_index_ = this->mesh_data_provider_->GetVertexYIndex(edge_pair_descriptor_.first.first);
-		edge1_v2_x_index_ = this->mesh_data_provider_->GetVertexXIndex(edge_pair_descriptor_.first.second);
-		edge1_v2_y_index_ = this->mesh_data_provider_->GetVertexYIndex(edge_pair_descriptor_.first.second);
-
-		edge2_v1_x_index_ = this->mesh_data_provider_->GetVertexXIndex(edge_pair_descriptor_.second.first);
-		edge2_v1_y_index_ = this->mesh_data_provider_->GetVertexYIndex(edge_pair_descriptor_.second.first);
-		edge2_v2_x_index_ = this->mesh_data_provider_->GetVertexXIndex(edge_pair_descriptor_.second.second);
-		edge2_v2_y_index_ = this->mesh_data_provider_->GetVertexYIndex(edge_pair_descriptor_.second.second);
-
-		sparse_index_to_first_derivative_sign_map_.insert({ edge1_v1_x_index_,  1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge1_v1_y_index_, -1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge1_v2_x_index_, -1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge1_v2_y_index_,  1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge2_v1_x_index_, -1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge2_v1_y_index_,  1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge2_v2_x_index_,  1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge2_v2_y_index_, -1 });
+		auto& edge_pair_data_provider = GetEdgePairDataProvider();
+		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge1Vertex1XIndex(),  1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge1Vertex1YIndex(), -1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge1Vertex2XIndex(), -1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge1Vertex2YIndex(),  1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge2Vertex1XIndex(), -1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge2Vertex1YIndex(),  1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge2Vertex2XIndex(),  1 });
+		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge2Vertex2YIndex(), -1 });
 
 		for (RDS::DenseVariableIndex dense_variable_index = 0; dense_variable_index < this->objective_variables_count_; dense_variable_index++)
 		{
@@ -79,38 +74,6 @@ protected:
 	/**
 	 * Protected fields
 	 */
-	RDS::EdgePairDescriptor edge_pair_descriptor_;
-
-	RDS::SparseVariableIndex edge1_v1_x_index_;
-	RDS::SparseVariableIndex edge1_v1_y_index_;
-	RDS::SparseVariableIndex edge1_v2_x_index_;
-	RDS::SparseVariableIndex edge1_v2_y_index_;
-	RDS::SparseVariableIndex edge2_v1_x_index_;
-	RDS::SparseVariableIndex edge2_v1_y_index_;
-	RDS::SparseVariableIndex edge2_v2_x_index_;
-	RDS::SparseVariableIndex edge2_v2_y_index_;
-
-	double edge1_x_diff_;
-	double edge1_y_diff_;
-	double edge2_x_diff_;
-	double edge2_y_diff_;
-
-	double edge1_x_diff_squared_;
-	double edge1_y_diff_squared_;
-	double edge2_x_diff_squared_;
-	double edge2_y_diff_squared_;
-
-	double edge1_atan2_dx_;
-	double edge1_atan2_dy_;
-	double edge2_atan2_dx_;
-	double edge2_atan2_dy_;
-
-	double edge1_squared_norm_;
-	double edge2_squared_norm_;
-
-	double edge1_quadrupled_norm_;
-	double edge2_quadrupled_norm_;
-
 	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_sign_map_;
 	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_value_map_;
 	std::unordered_map<std::pair<RDS::SparseVariableIndex, RDS::SparseVariableIndex>, double, RDS::OrderedPairHash, RDS::OrderedPairEquals> sparse_indices_to_second_derivative_value_map_;
@@ -121,14 +84,15 @@ private:
 	 */
 	void InitializeSparseVariableIndices(std::vector<RDS::SparseVariableIndex>& sparse_variable_indices) override
 	{
-		sparse_variable_indices.push_back(edge1_v1_x_index_);
-		sparse_variable_indices.push_back(edge1_v1_y_index_);
-		sparse_variable_indices.push_back(edge1_v2_x_index_);
-		sparse_variable_indices.push_back(edge1_v2_y_index_);
-		sparse_variable_indices.push_back(edge2_v1_x_index_);
-		sparse_variable_indices.push_back(edge2_v1_y_index_);
-		sparse_variable_indices.push_back(edge2_v2_x_index_);
-		sparse_variable_indices.push_back(edge2_v2_y_index_);
+		auto& edge_pair_data_provider = GetEdgePairDataProvider();
+		sparse_variable_indices.push_back(edge_pair_data_provider.GetEdge1Vertex1XIndex());
+		sparse_variable_indices.push_back(edge_pair_data_provider.GetEdge1Vertex1YIndex());
+		sparse_variable_indices.push_back(edge_pair_data_provider.GetEdge1Vertex2XIndex());
+		sparse_variable_indices.push_back(edge_pair_data_provider.GetEdge1Vertex2YIndex());
+		sparse_variable_indices.push_back(edge_pair_data_provider.GetEdge2Vertex1XIndex());
+		sparse_variable_indices.push_back(edge_pair_data_provider.GetEdge2Vertex1YIndex());
+		sparse_variable_indices.push_back(edge_pair_data_provider.GetEdge2Vertex2XIndex());
+		sparse_variable_indices.push_back(edge_pair_data_provider.GetEdge2Vertex2YIndex());
 	}
 
 	void CalculateValuePerVertex(Eigen::SparseVector<double>& f_per_vertex) override

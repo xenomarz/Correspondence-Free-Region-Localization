@@ -6,6 +6,7 @@
 #include <vector>
 
 // Optimization lib includes
+#include "../utils/data_providers/plain_data_provider.h"
 #include "./dense_objective_function.h"
 
 template<Eigen::StorageOptions StorageOrder_>
@@ -23,8 +24,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	Separation(const std::shared_ptr<MeshDataProvider>& mesh_data_provider) :
-		DenseObjectiveFunction(mesh_data_provider, "Separation", 0, false)
+	Separation(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<PlainDataProvider>& plain_data_provider) :
+		DenseObjectiveFunction(mesh_data_provider, plain_data_provider, "Separation", 0, false)
 	{
 		this->Initialize();
 	}

@@ -17,7 +17,7 @@ public:
 	 * Constructors and destructor
 	 */
 	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
-		DenseObjectiveFunction(mesh_data_provider, "Summation Objective", 0, false),
+		DenseObjectiveFunction(mesh_data_provider, nullptr, "Summation Objective", 0, false),
 		explicitly_zero_diagonal_(explicitly_zero_diagonal),
 		parallel_update_(parallel_update)
 	{
@@ -25,7 +25,7 @@ public:
 	}
 
 	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::string& name, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
-		DenseObjectiveFunction(mesh_data_provider, name, 0, false),
+		DenseObjectiveFunction(mesh_data_provider, nullptr, name, 0, false),
 		explicitly_zero_diagonal_(explicitly_zero_diagonal),
 		parallel_update_(parallel_update)
 	{

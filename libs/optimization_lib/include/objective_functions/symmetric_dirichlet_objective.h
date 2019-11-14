@@ -13,6 +13,7 @@
 #include <igl/doublearea.h>
 
 // Optimization lib includes
+#include "../utils/data_providers/plain_data_provider.h"
 #include "./dense_objective_function.h"
 #include "../utils/utils.h"
 
@@ -24,8 +25,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SymmetricDirichlet(const std::shared_ptr<MeshDataProvider>& mesh_data_provider)
-		: DenseObjectiveFunction(mesh_data_provider, "Symmetric Dirichlet", 0, false)
+	SymmetricDirichlet(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<PlainDataProvider>& plain_data_provider)
+		: DenseObjectiveFunction(mesh_data_provider, plain_data_provider, "Symmetric Dirichlet", 0, false)
 	{
 		this->Initialize();
 	}

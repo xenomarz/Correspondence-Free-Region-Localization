@@ -14,6 +14,9 @@
 // Eigen includes
 #include <Eigen/Core>
 
+// Optimization lib includes
+#include "./utils.h"
+
 namespace RDS
 {
 	/**
@@ -139,6 +142,15 @@ namespace RDS
 			const auto vector1_internal = std::vector<int64_t>(vector1.data(), vector1.data() + vector1.rows());
 			const auto vector2_internal = std::vector<int64_t>(vector2.data(), vector2.data() + vector2.rows());
 			return this->operator()(vector1_internal, vector2_internal);
+		}
+	};
+
+	https://wjngkoh.wordpress.com/2015/03/04/c-hash-function-for-eigen-matrix-and-vector/
+	struct MatrixBaseHash {
+		template <class Derived>
+		std::size_t operator () (const Eigen::MatrixBase<Derived>& matrix_base) const
+		{
+			return Utils::GenerateHash(matrix_base);
 		}
 	};
 

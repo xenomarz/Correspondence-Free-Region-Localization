@@ -3,6 +3,7 @@ project(optimization_lib)
 
 # Sources
 file(GLOB SOURCES
+	src/core/updatable_object.cpp
 	src/objective_functions/objective_function.cpp
 	src/objective_functions/dense_objective_function.cpp
 	src/objective_functions/sparse_objective_function.cpp
@@ -32,6 +33,7 @@ file(GLOB SOURCES
 	src/utils/data_providers/data_provider.cpp
 	src/utils/data_providers/plain_data_provider.cpp
 	src/utils/data_providers/edge_pair_data_provider.cpp
+	include/core/updatable_object.h
 	include/objective_functions/objective_function.h
 	include/objective_functions/sparse_objective_function.h
 	include/objective_functions/dense_objective_function.h

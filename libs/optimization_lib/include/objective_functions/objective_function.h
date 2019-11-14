@@ -13,11 +13,13 @@
 #include <Eigen/Core>
 
 // Optimization Lib Includes
+#include "./core/updatable_object.h"
 #include "../utils/type_definitions.h"
 #include "../utils/data_providers/mesh_data_provider.h"
+#include "../utils/data_providers/data_provider.h"
 
 template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
-class ObjectiveFunction
+class ObjectiveFunction : public UpdatableObject
 {
 public:
 	/**
@@ -54,7 +56,8 @@ public:
 	/**
 	 * Constructor and destructor
 	 */
-	ObjectiveFunction(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd) :
+	ObjectiveFunction(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd) :
+		UpdatableObject(),
 		f_(0),
 		w_(1),
 		domain_faces_count_(0),
@@ -66,7 +69,8 @@ public:
 		objective_variables_count_(2 * objective_vertices_count),
 		enforce_psd_(enforce_psd),
 		name_(name),
-		mesh_data_provider_(mesh_data_provider)
+		mesh_data_provider_(mesh_data_provider),
+		data_provider_(data_provider)
 	{
 		
 	}
@@ -209,6 +213,13 @@ public:
 	}
 
 	// Update value, gradient and hessian for a given x
+	void Update(const Eigen::VectorXd& x) override
+	{
+		Update(x, UpdateOptions::ALL);
+	}
+
+	
+	
 	void Update(const Eigen::VectorXd& x, const UpdateOptions update_options = UpdateOptions::ALL)
 	{
 		std::lock_guard<std::mutex> lock(m_);
@@ -340,6 +351,9 @@ protected:
 	// Mesh data provider
 	std::shared_ptr<MeshDataProvider> mesh_data_provider_;
 
+	// Mesh data provider
+	std::shared_ptr<DataProvider> data_provider_;
+	
 	// Mutex
 	mutable std::mutex m_;
 

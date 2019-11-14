@@ -9,6 +9,7 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
+#include "../../utils/data_providers/plain_data_provider.h"
 #include "../../utils/type_definitions.h"
 #include "./position_objective.h"
 
@@ -19,8 +20,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	BarycenterPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::vector<RDS::VertexIndex>& indices, const Eigen::Vector2d& objective_barycenter) :
-		PositionObjective(mesh_data_provider, "Barycenter Position Objective", indices.size()),
+	BarycenterPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<PlainDataProvider>& plain_data_provider, const std::vector<RDS::VertexIndex>& indices, const Eigen::Vector2d& objective_barycenter) :
+		PositionObjective(mesh_data_provider, plain_data_provider, "Barycenter Position Objective", indices.size()),
 		indices_(indices),
 		objective_barycenter_(objective_barycenter)
 	{
@@ -30,8 +31,8 @@ public:
 		this->Initialize();
 	}
 
-	BarycenterPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const Eigen::VectorXi& indices, const Eigen::Vector2d& objective_barycenter) :
-		BarycenterPositionObjective(mesh_data_provider, std::vector<int64_t>(indices.data(), indices.data() + indices.rows()), objective_barycenter)
+	BarycenterPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<PlainDataProvider>& plain_data_provider, const Eigen::VectorXi& indices, const Eigen::Vector2d& objective_barycenter) :
+		BarycenterPositionObjective(mesh_data_provider, plain_data_provider, std::vector<int64_t>(indices.data(), indices.data() + indices.rows()), objective_barycenter)
 	{
 
 	}

@@ -6,9 +6,10 @@
 #include <Eigen/Core>
 
 // Optimization Lib Includes
+#include "./core/updatable_object.h"
 #include "./mesh_data_provider.h"
 
-class DataProvider
+class DataProvider : public UpdatableObject
 {
 public:
 	/**

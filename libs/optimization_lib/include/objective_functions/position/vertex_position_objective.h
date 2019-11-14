@@ -9,7 +9,8 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
-#include "../utils/type_definitions.h"
+#include "../../utils/data_providers/plain_data_provider.h"
+#include "../../utils/type_definitions.h"
 #include "./position_objective.h"
 
 template<Eigen::StorageOptions StorageOrder_>
@@ -19,8 +20,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	VertexPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::vector<std::pair<RDS::VertexIndex, Eigen::Vector2d>>& index_vertex_pairs) :
-		PositionObjective(mesh_data_provider, "Vertex Position Objective", index_vertex_pairs.size()),
+	VertexPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<PlainDataProvider>& plain_data_provider, const std::vector<std::pair<RDS::VertexIndex, Eigen::Vector2d>>& index_vertex_pairs) :
+		PositionObjective(mesh_data_provider, plain_data_provider, "Vertex Position Objective", index_vertex_pairs.size()),
 		index_vertex_pairs_(index_vertex_pairs)
 	{
 		X_current_.resize(this->objective_vertices_count_, 2);

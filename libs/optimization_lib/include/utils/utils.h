@@ -204,6 +204,17 @@ public:
 		return H;
 	}
 
+	template <class Derived>
+	std::size_t GenerateHash(const Eigen::MatrixBase<Derived>& matrix_base) const
+	{
+		size_t seed = 0;
+		for (size_t i = 0; i < matrix_base.size(); ++i) {
+			auto value = *(matrix_base.data() + i);
+			boost::hash_combine(seed, value);
+		}
+		return seed;
+	}
+
 private:
 	static double CalculateEpsilon(const Eigen::VectorXd& x)
 	{
