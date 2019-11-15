@@ -30,15 +30,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SingularityObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::string& name, double interval) :
-		SummationObjective(mesh_data_provider, name, false, true),
+	SingularityObjective(const std::string& name, double interval) :
+		SummationObjective(name, false, true),
 		interval_(interval)
 	{
 		this->Initialize();
 	}
 
-	SingularityObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, double interval) :
-		SingularityObjective(mesh_data_provider, "Singularity", interval)
+	SingularityObjective(double interval) :
+		SingularityObjective("Singularity", interval)
 	{
 
 	}
@@ -109,12 +109,13 @@ public:
 	 */
 	void AddSingularCorners(const std::vector<SingularCorner>& singular_corners)
 	{
+		auto image_vertices_count = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
 		singular_corner_clusters_.push_back(singular_corners);
 
 		for(auto& singular_corner : singular_corners)
 		{
 			auto x_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, singular_corner.first, interval_);
-			auto y_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, singular_corner.first + this->image_vertices_count_, interval_);
+			auto y_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, singular_corner.first + image_vertices_count, interval_);
 			
 			this->AddObjectiveFunction(x_component_objective);
 			this->AddObjectiveFunction(y_component_objective);
@@ -126,8 +127,9 @@ public:
 
 	void AddSingularCornersTest()
 	{
+		auto image_vertices_count = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
 		auto x_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, 0);
-		auto y_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, this->image_vertices_count_);
+		auto y_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, image_vertices_count);
 		
 		this->AddObjectiveFunction(x_component_objective);
 		this->AddObjectiveFunction(y_component_objective);
@@ -140,6 +142,7 @@ private:
 	 */
 	void PreUpdate(const Eigen::VectorXd& x) override
 	{
+		const auto image_vertices_count = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
 		const auto singular_corner_clusters_size = singular_corner_clusters_.size();
 		for(int64_t cluster_index = 0; cluster_index < singular_corner_clusters_size; cluster_index++)
 		{
@@ -158,13 +161,13 @@ private:
 				Eigen::Vector2d v2;
 
 				v0.coeffRef(0) = x.coeffRef(v0_index);
-				v0.coeffRef(1) = x.coeffRef(v0_index + this->image_vertices_count_);
+				v0.coeffRef(1) = x.coeffRef(v0_index + image_vertices_count);
 
 				v1.coeffRef(0) = x.coeffRef(v1_index);
-				v1.coeffRef(1) = x.coeffRef(v1_index + this->image_vertices_count_);
+				v1.coeffRef(1) = x.coeffRef(v1_index + image_vertices_count);
 
 				v2.coeffRef(0) = x.coeffRef(v2_index);
-				v2.coeffRef(1) = x.coeffRef(v2_index + this->image_vertices_count_);	
+				v2.coeffRef(1) = x.coeffRef(v2_index + image_vertices_count);
 
 				Eigen::Vector2d e1 = v1 - v0;
 				Eigen::Vector2d e2 = v2 - v0;

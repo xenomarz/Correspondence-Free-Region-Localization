@@ -3,16 +3,14 @@
 #define OPTIMIZATION_LIB_EDGE_PAIR_DATA_PROVIDER_H
 
 // STL includes
-#include <vector>
 #include <memory>
 
 // Eigen Includes
 #include <Eigen/Core>
-#include <Eigen/Sparse>
 
 // Optimization lib includes
-#include "./utils/data_providers/data_provider.h"
-#include "./utils/type_definitions.h"
+#include "./data_provider.h"
+#include "../../utils/type_definitions.h"
 
 class EdgePairDataProvider : public DataProvider
 {

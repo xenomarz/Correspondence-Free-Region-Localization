@@ -7,7 +7,7 @@
 #include <math.h>
 
 // Optimization lib includes
-#include "../utils/data_providers/edge_pair_data_provider.h"
+#include "../../utils/data_providers/edge_pair_data_provider.h"
 #include "./edge_pair_objective.h"
 
 template<Eigen::StorageOptions StorageOrder_>

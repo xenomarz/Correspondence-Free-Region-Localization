@@ -6,7 +6,6 @@
 #include <memory>
 
 // Optimization lib includes
-#include "../utils/type_definitions.h"
 #include "../utils/utils.h"
 #include "./sparse_objective_function.h"
 
@@ -17,15 +16,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	CompositeObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective) :
-		SparseObjectiveFunction(mesh_data_provider, data_provider, name, objective_vertices_count, enforce_psd),
+	CompositeObjective(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective) :
+		SparseObjectiveFunction(data_provider, name, objective_vertices_count, enforce_psd),
 		inner_objective_(inner_objective)
 	{
 
 	}
 
-	CompositeObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const double period, bool enforce_psd) :
-		CompositeObjective(mesh_data_provider, data_provider, "Composite Objective", period, enforce_psd)
+	CompositeObjective(const std::shared_ptr<DataProvider>& data_provider, const double period, bool enforce_psd) :
+		CompositeObjective(data_provider, "Composite Objective", period, enforce_psd)
 	{
 
 	}

@@ -69,26 +69,36 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "name", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Name) });
 	properties_map_.insert({ "delta", static_cast<uint32_t>(Separation<Eigen::StorageOptions::RowMajor>::Properties::Delta) });
 	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularityObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
+
+	plain_data_provider_ = std::make_shared<PlainDataProvider>(mesh_wrapper_);
+	for(auto& edge_pair_descriptor : mesh_wrapper_->GetEdgePairDescriptors())
+	{
+		edge_pair_data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptor));
+	}
 	
 	// TODO: Expose interface for addition and removal of objective function
-	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
-	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
-	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_);
-	singularity_ = std::make_shared<SingularityObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, 1);
-  	position_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, std::string("Position"));
+	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(plain_data_provider_);
+	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(plain_data_provider_);
+	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>();
+	singularity_ = std::make_shared<SingularityObjective<Eigen::StorageOptions::RowMajor>>(1);
+  	position_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(std::string("Position"));
 	std::vector<std::shared_ptr<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> objective_functions;
 	objective_functions.push_back(position_);
 	objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
 	objective_functions.push_back(seamless_);
 	objective_functions.push_back(singularity_);
-	summation_objective_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(mesh_wrapper_, objective_functions, true);
+	summation_objective_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(objective_functions, true);
 	mesh_wrapper_->RegisterModelLoadedCallback([&]() {
 		/**
 		 * Initialize objective functions
 		 */
 		summation_objective_->Initialize();
-		seamless_->AddCorrespondingEdgePairs(mesh_wrapper_->GetCorrespondingEdgeVertices());
+
+		for (auto& edge_pair_data_provider : edge_pair_data_providers_)
+		{
+			seamless_->AddObjectiveFunction(std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, edge_pair_data_provider));
+		}
 
 		auto& dom_v_2_im_v_map = mesh_wrapper_->GetDomainVerticesToImageVerticesMap();
 		for(int64_t i = 0; i < mesh_wrapper_->GetDomainVerticesCount(); i++)
@@ -822,7 +832,7 @@ Napi::Value Engine::ConstrainFacePosition(const Napi::CallbackInfo& info)
 
 	//auto vertex_position_objective = std::make_shared<VertexPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, index_vertex_pairs);
 	
-	auto barycenter_position_objective = std::make_shared<BarycenterPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, indices, barycenter);
+	auto barycenter_position_objective = std::make_shared<BarycenterPositionObjective<Eigen::StorageOptions::RowMajor>>(plain_data_provider_, indices, barycenter);
 	position_->AddObjectiveFunction(barycenter_position_objective);
 	indices_2_position_objective_map.insert(std::make_pair(indices, barycenter_position_objective));
 

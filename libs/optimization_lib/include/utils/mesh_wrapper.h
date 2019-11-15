@@ -39,7 +39,7 @@ public:
 
 	using ModelLoadedCallback = void();
 
-	using EV2EVMap = std::vector<std::pair<std::pair<int64_t, int64_t>, std::pair<int64_t, int64_t>>>;
+	using EV2EVMap = std::vector<RDS::EdgePairDescriptor>;
 	using VI2VIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
 	
 	/**
@@ -76,7 +76,7 @@ public:
 	const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const override;
 	int64_t GetImageVerticesCount() const override;
 	int64_t GetDomainVerticesCount() const override;
-	const EV2EVMap& GetCorrespondingEdgeVertices() const;
+	const std::vector<RDS::EdgePairDescriptor>& GetEdgePairDescriptors() const;
 
 	/**
 	 * Public methods
@@ -91,7 +91,7 @@ private:
 	 * Private type definitions
 	 */
 	using EdgeDescriptor = std::pair<int64_t, int64_t>;
-	using ED2EIMap = std::unordered_map<EdgeDescriptor, int64_t, RDS::UnorderedPairHash, RDS::UnorderedPairEquals>;
+	using ED2EIMap = std::unordered_map<EdgeDescriptor, int64_t, Utils::UnorderedPairHash, Utils::UnorderedPairEquals>;
 	using VI2VIMap = std::unordered_map<int64_t, int64_t>;
 	using EI2EIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
 	using EI2EIMap = std::unordered_map<int64_t, int64_t>;
@@ -178,7 +178,7 @@ private:
 	// Image corresponding pairs
 	std::vector<std::pair<int64_t, int64_t>> cv_pairs_;
 	std::vector<std::pair<int64_t, int64_t>> ce_pairs_;
-	EV2EVMap cev_pairs_;
+	std::vector<RDS::EdgePairDescriptor> edge_pair_descriptors_;
 	Eigen::SparseMatrix<double> cv_pairs_coefficients_;
 	Eigen::VectorXd cv_pairs_edge_length_;
 

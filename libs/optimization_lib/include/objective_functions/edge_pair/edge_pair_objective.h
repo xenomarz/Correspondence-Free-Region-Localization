@@ -12,7 +12,6 @@
 #include "../../utils/data_providers/edge_pair_data_provider.h"
 #include "../sparse_objective_function.h"
 
-
 template<Eigen::StorageOptions StorageOrder_>
 class EdgePairObjective : public SparseObjectiveFunction<StorageOrder_>
 {
@@ -20,8 +19,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	EdgePairObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider, const std::string& name) :
-		SparseObjectiveFunction(mesh_data_provider, edge_pair_data_provider, name, 4, false)
+	EdgePairObjective(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider, const std::string& name) :
+		SparseObjectiveFunction(edge_pair_data_provider, name, 4, false)
 	{
 
 	}
@@ -45,6 +44,8 @@ protected:
 		SparseObjectiveFunction<StorageOrder_>::PreInitialize();
 
 		auto& edge_pair_data_provider = GetEdgePairDataProvider();
+		auto& dense_variable_index_to_sparse_variable_index_map = this->GetDenseVariableIndexToSparseVariableIndexMap();
+		
 		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge1Vertex1XIndex(),  1 });
 		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge1Vertex1YIndex(), -1 });
 		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge1Vertex2XIndex(), -1 });
@@ -54,9 +55,9 @@ protected:
 		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge2Vertex2XIndex(),  1 });
 		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge2Vertex2YIndex(), -1 });
 
-		for (RDS::DenseVariableIndex dense_variable_index = 0; dense_variable_index < this->objective_variables_count_; dense_variable_index++)
+		for (RDS::DenseVariableIndex dense_variable_index = 0; dense_variable_index < this->objective_variable_count_; dense_variable_index++)
 		{
-			const RDS::SparseVariableIndex sparse_variable_index = this->dense_variable_index_to_sparse_variable_index_map_[dense_variable_index];
+			const RDS::SparseVariableIndex sparse_variable_index = dense_variable_index_to_sparse_variable_index_map.at(dense_variable_index);
 			sparse_index_to_first_derivative_value_map_.insert({ sparse_variable_index, 0 });
 		}
 
@@ -64,8 +65,8 @@ protected:
 		{
 			for (RDS::DenseVariableIndex dense_variable_index2 = 0; dense_variable_index2 < this->objective_variable_count_; dense_variable_index2++)
 			{
-				const RDS::SparseVariableIndex sparse_variable_index1 = this->dense_variable_index_to_sparse_variable_index_map_[dense_variable_index1];
-				const RDS::SparseVariableIndex sparse_variable_index2 = this->dense_variable_index_to_sparse_variable_index_map_[dense_variable_index2];
+				const RDS::SparseVariableIndex sparse_variable_index1 = dense_variable_index_to_sparse_variable_index_map.at(dense_variable_index1);
+				const RDS::SparseVariableIndex sparse_variable_index2 = dense_variable_index_to_sparse_variable_index_map.at(dense_variable_index2);
 				sparse_indices_to_second_derivative_value_map_.insert({ std::make_pair(sparse_variable_index1, sparse_variable_index2), 0 });
 			}
 		}
@@ -76,7 +77,7 @@ protected:
 	 */
 	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_sign_map_;
 	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_value_map_;
-	std::unordered_map<std::pair<RDS::SparseVariableIndex, RDS::SparseVariableIndex>, double, RDS::OrderedPairHash, RDS::OrderedPairEquals> sparse_indices_to_second_derivative_value_map_;
+	std::unordered_map<std::pair<RDS::SparseVariableIndex, RDS::SparseVariableIndex>, double, Utils::OrderedPairHash, Utils::OrderedPairEquals> sparse_indices_to_second_derivative_value_map_;
 
 private:
 	/**
@@ -107,10 +108,10 @@ private:
 
 	void CalculateGradient(Eigen::SparseVector<double>& g) override
 	{
-		auto objective_variables_count = this->objective_variables_count_;
-		for (RDS::DenseVariableIndex dense_variable_index = 0; dense_variable_index < objective_variables_count; dense_variable_index++)
+		auto objective_variable_count = this->objective_variable_count_;
+		for (RDS::DenseVariableIndex dense_variable_index = 0; dense_variable_index < objective_variable_count; dense_variable_index++)
 		{
-			const RDS::SparseVariableIndex sparse_variable_index = this->dense_variable_index_to_sparse_variable_index_map_[dense_variable_index];
+			const RDS::SparseVariableIndex sparse_variable_index = this->GetDenseVariableIndexToSparseVariableIndexMap().at(dense_variable_index);
 			g.coeffRef(sparse_variable_index) = CalculateFirstPartialDerivative(sparse_variable_index);
 		}
 	}

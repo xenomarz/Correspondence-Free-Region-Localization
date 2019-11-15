@@ -20,8 +20,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	VertexPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<PlainDataProvider>& plain_data_provider, const std::vector<std::pair<RDS::VertexIndex, Eigen::Vector2d>>& index_vertex_pairs) :
-		PositionObjective(mesh_data_provider, plain_data_provider, "Vertex Position Objective", index_vertex_pairs.size()),
+	VertexPositionObjective(const std::shared_ptr<PlainDataProvider>& plain_data_provider, const std::vector<std::pair<RDS::VertexIndex, Eigen::Vector2d>>& index_vertex_pairs) :
+		PositionObjective(plain_data_provider, "Vertex Position Objective", index_vertex_pairs.size()),
 		index_vertex_pairs_(index_vertex_pairs)
 	{
 		X_current_.resize(this->objective_vertices_count_, 2);
@@ -55,24 +55,26 @@ private:
 
 	void CalculateGradient(Eigen::VectorXd& g) override
 	{
+		auto image_vertices_count = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
 		g.setZero();
 		for (int64_t i = 0; i < this->objective_vertices_count_; i++)
 		{
 			const auto current_index = index_vertex_pairs_[i].first;
 			g(current_index) = 2.0 * X_diff_(i, 0);
-			g(current_index + this->image_vertices_count_) = 2.0 * X_diff_(i, 1);
+			g(current_index + image_vertices_count) = 2.0 * X_diff_(i, 1);
 		}
 	}
 
 	void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
+		auto image_vertices_count = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
 		triplets.resize(this->objective_variables_count_);
 		int64_t current_index;
 		int64_t current_index_shifted;
 		for (int64_t i = 0; i < this->objective_vertices_count_; i++)
 		{
 			current_index = index_vertex_pairs_[i].first;
-			current_index_shifted = index_vertex_pairs_[i].first + this->image_vertices_count_;
+			current_index_shifted = index_vertex_pairs_[i].first + image_vertices_count;
 			triplets[i] = Eigen::Triplet<double>(current_index, current_index, 0);
 			triplets[i + this->objective_vertices_count_] = Eigen::Triplet<double>(current_index_shifted, current_index_shifted, 0);
 		}

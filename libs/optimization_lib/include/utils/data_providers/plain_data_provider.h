@@ -9,8 +9,7 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
-#include "./utils/type_definitions.h"
-#include "./utils/data_providers/data_provider.h"
+#include "./data_provider.h"
 
 class PlainDataProvider : public DataProvider
 {
@@ -26,6 +25,7 @@ public:
 	 * Public methods
 	 */
 	void Update(const Eigen::VectorXd& x) override;
+	const Eigen::VectorXd& GetX() const;
 
 private:
 	/**

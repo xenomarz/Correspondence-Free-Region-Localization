@@ -19,6 +19,10 @@
 #include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
 #include <libs/optimization_lib/include/solvers/pardiso_solver.h>
 #include <libs/optimization_lib/include/iterative_methods/newton_method.h>
+
+#include <libs/optimization_lib/include/utils/data_providers/plain_data_provider.h>
+#include <libs/optimization_lib/include/utils/data_providers/edge_pair_data_provider.h>
+
 #include <libs/optimization_lib/include/objective_functions/summation_objective.h>
 #include <libs/optimization_lib/include/objective_functions/position/position_objective.h>
 #include <libs/optimization_lib/include/objective_functions/separation_objective.h>
@@ -230,8 +234,10 @@ private:
 	/**
 	 * Fields
 	 */
-	std::unordered_map<Eigen::VectorXi, std::shared_ptr<PositionObjective<Eigen::StorageOptions::RowMajor>>, RDS::VectorHash, RDS::VectorEquals> indices_2_position_objective_map;
+	std::unordered_map<Eigen::VectorXi, std::shared_ptr<PositionObjective<Eigen::StorageOptions::RowMajor>>, Utils::VectorHash, Utils::VectorEquals> indices_2_position_objective_map;
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
+	std::shared_ptr<PlainDataProvider> plain_data_provider_;
+	std::vector<std::shared_ptr<EdgePairDataProvider>> edge_pair_data_providers_;
 	std::shared_ptr<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> summation_objective_;
 	std::shared_ptr<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> position_;
 	std::shared_ptr<Separation<Eigen::StorageOptions::RowMajor>> separation_;

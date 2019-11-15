@@ -26,14 +26,14 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	PeriodicObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<PlainDataProvider>& plain_data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period) :
-		CompositeObjective(mesh_data_provider, plain_data_provider, name, objective_vertices_count, enforce_psd, inner_objective)
+	PeriodicObjective(const std::shared_ptr<PlainDataProvider>& plain_data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period) :
+		CompositeObjective(plain_data_provider, name, objective_vertices_count, enforce_psd, inner_objective)
 	{
 		SetPeriod(period);
 	}
 	
-	PeriodicObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<PlainDataProvider>& plain_data_provider, const int64_t objective_vertices_count, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period) :
-		PeriodicObjective(mesh_data_provider, plain_data_provider, "Periodic Objective", objective_vertices_count, enforce_psd, period, inner_objective)
+	PeriodicObjective(const std::shared_ptr<PlainDataProvider>& plain_data_provider, const int64_t objective_vertices_count, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period) :
+		PeriodicObjective(plain_data_provider, "Periodic Objective", objective_vertices_count, enforce_psd, period, inner_objective)
 	{
 
 	}

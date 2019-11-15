@@ -24,8 +24,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	Separation(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<PlainDataProvider>& plain_data_provider) :
-		DenseObjectiveFunction(mesh_data_provider, plain_data_provider, "Separation", 0, false)
+	Separation(const std::shared_ptr<PlainDataProvider>& plain_data_provider) :
+		DenseObjectiveFunction(plain_data_provider, "Separation", 0, false)
 	{
 		this->Initialize();
 	}
@@ -151,6 +151,7 @@ private:
 	{
 		const int64_t outer_size = Esept.outerSize();
 		triplets.reserve(10 * outer_size);
+		auto image_vertices_count = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
 		for (int i = 0; i < outer_size; ++i)
 		{
 			Eigen::SparseMatrix<double>::InnerIterator it(Esept, i);
@@ -166,19 +167,19 @@ private:
 			triplets.push_back(Eigen::Triplet<double>(idx_xi, idx_xi, 0));
 
 			// Second column
-			triplets.push_back(Eigen::Triplet<double>(idx_xi, idx_xi + this->image_vertices_count_, 0));
-			triplets.push_back(Eigen::Triplet<double>(idx_xi + this->image_vertices_count_, idx_xi + this->image_vertices_count_, 0));
+			triplets.push_back(Eigen::Triplet<double>(idx_xi, idx_xi + image_vertices_count, 0));
+			triplets.push_back(Eigen::Triplet<double>(idx_xi + image_vertices_count, idx_xi + image_vertices_count, 0));
 
 			// Third column
 			triplets.push_back(Eigen::Triplet<double>(idx_xi, idx_xj, 0));
-			triplets.push_back(Eigen::Triplet<double>(idx_xj, idx_xi + this->image_vertices_count_, 0));
+			triplets.push_back(Eigen::Triplet<double>(idx_xj, idx_xi + image_vertices_count, 0));
 			triplets.push_back(Eigen::Triplet<double>(idx_xj, idx_xj, 0));
 
 			// Fourth column
-			triplets.push_back(Eigen::Triplet<double>(idx_xi, idx_xj + this->image_vertices_count_, 0));
-			triplets.push_back(Eigen::Triplet<double>(idx_xi + this->image_vertices_count_, idx_xj + this->image_vertices_count_, 0));
-			triplets.push_back(Eigen::Triplet<double>(idx_xj, idx_xj + this->image_vertices_count_, 0));
-			triplets.push_back(Eigen::Triplet<double>(idx_xj + this->image_vertices_count_, idx_xj + this->image_vertices_count_, 0));
+			triplets.push_back(Eigen::Triplet<double>(idx_xi, idx_xj + image_vertices_count, 0));
+			triplets.push_back(Eigen::Triplet<double>(idx_xi + image_vertices_count, idx_xj + image_vertices_count, 0));
+			triplets.push_back(Eigen::Triplet<double>(idx_xj, idx_xj + image_vertices_count, 0));
+			triplets.push_back(Eigen::Triplet<double>(idx_xj + image_vertices_count, idx_xj + image_vertices_count, 0));
 		}
 	}
 	

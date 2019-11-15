@@ -388,7 +388,7 @@ void MeshWrapper::ComputeCorrespondingPairs()
 
 			// Record corresponding image edges, expressed using their vertices
 			auto cev_pair = std::make_pair(std::make_pair(e1_v1_index_im_ordered, e1_v2_index_im_ordered), std::make_pair(e2_v1_index_im_ordered, e2_v2_index_im_ordered));
- 			cev_pairs_.push_back(cev_pair);
+ 			edge_pair_descriptors_.push_back(cev_pair);
 			
 			// Record corresponding image edges pair 
 			std::pair<int64_t, int64_t> ce_pair = std::minmax(edge1_index_im, edge2_index_im);
@@ -515,7 +515,7 @@ void MeshWrapper::RegisterModelLoadedCallback(const std::function<ModelLoadedCal
 	model_loaded_signal_.connect(model_loaded_callback);
 }
 
-const MeshWrapper::EV2EVMap& MeshWrapper::GetCorrespondingEdgeVertices() const
+const MeshWrapper::EV2EVMap& MeshWrapper::GetEdgePairDescriptors() const
 {
-	return cev_pairs_;
+	return edge_pair_descriptors_;
 }

@@ -104,8 +104,8 @@ protected:
 
 	void CreateObjectiveFunction() override
 	{
-		auto corresponding_edge_pair = mesh_wrapper_->GetCorrespondingEdgeVertices()[0];
-		objective_function_ = std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, corresponding_edge_pair.first, corresponding_edge_pair.second, false);
+		auto corresponding_edge_pair = mesh_wrapper_->GetEdgePairDescriptors()[0];
+		//objective_function_ = std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, corresponding_edge_pair.first, corresponding_edge_pair.second, false);
 	}
 };
 
@@ -145,9 +145,9 @@ protected:
 
 	void CreateObjectiveFunction() override
 	{
-		auto corresponding_edge_pairs = mesh_wrapper_->GetCorrespondingEdgeVertices();
+		auto corresponding_edge_pairs = mesh_wrapper_->GetEdgePairDescriptors();
 		auto seamless_objective = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, false);
-		seamless_objective->AddCorrespondingEdgePairs(corresponding_edge_pairs);
+		//seamless_objective->AddCorrespondingEdgePairs(corresponding_edge_pairs);
 		objective_function_ = seamless_objective;
 	}
 };

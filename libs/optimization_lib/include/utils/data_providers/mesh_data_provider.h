@@ -21,14 +21,19 @@ public:
 	virtual const Eigen::MatrixX3d& GetD1() const = 0;
 	virtual const Eigen::MatrixX3d& GetD2() const = 0;
 
-	RDS::SparseVariableIndex GetVertexXIndex(RDS::VertexIndex vertex_index)
+	RDS::SparseVariableIndex GetVertexXIndex(RDS::VertexIndex vertex_index) const
 	{
 		return vertex_index;
 	}
 
-	RDS::SparseVariableIndex GetVertexYIndex(RDS::VertexIndex vertex_index)
+	RDS::SparseVariableIndex GetVertexYIndex(RDS::VertexIndex vertex_index) const
 	{
 		return vertex_index + GetImageVerticesCount();
+	}
+
+	int64_t GetVariablesCount() const
+	{
+		return 	2 * GetImageVerticesCount();
 	}
 
 	// Relevant for objective functions that operate on triangle soups

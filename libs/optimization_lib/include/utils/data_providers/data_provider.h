@@ -2,11 +2,8 @@
 #ifndef OPTIMIZATION_LIB_DATA_PROVIDER_H
 #define OPTIMIZATION_LIB_DATA_PROVIDER_H
 
-// Eigen Includes
-#include <Eigen/Core>
-
 // Optimization Lib Includes
-#include "./core/updatable_object.h"
+#include "../../core/updatable_object.h"
 #include "./mesh_data_provider.h"
 
 class DataProvider : public UpdatableObject
@@ -21,7 +18,6 @@ public:
 	/**
 	 * Public methods
 	 */
-	virtual void Update(const Eigen::VectorXd& x) = 0;
 	const MeshDataProvider& GetMeshDataProvider() const;
 
 protected:

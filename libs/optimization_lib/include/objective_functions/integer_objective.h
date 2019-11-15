@@ -21,8 +21,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	IntegerObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const int64_t index, const double period) :
-		PeriodicObjective(mesh_data_provider, "Integer Objective", period, 1, true),
+	IntegerObjective(const int64_t index, const double period) :
+		PeriodicObjective("Integer Objective", period, 1, true),
 		index_(index)
 	{
 		this->Initialize();
@@ -37,17 +37,17 @@ protected:
 	/**
 	 * Protected overrides
 	 */
-	void CalculateValueInner(double& f) override
+	void CalculateValue(double& f) override
 	{
 		f = value_;
 	}
 
-	void CalculateGradientInner(Eigen::SparseVector<double>& g) override
+	void CalculateGradient(Eigen::SparseVector<double>& g) override
 	{
 		g.coeffRef(index_) = 1;
 	}
 
-	void CalculateTripletsInner(std::vector<Eigen::Triplet<double>>& triplets) override
+	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		triplets.resize(1);
 		triplets[0] = Eigen::Triplet<double>(index_, index_, 0);
