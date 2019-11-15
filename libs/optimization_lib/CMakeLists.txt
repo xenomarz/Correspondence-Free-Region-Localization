@@ -33,6 +33,7 @@ file(GLOB SOURCES
 	src/utils/data_providers/data_provider.cpp
 	src/utils/data_providers/plain_data_provider.cpp
 	src/utils/data_providers/edge_pair_data_provider.cpp
+	src/utils/data_providers/face_fan_data_provider.cpp
 	include/core/updatable_object.h
 	include/objective_functions/objective_function.h
 	include/objective_functions/sparse_objective_function.h
@@ -63,7 +64,8 @@ file(GLOB SOURCES
 	include/utils/data_providers/mesh_data_provider.h
 	include/utils/data_providers/data_provider.h
 	include/utils/data_providers/plain_data_provider.h
-	include/utils/data_providers/edge_pair_data_provider.h)
+	include/utils/data_providers/edge_pair_data_provider.h
+	include/utils/data_providers/face_fan_data_provider.h)
 
 # Add Library Target
 add_library(${PROJECT_NAME} ${SOURCES})

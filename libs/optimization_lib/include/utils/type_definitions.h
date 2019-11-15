@@ -2,6 +2,9 @@
 #ifndef OPTIMIZATION_LIB_TYPE_DEFINITIONS_H
 #define OPTIMIZATION_LIB_TYPE_DEFINITIONS_H
 
+// STL includes
+#include <unordered_map>
+
 namespace RDS
 {
 	/**
@@ -17,6 +20,8 @@ namespace RDS
 	using HessianTripletIndex = std::int64_t;
 	using PartialDerivativeIndex = std::int64_t;
 	using HessianEntry = std::pair<DenseVariableIndex, DenseVariableIndex>;
+	using AdjacentSoupFaces = std::pair<VertexIndex, VertexIndex>;
+	using VertexAdjacentFacesVertices = std::vector<VertexAdjacentFaceVertices>;
 }
 
 #endif
