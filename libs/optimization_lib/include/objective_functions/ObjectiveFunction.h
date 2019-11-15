@@ -45,8 +45,8 @@ public:
 	vector<double> SS;
 
 	//weight for each objective function
-	float w;
-	float augmented_value_parameter;
+	float w = 0;
+	float augmented_value_parameter = 1;
 	VectorXd Efi;     
 	double energy_value = 0;
 	double gradient_norm = 0;

@@ -14,6 +14,7 @@ protected:
 public:
 	TriangleMeshObjectiveFunction() {}
 	virtual ~TriangleMeshObjectiveFunction(){}
-
+	virtual void init() override;
+	virtual void updateX(const VectorXd& X) override;
 	void AddElementToHessian(std::vector<int> ind);
 };

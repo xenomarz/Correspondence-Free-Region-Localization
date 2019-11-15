@@ -3,7 +3,6 @@
 AreaDistortionOneRing::AreaDistortionOneRing()
 {
 	name = "One Ring Area Preserving";
-	w = 0;
 }
 
 void AreaDistortionOneRing::init()

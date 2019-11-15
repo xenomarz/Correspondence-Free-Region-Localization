@@ -3,7 +3,6 @@
 SymmetricDirichletCompositeMajorization::SymmetricDirichletCompositeMajorization()
 {
     name = "symmetric dirichlet composite majorization";
-	w = 0;
 }
 
 void SymmetricDirichletCompositeMajorization::init()
@@ -57,14 +56,6 @@ void SymmetricDirichletCompositeMajorization::init()
 	b2d.bottomRows(3) = 0.5*D1d;
 
 	init_hessian();
-}
-
-void SymmetricDirichletCompositeMajorization::updateX(const VectorXd& X)
-{
-	bool inversions_exist = update_variables(X);
-	if (inversions_exist) {
-		cout << name << " Error! inversion exists." << endl;
-	}
 }
 
 double SymmetricDirichletCompositeMajorization::value(bool update)

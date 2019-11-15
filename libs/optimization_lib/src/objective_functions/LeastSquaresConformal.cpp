@@ -3,34 +3,11 @@
 LeastSquaresConformal::LeastSquaresConformal()
 {
 	name = "Least Squares Conformal";
-	w = 0;
 }
 
 void LeastSquaresConformal::init()
 {
-	if (V.size() == 0 || F.size() == 0)
-		throw name + " must define members V,F before init()!";
-	
-	a.resize(F.rows());
-	b.resize(F.rows());
-	c.resize(F.rows());
-	d.resize(F.rows());
-	
-	//Parameterization J mats resize
-	detJ.resize(F.rows());
-	grad.resize(F.rows(), 6);
-	Hessian.resize(F.rows());
-	dJ_dX.resize(F.rows());
-
-	// compute init energy matrices
-	igl::doublearea(V, F, Area);
-	Area /= 2;
-
-	MatrixX3d D1cols, D2cols;
-
-	Utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
-	D1d = D1cols.transpose();
-	D2d = D2cols.transpose();
+	TriangleMeshObjectiveFunction::init();
 
 	//prepare hessian and dJ/dX
 	MatrixXd d2E_dJ2(4, 4);
@@ -40,26 +17,7 @@ void LeastSquaresConformal::init()
 		0, 2, 2, 0,
 		0, 0, 0, 4;
 	for (int i = 0; i < F.rows(); i++) {
-		MatrixXd Dx = D1d.col(i).transpose();
-		MatrixXd Dy = D2d.col(i).transpose();
-		MatrixXd zero = VectorXd::Zero(3).transpose();
-		dJ_dX[i] << 
-			Dx	, zero	,
-			zero, Dx	,
-			Dy	, zero	,
-			zero, Dy;
-	
 		Hessian[i] = Area(i)*dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
-	}
-	
-	init_hessian();
-}
-
-void LeastSquaresConformal::updateX(const VectorXd& X)
-{
-	bool inversions_exist = update_variables(X);
-	if (inversions_exist) {
-		cout << name << " Error! inversion exists." << endl;
 	}
 }
 
