@@ -802,11 +802,18 @@ void basic_app::Draw_menu_for_solver_settings() {
 		ImGui::Columns(1);
 	}
 
-	//add more features
-	Draw_menu_for_colors();
-	ImGui::PushItemWidth(80 * menu_scaling());
-	ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.01f, 10000.0f);
-	ImGui::PopItemWidth();
+	static bool show = false;
+	if (ImGui::Button("More info")) {
+		show = !show;
+	}
+	if (show) {
+		//add more features
+		Draw_menu_for_colors();
+		ImGui::PushItemWidth(80 * menu_scaling());
+		ImGui::DragFloat("Max Distortion", &Max_Distortion, 0.05f, 0.01f, 10000.0f);
+		ImGui::PopItemWidth();
+	}
+	
 
 	//close the window
 	ImGui::End();
