@@ -20,8 +20,8 @@ namespace RDS
 	using HessianTripletIndex = std::int64_t;
 	using PartialDerivativeIndex = std::int64_t;
 	using HessianEntry = std::pair<DenseVariableIndex, DenseVariableIndex>;
-	using AdjacentSoupFaces = std::pair<VertexIndex, VertexIndex>;
-	using VertexAdjacentFacesVertices = std::vector<VertexAdjacentFaceVertices>;
+	using AdjacentFaceVertices = std::pair<VertexIndex, std::pair<VertexIndex, VertexIndex>>;
+	using AdjacentFacesVertices = std::vector<AdjacentFaceVertices>;
 }
 
 #endif

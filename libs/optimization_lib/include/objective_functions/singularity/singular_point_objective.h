@@ -24,9 +24,9 @@
 //	{
 //		Interval = SummationObjective<IntegerObjective<StorageOrder_>>::Properties::Count_
 //	};
-//	
+//
 //	using SingularCorner = std::pair<int64_t, std::vector<int64_t>>;
-//	
+//
 //	/**
 //	 * Constructors and destructor
 //	 */
@@ -53,7 +53,7 @@
 //	 */
 //	void SetInterval(const double interval)
 //	{
-//		for(int64_t i = 0; i < this->GetObjectiveFunctionsCount(); i++)
+//		for (int64_t i = 0; i < this->GetObjectiveFunctionsCount(); i++)
 //		{
 //			this->GetObjectiveFunction(i)->SetPeriod(interval);
 //		}
@@ -112,11 +112,11 @@
 //		auto image_vertices_count = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
 //		singular_corner_clusters_.push_back(singular_corners);
 //
-//		for(auto& singular_corner : singular_corners)
+//		for (auto& singular_corner : singular_corners)
 //		{
 //			auto x_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, singular_corner.first, interval_);
 //			auto y_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, singular_corner.first + image_vertices_count, interval_);
-//			
+//
 //			this->AddObjectiveFunction(x_component_objective);
 //			this->AddObjectiveFunction(y_component_objective);
 //
@@ -130,7 +130,7 @@
 //		auto image_vertices_count = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
 //		auto x_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, 0);
 //		auto y_component_objective = std::make_shared<IntegerObjective<StorageOrder_>>(this->mesh_data_provider_, image_vertices_count);
-//		
+//
 //		this->AddObjectiveFunction(x_component_objective);
 //		this->AddObjectiveFunction(y_component_objective);
 //	}
@@ -144,7 +144,7 @@
 //	{
 //		const auto image_vertices_count = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
 //		const auto singular_corner_clusters_size = singular_corner_clusters_.size();
-//		for(int64_t cluster_index = 0; cluster_index < singular_corner_clusters_size; cluster_index++)
+//		for (int64_t cluster_index = 0; cluster_index < singular_corner_clusters_size; cluster_index++)
 //		{
 //			double accumulated_angle = 0;
 //			auto& singular_corners = singular_corner_clusters_[cluster_index];
@@ -155,7 +155,7 @@
 //				int64_t v0_index = singular_corner.first;
 //				int64_t v1_index = singular_corner.second[0];
 //				int64_t v2_index = singular_corner.second[1];
-//				
+//
 //				Eigen::Vector2d v0;
 //				Eigen::Vector2d v1;
 //				Eigen::Vector2d v2;
@@ -191,7 +191,7 @@
 //			{
 //				SingularCorner& singular_corner = singular_corners[singular_corner_index];
 //				auto& integer_objectives = singular_corner_to_integer_objectives_[singular_corner.first];
-//				for(auto& integer_objective : integer_objectives)
+//				for (auto& integer_objective : integer_objectives)
 //				{
 //					integer_objective->SetWeight(weight);
 //				}
@@ -200,7 +200,7 @@
 //
 //		SummationObjective<IntegerObjective<StorageOrder_>>::PreUpdate(x);
 //	}
-//	
+//
 //	/**
 //	 * Private fields
 //	 */

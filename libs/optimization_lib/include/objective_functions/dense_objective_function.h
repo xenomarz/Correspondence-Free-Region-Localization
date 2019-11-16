@@ -12,6 +12,12 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
+	DenseObjectiveFunction(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const int64_t objective_vertices_count, const int64_t objective_variables_count, const bool enforce_psd) :
+		ObjectiveFunction(data_provider, name, objective_vertices_count, objective_variables_count, enforce_psd)
+	{
+
+	}
+
 	DenseObjectiveFunction(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd) :
 		ObjectiveFunction(data_provider, name, objective_vertices_count, enforce_psd)
 	{

@@ -55,15 +55,15 @@ protected:
 		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge2Vertex2XIndex(),  1 });
 		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge2Vertex2YIndex(), -1 });
 
-		for (RDS::DenseVariableIndex dense_variable_index = 0; dense_variable_index < this->objective_variable_count_; dense_variable_index++)
+		for (RDS::DenseVariableIndex dense_variable_index = 0; dense_variable_index < this->objective_variables_count_; dense_variable_index++)
 		{
 			const RDS::SparseVariableIndex sparse_variable_index = dense_variable_index_to_sparse_variable_index_map.at(dense_variable_index);
 			sparse_index_to_first_derivative_value_map_.insert({ sparse_variable_index, 0 });
 		}
 
-		for (RDS::DenseVariableIndex dense_variable_index1 = 0; dense_variable_index1 < this->objective_variable_count_; dense_variable_index1++)
+		for (RDS::DenseVariableIndex dense_variable_index1 = 0; dense_variable_index1 < this->objective_variables_count_; dense_variable_index1++)
 		{
-			for (RDS::DenseVariableIndex dense_variable_index2 = 0; dense_variable_index2 < this->objective_variable_count_; dense_variable_index2++)
+			for (RDS::DenseVariableIndex dense_variable_index2 = 0; dense_variable_index2 < this->objective_variables_count_; dense_variable_index2++)
 			{
 				const RDS::SparseVariableIndex sparse_variable_index1 = dense_variable_index_to_sparse_variable_index_map.at(dense_variable_index1);
 				const RDS::SparseVariableIndex sparse_variable_index2 = dense_variable_index_to_sparse_variable_index_map.at(dense_variable_index2);
@@ -108,7 +108,7 @@ private:
 
 	void CalculateGradient(Eigen::SparseVector<double>& g) override
 	{
-		auto objective_variable_count = this->objective_variable_count_;
+		auto objective_variable_count = this->objective_variables_count_;
 		for (RDS::DenseVariableIndex dense_variable_index = 0; dense_variable_index < objective_variable_count; dense_variable_index++)
 		{
 			const RDS::SparseVariableIndex sparse_variable_index = this->GetDenseVariableIndexToSparseVariableIndexMap().at(dense_variable_index);

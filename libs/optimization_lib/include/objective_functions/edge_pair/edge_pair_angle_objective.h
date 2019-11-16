@@ -17,8 +17,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	EdgePairAngleObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider) :
-		EdgePairObjective(mesh_data_provider, "Edge Pair Angle Objective", edge_pair_data_provider)
+	EdgePairAngleObjective(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider) :
+		EdgePairObjective(edge_pair_data_provider, "Edge Pair Angle Objective")
 	{
 		this->Initialize();
 	}

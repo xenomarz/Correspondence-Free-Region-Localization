@@ -7,10 +7,17 @@
 
 // Optimization lib includes
 #include <libs/optimization_lib/include/utils/mesh_wrapper.h>
-#include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h>
-#include <libs/optimization_lib/include/objective_functions/integer_objective.h>
-#include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
 #include <libs/optimization_lib/include/utils/utils.h>
+#include <libs/optimization_lib/include/utils/data_providers/data_provider.h>
+#include <libs/optimization_lib/include/utils/data_providers/plain_data_provider.h>
+#include <libs/optimization_lib/include/utils/data_providers/edge_pair_data_provider.h>
+#include <libs/optimization_lib/include/utils/data_providers/adjacent_faces_data_provider.h>
+
+#include <libs/optimization_lib/include/objective_functions/objective_function.h>
+#include <libs/optimization_lib/include/objective_functions/composite_objective.h>
+#include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h>
+#include <libs/optimization_lib/include/objective_functions/coordinate_objective.h>
+#include <libs/optimization_lib/include/objective_functions/periodic_objective.h>
 
 template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
 class FiniteDifferencesTest : public ::testing::Test
@@ -30,6 +37,7 @@ protected:
 	void SetUp() override
 	{
 		mesh_wrapper_->RegisterModelLoadedCallback([this]() {
+			CreateDataProvider();
 			CreateObjectiveFunction();
 			auto image_vertices = mesh_wrapper_->GetImageVertices();
 			x_ = Eigen::Map<const Eigen::VectorXd>(image_vertices.data(), image_vertices.cols() * image_vertices.rows());
@@ -44,6 +52,8 @@ protected:
 	}
 
 	virtual void CreateObjectiveFunction() = 0;
+	
+	virtual void CreateDataProvider() = 0;
 
 	void AssertComponent(const double value, const double approximation) const
 	{
@@ -56,7 +66,7 @@ protected:
 	{
 		objective_function_->Update(x_);
 		Eigen::VectorXd analytic_g = objective_function_->GetGradient();
-		Eigen::VectorXd approx_g = Utils::GetApproximatedGradient<StorageOrder_, VectorType_>(objective_function_, x_);
+		Eigen::VectorXd approx_g = ObjectiveFunction<StorageOrder_, VectorType_>::GetApproximatedGradient(objective_function_, x_);
 
 		for (uint64_t i = 0; i < analytic_g.rows(); i++)
 		{
@@ -68,7 +78,7 @@ protected:
 	{
 		objective_function_->Update(x_);
 		Eigen::MatrixXd analytic_H = objective_function_->GetHessian();
-		Eigen::MatrixXd approx_H = Utils::GetApproximatedHessian<StorageOrder_, VectorType_>(objective_function_, x_);
+		Eigen::MatrixXd approx_H = ObjectiveFunction<StorageOrder_, VectorType_>::GetApproximatedHessian(objective_function_, x_);
 
 		for (uint64_t row = 0; row < analytic_H.rows(); row++)
 		{
@@ -84,100 +94,113 @@ protected:
 
 	std::shared_ptr<ObjectiveFunction<StorageOrder_, VectorType_>> objective_function_;
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
+	std::shared_ptr<DataProvider> data_provider_;
 	Eigen::VectorXd x_;
 	std::string filename_;
 };
 
-class EdgePairAngleObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
+class PeriodicEdgePairAngleObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
 {
 protected:
-	EdgePairAngleObjectiveFDTest() :
+	PeriodicEdgePairAngleObjectiveFDTest() :
 		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
 	{
 
 	}
 
-	~EdgePairAngleObjectiveFDTest() override
+	~PeriodicEdgePairAngleObjectiveFDTest() override
 	{
 
+	}
+
+	void CreateDataProvider() override
+	{
+		auto& edge_pair_descriptors = mesh_wrapper_->GetEdgePairDescriptors();
+		data_provider_ = std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptors[0]);
 	}
 
 	void CreateObjectiveFunction() override
 	{
-		auto corresponding_edge_pair = mesh_wrapper_->GetEdgePairDescriptors()[0];
-		//objective_function_ = std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, corresponding_edge_pair.first, corresponding_edge_pair.second, false);
+		auto edge_pair_length_objective = std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<EdgePairDataProvider>(data_provider_));	
+		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(true, edge_pair_length_objective, 2 * M_PI);
 	}
 };
 
-class IntegerObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
+class PeriodicCoordinateObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
 {
 protected:
-	IntegerObjectiveFDTest() :
+	PeriodicCoordinateObjectiveFDTest() :
 		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
 	{
 
 	}
 
-	~IntegerObjectiveFDTest() override
+	~PeriodicCoordinateObjectiveFDTest() override
 	{
 
+	}
+
+	void CreateDataProvider() override
+	{
+		data_provider_ = std::make_shared<PlainDataProvider>(mesh_wrapper_);
 	}
 
 	void CreateObjectiveFunction() override
 	{
-		objective_function_ = std::make_shared<IntegerObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, 9, 1);
+		auto coordinate_objective = std::make_shared<CoordinateObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<PlainDataProvider>(data_provider_), 1, CoordinateObjective<Eigen::StorageOptions::RowMajor>::CoordinateType::X);
+		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(true, coordinate_objective, 1);
 	}
 };
 
-class SeamlessObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>
-{
-protected:
-	SeamlessObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
-	{
+//class SeamlessObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>
+//{
+//protected:
+//	SeamlessObjectiveFDTest() :
+//		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+//	{
+//
+//	}
+//
+//	~SeamlessObjectiveFDTest() override
+//	{
+//
+//	}
+//
+//	void CreateObjectiveFunction() override
+//	{
+//		auto corresponding_edge_pairs = mesh_wrapper_->GetEdgePairDescriptors();
+//		auto seamless_objective = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, false);
+//		//seamless_objective->AddCorrespondingEdgePairs(corresponding_edge_pairs);
+//		objective_function_ = seamless_objective;
+//	}
+//};
 
-	}
-
-	~SeamlessObjectiveFDTest() override
-	{
-
-	}
-
-	void CreateObjectiveFunction() override
-	{
-		auto corresponding_edge_pairs = mesh_wrapper_->GetEdgePairDescriptors();
-		auto seamless_objective = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, false);
-		//seamless_objective->AddCorrespondingEdgePairs(corresponding_edge_pairs);
-		objective_function_ = seamless_objective;
-	}
-};
-
-TEST_F(EdgePairAngleObjectiveFDTest, Gradient)
-{
-	AssertGradient();
-}
-
-TEST_F(EdgePairAngleObjectiveFDTest, Hessian)
-{
-	AssertHessian(true);
-}
-
-TEST_F(IntegerObjectiveFDTest, Gradient)
+TEST_F(PeriodicEdgePairAngleObjectiveFDTest, Gradient)
 {
 	AssertGradient();
 }
 
-TEST_F(IntegerObjectiveFDTest, Hessian)
+TEST_F(PeriodicEdgePairAngleObjectiveFDTest, Hessian)
 {
 	AssertHessian(true);
 }
 
-TEST_F(SeamlessObjectiveFDTest, Gradient)
+TEST_F(PeriodicCoordinateObjectiveFDTest, Gradient)
 {
 	AssertGradient();
 }
 
-TEST_F(SeamlessObjectiveFDTest, Hessian)
+TEST_F(PeriodicCoordinateObjectiveFDTest, Hessian)
 {
 	AssertHessian(true);
 }
+
+//TEST_F(SeamlessObjectiveFDTest, Gradient)
+//{
+//	AssertGradient();
+//}
+//
+//TEST_F(SeamlessObjectiveFDTest, Hessian)
+//{
+//	AssertHessian(true);
+//}

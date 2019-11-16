@@ -57,17 +57,23 @@ public:
 	/**
 	 * Constructor and destructor
 	 */
-	ObjectiveFunction(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const int64_t objective_vertex_count, const bool enforce_psd) :
+	ObjectiveFunction(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd) :
+		ObjectiveFunction(data_provider, name, objective_vertices_count, 2 * objective_vertices_count, enforce_psd)
+	{
+		
+	}
+
+	ObjectiveFunction(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const int64_t objective_vertices_count, const int64_t objective_variables_count, const bool enforce_psd) :
 		UpdatableObject(),
 		f_(0),
 		w_(1),
-		objective_vertex_count_(objective_vertex_count),
-		objective_variable_count_(2 * objective_vertex_count),
+		objective_vertices_count_(objective_vertices_count),
+		objective_variables_count_(objective_variables_count),
 		enforce_psd_(enforce_psd),
 		name_(name),
 		data_provider_(data_provider)
 	{
-		
+
 	}
 
 	virtual ~ObjectiveFunction()
@@ -114,6 +120,18 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		return triplets_;
+	}
+
+	int64_t GetObjectiveVerticesCount() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return objective_vertices_count_;
+	}
+
+	int64_t GetObjectiveVariablesCount() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return objective_variables_count_;
 	}
 
 	double GetWeight() const
@@ -432,8 +450,8 @@ protected:
 	mutable std::mutex m_;
 
 	// Elements count
-	int64_t objective_vertex_count_;
-	int64_t objective_variable_count_;
+	int64_t objective_vertices_count_;
+	int64_t objective_variables_count_;
 
 private:
 
@@ -482,9 +500,9 @@ private:
 	virtual void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets)
 	{
 		std::sort(sparse_variable_indices_.begin(), sparse_variable_indices_.end());
-		triplets.resize(objective_variable_count_* objective_variable_count_ - objective_variable_count_);
+		triplets.resize(objective_variables_count_* objective_variables_count_ - objective_variables_count_);
 		auto triplet_index = 0;
-		for (auto column = 0; column < objective_variable_count_; column++)
+		for (auto column = 0; column < objective_variables_count_; column++)
 		{
 			for (auto row = 0; row <= column; row++)
 			{
@@ -509,7 +527,7 @@ private:
 		if (enforce_psd_)
 		{
 			Eigen::MatrixXd H;
-			H.resize(objective_variable_count_, objective_variable_count_);
+			H.resize(objective_variables_count_, objective_variables_count_);
 			H.setZero();
 
 			auto triplets_count = triplets.size();
@@ -525,7 +543,7 @@ private:
 			Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(H);
 			Eigen::MatrixXd D = solver.eigenvalues().asDiagonal();
 			Eigen::MatrixXd V = solver.eigenvectors();
-			for (auto i = 0; i < objective_variable_count_; i++)
+			for (auto i = 0; i < objective_variables_count_; i++)
 			{
 				auto& value = D.coeffRef(i, i);
 				if (value < 0)
@@ -536,7 +554,7 @@ private:
 
 			H = V * D * V.inverse();
 
-			for (auto column = 0; column < objective_variable_count_; column++)
+			for (auto column = 0; column < objective_variables_count_; column++)
 			{
 				for (auto row = 0; row <= column; row++)
 				{

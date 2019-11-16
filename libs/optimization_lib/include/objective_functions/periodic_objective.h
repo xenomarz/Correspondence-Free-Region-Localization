@@ -26,14 +26,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	PeriodicObjective(const std::shared_ptr<PlainDataProvider>& plain_data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period) :
-		CompositeObjective(plain_data_provider, name, objective_vertices_count, enforce_psd, inner_objective)
+	PeriodicObjective(const std::string& name, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period) :
+		CompositeObjective(name, enforce_psd, inner_objective)
 	{
 		SetPeriod(period);
+		this->Initialize();
 	}
 	
-	PeriodicObjective(const std::shared_ptr<PlainDataProvider>& plain_data_provider, const int64_t objective_vertices_count, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period) :
-		PeriodicObjective(plain_data_provider, "Periodic Objective", objective_vertices_count, enforce_psd, period, inner_objective)
+	PeriodicObjective(const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period) :
+		PeriodicObjective("Periodic Objective", enforce_psd, inner_objective, period)
 	{
 
 	}
@@ -140,12 +141,12 @@ private:
 	/**
 	 * Private overrides
 	 */
-	void CalculateDerivativesOuter(const double f, double& outer_value, double& outer_first_derivative, double& outer_second_derivative) override
+	void CalculateDerivativesOuter(const double x, double& outer_value, double& outer_first_derivative, double& outer_second_derivative) override
 	{
 		double f = fmod(x, p_);
 		if (f < 0)
 		{
-			f = p_ + f;
+			f += p_;
 		}
 		
 		const double f2 = f * f;

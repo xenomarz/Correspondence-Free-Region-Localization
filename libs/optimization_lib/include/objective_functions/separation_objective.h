@@ -142,9 +142,9 @@ private:
 	
 	void PreInitialize() override
 	{
-		Esep = this->mesh_data_provider_->GetCorrespondingVertexPairsCoefficients();
+		Esep = this->data_provider_->GetMeshDataProvider().GetCorrespondingVertexPairsCoefficients();
 		Esept = Esep.transpose();
-		edge_lenghts_per_pair = this->mesh_data_provider_->GetCorrespondingVertexPairsEdgeLength();
+		edge_lenghts_per_pair = this->data_provider_->GetMeshDataProvider().GetCorrespondingVertexPairsEdgeLength();
 	}
 	
 	void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) override

@@ -16,15 +16,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	CompositeObjective(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective) :
-		SparseObjectiveFunction(data_provider, name, objective_vertices_count, enforce_psd),
+	CompositeObjective(const std::string& name, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective) :
+		SparseObjectiveFunction(nullptr, name, inner_objective->GetObjectiveVerticesCount(), inner_objective->GetObjectiveVariablesCount(), enforce_psd),
 		inner_objective_(inner_objective)
 	{
 
 	}
 
-	CompositeObjective(const std::shared_ptr<DataProvider>& data_provider, const double period, bool enforce_psd) :
-		CompositeObjective(data_provider, "Composite Objective", period, enforce_psd)
+	CompositeObjective(const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective) :
+		CompositeObjective(nullptr, "Composite Objective", enforce_psd, inner_objective)
 	{
 
 	}
@@ -75,7 +75,7 @@ private:
 		for (std::size_t i = 0; i < triplets_count; i++)
 		{
 			auto& value = const_cast<double&>(triplets[i].value());
-			value = (outer_first_derivative_ * value) + (outer_second_derivative_ * g_inner.coeffRef(triplets[i].row()) * g_inner.coeffRef(triplets[i].col()));
+			value = (outer_first_derivative_ * value) + (outer_second_derivative_ * g_inner.coeff(triplets[i].row()) * g_inner.coeff(triplets[i].col()));
 		}
 	}
 
