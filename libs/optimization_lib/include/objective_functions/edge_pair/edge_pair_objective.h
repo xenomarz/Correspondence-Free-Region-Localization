@@ -42,17 +42,9 @@ protected:
 	{
 		SparseObjectiveFunction<StorageOrder_>::PostInitialize();
 
-		auto& edge_pair_data_provider = GetEdgePairDataProvider();
 		auto& dense_variable_index_to_sparse_variable_index_map = this->GetDenseVariableIndexToSparseVariableIndexMap();
-		
-		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge1Vertex1XIndex(),  1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge1Vertex1YIndex(), -1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge1Vertex2XIndex(), -1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge1Vertex2YIndex(),  1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge2Vertex1XIndex(), -1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge2Vertex1YIndex(),  1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge2Vertex2XIndex(),  1 });
-		sparse_index_to_first_derivative_sign_map_.insert({ edge_pair_data_provider.GetEdge2Vertex2YIndex(), -1 });
+
+		InitializeSparseIndexToFirstDerivativeSignMap(sparse_index_to_first_derivative_sign_map_);
 
 		for (RDS::DenseVariableIndex dense_variable_index = 0; dense_variable_index < this->objective_variables_count_; dense_variable_index++)
 		{
@@ -127,6 +119,8 @@ private:
 	/**
 	 * Private methods
 	 */
+	virtual void InitializeSparseIndexToFirstDerivativeSignMap(std::unordered_map<RDS::SparseVariableIndex, double>& sparse_index_to_first_derivative_sign_map) = 0;
+	
 	double CalculateFirstPartialDerivative(const RDS::SparseVariableIndex sparse_variable_index)
 	{
 		return sparse_index_to_first_derivative_sign_map_[sparse_variable_index] * sparse_index_to_first_derivative_value_map_[sparse_variable_index];

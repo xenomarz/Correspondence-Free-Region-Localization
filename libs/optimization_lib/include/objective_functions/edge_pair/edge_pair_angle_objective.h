@@ -157,6 +157,19 @@ private:
 	/**
 	 * Private overrides
 	 */
+	void InitializeSparseIndexToFirstDerivativeSignMap(std::unordered_map<RDS::SparseVariableIndex, double>& sparse_index_to_first_derivative_sign_map) override
+	{
+		auto& edge_pair_data_provider = this->GetEdgePairDataProvider();
+		sparse_index_to_first_derivative_sign_map.insert({ edge_pair_data_provider.GetEdge1Vertex1XIndex(),  1 });
+		sparse_index_to_first_derivative_sign_map.insert({ edge_pair_data_provider.GetEdge1Vertex1YIndex(), -1 });
+		sparse_index_to_first_derivative_sign_map.insert({ edge_pair_data_provider.GetEdge1Vertex2XIndex(), -1 });
+		sparse_index_to_first_derivative_sign_map.insert({ edge_pair_data_provider.GetEdge1Vertex2YIndex(),  1 });
+		sparse_index_to_first_derivative_sign_map.insert({ edge_pair_data_provider.GetEdge2Vertex1XIndex(), -1 });
+		sparse_index_to_first_derivative_sign_map.insert({ edge_pair_data_provider.GetEdge2Vertex1YIndex(),  1 });
+		sparse_index_to_first_derivative_sign_map.insert({ edge_pair_data_provider.GetEdge2Vertex2XIndex(),  1 });
+		sparse_index_to_first_derivative_sign_map.insert({ edge_pair_data_provider.GetEdge2Vertex2YIndex(), -1 });
+	}
+	
 	void CalculateValue(double& f) override
 	{
 		auto& edge_pair_data_provider = this->GetEdgePairDataProvider();

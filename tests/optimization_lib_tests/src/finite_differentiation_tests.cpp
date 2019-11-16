@@ -15,6 +15,7 @@
 #include <libs/optimization_lib/include/objective_functions/objective_function.h>
 #include <libs/optimization_lib/include/objective_functions/composite_objective.h>
 #include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h>
+#include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_length_objective.h>
 #include <libs/optimization_lib/include/objective_functions/coordinate_objective.h>
 #include <libs/optimization_lib/include/objective_functions/periodic_objective.h>
 
@@ -151,6 +152,32 @@ protected:
 	}
 };
 
+class PeriodicEdgePairLengthObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
+{
+protected:
+	PeriodicEdgePairLengthObjectiveFDTest() :
+		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
+	{
+
+	}
+
+	~PeriodicEdgePairLengthObjectiveFDTest() override
+	{
+
+	}
+
+	void CreateDataProvider() override
+	{
+		auto& edge_pair_descriptors = mesh_wrapper_->GetEdgePairDescriptors();
+		data_provider_ = std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptors[0]);
+	}
+
+	void CreateObjectiveFunction() override
+	{
+		objective_function_ = std::make_shared<EdgePairLengthObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<EdgePairDataProvider>(data_provider_));
+	}
+};
+
 TEST_F(PeriodicEdgePairAngleObjectiveFDTest, Gradient)
 {
 	AssertGradient();
@@ -167,6 +194,16 @@ TEST_F(PeriodicCoordinateObjectiveFDTest, Gradient)
 }
 
 TEST_F(PeriodicCoordinateObjectiveFDTest, Hessian)
+{
+	AssertHessian(true);
+}
+
+TEST_F(PeriodicEdgePairLengthObjectiveFDTest, Gradient)
+{
+	AssertGradient();
+}
+
+TEST_F(PeriodicEdgePairLengthObjectiveFDTest, Hessian)
 {
 	AssertHessian(true);
 }
