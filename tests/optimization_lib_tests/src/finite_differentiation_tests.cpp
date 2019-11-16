@@ -103,7 +103,7 @@ class PeriodicEdgePairAngleObjectiveFDTest : public FiniteDifferencesTest<Eigen:
 {
 protected:
 	PeriodicEdgePairAngleObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
 	{
 
 	}
@@ -130,7 +130,7 @@ class PeriodicCoordinateObjectiveFDTest : public FiniteDifferencesTest<Eigen::St
 {
 protected:
 	PeriodicCoordinateObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
 	{
 
 	}
@@ -148,7 +148,7 @@ protected:
 	void CreateObjectiveFunction() override
 	{
 		auto coordinate_objective = std::make_shared<CoordinateObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<PlainDataProvider>(data_provider_), 1, CoordinateObjective<Eigen::StorageOptions::RowMajor>::CoordinateType::X);
-		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(true, coordinate_objective, 1);
+		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(false, coordinate_objective, 1);
 	}
 };
 

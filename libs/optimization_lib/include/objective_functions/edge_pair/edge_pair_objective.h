@@ -39,9 +39,9 @@ protected:
 	/**
 	 * Protected overrides
 	 */
-	void PreInitialize() override
+	void PostInitialize() override
 	{
-		SparseObjectiveFunction<StorageOrder_>::PreInitialize();
+		SparseObjectiveFunction<StorageOrder_>::PostInitialize();
 
 		auto& edge_pair_data_provider = GetEdgePairDataProvider();
 		auto& dense_variable_index_to_sparse_variable_index_map = this->GetDenseVariableIndexToSparseVariableIndexMap();

@@ -144,7 +144,13 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		return name_;
-	}	
+	}
+
+	std::shared_ptr<DataProvider> GetDataProvider() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return data_provider_;
+	}
 
 	// Generic property getter
 	virtual bool GetProperty(const int32_t property_id, std::any& property_value)
@@ -500,7 +506,8 @@ private:
 	virtual void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets)
 	{
 		std::sort(sparse_variable_indices_.begin(), sparse_variable_indices_.end());
-		triplets.resize(objective_variables_count_* objective_variables_count_ - objective_variables_count_);
+		const auto objective_variables_count_squared = objective_variables_count_ * objective_variables_count_;
+		triplets.resize(((objective_variables_count_squared - objective_variables_count_) / 2) + objective_variables_count_);
 		auto triplet_index = 0;
 		for (auto column = 0; column < objective_variables_count_; column++)
 		{

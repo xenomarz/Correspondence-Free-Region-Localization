@@ -70,7 +70,7 @@ public:
 					}
 					lock.unlock();
 
-					objective_function_->Update(x_, tbb::concurrent_unordered_set<UpdatableObject*>(), DenseObjectiveFunction<StorageOrder_>::UpdateOptions::GRADIENT | DenseObjectiveFunction<StorageOrder_>::UpdateOptions::HESSIAN);
+					objective_function_->Update(x_, UpdatableObject::UpdatedObjectSet(), DenseObjectiveFunction<StorageOrder_>::UpdateOptions::GRADIENT | DenseObjectiveFunction<StorageOrder_>::UpdateOptions::HESSIAN);
 					ComputeDescentDirection(p_);
 					LineSearch(p_);
 				}
