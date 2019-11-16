@@ -22,6 +22,10 @@ namespace RDS
 	using HessianEntry = std::pair<DenseVariableIndex, DenseVariableIndex>;
 	using AdjacentFaceVertices = std::pair<VertexIndex, std::pair<VertexIndex, VertexIndex>>;
 	using AdjacentFacesVertices = std::vector<AdjacentFaceVertices>;
+
+	using HessianEntryToTripletIndexMap = std::unordered_map<RDS::HessianEntry, RDS::HessianTripletIndex, Utils::HessianEntryHash, Utils::HessianEntryEquals>;
+	using SparseVariableIndexToDenseVariableIndexMap = std::unordered_map<RDS::SparseVariableIndex, RDS::DenseVariableIndex>;
+	using DenseVariableIndexToSparseVariableIndexMap = std::unordered_map<RDS::DenseVariableIndex, RDS::SparseVariableIndex>;
 }
 
 #endif

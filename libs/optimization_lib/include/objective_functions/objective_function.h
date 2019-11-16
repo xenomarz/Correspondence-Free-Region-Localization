@@ -106,11 +106,11 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(m_);
 
-		auto variables_count = this->data_provider_->GetMeshDataProvider().GetVariablesCount();
-		for(int64_t i = 0; i < variables_count; i++)
-		{
-			triplets_.push_back(Eigen::Triplet<double>(i,i,0));
-		}
+		//auto variables_count = this->data_provider_->GetMeshDataProvider().GetVariablesCount();
+		//for(int64_t i = 0; i < variables_count; i++)
+		//{
+		//	triplets_.push_back(Eigen::Triplet<double>(i,i,0));
+		//}
 		
 		H_.setFromTriplets(triplets_.begin(), triplets_.end());
 		return H_;
@@ -150,6 +150,26 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		return data_provider_;
+	}
+
+	const std::vector<RDS::SparseVariableIndex>& GetSparseVariablesIndices() const
+	{
+		return sparse_variable_indices_;
+	}
+
+	const RDS::HessianEntryToTripletIndexMap& GetHessianEntryToTripletIndexMap() const
+	{
+		return hessian_entry_to_triplet_index_map_;
+	}
+
+	const RDS::SparseVariableIndexToDenseVariableIndexMap& GetSparseVariableIndexToDenseVariableIndexMap() const
+	{
+		return sparse_variable_index_to_dense_variable_index_map_;
+	}
+
+	const RDS::DenseVariableIndexToSparseVariableIndexMap& GetDenseVariableIndexToSparseVariableIndexMap() const
+	{
+		return dense_variable_index_to_sparse_variable_index_map_;
 	}
 
 	// Generic property getter
@@ -368,13 +388,6 @@ public:
 	
 protected:
 	/**
-	 * Protected type definitions
-	 */
-	using HessianEntryToTripletIndexMap = std::unordered_map<RDS::HessianEntry, RDS::HessianTripletIndex, Utils::HessianEntryHash, Utils::HessianEntryEquals>;
-	using SparseVariableIndexToDenseVariableIndexMap = std::unordered_map<RDS::SparseVariableIndex, RDS::DenseVariableIndex>;
-	using DenseVariableIndexToSparseVariableIndexMap = std::unordered_map<RDS::DenseVariableIndex, RDS::SparseVariableIndex>;	
-
-	/**
 	 * Protected methods
 	 */
 	virtual void PreInitialize()
@@ -430,21 +443,6 @@ protected:
 		return name_;
 	}
 
-	const HessianEntryToTripletIndexMap& GetHessianEntryToTripletIndexMap() const
-	{
-		return hessian_entry_to_triplet_index_map_;
-	}
-
-	const SparseVariableIndexToDenseVariableIndexMap& GetSparseVariableIndexToDenseVariableIndexMap() const
-	{
-		return sparse_variable_index_to_dense_variable_index_map_;
-	}
-
-	const DenseVariableIndexToSparseVariableIndexMap& GetDenseVariableIndexToSparseVariableIndexMap() const
-	{
-		return dense_variable_index_to_sparse_variable_index_map_;
-	}
-
 	/**
 	 * Protected Fields
 	 */
@@ -494,18 +492,18 @@ private:
 		// Empty implementation
 	}
 
-	void InitializeMappings(SparseVariableIndexToDenseVariableIndexMap& sparse_variable_index_to_dense_variable_index_map_, DenseVariableIndexToSparseVariableIndexMap& dense_variable_index_to_sparse_variable_index_map_)
+	virtual void InitializeMappings(RDS::SparseVariableIndexToDenseVariableIndexMap& sparse_variable_index_to_dense_variable_index_map, RDS::DenseVariableIndexToSparseVariableIndexMap& dense_variable_index_to_sparse_variable_index_map)
 	{
+		std::sort(sparse_variable_indices_.begin(), sparse_variable_indices_.end());
 		for (std::size_t i = 0; i < sparse_variable_indices_.size(); i++)
 		{
-			dense_variable_index_to_sparse_variable_index_map_.insert({ i, sparse_variable_indices_[i] });
-			sparse_variable_index_to_dense_variable_index_map_.insert({ sparse_variable_indices_[i], i });
+			dense_variable_index_to_sparse_variable_index_map.insert({ i, sparse_variable_indices_[i] });
+			sparse_variable_index_to_dense_variable_index_map.insert({ sparse_variable_indices_[i], i });
 		}
 	}
 
 	virtual void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets)
-	{
-		std::sort(sparse_variable_indices_.begin(), sparse_variable_indices_.end());
+	{	
 		const auto objective_variables_count_squared = objective_variables_count_ * objective_variables_count_;
 		triplets.resize(((objective_variables_count_squared - objective_variables_count_) / 2) + objective_variables_count_);
 		auto triplet_index = 0;
@@ -609,9 +607,9 @@ private:
 	std::vector<RDS::SparseVariableIndex> sparse_variable_indices_;
 
 	// Mappings
-	HessianEntryToTripletIndexMap hessian_entry_to_triplet_index_map_;
-	SparseVariableIndexToDenseVariableIndexMap sparse_variable_index_to_dense_variable_index_map_;
-	DenseVariableIndexToSparseVariableIndexMap dense_variable_index_to_sparse_variable_index_map_;
+	RDS::HessianEntryToTripletIndexMap hessian_entry_to_triplet_index_map_;
+	RDS::SparseVariableIndexToDenseVariableIndexMap sparse_variable_index_to_dense_variable_index_map_;
+	RDS::DenseVariableIndexToSparseVariableIndexMap dense_variable_index_to_sparse_variable_index_map_;
 
 	// Name
 	const std::string name_;

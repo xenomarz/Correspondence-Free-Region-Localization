@@ -49,13 +49,16 @@ protected:
 		auto e2_y_diff = edge_pair_data_provider.GetEdge2YDiff();
 		auto e2_x_diff = edge_pair_data_provider.GetEdge2XDiff();
 
+		auto e1_squared_norm = edge_pair_data_provider.GetEdge1SquaredNrom();
+		auto e2_squared_norm = edge_pair_data_provider.GetEdge2SquaredNrom();
+		
 		auto e1_quad_norm = edge_pair_data_provider.GetEdge1QuadrupledNrom();
 		auto e2_quad_norm = edge_pair_data_provider.GetEdge2QuadrupledNrom();
 	
-		double e1_y_to_e1_squared_norm = e1_y_diff / edge_pair_data_provider.GetEdge1SquaredNrom();
-		double e1_x_to_e1_squared_norm = e1_x_diff / edge_pair_data_provider.GetEdge1SquaredNrom();
-		double e2_y_to_e2_squared_norm = e2_y_diff / edge_pair_data_provider.GetEdge2SquaredNrom();
-		double e2_x_to_e2_squared_norm = e2_x_diff / edge_pair_data_provider.GetEdge2SquaredNrom();
+		double e1_y_to_e1_squared_norm = e1_y_diff / e1_squared_norm;
+		double e1_x_to_e1_squared_norm = e1_x_diff / e1_squared_norm;
+		double e2_y_to_e2_squared_norm = e2_y_diff / e2_squared_norm;
+		double e2_x_to_e2_squared_norm = e2_x_diff / e2_squared_norm;
 
 		double e1_diff_prod_to_quad_norm = (2 * e1_x_diff * e1_y_diff) / e1_quad_norm;
 		double e2_diff_prod_to_quad_norm = (2 * e2_x_diff * e2_y_diff) / e2_quad_norm;

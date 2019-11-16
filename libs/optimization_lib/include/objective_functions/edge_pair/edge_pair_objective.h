@@ -7,8 +7,7 @@
 #include <unordered_map>
 
 // Optimization lib includes
-#include "../../utils/type_definitions.h"
-#include "../../utils/utils.h"
+#include "../../core/core.h"
 #include "../../utils/data_providers/edge_pair_data_provider.h"
 #include "../sparse_objective_function.h"
 
@@ -77,7 +76,7 @@ protected:
 	 */
 	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_sign_map_;
 	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_value_map_;
-	std::unordered_map<std::pair<RDS::SparseVariableIndex, RDS::SparseVariableIndex>, double, Utils::OrderedPairHash, Utils::OrderedPairEquals> sparse_indices_to_second_derivative_value_map_;
+	std::unordered_map<std::pair<RDS::SparseVariableIndex, RDS::SparseVariableIndex>, double, RDS::OrderedPairHash, RDS::OrderedPairEquals> sparse_indices_to_second_derivative_value_map_;
 
 private:
 	/**

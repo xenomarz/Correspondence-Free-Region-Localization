@@ -12,7 +12,6 @@
 #include <libs/optimization_lib/include/utils/data_providers/plain_data_provider.h>
 #include <libs/optimization_lib/include/utils/data_providers/edge_pair_data_provider.h>
 #include <libs/optimization_lib/include/utils/data_providers/adjacent_faces_data_provider.h>
-
 #include <libs/optimization_lib/include/objective_functions/objective_function.h>
 #include <libs/optimization_lib/include/objective_functions/composite_objective.h>
 #include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h>
@@ -122,7 +121,7 @@ protected:
 	void CreateObjectiveFunction() override
 	{
 		auto edge_pair_length_objective = std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<EdgePairDataProvider>(data_provider_));	
-		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(true, edge_pair_length_objective, 2 * M_PI);
+		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(false, edge_pair_length_objective, 2 * M_PI);
 	}
 };
 
@@ -152,6 +151,26 @@ protected:
 	}
 };
 
+TEST_F(PeriodicEdgePairAngleObjectiveFDTest, Gradient)
+{
+	AssertGradient();
+}
+
+TEST_F(PeriodicEdgePairAngleObjectiveFDTest, Hessian)
+{
+	AssertHessian(true);
+}
+
+TEST_F(PeriodicCoordinateObjectiveFDTest, Gradient)
+{
+	AssertGradient();
+}
+
+TEST_F(PeriodicCoordinateObjectiveFDTest, Hessian)
+{
+	AssertHessian(true);
+}
+
 //class SeamlessObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>
 //{
 //protected:
@@ -174,27 +193,7 @@ protected:
 //		objective_function_ = seamless_objective;
 //	}
 //};
-
-TEST_F(PeriodicEdgePairAngleObjectiveFDTest, Gradient)
-{
-	AssertGradient();
-}
-
-TEST_F(PeriodicEdgePairAngleObjectiveFDTest, Hessian)
-{
-	AssertHessian(true);
-}
-
-TEST_F(PeriodicCoordinateObjectiveFDTest, Gradient)
-{
-	AssertGradient();
-}
-
-TEST_F(PeriodicCoordinateObjectiveFDTest, Hessian)
-{
-	AssertHessian(true);
-}
-
+//
 //TEST_F(SeamlessObjectiveFDTest, Gradient)
 //{
 //	AssertGradient();

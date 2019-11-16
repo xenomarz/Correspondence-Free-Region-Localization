@@ -9,8 +9,8 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
+#include "../../core/core.h"
 #include "../../utils/data_providers/plain_data_provider.h"
-#include "../../utils/type_definitions.h"
 #include "./position_objective.h"
 
 template<Eigen::StorageOptions StorageOrder_>

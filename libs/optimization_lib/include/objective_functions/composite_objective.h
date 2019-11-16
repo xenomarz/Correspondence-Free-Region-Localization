@@ -53,6 +53,11 @@ private:
 	/**
 	 * Private method overrides
 	 */
+	void InitializeSparseVariableIndices(std::vector<RDS::SparseVariableIndex>& sparse_variable_indices) override
+	{
+		sparse_variable_indices = inner_objective_->GetSparseVariablesIndices();
+	}
+
 	void CalculateValue(double& f) override
 	{
 		f = outer_value_;
@@ -70,7 +75,6 @@ private:
 		auto& triplets_inner = inner_objective_->GetTriplets();
 		for (std::size_t i = 0; i < triplets_count; i++)
 		{
-			//auto& value = const_cast<double&>(triplets[i].value());
 			const_cast<double&>(triplets[i].value()) = (outer_first_derivative_ * triplets_inner[i].value()) + (outer_second_derivative_ * g_inner.coeff(triplets_inner[i].row()) * g_inner.coeff(triplets_inner[i].col()));
 		}
 	}

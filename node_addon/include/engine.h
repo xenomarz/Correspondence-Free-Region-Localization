@@ -14,7 +14,9 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
-#include <libs/optimization_lib/include/utils/type_definitions.h>
+#include <libs/optimization_lib/include/core/core.h>
+#include <libs/optimization_lib/include/core/utils.h>
+
 #include <libs/optimization_lib/include/utils/mesh_wrapper.h>
 #include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
 #include <libs/optimization_lib/include/solvers/pardiso_solver.h>
@@ -29,7 +31,7 @@
 #include <libs/optimization_lib/include/objective_functions/symmetric_dirichlet_objective.h>
 #include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
 #include <libs/optimization_lib/include/objective_functions/singularity_objective.h>
-#include <libs/optimization_lib/include/utils/utils.h>
+
 
 class Engine : public Napi::ObjectWrap<Engine> {
 public:
@@ -234,7 +236,7 @@ private:
 	/**
 	 * Fields
 	 */
-	std::unordered_map<Eigen::VectorXi, std::shared_ptr<PositionObjective<Eigen::StorageOptions::RowMajor>>, Utils::VectorHash, Utils::VectorEquals> indices_2_position_objective_map;
+	std::unordered_map<Eigen::VectorXi, std::shared_ptr<PositionObjective<Eigen::StorageOptions::RowMajor>>, RDS::VectorHash, RDS::VectorEquals> indices_2_position_objective_map;
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
 	std::shared_ptr<PlainDataProvider> plain_data_provider_;
 	std::vector<std::shared_ptr<EdgePairDataProvider>> edge_pair_data_providers_;

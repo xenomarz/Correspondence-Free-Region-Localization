@@ -36,6 +36,8 @@ file(GLOB SOURCES
 	src/utils/data_providers/plain_data_provider.cpp
 	src/utils/data_providers/edge_pair_data_provider.cpp
 	src/utils/data_providers/adjacent_faces_data_provider.cpp
+	include/core/core.h
+	include/core/utils.h
 	include/core/updatable_object.h
 	include/objective_functions/objective_function.h
 	include/objective_functions/sparse_objective_function.h
@@ -62,7 +64,6 @@ file(GLOB SOURCES
 	include/solvers/solver.h	
 	include/solvers/eigen_sparse_solver.h
 	include/solvers/pardiso_solver.h
-	include/utils/utils.h
 	include/utils/mesh_wrapper.h
 	include/utils/type_definitions.h
 	include/utils/data_providers/mesh_data_provider.h

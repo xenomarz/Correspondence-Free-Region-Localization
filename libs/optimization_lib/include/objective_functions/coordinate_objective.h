@@ -3,7 +3,7 @@
 #define OPTIMIZATION_LIB_COORDINATE_OBJECTIVE_H
 
 // Optimization lib includes
-#include "../utils/type_definitions.h"
+#include "../core/core.h"
 #include "./sparse_objective_function.h"
 
 template<Eigen::StorageOptions StorageOrder_>
@@ -81,7 +81,6 @@ private:
 	/**
 	 * Private overrides
 	 */
-
 	void InitializeSparseVariableIndices(std::vector<RDS::SparseVariableIndex>& sparse_variable_indices) override
 	{
 		sparse_variable_indices.push_back(sparse_variable_index_);
