@@ -8,7 +8,7 @@
 
 // Optimization lib includes
 #include "../../core/core.h"
-#include "../../utils/data_providers/edge_pair_data_provider.h"
+#include "../../data_providers/edge_pair_data_provider.h"
 #include "../sparse_objective_function.h"
 
 template<Eigen::StorageOptions StorageOrder_>

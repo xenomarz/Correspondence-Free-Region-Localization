@@ -13,9 +13,9 @@
 #include <igl/doublearea.h>
 
 // Optimization lib includes
-#include "../utils/data_providers/plain_data_provider.h"
+#include "../core/core.h"
+#include "../data_providers/plain_data_provider.h"
 #include "./dense_objective_function.h"
-#include "../utils/utils.h"
 
 template<Eigen::StorageOptions StorageOrder_>
 class SymmetricDirichlet : public DenseObjectiveFunction<StorageOrder_>

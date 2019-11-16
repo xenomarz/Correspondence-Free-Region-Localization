@@ -7,7 +7,7 @@
 #include <Eigen/Sparse>
 
 // Optimization lib includes
-#include "../../core/core.h"
+#include "../core/core.h"
 
 class MeshDataProvider
 {

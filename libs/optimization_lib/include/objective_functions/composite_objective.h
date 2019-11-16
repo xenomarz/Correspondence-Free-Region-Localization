@@ -6,7 +6,7 @@
 #include <memory>
 
 // Optimization lib includes
-#include "../utils/utils.h"
+#include "../core/core.h"
 #include "./sparse_objective_function.h"
 
 template<Eigen::StorageOptions StorageOrder_>

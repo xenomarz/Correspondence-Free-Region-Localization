@@ -6,12 +6,12 @@
 #include <filesystem>
 
 // Optimization lib includes
-#include <libs/optimization_lib/include/utils/mesh_wrapper.h>
-#include <libs/optimization_lib/include/utils/utils.h>
-#include <libs/optimization_lib/include/utils/data_providers/data_provider.h>
-#include <libs/optimization_lib/include/utils/data_providers/plain_data_provider.h>
-#include <libs/optimization_lib/include/utils/data_providers/edge_pair_data_provider.h>
-#include <libs/optimization_lib/include/utils/data_providers/adjacent_faces_data_provider.h>
+#include <libs/optimization_lib/include/core/utils.h>
+#include <libs/optimization_lib/include/data_providers/mesh_wrapper.h>
+#include <libs/optimization_lib/include/data_providers/data_provider.h>
+#include <libs/optimization_lib/include/data_providers/plain_data_provider.h>
+#include <libs/optimization_lib/include/data_providers/edge_pair_data_provider.h>
+#include <libs/optimization_lib/include/data_providers/adjacent_faces_data_provider.h>
 #include <libs/optimization_lib/include/objective_functions/objective_function.h>
 #include <libs/optimization_lib/include/objective_functions/composite_objective.h>
 #include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h>

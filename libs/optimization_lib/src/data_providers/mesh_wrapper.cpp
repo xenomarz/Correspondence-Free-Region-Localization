@@ -2,7 +2,7 @@
 //#include <ranges>
 
 // Optimization library includes
-#include <utils/mesh_wrapper.h>
+#include <data_providers//mesh_wrapper.h>
 
 // LIBIGL includes
 #include <igl/slice.h>

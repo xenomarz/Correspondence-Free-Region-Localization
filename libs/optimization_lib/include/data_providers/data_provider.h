@@ -3,7 +3,7 @@
 #define OPTIMIZATION_LIB_DATA_PROVIDER_H
 
 // Optimization Lib Includes
-#include "../../core/updatable_object.h"
+#include "../core/updatable_object.h"
 #include "./mesh_data_provider.h"
 
 class DataProvider : public UpdatableObject

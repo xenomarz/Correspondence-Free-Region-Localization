@@ -7,8 +7,7 @@
 #include <cmath>
 
 // Optimization lib includes
-#include "../utils/data_providers/plain_data_provider.h"
-#include "../utils/utils.h"
+#include "../data_providers/plain_data_provider.h"
 #include "./composite_objective.h"
 
 template<Eigen::StorageOptions StorageOrder_>

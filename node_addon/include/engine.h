@@ -16,22 +16,18 @@
 // Optimization lib includes
 #include <libs/optimization_lib/include/core/core.h>
 #include <libs/optimization_lib/include/core/utils.h>
-
-#include <libs/optimization_lib/include/utils/mesh_wrapper.h>
-#include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
-#include <libs/optimization_lib/include/solvers/pardiso_solver.h>
-#include <libs/optimization_lib/include/iterative_methods/newton_method.h>
-
-#include <libs/optimization_lib/include/utils/data_providers/plain_data_provider.h>
-#include <libs/optimization_lib/include/utils/data_providers/edge_pair_data_provider.h>
-
+#include <libs/optimization_lib/include/data_providers/mesh_wrapper.h>
+#include <libs/optimization_lib/include/data_providers/plain_data_provider.h>
+#include <libs/optimization_lib/include/data_providers/edge_pair_data_provider.h>
 #include <libs/optimization_lib/include/objective_functions/summation_objective.h>
 #include <libs/optimization_lib/include/objective_functions/position/position_objective.h>
 #include <libs/optimization_lib/include/objective_functions/separation_objective.h>
 #include <libs/optimization_lib/include/objective_functions/symmetric_dirichlet_objective.h>
 #include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
 #include <libs/optimization_lib/include/objective_functions/singularity_objective.h>
-
+#include <libs/optimization_lib/include/iterative_methods/newton_method.h>
+#include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
+#include <libs/optimization_lib/include/solvers/pardiso_solver.h>
 
 class Engine : public Napi::ObjectWrap<Engine> {
 public:

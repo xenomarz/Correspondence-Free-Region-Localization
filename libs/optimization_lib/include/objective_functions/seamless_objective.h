@@ -10,7 +10,6 @@
 
 // Optimization lib includes
 #include "./summation_objective.h"
-#include "../utils/data_providers/edge_pair_data_provider.h"
 #include "./edge_pair/edge_pair_angle_objective.h"
 
 template <Eigen::StorageOptions StorageOrder_>

@@ -9,7 +9,7 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
-#include "../../utils/data_providers/plain_data_provider.h"
+#include "../../data_providers/plain_data_provider.h"
 #include "../dense_objective_function.h"
 
 template <Eigen::StorageOptions StorageOrder_>

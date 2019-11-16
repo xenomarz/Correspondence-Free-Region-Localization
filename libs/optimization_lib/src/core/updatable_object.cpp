@@ -1,4 +1,4 @@
-// Optimization Lib Includes
+// Optimization lib includes
 #include <core/updatable_object.h>
 
 UpdatableObject::UpdatableObject()

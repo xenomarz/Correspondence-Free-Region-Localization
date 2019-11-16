@@ -1,4 +1,5 @@
-#include <utils/data_providers/adjacent_faces_data_provider.h>
+// Optimization lib includes
+#include <data_providers/adjacent_faces_data_provider.h>
 
 AdjacentFacesDataProvider::AdjacentFacesDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const RDS::AdjacentFacesVertices& adjacent_faces_vertices) :
 	DataProvider(mesh_data_provider),

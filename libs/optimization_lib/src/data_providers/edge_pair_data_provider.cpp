@@ -1,4 +1,5 @@
-#include <utils/data_providers/edge_pair_data_provider.h>
+// Optimization lib includes
+#include <data_providers/edge_pair_data_provider.h>
 
 EdgePairDataProvider::EdgePairDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const RDS::EdgePairDescriptor& edge_pair_descriptor) :
 	DataProvider(mesh_data_provider),

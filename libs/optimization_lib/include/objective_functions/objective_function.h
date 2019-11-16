@@ -16,8 +16,8 @@
 #include <Eigen/Eigenvalues> 
 
 // Optimization Lib Includes
-#include "../utils/utils.h"
-#include "../utils/data_providers/data_provider.h"
+#include "../core/core.h"
+#include "../data_providers/data_provider.h"
 
 template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
 class ObjectiveFunction : public UpdatableObject

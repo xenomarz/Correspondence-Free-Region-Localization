@@ -10,7 +10,7 @@
 
 // Optimization lib includes
 #include "../../core/core.h"
-#include "../../utils/data_providers/plain_data_provider.h"
+#include "../../data_providers/plain_data_provider.h"
 #include "./position_objective.h"
 
 template<Eigen::StorageOptions StorageOrder_>

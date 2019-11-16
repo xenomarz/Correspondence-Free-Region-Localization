@@ -22,7 +22,7 @@
 
 // Optimization lib includes
 #include "../core/core.h"
-#include "./data_providers/mesh_data_provider.h"
+#include "./mesh_data_provider.h"
 
 class MeshWrapper : public MeshDataProvider
 {

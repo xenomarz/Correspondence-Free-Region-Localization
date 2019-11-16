@@ -9,7 +9,7 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
-#include "../../core/core.h"
+#include "../core/core.h"
 #include "./data_provider.h"
 
 class EdgePairDataProvider : public DataProvider

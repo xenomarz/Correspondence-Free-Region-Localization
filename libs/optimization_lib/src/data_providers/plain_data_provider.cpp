@@ -1,4 +1,5 @@
-#include <utils/data_providers/plain_data_provider.h>
+// Optimization lib includes
+#include <data_providers/plain_data_provider.h>
 
 PlainDataProvider::PlainDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider) :
 	DataProvider(mesh_data_provider)
