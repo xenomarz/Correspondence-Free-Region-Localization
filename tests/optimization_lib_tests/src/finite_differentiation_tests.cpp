@@ -152,16 +152,16 @@ protected:
 	}
 };
 
-class PeriodicEdgePairLengthObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
+class EdgePairLengthObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
 {
 protected:
-	PeriodicEdgePairLengthObjectiveFDTest() :
+	EdgePairLengthObjectiveFDTest() :
 		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
 	{
 
 	}
 
-	~PeriodicEdgePairLengthObjectiveFDTest() override
+	~EdgePairLengthObjectiveFDTest() override
 	{
 
 	}
@@ -198,12 +198,12 @@ TEST_F(PeriodicCoordinateObjectiveFDTest, Hessian)
 	AssertHessian(true);
 }
 
-TEST_F(PeriodicEdgePairLengthObjectiveFDTest, Gradient)
+TEST_F(EdgePairLengthObjectiveFDTest, Gradient)
 {
 	AssertGradient();
 }
 
-TEST_F(PeriodicEdgePairLengthObjectiveFDTest, Hessian)
+TEST_F(EdgePairLengthObjectiveFDTest, Hessian)
 {
 	AssertHessian(true);
 }

@@ -23,10 +23,16 @@ EdgePairDataProvider::~EdgePairDataProvider()
 
 void EdgePairDataProvider::Update(const Eigen::VectorXd& x)
 {
-	edge1_x_diff_ = x(edge1_v2_x_index_) - x(edge1_v1_x_index_);
-	edge1_y_diff_ = x(edge1_v2_y_index_) - x(edge1_v1_y_index_);
-	edge2_x_diff_ = x(edge2_v2_x_index_) - x(edge2_v1_x_index_);
-	edge2_y_diff_ = x(edge2_v2_y_index_) - x(edge2_v1_y_index_);
+	edge1_.coeffRef(0) = x(edge1_v2_x_index_) - x(edge1_v1_x_index_);
+	edge1_.coeffRef(1) = x(edge1_v2_y_index_) - x(edge1_v1_y_index_);
+	
+	edge2_.coeffRef(0) = x(edge2_v2_x_index_) - x(edge2_v1_x_index_);
+	edge2_.coeffRef(1) = x(edge2_v2_y_index_) - x(edge2_v1_y_index_);
+	
+	edge1_x_diff_ = edge1_.coeffRef(0);
+	edge1_y_diff_ = edge1_.coeffRef(1);
+	edge2_x_diff_ = edge2_.coeffRef(0);
+	edge2_y_diff_ = edge2_.coeffRef(1);
 
 	edge1_x_diff_squared_ = edge1_x_diff_ * edge1_x_diff_;
 	edge1_y_diff_squared_ = edge1_y_diff_ * edge1_y_diff_;
@@ -38,6 +44,16 @@ void EdgePairDataProvider::Update(const Eigen::VectorXd& x)
 
 	edge1_quadrupled_norm_ = edge1_squared_norm_ * edge1_squared_norm_;
 	edge2_quadrupled_norm_ = edge2_squared_norm_ * edge2_squared_norm_;
+}
+
+const Eigen::Vector2d& EdgePairDataProvider::GetEdge1() const
+{
+	return edge1_;
+}
+
+const Eigen::Vector2d& EdgePairDataProvider::GetEdge2() const
+{
+	return edge2_;
 }
 
 int64_t EdgePairDataProvider::GetEdge1Vertex1XIndex() const

@@ -29,6 +29,9 @@ public:
 	/**
 	 * Getters
 	 */
+	const Eigen::Vector2d& GetEdge1() const;
+	const Eigen::Vector2d& GetEdge2() const;
+	
 	int64_t GetEdge1Vertex1XIndex() const;
 	int64_t GetEdge1Vertex1YIndex() const;
 	int64_t GetEdge1Vertex2XIndex() const;
@@ -57,6 +60,9 @@ public:
 
 private:
 	RDS::EdgePairDescriptor edge_pair_descriptor_;
+
+	Eigen::Vector2d edge1_;
+	Eigen::Vector2d edge2_;
 	
 	int64_t edge1_v1_x_index_;
 	int64_t edge1_v1_y_index_;
