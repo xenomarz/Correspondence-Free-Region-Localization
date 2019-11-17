@@ -71,11 +71,11 @@ protected:
 		Eigen::Matrix2d I = Eigen::Matrix2d::Identity();
 		Eigen::Matrix2d I_scaled = squared_norm_diff_scaled * I;
 
-		Eigen::Matrix2d d_edge1_d_edge1 = -(8 * edge1 * edge1.transpose() + I_scaled);
-		Eigen::Matrix2d d_edge1_v1_d_edge1_v1 = d_edge1_d_edge1;
-		Eigen::Matrix2d d_edge1_v1_d_edge1_v2 = -d_edge1_d_edge1;
-		Eigen::Matrix2d d_edge1_v2_d_edge1_v1 = d_edge1_d_edge1;
-		Eigen::Matrix2d d_edge1_v2_d_edge1_v2 = -d_edge1_d_edge1;
+		Eigen::Matrix2d d_edge1_d_edge1 = 8 * edge1 * edge1.transpose() + I_scaled;
+		Eigen::Matrix2d d_edge1_v1_d_edge1_v1 = -d_edge1_d_edge1;
+		Eigen::Matrix2d d_edge1_v1_d_edge1_v2 = d_edge1_d_edge1;
+		Eigen::Matrix2d d_edge1_v2_d_edge1_v1 = -d_edge1_d_edge1;
+		Eigen::Matrix2d d_edge1_v2_d_edge1_v2 = d_edge1_d_edge1;
 
 		Eigen::Matrix2d d_edge1_d_edge2 = 8 * edge1 * edge2.transpose();
 		Eigen::Matrix2d d_edge1_v1_d_edge2_v1 = d_edge1_d_edge2;
@@ -83,17 +83,17 @@ protected:
 		Eigen::Matrix2d d_edge1_v2_d_edge2_v1 = d_edge1_d_edge2;
 		Eigen::Matrix2d d_edge1_v2_d_edge2_v2 = -d_edge1_d_edge2;
 
-		Eigen::Matrix2d d_edge2_d_edge1 = -8 * edge2 * edge2.transpose() + I_scaled;
-		Eigen::Matrix2d d_edge2_v1_d_edge1_v1 = d_edge2_d_edge1;
-		Eigen::Matrix2d d_edge2_v1_d_edge1_v2 = -d_edge2_d_edge1;
-		Eigen::Matrix2d d_edge2_v2_d_edge1_v1 = d_edge2_d_edge1;
-		Eigen::Matrix2d d_edge2_v2_d_edge1_v2 = -d_edge2_d_edge1;
+		Eigen::Matrix2d d_edge2_d_edge1 = 8 * edge2 * edge1.transpose();
+		Eigen::Matrix2d d_edge2_v1_d_edge1_v1 = -d_edge2_d_edge1;
+		Eigen::Matrix2d d_edge2_v1_d_edge1_v2 = d_edge2_d_edge1;
+		Eigen::Matrix2d d_edge2_v2_d_edge1_v1 = -d_edge2_d_edge1;
+		Eigen::Matrix2d d_edge2_v2_d_edge1_v2 = d_edge2_d_edge1;
 
-		Eigen::Matrix2d d_edge2_d_edge2 = -8 * edge1 * edge2.transpose();
-		Eigen::Matrix2d d_edge2_v1_d_edge2_v1 = d_edge2_d_edge2;
-		Eigen::Matrix2d d_edge2_v1_d_edge2_v2 = -d_edge2_d_edge2;
-		Eigen::Matrix2d d_edge2_v2_d_edge2_v1 = d_edge2_d_edge2;
-		Eigen::Matrix2d d_edge2_v2_d_edge2_v2 = -d_edge2_d_edge2;
+		Eigen::Matrix2d d_edge2_d_edge2 = -8 * edge2 * edge2.transpose() + I_scaled;
+		Eigen::Matrix2d d_edge2_v1_d_edge2_v1 = -d_edge2_d_edge2;
+		Eigen::Matrix2d d_edge2_v1_d_edge2_v2 = d_edge2_d_edge2;
+		Eigen::Matrix2d d_edge2_v2_d_edge2_v1 = -d_edge2_d_edge2;
+		Eigen::Matrix2d d_edge2_v2_d_edge2_v2 = d_edge2_d_edge2;
 
 		/**
 		 * First partial derivatives

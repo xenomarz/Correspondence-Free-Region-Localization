@@ -112,7 +112,7 @@ private:
 		const auto triplets_count = triplets.size();
 		for (RDS::HessianTripletIndex i = 0; i < triplets_count; i++)
 		{
-			const_cast<double&>(triplets[i].value()) = CalculateSecondPartialDerivative(triplets[i].col(), triplets[i].row());
+			const_cast<double&>(triplets[i].value()) = CalculateSecondPartialDerivative(triplets[i].row(), triplets[i].col());
 		}
 	}
 
