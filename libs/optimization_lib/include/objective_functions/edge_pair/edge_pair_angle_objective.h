@@ -2,10 +2,6 @@
 #ifndef OPTIMIZATION_LIB_EDGE_PAIR_ANGLE_OBJECTIVE_H
 #define OPTIMIZATION_LIB_EDGE_PAIR_ANGLE_OBJECTIVE_H
 
-// C includes
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 // Optimization lib includes
 #include "../../data_providers/edge_pair_data_provider.h"
 #include "./edge_pair_objective.h"

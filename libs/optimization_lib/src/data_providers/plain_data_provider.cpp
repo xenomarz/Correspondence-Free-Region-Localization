@@ -7,13 +7,6 @@ PlainDataProvider::PlainDataProvider(const std::shared_ptr<MeshDataProvider>& me
 	
 }
 
-PlainDataProvider::PlainDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const Eigen::VectorXd& x0) :
-	DataProvider(mesh_data_provider),
-	x_(x0)
-{
-	
-}
-
 PlainDataProvider::~PlainDataProvider()
 {
 	

@@ -2,10 +2,6 @@
 #ifndef OPTIMIZATION_LIB_EDGE_PAIR_LENGTH_OBJECTIVE_H
 #define OPTIMIZATION_LIB_EDGE_PAIR_LENGTH_OBJECTIVE_H
 
-// C includes
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 // Optimization lib includes
 #include "../../data_providers/edge_pair_data_provider.h"
 #include "./edge_pair_objective.h"
@@ -44,11 +40,6 @@ protected:
 		auto e2_v1_y_index = edge_pair_data_provider.GetEdge2Vertex1YIndex();
 		auto e2_v2_x_index = edge_pair_data_provider.GetEdge2Vertex2XIndex();
 		auto e2_v2_y_index = edge_pair_data_provider.GetEdge2Vertex2YIndex();
-		
-		auto e1_y_diff = edge_pair_data_provider.GetEdge1YDiff();
-		auto e1_x_diff = edge_pair_data_provider.GetEdge1XDiff();
-		auto e2_y_diff = edge_pair_data_provider.GetEdge2YDiff();
-		auto e2_x_diff = edge_pair_data_provider.GetEdge2XDiff();
 
 		auto e1_squared_norm = edge_pair_data_provider.GetEdge1SquaredNrom();
 		auto e2_squared_norm = edge_pair_data_provider.GetEdge2SquaredNrom();
@@ -62,11 +53,6 @@ protected:
 
 		Eigen::Vector2d edge1_scaled = squared_norm_diff_scaled * edge1;
 		Eigen::Vector2d edge2_scaled = squared_norm_diff_scaled * edge2;
-		
-		auto e1_y_diff_scaled = e1_y_diff * squared_norm_diff_scaled;
-		auto e1_x_diff_scaled = e1_x_diff * squared_norm_diff_scaled;
-		auto e2_y_diff_scaled = e2_y_diff * squared_norm_diff_scaled;
-		auto e2_x_diff_scaled = e2_x_diff * squared_norm_diff_scaled;
 
 		Eigen::Matrix2d I = Eigen::Matrix2d::Identity();
 		Eigen::Matrix2d I_scaled = squared_norm_diff_scaled * I;

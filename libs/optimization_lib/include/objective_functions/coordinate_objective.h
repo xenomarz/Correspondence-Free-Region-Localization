@@ -4,6 +4,7 @@
 
 // Optimization lib includes
 #include "../core/core.h"
+#include "../data_providers/coordinate_data_provider.h"
 #include "./sparse_objective_function.h"
 
 template<Eigen::StorageOptions StorageOrder_>
@@ -27,10 +28,9 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	CoordinateObjective(const std::shared_ptr<PlainDataProvider>& plain_data_provider, const RDS::VertexIndex vertex_index, CoordinateType coordinate_type) :
-		SparseObjectiveFunction(plain_data_provider, "Integer Objective", 1, 1, false),
-		vertex_index_(vertex_index),
-		coordinate_type_(coordinate_type)
+	CoordinateObjective(const std::shared_ptr<CoordinateDataProvider>& coordinate_data_provider) :
+		SparseObjectiveFunction(coordinate_data_provider, "Integer Objective", 1, 1, false),
+		coordinate_data_provider_(coordinate_data_provider)
 	{
 		this->Initialize();
 	}
@@ -41,40 +41,20 @@ public:
 	}
 
 protected:
-	/**
-	 * Protected overrides
-	 */
-	void PreInitialize() override
-	{
-		switch (coordinate_type_)
-		{
-		case CoordinateType::X:
-			sparse_variable_index_ = this->data_provider_->GetMeshDataProvider().GetVertexXIndex(vertex_index_);
-			break;
-		case CoordinateType::Y:
-			sparse_variable_index_ = this->data_provider_->GetMeshDataProvider().GetVertexYIndex(vertex_index_);
-			break;
-		}
-	}
-	
 	void CalculateValue(double& f) override
 	{
-		f = coordinate_value_;
+		f = coordinate_data_provider_->GetCoordinateValue();
 	}
 
 	void CalculateGradient(Eigen::SparseVector<double>& g) override
 	{
-		g.coeffRef(sparse_variable_index_) = 1;
+		g.coeffRef(coordinate_data_provider_->GetSparseVariableIndex()) = 1;
 	}
 
 	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-		triplets[0] = Eigen::Triplet<double>(sparse_variable_index_, sparse_variable_index_, 0);
-	}
-
-	void PreUpdate(const Eigen::VectorXd& x) override
-	{
-		coordinate_value_ = x.coeffRef(sparse_variable_index_);
+		const auto sparse_variable_index = coordinate_data_provider_->GetSparseVariableIndex();
+		triplets[0] = Eigen::Triplet<double>(sparse_variable_index, sparse_variable_index, 0);
 	}
 
 private:
@@ -83,16 +63,13 @@ private:
 	 */
 	void InitializeSparseVariableIndices(std::vector<RDS::SparseVariableIndex>& sparse_variable_indices) override
 	{
-		sparse_variable_indices.push_back(sparse_variable_index_);
+		sparse_variable_indices.push_back(coordinate_data_provider_->GetSparseVariableIndex());
 	}
 
 	/**
 	 * Private fields
 	 */
-	RDS::VertexIndex vertex_index_;
-	RDS::SparseVariableIndex sparse_variable_index_;
-	CoordinateType coordinate_type_;
-	double coordinate_value_;
+	std::shared_ptr<CoordinateDataProvider> coordinate_data_provider_;
 };
 
 #endif

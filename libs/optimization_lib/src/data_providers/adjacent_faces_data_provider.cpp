@@ -55,3 +55,8 @@ double AdjacentFacesDataProvider::GetAngle() const
 {
 	return angle_;
 }
+
+const RDS::AdjacentFacesVertices& AdjacentFacesDataProvider::GetAdjacentFacesVertices() const
+{
+	return adjacent_faces_vertices_;
+}

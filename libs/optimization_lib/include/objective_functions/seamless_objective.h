@@ -20,7 +20,7 @@ public:
 	 * Constructors and destructor
 	 */
 	SeamlessObjective(const std::string& name) :
-		SummationObjective(name, false, true)
+		SummationObjective(name, true)
 	{
 
 	}

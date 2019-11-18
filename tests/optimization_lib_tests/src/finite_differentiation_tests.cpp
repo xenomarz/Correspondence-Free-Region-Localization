@@ -10,6 +10,7 @@
 #include <libs/optimization_lib/include/data_providers/mesh_wrapper.h>
 #include <libs/optimization_lib/include/data_providers/data_provider.h>
 #include <libs/optimization_lib/include/data_providers/plain_data_provider.h>
+#include <libs/optimization_lib/include/data_providers/coordinate_data_provider.h>
 #include <libs/optimization_lib/include/data_providers/edge_pair_data_provider.h>
 #include <libs/optimization_lib/include/data_providers/adjacent_faces_data_provider.h>
 #include <libs/optimization_lib/include/objective_functions/objective_function.h>
@@ -18,6 +19,7 @@
 #include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_length_objective.h>
 #include <libs/optimization_lib/include/objective_functions/coordinate_objective.h>
 #include <libs/optimization_lib/include/objective_functions/periodic_objective.h>
+#include <libs/optimization_lib/include/objective_functions/singularity/singular_point_objective.h>
 
 template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
 class FiniteDifferencesTest : public ::testing::Test
@@ -122,7 +124,7 @@ protected:
 	void CreateObjectiveFunction() override
 	{
 		auto edge_pair_length_objective = std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<EdgePairDataProvider>(data_provider_));	
-		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(false, edge_pair_length_objective, 2 * M_PI);
+		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(false, edge_pair_length_objective, M_PI / 2);
 	}
 };
 
@@ -142,12 +144,12 @@ protected:
 
 	void CreateDataProvider() override
 	{
-		data_provider_ = std::make_shared<PlainDataProvider>(mesh_wrapper_);
+		data_provider_ = std::make_shared<CoordinateDataProvider>(mesh_wrapper_, 1, CoordinateDataProvider::CoordinateType::Y);
 	}
 
 	void CreateObjectiveFunction() override
 	{
-		auto coordinate_objective = std::make_shared<CoordinateObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<PlainDataProvider>(data_provider_), 1, CoordinateObjective<Eigen::StorageOptions::RowMajor>::CoordinateType::X);
+		auto coordinate_objective = std::make_shared<CoordinateObjective<Eigen::StorageOptions::RowMajor>>(std::static_pointer_cast<CoordinateDataProvider>(data_provider_));
 		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(false, coordinate_objective, 1);
 	}
 };

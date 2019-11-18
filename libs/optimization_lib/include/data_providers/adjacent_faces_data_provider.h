@@ -30,6 +30,7 @@ public:
 	 * Getters
 	 */
 	double GetAngle() const;
+	const RDS::AdjacentFacesVertices& GetAdjacentFacesVertices() const;
 
 private:
 	RDS::AdjacentFacesVertices adjacent_faces_vertices_;

@@ -18,7 +18,6 @@ public:
 	 * Constructors and destructor
 	 */
 	PlainDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider);
-	PlainDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const Eigen::VectorXd& x0);
 	virtual ~PlainDataProvider();
 
 	/**

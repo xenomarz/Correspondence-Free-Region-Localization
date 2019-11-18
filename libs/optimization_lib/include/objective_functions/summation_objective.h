@@ -16,42 +16,78 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SummationObjective(const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
+	SummationObjective(const bool parallel_update = false) :
 		DenseObjectiveFunction(nullptr, "Summation Objective", 0, false),
-		explicitly_zero_diagonal_(explicitly_zero_diagonal),
 		parallel_update_(parallel_update)
 	{
 		this->Initialize();
 	}
 
-	SummationObjective(const std::string& name, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
+	SummationObjective(const std::string& name, const bool parallel_update = false) :
 		DenseObjectiveFunction(nullptr, name, 0, false),
-		explicitly_zero_diagonal_(explicitly_zero_diagonal),
 		parallel_update_(parallel_update)
 	{
 		this->Initialize();
 	}
 
-	SummationObjective(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
-		SummationObjective(name, explicitly_zero_diagonal, parallel_update)
+	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const bool parallel_update = false) :
+		DenseObjectiveFunction(data_provider, "Summation Objective", 0, false),
+		parallel_update_(parallel_update)
+	{
+		this->Initialize();
+	}
+
+	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const bool parallel_update = false) :
+		DenseObjectiveFunction(data_provider, name, 0, false),
+		parallel_update_(parallel_update)
+	{
+		this->Initialize();
+	}
+
+	SummationObjective(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool parallel_update = false) :
+		SummationObjective(name, parallel_update)
 	{
 		AddObjectiveFunctions(objective_functions);
 	}
 
-	SummationObjective(const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
-		SummationObjective(std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, explicitly_zero_diagonal, parallel_update)
+	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool parallel_update = false) :
+		SummationObjective(data_provider, name, parallel_update)
+	{
+		AddObjectiveFunctions(objective_functions);
+	}
+
+	SummationObjective(const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, const bool parallel_update = false) :
+		SummationObjective(std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, parallel_update)
 	{
 
 	}
 
-	SummationObjective(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
-		SummationObjective(objective_functions, "Summation Objective", explicitly_zero_diagonal, parallel_update)
+	SummationObjective(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const bool parallel_update = false) :
+		SummationObjective(objective_functions, "Summation Objective", parallel_update)
 	{
 
 	}
 
-	SummationObjective(const std::shared_ptr<ObjectiveFunctionType_> objective_function, const bool explicitly_zero_diagonal = false, const bool parallel_update = false) :
-		SummationObjective(objective_function, "Summation Objective", explicitly_zero_diagonal, parallel_update)
+	SummationObjective(const std::shared_ptr<ObjectiveFunctionType_> objective_function, const bool parallel_update = false) :
+		SummationObjective(objective_function, "Summation Objective", parallel_update)
+	{
+
+	}
+
+	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, const bool parallel_update = false) :
+		SummationObjective(data_provider, std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, parallel_update)
+	{
+
+	}
+
+	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const bool parallel_update = false) :
+		SummationObjective(data_provider, objective_functions, "Summation Objective", parallel_update)
+	{
+
+	}
+
+	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const bool parallel_update = false) :
+		SummationObjective(data_provider, objective_function, "Summation Objective", parallel_update)
 	{
 
 	}
@@ -207,7 +243,6 @@ private:
 	 * Fields
 	 */
 	std::vector<std::shared_ptr<ObjectiveFunctionType_>> objective_functions_;
-	bool explicitly_zero_diagonal_;
 	bool parallel_update_;
 };
 
