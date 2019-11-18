@@ -10,10 +10,10 @@
 
 // Optimization lib includes
 #include "./summation_objective.h"
-#include "./edge_pair/edge_pair_angle_objective.h"
+#include "./edge_pair/edge_pair_objective.h"
 
 template <Eigen::StorageOptions StorageOrder_>
-class SeamlessObjective : public SummationObjective<EdgePairAngleObjective<StorageOrder_>>
+class SeamlessObjective : public SummationObjective<EdgePairObjective<StorageOrder_>>
 {
 public:
 	/**

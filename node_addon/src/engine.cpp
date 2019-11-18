@@ -12,6 +12,8 @@
 #include "libs/optimization_lib/include/objective_functions/dense_objective_function.h"
 #include "libs/optimization_lib/include/objective_functions/position/barycenter_position_objective.h"
 #include "libs/optimization_lib/include/objective_functions/position/vertex_position_objective.h"
+#include "libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h"
+#include "libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_length_objective.h"
 
 Napi::FunctionReference Engine::constructor;
 
@@ -98,6 +100,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 		for (auto& edge_pair_data_provider : edge_pair_data_providers_)
 		{
 			seamless_->AddObjectiveFunction(std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(edge_pair_data_provider));
+			seamless_->AddObjectiveFunction(std::make_shared<EdgePairLengthObjective<Eigen::StorageOptions::RowMajor>>(edge_pair_data_provider));
 		}
 
 		auto& dom_v_2_im_v_map = mesh_wrapper_->GetDomainVerticesToImageVerticesMap();
