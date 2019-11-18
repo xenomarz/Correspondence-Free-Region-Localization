@@ -55,7 +55,7 @@ private:
 
 	void CalculateGradient(Eigen::VectorXd& g) override
 	{
-		auto image_vertices_count = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
+		auto image_vertices_count = this->data_provider_->GetMeshDataProvider()->GetImageVerticesCount();
 		g.setZero();
 		for (int64_t i = 0; i < this->objective_vertices_count_; i++)
 		{
@@ -67,7 +67,7 @@ private:
 
 	void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-		auto image_vertices_count = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
+		auto image_vertices_count = this->data_provider_->GetMeshDataProvider()->GetImageVerticesCount();
 		triplets.resize(this->objective_variables_count_);
 		int64_t current_index;
 		int64_t current_index_shifted;

@@ -19,12 +19,6 @@ public:
 		Period = SparseObjectiveFunction<StorageOrder_>::Properties::Count_
 	};
 
-	enum class CoordinateType : int32_t
-	{
-		X,
-		Y
-	};
-
 	/**
 	 * Constructors and destructor
 	 */

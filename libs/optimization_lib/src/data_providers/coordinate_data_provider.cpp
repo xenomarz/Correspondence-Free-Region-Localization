@@ -1,7 +1,7 @@
 // Optimization lib includes
 #include <data_providers/coordinate_data_provider.h>
 
-CoordinateDataProvider::CoordinateDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const RDS::VertexIndex vertex_index, CoordinateType coordinate_type) :
+CoordinateDataProvider::CoordinateDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const RDS::VertexIndex vertex_index, const CoordinateType coordinate_type) :
 	DataProvider(mesh_data_provider),
 	vertex_index_(vertex_index),
 	coordinate_type_(coordinate_type)
@@ -9,10 +9,10 @@ CoordinateDataProvider::CoordinateDataProvider(const std::shared_ptr<MeshDataPro
 	switch(coordinate_type)
 	{
 	case CoordinateType::X:
-		sparse_variable_index_ = GetMeshDataProvider().GetVertexXIndex(vertex_index);
+		sparse_variable_index_ = GetMeshDataProvider()->GetVertexXIndex(vertex_index);
 		break;
 	case CoordinateType::Y:
-		sparse_variable_index_ = GetMeshDataProvider().GetVertexYIndex(vertex_index);
+		sparse_variable_index_ = GetMeshDataProvider()->GetVertexYIndex(vertex_index);
 		break;
 	}
 }

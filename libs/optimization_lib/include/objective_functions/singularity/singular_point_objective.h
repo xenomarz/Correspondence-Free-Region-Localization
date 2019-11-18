@@ -121,14 +121,14 @@ public:
 		auto adjacent_faces_vertices = adjacent_faces_data_provider->GetAdjacentFacesVertices();
 		for (auto& adjacent_face_vertices : adjacent_faces_vertices)
 		{
-			auto x_coordinate_data_provider = std::make_shared<CoordinateDataProvider>(this->data_provider_->GetMeshDataProvider(), adjacent_face_vertices.first, CoordinateObjective<Eigen::StorageOptions::RowMajor>::CoordinateType::X);
-			auto y_coordinate_data_provider = std::make_shared<CoordinateDataProvider>(this->data_provider_->GetMeshDataProvider(), adjacent_face_vertices.first, CoordinateObjective<Eigen::StorageOptions::RowMajor>::CoordinateType::Y);
+			auto x_coordinate_data_provider = std::make_shared<CoordinateDataProvider>(this->data_provider_->GetMeshDataProvider(), adjacent_face_vertices.first, CoordinateDataProvider::CoordinateType::X);
+			auto y_coordinate_data_provider = std::make_shared<CoordinateDataProvider>(this->data_provider_->GetMeshDataProvider(), adjacent_face_vertices.first, CoordinateDataProvider::CoordinateType::Y);
 
 			auto x_coordinate_objective = std::make_shared<CoordinateObjective<StorageOrder_>>(x_coordinate_data_provider);
 			auto y_coordinate_objective = std::make_shared<CoordinateObjective<StorageOrder_>>(y_coordinate_data_provider);
 
-			auto periodic_x_coordinate_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(true, periodic_x_coordinate_objective, interval_);
-			auto periodic_y_coordinate_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(true, periodic_y_coordinate_objective, interval_);
+			std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_x_coordinate_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(true, periodic_x_coordinate_objective, interval_);
+			std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_y_coordinate_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(true, periodic_y_coordinate_objective, interval_);
 			
 			this->AddObjectiveFunction(periodic_x_coordinate_objective);
 			this->AddObjectiveFunction(periodic_y_coordinate_objective);

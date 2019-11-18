@@ -13,7 +13,7 @@ DataProvider::~DataProvider()
 	
 }
 
-const MeshDataProvider& DataProvider::GetMeshDataProvider() const
+std::shared_ptr<MeshDataProvider> DataProvider::GetMeshDataProvider() const
 {
-	return *mesh_data_provider_;
+	return mesh_data_provider_;
 }

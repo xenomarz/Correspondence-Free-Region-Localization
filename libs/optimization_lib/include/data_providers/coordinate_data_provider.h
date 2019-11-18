@@ -26,7 +26,7 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	CoordinateDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const RDS::VertexIndex vertex_index, CoordinateType coordinate_type);
+	CoordinateDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const RDS::VertexIndex vertex_index, const CoordinateType coordinate_type);
 	virtual ~CoordinateDataProvider();
 
 	/**

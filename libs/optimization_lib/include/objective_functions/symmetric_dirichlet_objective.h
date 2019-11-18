@@ -94,17 +94,17 @@ private:
 	
 	void PreInitialize() override
 	{
-		auto F = this->data_provider_->GetMeshDataProvider().GetDomainFaces();
-		auto V = this->data_provider_->GetMeshDataProvider().GetDomainVertices();
+		auto F = this->data_provider_->GetMeshDataProvider()->GetDomainFaces();
+		auto V = this->data_provider_->GetMeshDataProvider()->GetDomainVertices();
 
-		auto D1 = this->data_provider_->GetMeshDataProvider().GetD1();
-		auto D2 = this->data_provider_->GetMeshDataProvider().GetD2();
+		auto D1 = this->data_provider_->GetMeshDataProvider()->GetD1();
+		auto D2 = this->data_provider_->GetMeshDataProvider()->GetD2();
 
-		auto Fs = this->data_provider_->GetMeshDataProvider().GetImageFaces();
-		this->F = this->data_provider_->GetMeshDataProvider().GetImageFaces();
+		auto Fs = this->data_provider_->GetMeshDataProvider()->GetImageFaces();
+		this->F = this->data_provider_->GetMeshDataProvider()->GetImageFaces();
 
 		numF = Fs.rows();
-		numV = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
+		numV = this->data_provider_->GetMeshDataProvider()->GetImageVerticesCount();
 
 		Fuv.resize(6, numF);
 		Fuv.topRows(3) = Fs.transpose();
@@ -156,8 +156,8 @@ private:
 
 	void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-		auto nfs = this->data_provider_->GetMeshDataProvider().GetImageFaces().rows();
-		auto nvs = this->data_provider_->GetMeshDataProvider().GetImageVerticesCount();
+		auto nfs = this->data_provider_->GetMeshDataProvider()->GetImageFaces().rows();
+		auto nvs = this->data_provider_->GetMeshDataProvider()->GetImageVerticesCount();
 		triplets.reserve(21 * nfs);
 		for (int i = 0; i < nfs; ++i)
 		{

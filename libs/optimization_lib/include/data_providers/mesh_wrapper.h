@@ -75,7 +75,7 @@ public:
 	const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const override;
 	int64_t GetImageVerticesCount() const override;
 	int64_t GetDomainVerticesCount() const override;
-	const std::vector<RDS::EdgePairDescriptor>& GetEdgePairDescriptors() const;
+	const RDS::EdgePairDescriptors& GetEdgePairDescriptors() const;
 
 	/**
 	 * Public methods
@@ -151,6 +151,9 @@ private:
 	// Compute vertex neighbours
 	void ComputeVertexNeighbours();
 
+	// Compute adjacent faces vertices
+	void ComputeAdjacentFacesVertices();
+
 	/**
 	 * Private methods
 	 */
@@ -177,12 +180,15 @@ private:
 	// Image corresponding pairs
 	std::vector<std::pair<int64_t, int64_t>> cv_pairs_;
 	std::vector<std::pair<int64_t, int64_t>> ce_pairs_;
-	std::vector<RDS::EdgePairDescriptor> edge_pair_descriptors_;
+	RDS::EdgePairDescriptors edge_pair_descriptors_;
 	Eigen::SparseMatrix<double> cv_pairs_coefficients_;
 	Eigen::VectorXd cv_pairs_edge_length_;
 
 	// Image neighbour vertices
 	VI2VIsMap v_im_2_neighbours;
+
+	// AdjacentFacesVertices
+	RDS::AdjacentFacesVertices adjacent_faces_vertices_;
 
 	// Maps
 	ED2EIMap ed_im_2_ei_im_;

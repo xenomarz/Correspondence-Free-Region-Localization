@@ -18,7 +18,7 @@ public:
 	/**
 	 * Public methods
 	 */
-	const MeshDataProvider& GetMeshDataProvider() const;
+	[[nodiscard]] std::shared_ptr<MeshDataProvider> GetMeshDataProvider() const;
 
 protected:
 	/**

@@ -24,7 +24,7 @@
 #include <libs/optimization_lib/include/objective_functions/separation_objective.h>
 #include <libs/optimization_lib/include/objective_functions/symmetric_dirichlet_objective.h>
 #include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
-#include <libs/optimization_lib/include/objective_functions/singularity_objective.h>
+#include <libs/optimization_lib/include/objective_functions/singularity/singular_points_objective.h>
 #include <libs/optimization_lib/include/iterative_methods/newton_method.h>
 #include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
 #include <libs/optimization_lib/include/solvers/pardiso_solver.h>
@@ -241,7 +241,7 @@ private:
 	std::shared_ptr<Separation<Eigen::StorageOptions::RowMajor>> separation_;
 	std::shared_ptr<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>> symmetric_dirichlet_;
 	std::shared_ptr<SeamlessObjective<Eigen::StorageOptions::RowMajor>> seamless_;
-	//std::shared_ptr<SingularityObjective<Eigen::StorageOptions::RowMajor>> singularity_;
+	std::shared_ptr<SingularPointsObjective<Eigen::StorageOptions::RowMajor>> singular_points_;
 	std::unique_ptr<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>> newton_method_;
 	std::vector<Eigen::DenseIndex> constrained_faces_indices;
 	Eigen::MatrixX2d image_vertices_;

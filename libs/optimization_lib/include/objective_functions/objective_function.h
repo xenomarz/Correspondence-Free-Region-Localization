@@ -106,7 +106,7 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(m_);
 
-		//auto variables_count = this->data_provider_->GetMeshDataProvider().GetVariablesCount();
+		//auto variables_count = this->data_provider_->GetMeshDataProvider()->GetVariablesCount();
 		//for(int64_t i = 0; i < variables_count; i++)
 		//{
 		//	triplets_.push_back(Eigen::Triplet<double>(i,i,0));
@@ -471,19 +471,19 @@ private:
 
 	void InitializeValuePerVertex(VectorType_& f_per_vertex)
 	{
-		f_per_vertex.resize(data_provider_->GetMeshDataProvider().GetImageVerticesCount());
+		f_per_vertex.resize(data_provider_->GetMeshDataProvider()->GetImageVerticesCount());
 		f_per_vertex.setZero();
 	}
 
 	void InitializeGradient(VectorType_& g)
 	{
-		g.resize(data_provider_->GetMeshDataProvider().GetVariablesCount());
+		g.resize(data_provider_->GetMeshDataProvider()->GetVariablesCount());
 		g.setZero();
 	}
 
 	void InitializeHessian(Eigen::SparseMatrix<double, StorageOrder_>& H)
 	{
-		auto variables_count = data_provider_->GetMeshDataProvider().GetVariablesCount();
+		auto variables_count = data_provider_->GetMeshDataProvider()->GetVariablesCount();
 		H.resize(variables_count, variables_count);
 	}
 

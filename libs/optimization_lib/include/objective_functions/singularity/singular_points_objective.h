@@ -9,23 +9,32 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
-#include "./objective_functions/summation_objective.h"
-#include "./objective_functions/singularity/singular_point_objective.h"
+#include "../summation_objective.h"
+#include "./singular_point_objective.h"
 
 template <Eigen::StorageOptions StorageOrder_>
 class SingularPointsObjective : public SummationObjective<SingularPointObjective<StorageOrder_>>
 {
 public:
 	/**
+	 * Public type definitions
+	 */
+	enum class Properties : int32_t
+	{
+		Interval = SummationObjective<SingularPointObjective<StorageOrder_>>::Properties::Count_
+	};
+
+	
+	/**
 	 * Constructors and destructor
 	 */
-	SingularPointsObjective(const std::string& name) :
+	SingularPointsObjective(const std::string& name, double interval) :
 		SummationObjective(name, true)
 	{
 
 	}
 
-	SingularPointsObjective() :
+	SingularPointsObjective(double interval) :
 		SummationObjective("Singular Points")
 	{
 
@@ -35,6 +44,68 @@ public:
 	{
 
 	}
+
+	/**
+	 * Setters
+	 */
+	void SetInterval(const double interval)
+	{
+		for (int64_t i = 0; i < this->GetObjectiveFunctionsCount(); i++)
+		{
+			this->GetObjectiveFunction(i)->SetInterval(interval);
+		}
+		interval_ = interval;
+	}
+
+	bool SetProperty(const int32_t property_id, const std::any& property_value) override
+	{
+		if (SummationObjective<SingularPointObjective<StorageOrder_>>::SetProperty(property_id, property_value))
+		{
+			return true;
+		}
+
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::Interval:
+			SetInterval(std::any_cast<const double>(property_value));
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Getters
+	 */
+	double GetInterval() const
+	{
+		return interval_;
+	}
+
+	bool GetProperty(const int32_t property_id, std::any& property_value) override
+	{
+		if (SummationObjective<SingularPointObjective<StorageOrder_>>::GetProperty(property_id, property_value))
+		{
+			return true;
+		}
+
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::Interval:
+			property_value = GetInterval();
+			return true;
+		}
+
+		return false;
+	}
+
+private:
+	/**
+	 * Private fields
+	 */
+	double interval_;
 };
 
 #endif

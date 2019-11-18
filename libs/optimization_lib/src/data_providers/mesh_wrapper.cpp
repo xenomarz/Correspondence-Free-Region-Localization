@@ -449,6 +449,23 @@ void MeshWrapper::ComputeVertexNeighbours()
 	}
 }
 
+void MeshWrapper::ComputeAdjacentFacesVertices()
+{
+	//for(int64_t i = 0; i < this->GetDomainVerticesCount(); i++)
+	//{
+	//	std::vector<SingularityObjective<Eigen::StorageOptions::RowMajor>::SingularCorner> singular_corners;
+	//	auto& image_indices = v_dom_2_v_im_.at(i);
+	//	for(int64_t corner_index = 0; corner_index < image_indices.size(); corner_index++)
+	//	{
+	//		auto image_index = image_indices[corner_index];
+	//		auto& neighbours = mesh_wrapper_->GetImageNeighbours().at(image_index);
+	//		singular_corners.push_back(std::make_pair(image_index, neighbours));
+	//	}
+
+	//	singularity_->AddSingularCorners(singular_corners);
+	//}
+}
+
 int64_t MeshWrapper::GetImageVerticesCount() const
 {
 	return v_im_.rows();
@@ -515,7 +532,7 @@ void MeshWrapper::RegisterModelLoadedCallback(const std::function<ModelLoadedCal
 	model_loaded_signal_.connect(model_loaded_callback);
 }
 
-const MeshWrapper::EV2EVMap& MeshWrapper::GetEdgePairDescriptors() const
+const RDS::EdgePairDescriptors& MeshWrapper::GetEdgePairDescriptors() const
 {
 	return edge_pair_descriptors_;
 }
