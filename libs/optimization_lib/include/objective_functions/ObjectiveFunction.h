@@ -18,9 +18,6 @@ protected:
 
 	//dense mesh derivative matrices
 	Matrix3Xd D1d, D2d;		
-
-	
-
 public:
 	ObjectiveFunction() {}
 	virtual ~ObjectiveFunction(){}

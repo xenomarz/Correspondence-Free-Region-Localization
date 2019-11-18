@@ -117,6 +117,12 @@ public:
 		return MatrixSize + GetLowerTriangleSize(MatrixSize - 1);
 	}
 
+
+	template<typename Base, typename T>
+	static inline bool instanceof(const T*) {
+		return std::is_base_of<Base, T>::value;
+	}
+
 private:
 	static unsigned int nv, nf, ne, nvs, nfs, nes;
 	static Eigen::MatrixX2d E, Es;

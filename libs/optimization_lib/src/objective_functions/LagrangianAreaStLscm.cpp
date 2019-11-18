@@ -5,12 +5,6 @@ LagrangianAreaStLscm::LagrangianAreaStLscm()
 	name = "LagrangianAreaStLscm";
 }
 
-void LagrangianAreaStLscm::init()
-{
-	lambda.resize(F.rows());
-	TriangleMeshObjectiveFunction::init();
-}
-
 double LagrangianAreaStLscm::value(bool update)
 {
 	// L = LSCM + lambda * area
@@ -108,34 +102,4 @@ void LagrangianAreaStLscm::hessian()
 		SS[index2++] = hess[4];
 		SS[index2++] = hess[5];	
 	}
-}
-
-bool LagrangianAreaStLscm::update_variables(const VectorXd& X)
-{
-	lambda = X.tail(F.rows());
-	return TriangleMeshObjectiveFunction::update_variables(X.head(2 * V.rows()));
-}
-
-void LagrangianAreaStLscm::init_hessian()
-{
-	II.clear();
-	JJ.clear();
-	auto PushPair = [&](int i, int j) { if (i > j) swap(i, j); II.push_back(i); JJ.push_back(j); };
-	int n = V.rows();
-	for (int i = 0; i < F.rows(); ++i)
-		AddElementToHessian({ F(i, 0), F(i, 1), F(i, 2), F(i, 0) + n, F(i, 1) + n, F(i, 2) + n });
-	
-	for (int i = 0; i < F.rows(); ++i)
-	{
-		PushPair(i + 2 * n, F(i, 0));
-		PushPair(i + 2 * n, F(i, 1));
-		PushPair(i + 2 * n, F(i, 2));
-		PushPair(i + 2 * n, F(i, 0) + n);
-		PushPair(i + 2 * n, F(i, 1) + n);
-		PushPair(i + 2 * n, F(i, 2) + n);
-	}
-	//we add the indexes of the last element in order to tell the solver the size of the matrix
-	PushPair(2 * n + F.rows() - 1, 2 * n + F.rows() -1);
-	
-	SS = vector<double>(II.size(), 0.);
 }

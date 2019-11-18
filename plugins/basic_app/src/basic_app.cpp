@@ -780,7 +780,7 @@ void basic_app::Draw_menu_for_solver_settings() {
 				for (auto& obj : Outputs[i].totalObjective->objectiveList) {
 					ImGui::PushID(id++);
 					ImGui::DragFloat("w", &(obj->w), 0.05f, 0.0f, 100000.0f);
-					ImGui::DragFloat("augmented param.", &(obj->augmented_value_parameter), 0.05f, 0.0f, 100000.0f);
+					ImGui::DragFloat("augmented param.", &(obj)->augmented_value_parameter, 0.05f, 0.0f, 100000.0f);
 					ImGui::NextColumn();
 					ImGui::PopID();
 				}

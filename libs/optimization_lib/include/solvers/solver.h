@@ -23,9 +23,6 @@ public:
 	atomic_bool is_running = {false};
 	atomic_bool progressed = {false};
 
-	//// energy output from the last step
-	//double currentEnergy;
-
 	// Synchronization functions used by the wrapper
 	void wait_for_parameter_update_slot();
 	void release_parameter_update_slot();
