@@ -9,6 +9,7 @@
 #include <libs/optimization_lib/include/core/utils.h>
 #include <libs/optimization_lib/include/data_providers/mesh_wrapper.h>
 #include <libs/optimization_lib/include/data_providers/data_provider.h>
+#include <libs/optimization_lib/include/data_providers/empty_data_provider.h>
 #include <libs/optimization_lib/include/data_providers/plain_data_provider.h>
 #include <libs/optimization_lib/include/data_providers/coordinate_data_provider.h>
 #include <libs/optimization_lib/include/data_providers/edge_pair_data_provider.h>
@@ -20,6 +21,8 @@
 #include <libs/optimization_lib/include/objective_functions/coordinate_objective.h>
 #include <libs/optimization_lib/include/objective_functions/periodic_objective.h>
 #include <libs/optimization_lib/include/objective_functions/singularity/singular_point_objective.h>
+#include <libs/optimization_lib/include/objective_functions/singularity/singular_points_objective.h>
+#include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
 
 template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
 class FiniteDifferencesTest : public ::testing::Test
@@ -96,7 +99,7 @@ protected:
 
 	std::shared_ptr<ObjectiveFunction<StorageOrder_, VectorType_>> objective_function_;
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
-	std::shared_ptr<DataProvider> data_provider_;
+	std::vector<std::shared_ptr<DataProvider>> data_providers_;
 	Eigen::VectorXd x_;
 	std::string filename_;
 };
@@ -118,12 +121,12 @@ protected:
 	void CreateDataProvider() override
 	{
 		auto& edge_pair_descriptors = mesh_wrapper_->GetEdgePairDescriptors();
-		data_provider_ = std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptors[0]);
+		data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptors[0]));
 	}
 
 	void CreateObjectiveFunction() override
 	{
-		auto edge_pair_length_objective = std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<EdgePairDataProvider>(data_provider_));	
+		auto edge_pair_length_objective = std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<EdgePairDataProvider>(data_providers_[0]));	
 		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(edge_pair_length_objective, M_PI / 2, false);
 	}
 };
@@ -144,12 +147,12 @@ protected:
 
 	void CreateDataProvider() override
 	{
-		data_provider_ = std::make_shared<CoordinateDataProvider>(mesh_wrapper_, 1, CoordinateDataProvider::CoordinateType::Y);
+		data_providers_.push_back(std::make_shared<CoordinateDataProvider>(mesh_wrapper_, 1, CoordinateDataProvider::CoordinateType::Y));
 	}
 
 	void CreateObjectiveFunction() override
 	{
-		auto coordinate_objective = std::make_shared<CoordinateObjective<Eigen::StorageOptions::RowMajor>>(std::static_pointer_cast<CoordinateDataProvider>(data_provider_));
+		auto coordinate_objective = std::make_shared<CoordinateObjective<Eigen::StorageOptions::RowMajor>>(std::static_pointer_cast<CoordinateDataProvider>(data_providers_[0]));
 		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(coordinate_objective, 1, false);
 	}
 };
@@ -171,12 +174,102 @@ protected:
 	void CreateDataProvider() override
 	{
 		auto& edge_pair_descriptors = mesh_wrapper_->GetEdgePairDescriptors();
-		data_provider_ = std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptors[0]);
+		data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptors[0]));
 	}
 
 	void CreateObjectiveFunction() override
 	{
-		objective_function_ = std::make_shared<EdgePairLengthObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<EdgePairDataProvider>(data_provider_));
+		objective_function_ = std::make_shared<EdgePairLengthObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<EdgePairDataProvider>(data_providers_[0]));
+	}
+};
+
+class SingularPointObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>
+{
+protected:
+	SingularPointObjectiveFDTest() :
+		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
+	{
+
+	}
+
+	~SingularPointObjectiveFDTest() override
+	{
+
+	}
+
+	void CreateDataProvider() override
+	{
+		auto& face_fans = mesh_wrapper_->GetFaceFans();
+		data_providers_.push_back(std::make_shared<FaceFanDataProvider>(mesh_wrapper_, face_fans[1]));
+	}
+
+	void CreateObjectiveFunction() override
+	{
+		objective_function_ = std::make_shared<SingularPointObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<FaceFanDataProvider>(data_providers_[0]), 1, false);
+	}
+};
+
+class SingularPointsObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>
+{
+protected:
+	SingularPointsObjectiveFDTest() :
+		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
+	{
+
+	}
+
+	~SingularPointsObjectiveFDTest() override
+	{
+
+	}
+
+	void CreateDataProvider() override
+	{
+		data_providers_.push_back(std::make_shared<EmptyDataProvider>(mesh_wrapper_));
+		
+		auto& face_fans = mesh_wrapper_->GetFaceFans();	
+		data_providers_.push_back(std::make_shared<FaceFanDataProvider>(mesh_wrapper_, face_fans[1]));
+		data_providers_.push_back(std::make_shared<FaceFanDataProvider>(mesh_wrapper_, face_fans[2]));
+	}
+
+	void CreateObjectiveFunction() override
+	{
+		std::shared_ptr<SingularPointsObjective<Eigen::StorageOptions::RowMajor>> singular_points_objective = std::make_shared<SingularPointsObjective<Eigen::StorageOptions::RowMajor>>(std::static_pointer_cast<EmptyDataProvider>(data_providers_[0]), 1);
+		singular_points_objective->AddSingularPointObjective(std::static_pointer_cast<FaceFanDataProvider>(data_providers_[1]));
+		singular_points_objective->AddSingularPointObjective(std::static_pointer_cast<FaceFanDataProvider>(data_providers_[2]));
+		objective_function_ = singular_points_objective;
+	}
+};
+
+class SeamlessObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>
+{
+protected:
+	SeamlessObjectiveFDTest() :
+		FiniteDifferencesTest("../../../models/obj/three_triangles.obj")
+	{
+
+	}
+
+	~SeamlessObjectiveFDTest() override
+	{
+
+	}
+
+	void CreateDataProvider() override
+	{
+		data_providers_.push_back(std::make_shared<EmptyDataProvider>(mesh_wrapper_));
+
+		auto& edge_pair_descriptors = mesh_wrapper_->GetEdgePairDescriptors();
+		data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptors[0]));
+		data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptors[1]));
+	}
+
+	void CreateObjectiveFunction() override
+	{
+		auto seamless_objective = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(std::static_pointer_cast<EmptyDataProvider>(data_providers_[0]), false);
+		seamless_objective->AddEdgePairObjectives(std::static_pointer_cast<EdgePairDataProvider>(data_providers_[1]));
+		seamless_objective->AddEdgePairObjectives(std::static_pointer_cast<EdgePairDataProvider>(data_providers_[2]));
+		objective_function_ = seamless_objective;
 	}
 };
 
@@ -210,35 +303,32 @@ TEST_F(EdgePairLengthObjectiveFDTest, Hessian)
 	AssertHessian(true);
 }
 
-//class SeamlessObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>
-//{
-//protected:
-//	SeamlessObjectiveFDTest() :
-//		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
-//	{
-//
-//	}
-//
-//	~SeamlessObjectiveFDTest() override
-//	{
-//
-//	}
-//
-//	void CreateObjectiveFunction() override
-//	{
-//		auto corresponding_edge_pairs = mesh_wrapper_->GetEdgePairDescriptors();
-//		auto seamless_objective = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, false);
-//		//seamless_objective->AddCorrespondingEdgePairs(corresponding_edge_pairs);
-//		objective_function_ = seamless_objective;
-//	}
-//};
-//
-//TEST_F(SeamlessObjectiveFDTest, Gradient)
-//{
-//	AssertGradient();
-//}
-//
-//TEST_F(SeamlessObjectiveFDTest, Hessian)
-//{
-//	AssertHessian(true);
-//}
+TEST_F(SingularPointObjectiveFDTest, Gradient)
+{
+	AssertGradient();
+}
+
+TEST_F(SingularPointObjectiveFDTest, Hessian)
+{
+	AssertHessian(true);
+}
+
+TEST_F(SingularPointsObjectiveFDTest, Gradient)
+{
+	AssertGradient();
+}
+
+TEST_F(SingularPointsObjectiveFDTest, Hessian)
+{
+	AssertHessian(true);
+}
+
+TEST_F(SeamlessObjectiveFDTest, Gradient)
+{
+	AssertGradient();
+}
+
+TEST_F(SeamlessObjectiveFDTest, Hessian)
+{
+	AssertHessian(true);
+}

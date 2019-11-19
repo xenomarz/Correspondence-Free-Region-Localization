@@ -7,6 +7,7 @@ file(GLOB SOURCES
 	src/data_providers/mesh_wrapper.cpp
 	src/data_providers/mesh_data_provider.cpp
 	src/data_providers/data_provider.cpp
+	src/data_providers/empty_data_provider.cpp
 	src/data_providers/coordinate_data_provider.cpp
 	src/data_providers/plain_data_provider.cpp
 	src/data_providers/edge_pair_data_provider.cpp
@@ -41,8 +42,9 @@ file(GLOB SOURCES
 	include/core/updatable_object.h
 	include/data_providers/mesh_wrapper.h
 	include/data_providers/mesh_data_provider.h
-	include/data_providers/coordinate_data_provider.h
 	include/data_providers/data_provider.h
+	include/data_providers/empty_data_provider.h
+	include/data_providers/coordinate_data_provider.h
 	include/data_providers/plain_data_provider.h
 	include/data_providers/edge_pair_data_provider.h
 	include/data_providers/face_fan_data_provider.h

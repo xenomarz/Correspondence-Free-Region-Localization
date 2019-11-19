@@ -524,6 +524,7 @@ void MeshWrapper::Initialize()
 	ComputeCorrespondingVertexPairsEdgeLength();
 
 	ComputeVertexNeighbours();
+	ComputeFaceFans();
 
 	ComputeSurfaceGradientPerFace(v_dom_, f_dom_, d1_, d2_);
 }

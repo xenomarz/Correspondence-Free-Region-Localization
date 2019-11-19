@@ -73,6 +73,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "delta", static_cast<uint32_t>(Separation<Eigen::StorageOptions::RowMajor>::Properties::Delta) });
 	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
 
+	empty_data_provider_ = std::make_shared<EmptyDataProvider>(mesh_wrapper_);
 	plain_data_provider_ = std::make_shared<PlainDataProvider>(mesh_wrapper_);
 	for(auto& edge_pair_descriptor : mesh_wrapper_->GetEdgePairDescriptors())
 	{
@@ -87,16 +88,16 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	// TODO: Expose interface for addition and removal of objective function
 	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(plain_data_provider_);
 	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(plain_data_provider_);
-	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>();
-	singular_points_ = std::make_shared<SingularPointsObjective<Eigen::StorageOptions::RowMajor>>(1);
-  	position_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(std::string("Position"));
+	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(empty_data_provider_);
+	singular_points_ = std::make_shared<SingularPointsObjective<Eigen::StorageOptions::RowMajor>>(empty_data_provider_, 1);
+  	position_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(empty_data_provider_, std::string("Position"));
 	std::vector<std::shared_ptr<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> objective_functions;
 	objective_functions.push_back(position_);
 	objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
 	objective_functions.push_back(seamless_);
 	objective_functions.push_back(singular_points_);
-	summation_objective_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(objective_functions, false, true);
+	summation_objective_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(empty_data_provider_, objective_functions, false, true);
 	mesh_wrapper_->RegisterModelLoadedCallback([&]() {
 		/**
 		 * Initialize objective functions

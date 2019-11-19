@@ -9,6 +9,7 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
+#include "../../data_providers/empty_data_provider.h"
 #include "../summation_objective.h"
 #include "./singular_point_objective.h"
 
@@ -28,14 +29,14 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SingularPointsObjective(const std::string& name, double interval) :
-		SummationObjective(name, false, false)
+	SingularPointsObjective(const std::shared_ptr<EmptyDataProvider>& empty_data_provider, const std::string& name, double interval) :
+		SummationObjective(empty_data_provider, name, false, false)
 	{
 
 	}
 
-	SingularPointsObjective(double interval) :
-		SingularPointsObjective("Singular Points", interval)
+	SingularPointsObjective(const std::shared_ptr<EmptyDataProvider>& empty_data_provider, double interval) :
+		SingularPointsObjective(empty_data_provider, "Singular Points", interval)
 	{
 
 	}

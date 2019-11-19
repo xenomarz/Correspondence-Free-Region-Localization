@@ -16,20 +16,6 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SummationObjective(const bool enforce_psd = false, const bool parallel_update = false) :
-		DenseObjectiveFunction(nullptr, "Summation Objective", 0, enforce_psd),
-		parallel_update_(parallel_update)
-	{
-		this->Initialize();
-	}
-
-	SummationObjective(const std::string& name, const bool enforce_psd = false, const bool parallel_update = false) :
-		DenseObjectiveFunction(nullptr, name, 0, enforce_psd),
-		parallel_update_(parallel_update)
-	{
-		this->Initialize();
-	}
-
 	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const bool enforce_psd = false, const bool parallel_update = false) :
 		DenseObjectiveFunction(data_provider, "Summation Objective", 0, enforce_psd),
 		parallel_update_(parallel_update)
@@ -44,34 +30,10 @@ public:
 		this->Initialize();
 	}
 
-	SummationObjective(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool enforce_psd = false, const bool parallel_update = false) :
-		SummationObjective(name, enforce_psd, parallel_update)
-	{
-		AddObjectiveFunctions(objective_functions);
-	}
-
 	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool enforce_psd = false, const bool parallel_update = false) :
 		SummationObjective(data_provider, name, enforce_psd, parallel_update)
 	{
 		AddObjectiveFunctions(objective_functions);
-	}
-
-	SummationObjective(const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, const bool enforce_psd = false, const bool parallel_update = false) :
-		SummationObjective(std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, enforce_psd, parallel_update)
-	{
-
-	}
-
-	SummationObjective(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const bool enforce_psd = false, const bool parallel_update = false) :
-		SummationObjective(objective_functions, "Summation Objective", enforce_psd, parallel_update)
-	{
-
-	}
-
-	SummationObjective(const std::shared_ptr<ObjectiveFunctionType_> objective_function, const bool enforce_psd = false, const bool parallel_update = false) :
-		SummationObjective(objective_function, "Summation Objective", enforce_psd, parallel_update)
-	{
-
 	}
 
 	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, const bool enforce_psd = false, const bool parallel_update = false) :
@@ -149,12 +111,32 @@ public:
 	std::uint32_t GetObjectiveFunctionsCount() const
 	{
 		std::lock_guard<std::mutex> lock(m_);
-		return objective_functions_.size();
+		return GetObjectiveFunctionsCountInternal();
 	}
 
 	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(std::uint32_t index) const
 	{
 		std::lock_guard<std::mutex> lock(m_);
+		return GetObjectiveFunctionInternal(index);
+	}
+
+	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(const std::string& name) const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return GetObjectiveFunctionInternal(name);
+	}
+
+protected:
+	/**
+	 * Protected getters
+	 */
+	std::uint32_t GetObjectiveFunctionsCountInternal() const
+	{
+		return objective_functions_.size();
+	}
+
+	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunctionInternal(std::uint32_t index) const
+	{
 		if (index < objective_functions_.size())
 		{
 			return objective_functions_.at(index);
@@ -163,9 +145,8 @@ public:
 		return nullptr;
 	}
 
-	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(const std::string& name) const
+	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunctionInternal(const std::string& name) const
 	{
-		std::lock_guard<std::mutex> lock(m_);
 		for (auto& objective_function : objective_functions_)
 		{
 			if (!objective_function->GetName().compare(name))
@@ -176,8 +157,7 @@ public:
 
 		return nullptr;
 	}
-
-protected:
+	
 	/**
 	 * Protected overrides
 	 */

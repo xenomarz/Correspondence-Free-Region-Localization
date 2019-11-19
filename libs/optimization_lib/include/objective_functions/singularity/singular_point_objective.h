@@ -143,10 +143,10 @@ private:
 	void PreUpdate(const Eigen::VectorXd& x) override
 	{
 		double weight = abs(GetFaceFanDataProvider()->GetAngle() - 2 * M_PI);
-		auto objective_functions_count = this->GetObjectiveFunctionsCount();
+		auto objective_functions_count = this->GetObjectiveFunctionsCountInternal();
 		for(std::size_t i = 0; i < objective_functions_count; i++)
 		{
-			this->GetObjectiveFunction(i)->SetWeight(weight);
+			this->GetObjectiveFunctionInternal(i)->SetWeight(weight);
 		}
 	}
 

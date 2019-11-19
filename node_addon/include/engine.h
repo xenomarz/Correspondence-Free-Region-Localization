@@ -17,6 +17,7 @@
 #include <libs/optimization_lib/include/core/core.h>
 #include <libs/optimization_lib/include/core/utils.h>
 #include <libs/optimization_lib/include/data_providers/mesh_wrapper.h>
+#include <libs/optimization_lib/include/data_providers/empty_data_provider.h>
 #include <libs/optimization_lib/include/data_providers/plain_data_provider.h>
 #include <libs/optimization_lib/include/data_providers/edge_pair_data_provider.h>
 #include <libs/optimization_lib/include/objective_functions/summation_objective.h>
@@ -236,6 +237,7 @@ private:
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
 	
 	std::shared_ptr<PlainDataProvider> plain_data_provider_;
+	std::shared_ptr<EmptyDataProvider> empty_data_provider_;
 	std::vector<std::shared_ptr<EdgePairDataProvider>> edge_pair_data_providers_;
 	std::vector<std::shared_ptr<FaceFanDataProvider>> face_fan_data_providers_;
 	

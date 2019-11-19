@@ -13,6 +13,7 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
+#include "../data_providers/empty_data_provider.h"
 #include "../data_providers/edge_pair_data_provider.h"
 #include "./summation_objective.h"
 #include "./edge_pair/edge_pair_objective.h"
@@ -27,14 +28,14 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SeamlessObjective(const std::string& name, const bool enforce_psd = true) :
-		SummationObjective(name, enforce_psd, false)
+	SeamlessObjective(const std::shared_ptr<EmptyDataProvider>& empty_data_provider, const std::string& name, const bool enforce_psd = true) :
+		SummationObjective(empty_data_provider, name, enforce_psd, false)
 	{
 
 	}
 
-	SeamlessObjective(const bool enforce_psd = true) :
-		SeamlessObjective("Seamless", enforce_psd)
+	SeamlessObjective(const std::shared_ptr<EmptyDataProvider>& empty_data_provider, const bool enforce_psd = true) :
+		SeamlessObjective(empty_data_provider, "Seamless", enforce_psd)
 	{
 
 	}
