@@ -864,7 +864,15 @@ void basic_app::Draw_menu_for_text_results() {
 			ImGui::TextColored(c, (std::string(out.totalObjective->name) + std::string(" gradient ") + std::to_string(out.totalObjective->gradient_norm)).c_str());
 			for (auto& obj : out.totalObjective->objectiveList) {
 				ImGui::TextColored(c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
+				if (out.solver->IsConstrObjFunc) {
+					ImGui::TextColored(c, (std::string(obj->name) + std::string(" objective_value ") + std::to_string(obj->objective_value)).c_str());
+					ImGui::TextColored(c, (std::string(obj->name) + std::string(" constraint_value ") + std::to_string(obj->constraint_value)).c_str());
+				}
 				ImGui::TextColored(c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
+				if (out.solver->IsConstrObjFunc) {
+					ImGui::TextColored(c, (std::string(obj->name) + std::string(" objective_gradient ") + std::to_string(obj->objective_gradient_norm)).c_str());
+					ImGui::TextColored(c, (std::string(obj->name) + std::string(" constraint_gradient ") + std::to_string(obj->constraint_gradient_norm)).c_str());
+				}
 			}
 			ImGui::End();
 			ImGui::PopStyleColor();

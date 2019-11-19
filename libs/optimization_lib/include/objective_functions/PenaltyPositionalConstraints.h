@@ -12,6 +12,7 @@ public:
 	virtual double value(const bool update = true) override;
 	virtual void gradient(Eigen::VectorXd& g) override;
 	virtual void hessian() override;
+	virtual double AugmentedValue() override;
 
 	vector<int> ConstrainedVerticesInd;
 	MatrixX2d ConstrainedVerticesPos;

@@ -17,6 +17,8 @@ double LagrangianLscmStArea::value(bool update)
 	if (update) {
 		Efi = E;
 		energy_value = value;
+		objective_value = (Area.asDiagonal() * LSCM).sum();
+		constraint_value = (Area.asDiagonal() * areaE).sum();
 	}
 	
 	return value;
@@ -29,7 +31,7 @@ double LagrangianLscmStArea::AugmentedValue()
 	//I am not sure of multiplying areaE by Area!!!
 	double augmented_part = (Area.asDiagonal() * areaE.cwiseAbs2()).sum();
 	
-	return value(false) + augmented_value_parameter * augmented_part;
+	return value(true) + augmented_value_parameter * augmented_part;
 }
 
 void LagrangianLscmStArea::gradient(VectorXd& g)
@@ -60,6 +62,8 @@ void LagrangianLscmStArea::gradient(VectorXd& g)
 		g(fi + 2 * V.rows()) += Area(fi)*(detJ(fi) - 1);
 	}
 	gradient_norm = g.norm();
+	objective_gradient_norm = g.head(2 * V.rows()).norm();
+	constraint_gradient_norm = g.tail(F.rows()).norm();
 }
 
 void LagrangianLscmStArea::hessian()

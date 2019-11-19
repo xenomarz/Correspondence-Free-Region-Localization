@@ -36,6 +36,10 @@ double PenaltyPositionalConstraints::value(bool update)
 	return E;
 }
 
+double PenaltyPositionalConstraints::AugmentedValue() {
+	return value(false);
+}
+
 void PenaltyPositionalConstraints::gradient(VectorXd& g)
 {
 	if (IsConstrObjFunc) {

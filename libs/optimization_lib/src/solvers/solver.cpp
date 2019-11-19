@@ -50,7 +50,7 @@ int solver::run()
 void solver::linesearch()
 {
 	double step_size;
-	if (/*FlipAvoidingLineSearch*/false)
+	if (FlipAvoidingLineSearch)
 	{
 		double min_step_to_singularity;
 		if (IsConstrObjFunc) {
