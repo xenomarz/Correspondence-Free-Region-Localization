@@ -29,13 +29,13 @@ public:
 	 * Constructors and destructor
 	 */
 	SingularPointsObjective(const std::string& name, double interval) :
-		SummationObjective(name, true)
+		SummationObjective(name, false, false)
 	{
 
 	}
 
 	SingularPointsObjective(double interval) :
-		SummationObjective("Singular Points")
+		SingularPointsObjective("Singular Points", interval)
 	{
 
 	}
@@ -99,6 +99,14 @@ public:
 		}
 
 		return false;
+	}
+
+	/**
+	 * Public methods
+	 */
+	void AddSingularPointObjective(const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider)
+	{
+		this->AddObjectiveFunction(std::make_shared<SingularPointObjective<StorageOrder_>>(face_fan_data_provider, interval_));
 	}
 
 private:

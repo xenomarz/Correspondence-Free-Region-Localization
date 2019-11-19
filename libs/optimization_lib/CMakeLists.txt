@@ -10,7 +10,7 @@ file(GLOB SOURCES
 	src/data_providers/coordinate_data_provider.cpp
 	src/data_providers/plain_data_provider.cpp
 	src/data_providers/edge_pair_data_provider.cpp
-	src/data_providers/adjacent_faces_data_provider.cpp
+	src/data_providers/face_fan_data_provider.cpp
 	src/objective_functions/objective_function.cpp
 	src/objective_functions/dense_objective_function.cpp
 	src/objective_functions/sparse_objective_function.cpp
@@ -45,7 +45,7 @@ file(GLOB SOURCES
 	include/data_providers/data_provider.h
 	include/data_providers/plain_data_provider.h
 	include/data_providers/edge_pair_data_provider.h
-	include/data_providers/adjacent_faces_data_provider.h
+	include/data_providers/face_fan_data_provider.h
 	include/objective_functions/objective_function.h
 	include/objective_functions/sparse_objective_function.h
 	include/objective_functions/dense_objective_function.h

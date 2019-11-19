@@ -44,7 +44,7 @@ export class AutoquadsMeshProvider extends MeshProvider {
 
     getBufferedUvs() {
         let bufferedUvs = this._engine.getImageBufferedUvs();
-        let interval = this._engine.getObjectiveFunctionProperty("Singularity", "interval");
+        let interval = this._engine.getObjectiveFunctionProperty("Singular Points", "interval");
         for(let i = 0; i < bufferedUvs.length; i++)
         {
             bufferedUvs[i] = bufferedUvs[i] / interval;

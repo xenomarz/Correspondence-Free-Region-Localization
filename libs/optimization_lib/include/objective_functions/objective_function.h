@@ -146,6 +146,11 @@ public:
 		return name_;
 	}
 
+	bool GetEnforcePsd() const
+	{
+		return enforce_psd_;
+	}
+
 	std::shared_ptr<DataProvider> GetDataProvider() const
 	{
 		std::lock_guard<std::mutex> lock(m_);
@@ -212,6 +217,12 @@ public:
 		std::lock_guard<std::mutex> lock(m_);
 		w_ = w;
 	}
+
+	void SetEnforcePsd(const bool enforce_psd)
+	{
+		enforce_psd_ = enforce_psd;
+	}
+
 
 	// Generic property setter
 	virtual bool SetProperty(const int32_t property_id, const std::any& property_value)

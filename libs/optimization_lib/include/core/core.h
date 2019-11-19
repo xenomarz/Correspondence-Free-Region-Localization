@@ -31,8 +31,9 @@ namespace RDS
 	using HessianTripletIndex = std::int64_t;
 	using PartialDerivativeIndex = std::int64_t;
 	using HessianEntry = std::pair<DenseVariableIndex, DenseVariableIndex>;
-	using AdjacentFaceVertices = std::pair<VertexIndex, std::pair<VertexIndex, VertexIndex>>;
-	using AdjacentFacesVertices = std::vector<AdjacentFaceVertices>;
+	using FaceFanSlice = std::pair<VertexIndex, std::pair<VertexIndex, VertexIndex>>;
+	using FaceFan = std::vector<FaceFanSlice>;
+	using FaceFans = std::vector<FaceFan>;
 	
 	/**
 	 * Custom hash and equals function objects for unordered_map

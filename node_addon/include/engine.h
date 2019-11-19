@@ -234,14 +234,18 @@ private:
 	 */
 	std::unordered_map<Eigen::VectorXi, std::shared_ptr<PositionObjective<Eigen::StorageOptions::RowMajor>>, RDS::VectorHash, RDS::VectorEquals> indices_2_position_objective_map;
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
+	
 	std::shared_ptr<PlainDataProvider> plain_data_provider_;
 	std::vector<std::shared_ptr<EdgePairDataProvider>> edge_pair_data_providers_;
+	std::vector<std::shared_ptr<FaceFanDataProvider>> face_fan_data_providers_;
+	
 	std::shared_ptr<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> summation_objective_;
 	std::shared_ptr<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> position_;
 	std::shared_ptr<Separation<Eigen::StorageOptions::RowMajor>> separation_;
 	std::shared_ptr<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>> symmetric_dirichlet_;
 	std::shared_ptr<SeamlessObjective<Eigen::StorageOptions::RowMajor>> seamless_;
 	std::shared_ptr<SingularPointsObjective<Eigen::StorageOptions::RowMajor>> singular_points_;
+	
 	std::unique_ptr<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>> newton_method_;
 	std::vector<Eigen::DenseIndex> constrained_faces_indices;
 	Eigen::MatrixX2d image_vertices_;

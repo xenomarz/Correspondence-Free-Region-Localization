@@ -12,7 +12,7 @@
 #include <libs/optimization_lib/include/data_providers/plain_data_provider.h>
 #include <libs/optimization_lib/include/data_providers/coordinate_data_provider.h>
 #include <libs/optimization_lib/include/data_providers/edge_pair_data_provider.h>
-#include <libs/optimization_lib/include/data_providers/adjacent_faces_data_provider.h>
+#include <libs/optimization_lib/include/data_providers/face_fan_data_provider.h>
 #include <libs/optimization_lib/include/objective_functions/objective_function.h>
 #include <libs/optimization_lib/include/objective_functions/composite_objective.h>
 #include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h>
@@ -124,7 +124,7 @@ protected:
 	void CreateObjectiveFunction() override
 	{
 		auto edge_pair_length_objective = std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<EdgePairDataProvider>(data_provider_));	
-		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(false, edge_pair_length_objective, M_PI / 2);
+		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(edge_pair_length_objective, M_PI / 2, false);
 	}
 };
 
@@ -150,7 +150,7 @@ protected:
 	void CreateObjectiveFunction() override
 	{
 		auto coordinate_objective = std::make_shared<CoordinateObjective<Eigen::StorageOptions::RowMajor>>(std::static_pointer_cast<CoordinateDataProvider>(data_provider_));
-		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(false, coordinate_objective, 1);
+		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(coordinate_objective, 1, false);
 	}
 };
 

@@ -449,21 +449,22 @@ void MeshWrapper::ComputeVertexNeighbours()
 	}
 }
 
-void MeshWrapper::ComputeAdjacentFacesVertices()
+void MeshWrapper::ComputeFaceFans()
 {
-	//for(int64_t i = 0; i < this->GetDomainVerticesCount(); i++)
-	//{
-	//	std::vector<SingularityObjective<Eigen::StorageOptions::RowMajor>::SingularCorner> singular_corners;
-	//	auto& image_indices = v_dom_2_v_im_.at(i);
-	//	for(int64_t corner_index = 0; corner_index < image_indices.size(); corner_index++)
-	//	{
-	//		auto image_index = image_indices[corner_index];
-	//		auto& neighbours = mesh_wrapper_->GetImageNeighbours().at(image_index);
-	//		singular_corners.push_back(std::make_pair(image_index, neighbours));
-	//	}
+	for(int64_t i = 0; i < this->GetDomainVerticesCount(); i++)
+	{
+		RDS::FaceFan face_fan;
+		auto& image_indices = v_dom_2_v_im_.at(i);
+		for(int64_t corner_index = 0; corner_index < image_indices.size(); corner_index++)
+		{
+			auto image_index = image_indices[corner_index];
+			auto& neighbours = GetImageNeighbours().at(image_index);
+			RDS::FaceFanSlice face_fan_slice = std::make_pair(image_index, std::make_pair(neighbours[0], neighbours[1]));
+			face_fan.push_back(face_fan_slice);
+		}
 
-	//	singularity_->AddSingularCorners(singular_corners);
-	//}
+		face_fans_.push_back(face_fan);
+	}
 }
 
 int64_t MeshWrapper::GetImageVerticesCount() const
@@ -535,4 +536,9 @@ void MeshWrapper::RegisterModelLoadedCallback(const std::function<ModelLoadedCal
 const RDS::EdgePairDescriptors& MeshWrapper::GetEdgePairDescriptors() const
 {
 	return edge_pair_descriptors_;
+}
+
+const RDS::FaceFans& MeshWrapper::GetFaceFans() const
+{
+	return face_fans_;
 }

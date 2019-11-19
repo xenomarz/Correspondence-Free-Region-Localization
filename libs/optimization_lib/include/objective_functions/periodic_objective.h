@@ -25,15 +25,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	PeriodicObjective(const std::string& name, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period) :
+	PeriodicObjective(const std::string& name, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period, const bool enforce_psd = false) :
 		CompositeObjective(name, enforce_psd, inner_objective)
 	{
 		SetPeriod(period);
 		this->Initialize();
 	}
 	
-	PeriodicObjective(const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period) :
-		PeriodicObjective("Periodic Objective", enforce_psd, inner_objective, period)
+	PeriodicObjective(const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period, const bool enforce_psd = false) :
+		PeriodicObjective("Periodic Objective", inner_objective, period, enforce_psd)
 	{
 
 	}

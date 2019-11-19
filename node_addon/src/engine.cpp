@@ -78,6 +78,11 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	{
 		edge_pair_data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptor));
 	}
+
+	for (auto& face_fan : mesh_wrapper_->GetFaceFans())
+	{
+		face_fan_data_providers_.push_back(std::make_shared<FaceFanDataProvider>(mesh_wrapper_, face_fan));
+	}
 	
 	// TODO: Expose interface for addition and removal of objective function
 	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(plain_data_provider_);
@@ -91,7 +96,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	objective_functions.push_back(symmetric_dirichlet_);
 	objective_functions.push_back(seamless_);
 	objective_functions.push_back(singular_points_);
-	summation_objective_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(objective_functions);
+	summation_objective_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(objective_functions, false, true);
 	mesh_wrapper_->RegisterModelLoadedCallback([&]() {
 		/**
 		 * Initialize objective functions
@@ -100,11 +105,15 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 
 		for (auto& edge_pair_data_provider : edge_pair_data_providers_)
 		{
-			seamless_->AddObjectiveFunction(std::make_shared<EdgePairAngleObjective<Eigen::StorageOptions::RowMajor>>(edge_pair_data_provider));
-			seamless_->AddObjectiveFunction(std::make_shared<EdgePairLengthObjective<Eigen::StorageOptions::RowMajor>>(edge_pair_data_provider));
+			seamless_->AddEdgePairObjectives(edge_pair_data_provider);
 		}
 
-		auto& dom_v_2_im_v_map = mesh_wrapper_->GetDomainVerticesToImageVerticesMap();
+		for (auto& face_fan_data_provider : face_fan_data_providers_)
+		{
+			singular_points_->AddSingularPointObjective(face_fan_data_provider);
+		}
+
+		//auto& dom_v_2_im_v_map = mesh_wrapper_->GetDomainVerticesToImageVerticesMap();
 		//for(int64_t i = 0; i < mesh_wrapper_->GetDomainVerticesCount(); i++)
 		//{
 		//	std::vector<SingularityObjective<Eigen::StorageOptions::RowMajor>::SingularCorner> singular_corners;

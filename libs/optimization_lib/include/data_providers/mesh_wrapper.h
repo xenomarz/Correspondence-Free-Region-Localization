@@ -76,6 +76,7 @@ public:
 	int64_t GetImageVerticesCount() const override;
 	int64_t GetDomainVerticesCount() const override;
 	const RDS::EdgePairDescriptors& GetEdgePairDescriptors() const;
+	const RDS::FaceFans& GetFaceFans() const;
 
 	/**
 	 * Public methods
@@ -152,7 +153,7 @@ private:
 	void ComputeVertexNeighbours();
 
 	// Compute adjacent faces vertices
-	void ComputeAdjacentFacesVertices();
+	void ComputeFaceFans();
 
 	/**
 	 * Private methods
@@ -187,8 +188,8 @@ private:
 	// Image neighbour vertices
 	VI2VIsMap v_im_2_neighbours;
 
-	// AdjacentFacesVertices
-	RDS::AdjacentFacesVertices adjacent_faces_vertices_;
+	// Face fans
+	RDS::FaceFans face_fans_;
 
 	// Maps
 	ED2EIMap ed_im_2_ei_im_;

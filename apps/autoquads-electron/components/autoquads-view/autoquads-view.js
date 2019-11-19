@@ -392,14 +392,14 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._singularityWeight;
             this._singularityWeight = value;
-            this._engine.setObjectiveFunctionProperty('Singularity', 'weight', value / 2);
+            this._engine.setObjectiveFunctionProperty('Singular Points', 'weight', value / 2);
             this.requestUpdate('singularityWeight', oldValue);
         }
     }
 
     get singularityWeight() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Singularity', 'weight');
+            return this._engine.getObjectiveFunctionProperty('Singular Points', 'weight');
         }
     }
 
@@ -407,14 +407,14 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._singularityInterval;
             this._singularityInterval = value;
-            this._engine.setObjectiveFunctionProperty('Singularity', 'interval', value);
+            this._engine.setObjectiveFunctionProperty('Singular Points', 'interval', value);
             this.requestUpdate('singularityInterval', oldValue);
         }
     }
 
     get singularityInterval() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Singularity', 'interval');
+            return this._engine.getObjectiveFunctionProperty('Singular Points', 'interval');
         }
     }
 
