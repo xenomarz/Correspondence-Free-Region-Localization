@@ -86,7 +86,7 @@ private:
 		}
 	}
 	
-	void PreUpdate(const Eigen::VectorXd& x) override
+	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
 	{
 		X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
 	}

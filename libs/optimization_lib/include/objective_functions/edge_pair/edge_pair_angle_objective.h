@@ -28,7 +28,7 @@ protected:
 	/**
 	 * Protected overrides
 	 */
-	void PreUpdate(const Eigen::VectorXd& x) override
+	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
 	{
 		auto& edge_pair_data_provider = this->GetEdgePairDataProvider();
 

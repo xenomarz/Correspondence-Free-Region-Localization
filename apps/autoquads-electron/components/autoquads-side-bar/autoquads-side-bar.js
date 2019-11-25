@@ -74,8 +74,14 @@ export class AutoquadsSideBar extends SideBar {
                     ?checked=${HelpersExports.isVisible(this._wireframeVisibility)}
                     @change="${this._wireframeVisibilityInputChanged}"
                     checked>
-                    <span>Show Wireframe</span>
-                </vaadin-checkbox>   
+                    <span>Show Model Wireframe</span>
+                </vaadin-checkbox>
+                <vaadin-checkbox
+                    ?checked=${HelpersExports.isVisible(this._wireframeVisibility)}
+                    @change="${this._wireframeVisibilityInputChanged}"
+                    checked>
+                    <span>Show Soup Wireframe</span>
+                </vaadin-checkbox>                   
             </side-bar-collapsable-section>
             <side-bar-collapsable-section
                 caption="Numeric Properties">

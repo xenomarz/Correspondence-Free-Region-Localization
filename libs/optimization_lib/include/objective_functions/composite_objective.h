@@ -38,7 +38,7 @@ protected:
 	/**
 	 * Protected overrides
 	 */
-	void PreUpdate(const Eigen::VectorXd& x) override
+	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
 	{
 		inner_objective_->Update(x);
 		CalculateDerivativesOuter(inner_objective_->GetValue(), outer_value_, outer_first_derivative_, outer_second_derivative_);

@@ -277,7 +277,7 @@ public:
 				data_provider_->Update(x, updated_objects);
 			}
 			
-			PreUpdate(x);
+			PreUpdate(x, updated_objects);
 
 			if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
 			{
@@ -411,7 +411,7 @@ protected:
 		// Empty implementation
 	}
 
-	virtual void PreUpdate(const Eigen::VectorXd& x)
+	virtual void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects)
 	{
 		// Empty implementation
 	}

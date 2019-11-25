@@ -168,6 +168,15 @@ protected:
 			objective_function->Initialize();
 		}
 	}
+
+	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
+	{
+		#pragma omp parallel for if(parallel_update_)
+		for (int32_t i = 0; i < objective_functions_.size(); i++)
+		{
+			objective_functions_[i]->Update(x, updated_objects);
+		}
+	}
 	
 private:
 

@@ -23,6 +23,7 @@
 #include <libs/optimization_lib/include/objective_functions/singularity/singular_point_objective.h>
 #include <libs/optimization_lib/include/objective_functions/singularity/singular_points_objective.h>
 #include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
+#include <libs/optimization_lib/include/objective_functions/separation_objective.h>
 
 template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
 class FiniteDifferencesTest : public ::testing::Test
@@ -273,6 +274,32 @@ protected:
 	}
 };
 
+class SeparationObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>
+{
+protected:
+	SeparationObjectiveFDTest() :
+		FiniteDifferencesTest("../../../models/obj/three_triangles.obj")
+	{
+
+	}
+
+	~SeparationObjectiveFDTest() override
+	{
+
+	}
+
+	void CreateDataProvider() override
+	{
+		data_providers_.push_back(std::make_shared<PlainDataProvider>(mesh_wrapper_));
+	}
+
+	void CreateObjectiveFunction() override
+	{
+		const auto separation_objective = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(std::static_pointer_cast<PlainDataProvider>(data_providers_[0]));
+		objective_function_ = separation_objective;
+	}
+};
+
 TEST_F(PeriodicEdgePairAngleObjectiveFDTest, Gradient)
 {
 	AssertGradient();
@@ -329,6 +356,16 @@ TEST_F(SeamlessObjectiveFDTest, Gradient)
 }
 
 TEST_F(SeamlessObjectiveFDTest, Hessian)
+{
+	AssertHessian(true);
+}
+
+TEST_F(SeparationObjectiveFDTest, Gradient)
+{
+	AssertGradient();
+}
+
+TEST_F(SeparationObjectiveFDTest, Hessian)
 {
 	AssertHessian(true);
 }

@@ -54,7 +54,7 @@ const INITIAL_STATE = {
     positionWeight: 100,
     gridHorizontalColor: 'rgb(0,0,0)',
     gridVerticalColor: 'rgb(0,0,0)',
-    gridBackgroundColor1: 'rgb(200,200,0)',
+    gridBackgroundColor1: 'rgb(0,0,200)',
     gridBackgroundColor2: 'rgb(200,200,0)',
     highlightedFaceColor: 'rgb(0,255,0)',
     draggedFaceColor: 'rgb(0,0,255)',

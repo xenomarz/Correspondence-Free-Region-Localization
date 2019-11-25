@@ -101,7 +101,7 @@ private:
 		}		
 	}
 
-	void PreUpdate(const Eigen::VectorXd& x)
+	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects)
 	{
 		auto X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
 		Utils::CalculateBarycenter(indices_, X, current_barycenter_);
