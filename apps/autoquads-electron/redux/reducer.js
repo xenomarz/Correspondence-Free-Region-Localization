@@ -4,7 +4,8 @@ import {
     CHANGE_SOUP_VIEWPORT_COLOR,
     CHANGE_MODEL_COLOR,
     CHANGE_SOUP_COLOR,
-    CHANGE_WIREFRAME_VISIBILITY,
+    CHANGE_MODEL_WIREFRAME_VISIBILITY,
+    CHANGE_SOUP_WIREFRAME_VISIBILITY, 
     CHANGE_MODEL_VIEW_VISIBILITY,
     CHANGE_SOUP_VIEW_VISIBILITY,
     CHANGE_DELTA,
@@ -43,7 +44,8 @@ const INITIAL_STATE = {
     soupViewportColor: 'rgb(200,200,200)',
     modelColor: 'rgb(255, 255, 255)',
     soupColor: 'rgb(255, 255, 255)',
-    wireframeVisibility: EnumsExports.Visibility.VISIBLE,
+    modelWireframeVisibility: EnumsExports.Visibility.VISIBLE,
+    soupWireframeVisibility: EnumsExports.Visibility.VISIBLE, 
     modelViewVisibility: EnumsExports.Visibility.VISIBLE,
     soupViewVisibility: EnumsExports.Visibility.VISIBLE,
     delta: 0.5,
@@ -135,10 +137,15 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 soupColor: action.color
             };
-        case CHANGE_WIREFRAME_VISIBILITY:
+        case CHANGE_MODEL_WIREFRAME_VISIBILITY:
             return {
                 ...state,
-                wireframeVisibility: action.visibility
+                modelWireframeVisibility: action.visibility
+            };
+        case CHANGE_SOUP_WIREFRAME_VISIBILITY:
+            return {
+                ...state,
+                soupWireframeVisibility: action.visibility
             };
         case CHANGE_MODEL_VIEW_VISIBILITY:
             return {

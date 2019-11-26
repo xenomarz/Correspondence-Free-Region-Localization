@@ -94,25 +94,27 @@ export class MeshView extends LitElement {
                         <span>${this.caption}</span>
                     </div>
                     <!-- TODO: extract the debug-data markup into an external custom element -->
-                    <div class="debug-data">
-                        ${this.debugData.map(item => html`
-                            <div class="debug-data-item">
-                                <div>${item.name}</div>
-                                <div class="debug-data-item-fields">
-                                    <div class="debug-data-labels">
-                                        ${Object.keys(item.data).map((key, index) => html`
-                                            <div>${key}</div>
-                                        `)}
-                                    </div>
-                                    <div class="debug-data-values">
-                                        ${Object.keys(item.data).map((key, index) => html`
-                                            <div>${item.data[key]}</div>
-                                        `)}
+                    ${this.showDebugData ? html`
+                        <div class="debug-data">
+                            ${this.debugData.map(item => html`
+                                <div class="debug-data-item">
+                                    <div>${item.name}</div>
+                                    <div class="debug-data-item-fields">
+                                        <div class="debug-data-labels">
+                                            ${Object.keys(item.data).map((key, index) => html`
+                                                <div>${key}</div>
+                                            `)}
+                                        </div>
+                                        <div class="debug-data-values">
+                                            ${Object.keys(item.data).map((key, index) => html`
+                                                <div>${item.data[key]}</div>
+                                            `)}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        `)}
-                    </div>
+                            `)}
+                        </div>
+                    `: ''}
                 </div>
             </div>
         `;
@@ -147,10 +149,6 @@ export class MeshView extends LitElement {
             showWireframe: {
                 type: Boolean,
                 attribute: 'show-wireframe'
-            },
-            showGrid: {
-                type: Boolean,
-                attribute: 'show-grid'
             },
             syncFaceSelection: {
                 type: Boolean,
@@ -249,6 +247,9 @@ export class MeshView extends LitElement {
         this._mouseInCanvas = false;
         this.debugData = [];
         this._needResize = false;
+        this.showWireframe = false;
+        this.showUnitGrid = false;
+        this.showDebugData = false;
         this._initializeStateMachine();
         this._createCamera();
         this._createRenderer();
@@ -256,7 +257,7 @@ export class MeshView extends LitElement {
         this._createScene();
         this._createOrbitControl();
         this._createRaycaster();
-        // this._createGrid();
+        this._createGrid();
     }
 
     /**
@@ -270,16 +271,16 @@ export class MeshView extends LitElement {
             this._initializeTextures();
             this._initializeLights();
             this._initializeMesh();
-            // this._initializeMeshWireframe();
+            this._initializeMeshWireframe();
             this._initializePointcloud();
-            // this._initializeGrid();
+            this._initializeGrid();
             this.requestUpdate('meshProvider', oldValue);
         }
-        else {
-            if(!this._mesh.material.color.equals(this._meshProvider.meshColor)) {
-                this._mesh.material.color = this._meshProvider.meshColor;
-            }
-        }
+        // else {
+        //     if(!this._mesh.material.color.equals(this._meshProvider.meshColor)) {
+        //         this._mesh.material.color = this._meshProvider.meshColor;
+        //     }
+        // }
     }
 
     get meshProvider() {
@@ -425,6 +426,48 @@ export class MeshView extends LitElement {
     get gridLineWidth() {
         return this._gridLineWidth;
     } 
+
+    set showWireframe(value) {
+        const oldValue = this._showWireframe;
+        if(oldValue !== value) {
+            this._showWireframe = value;
+            if(this._meshWireframe) {
+                this._meshWireframe.visible = value;
+            }
+            this.requestUpdate('showWireframe', oldValue);
+        }
+    }
+
+    get showWireframe() {
+        return this._showWireframe;
+    }
+
+    set showUnitGrid(value) {
+        const oldValue = this._showUnitGrid;
+        if(oldValue !== value) {
+            this._showUnitGrid = value;
+            if(this._grid) {
+                this._grid.visible = value;
+            }
+            this.requestUpdate('showUnitGrid', oldValue);
+        }
+    }
+
+    get showUnitGrid() {
+        return this._showUnitGrid;
+    }
+
+    set showDebugData(value) {
+        const oldValue = this._showDebugData;
+        if(oldValue !== value) {
+            this._showDebugData = value;
+            this.requestUpdate('showDebugData', oldValue);
+        }
+    }
+
+    get showDebugData() {
+        return this._showDebugData;
+    }         
     
     /**
      * Public methods
@@ -560,6 +603,7 @@ export class MeshView extends LitElement {
         
         this._meshWireframe = new THREE.Mesh(this._mesh.geometry, material);
         this._meshWireframe.renderOrder = 1;
+        this._meshWireframe.visible = this.showWireframe;
         this._scene.add(this._meshWireframe);
     }
 
@@ -612,6 +656,7 @@ export class MeshView extends LitElement {
         let divisions = 500;
         this._grid = new THREE.GridHelper(size, divisions);
         this._grid.geometry.rotateX(Math.PI / 2);
+        this._grid.visible = this.showUnitGrid;
         this._scene.add(this._grid);
     }
 
@@ -937,18 +982,17 @@ export class MeshView extends LitElement {
         this._raycaster.params.Points.threshold = 0.05;
     }
 
-    // _createGrid() {
-    //     let size = 500;
-    //     let divisions = 500;
-    //     this._grid = new THREE.GridHelper(size, divisions);
-    //     this._grid.geometry.rotateX(Math.PI / 2);
-    // }
+    _createGrid() {
+        let size = 500;
+        let divisions = 500;
+        this._grid = new THREE.GridHelper(size, divisions);
+        this._grid.geometry.rotateX(Math.PI / 2);
+    }
 
     /**
      * Textures
      */
     _initializeGridTexture(textureSizeExp, gridSizeExp, lineWidthFactor, backgroundColor1, backgroundColor2, horizontalColor, verticalColor) {
-        // let lineWidth = 2 * lineWidthFactor + 1;
         let gridSize = Math.pow(2, gridSizeExp);
         let textureSize = Math.pow(2, textureSizeExp);
 

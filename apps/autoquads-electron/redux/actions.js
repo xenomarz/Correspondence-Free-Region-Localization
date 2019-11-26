@@ -6,7 +6,8 @@ export const CHANGE_MODEL_VIEWPORT_COLOR = 'CHANGE_MODEL_VIEWPORT_COLOR';
 export const CHANGE_SOUP_VIEWPORT_COLOR = 'CHANGE_SOUP_VIEWPORT_COLOR';
 export const CHANGE_MODEL_COLOR = 'CHANGE_MODEL_COLOR';
 export const CHANGE_SOUP_COLOR = 'CHANGE_SOUP_COLOR';
-export const CHANGE_WIREFRAME_VISIBILITY = 'CHANGE_WIREFRAME_VISIBILITY';
+export const CHANGE_MODEL_WIREFRAME_VISIBILITY = 'CHANGE_MODEL_WIREFRAME_VISIBILITY';
+export const CHANGE_SOUP_WIREFRAME_VISIBILITY = 'CHANGE_SOUP_WIREFRAME_VISIBILITY';
 export const CHANGE_MODEL_VIEW_VISIBILITY = 'CHANGE_MODEL_VIEW_VISIBILITY';
 export const CHANGE_SOUP_VIEW_VISIBILITY = 'CHANGE_SOUP_VIEW_VISIBILITY';
 export const CHANGE_DELTA = 'CHANGE_DELTA';
@@ -71,16 +72,30 @@ export const setSoupColor = color => {
     };
 };
 
-export const showWireframe = () => {
+export const showModelWireframe = () => {
     return {
-        type: CHANGE_WIREFRAME_VISIBILITY,
+        type: CHANGE_MODEL_WIREFRAME_VISIBILITY,
         visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const hideWireframe = () => {
+export const hideModelWireframe = () => {
     return {
-        type: CHANGE_WIREFRAME_VISIBILITY,
+        type: CHANGE_MODEL_WIREFRAME_VISIBILITY,
+        visibility: Enums.Visibility.HIDDEN
+    };
+};
+
+export const showSoupWireframe = () => {
+    return {
+        type: CHANGE_SOUP_WIREFRAME_VISIBILITY,
+        visibility: Enums.Visibility.VISIBLE
+    };
+};
+
+export const hideSoupWireframe = () => {
+    return {
+        type: CHANGE_SOUP_WIREFRAME_VISIBILITY,
         visibility: Enums.Visibility.HIDDEN
     };
 };

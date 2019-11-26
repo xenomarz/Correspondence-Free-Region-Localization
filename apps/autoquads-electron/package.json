@@ -47,6 +47,7 @@
       "@vaadin/vaadin-text-field/vaadin-number-field.js",
       "@vaadin/vaadin-select",
       "lit-element",
+      "lit-html/directives/class-map.js",
       "nano-id",
       "pubsub-js",
       "pwa-helpers",

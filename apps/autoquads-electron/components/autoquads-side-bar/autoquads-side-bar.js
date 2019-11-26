@@ -71,14 +71,14 @@ export class AutoquadsSideBar extends SideBar {
                     <span>Load Model...</span>
                 </vaadin-button>
                 <vaadin-checkbox
-                    ?checked=${HelpersExports.isVisible(this._wireframeVisibility)}
-                    @change="${this._wireframeVisibilityInputChanged}"
+                    ?checked=${HelpersExports.isVisible(this._modelWireframeVisibility)}
+                    @change="${this._modelWireframeVisibilityInputChanged}"
                     checked>
                     <span>Show Model Wireframe</span>
                 </vaadin-checkbox>
                 <vaadin-checkbox
-                    ?checked=${HelpersExports.isVisible(this._wireframeVisibility)}
-                    @change="${this._wireframeVisibilityInputChanged}"
+                    ?checked=${HelpersExports.isVisible(this._soupWireframeVisibility)}
+                    @change="${this._soupWireframeVisibilityInputChanged}"
                     checked>
                     <span>Show Soup Wireframe</span>
                 </vaadin-checkbox>                   
@@ -236,7 +236,7 @@ export class AutoquadsSideBar extends SideBar {
                 </side-bar-color-picker>
                 <vaadin-checkbox
                     ?checked=${HelpersExports.isVisible(this._modelViewVisibility)}
-                    @change="${this._modelViewVisibilityCheckboxChanged}">
+                    @change="${this._modelViewVisibilityInputChanged}">
                     <span>Show Model View</span>
                 </vaadin-checkbox>
                 <vaadin-checkbox
@@ -330,10 +330,14 @@ export class AutoquadsSideBar extends SideBar {
                 type: String,
                 attribute: 'soup-color'
             },
-            wireframeVisibility: {
+            modelWireframeVisibility: {
                 type: String,
-                attribute: 'wireframe-visibility'
+                attribute: 'model-wireframe-visibility'
             },
+            soupWireframeVisibility: {
+                type: String,
+                attribute: 'soup-wireframe-visibility'
+            },            
             modelViewVisibility: {
                 type: String,
                 attribute: 'model-view-visibility'
@@ -514,15 +518,25 @@ export class AutoquadsSideBar extends SideBar {
         return this._soupColor;
     }
 
-    set wireframeVisibility(value) {
-        const oldValue = this._wireframeVisibility;
-        this._wireframeVisibility = value;
-        this.requestUpdate('wireframeVisibility', oldValue);
+    set modelWireframeVisibility(value) {
+        const oldValue = this._modelWireframeVisibility;
+        this._modelWireframeVisibility = value;
+        this.requestUpdate('modelWireframeVisibility', oldValue);
     }
 
-    get wireframeVisibility() {
-        return this._wireframeVisibility;        
+    get modelWireframeVisibility() {
+        return this._modelWireframeVisibility;        
     }
+
+    set soupWireframeVisibility(value) {
+        const oldValue = this._soupWireframeVisibility;
+        this._soupWireframeVisibility = value;
+        this.requestUpdate('soupWireframeVisibility', oldValue);
+    }
+
+    get soupWireframeVisibility() {
+        return this._soupWireframeVisibility;        
+    }    
 
     set modelViewVisibility(value) {
         const oldValue = this._modelViewVisibility;
@@ -892,13 +906,21 @@ export class AutoquadsSideBar extends SideBar {
         store.dispatch(ActionsExports.setFixedFaceColor(e.detail.color));
     }
 
-    _wireframeVisibilityInputChanged(e) {
+    _modelWireframeVisibilityInputChanged(e) {
         if(e.srcElement.checked) {
-            store.dispatch(ActionsExports.showWireframe());
+            store.dispatch(ActionsExports.showModelWireframe());
         } else {
-            store.dispatch(ActionsExports.hideWireframe());
+            store.dispatch(ActionsExports.hideModelWireframe());
         }
     }
+
+    _soupWireframeVisibilityInputChanged(e) {
+        if(e.srcElement.checked) {
+            store.dispatch(ActionsExports.showSoupWireframe());
+        } else {
+            store.dispatch(ActionsExports.hideSoupWireframe());
+        }
+    }    
 
     _modelViewVisibilityInputChanged(e) {
         if(e.srcElement.checked) {
@@ -908,7 +930,7 @@ export class AutoquadsSideBar extends SideBar {
         }  
     }
 
-    _soupViewVisiblityInputChanged(e) {
+    _soupViewVisibilityInputChanged(e) {
         if(e.srcElement.checked) {
             store.dispatch(ActionsExports.showSoupView());
         } else {
@@ -916,7 +938,7 @@ export class AutoquadsSideBar extends SideBar {
         }
     }
 
-    _unitGridVisiblityInputChanged(e) {
+    _unitGridVisibilityInputChanged(e) {
         if(e.srcElement.checked) {
             store.dispatch(ActionsExports.showUnitGrid());
         } else {

@@ -1,5 +1,6 @@
 // Web Modules Imports
 import { LitElement, html, css } from '../../web_modules/lit-element.js';
+import { classMap } from '../../web_modules/lit-html/directives/class-map.js';
 import '../../web_modules/@vaadin/vaadin-button.js';
 import '../../web_modules/@vaadin/vaadin-split-layout.js';
 import { PubSub } from '../../web_modules/pubsub-js.js';
@@ -40,6 +41,10 @@ export class AutoquadsView extends connect(store)(LitElement) {
             /* [hidden] {
                 display: none;
             } */
+
+            .hidden {
+                display: none;
+            }
         `];
     }
 
@@ -50,6 +55,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 <vaadin-split-layout orientation="horizontal" class="inner-split">
                     <mesh-view 
                         id="model-mesh-view"
+                        class="${classMap(this._modelMeshViewClasses)}"
                         use-lights
                         enable-mesh-rotation
                         enable-vertex-selection
@@ -61,7 +67,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         grid-size="${this.gridSize}"
                         grid-texture-size="${this.gridTextureSize}"
                         grid-line-width="${this.gridLineWidth}"
-                        show-wireframe="${this.showWireframe}"
+                        ?show-wireframe="${HelpersExports.isVisible(this.modelWireframeVisibility)}"
                         background-color="${this.modelViewportColor}"
                         mesh-color="${this.modelColor}"
                         .meshProvider="${this._modelMeshProvider}"
@@ -73,8 +79,9 @@ export class AutoquadsView extends connect(store)(LitElement) {
                     </mesh-view>
                     <mesh-view 
                         id="soup-mesh-view"
+                        class="${classMap(this._soupMeshViewClasses)}"
                         enable-face-dragging caption="Soup View"
-                        show-grid="${this.showUnitGrid}"
+                        ?show-unit-grid="${HelpersExports.isVisible2(this.unitGridVisibility)}"
                         grid-horizontal-color="${this.gridHorizontalColor}"
                         grid-vertical-color="${this.gridVerticalColor}"
                         grid-background-color1="${this.gridBackgroundColor1}"
@@ -82,7 +89,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         grid-size="${this.gridSize}"
                         grid-texture-size="${this.gridTextureSize}"
                         grid-line-width="${this.gridLineWidth}"
-                        show-wireframe="${this.showWireframe}"
+                        ?show-wireframe="${HelpersExports.isVisible(this.soupWireframeVisibility)}"
                         background-color="${this.soupViewportColor}"
                         mesh-color="${this.soupColor}"
                         .meshProvider="${this._soupMeshProvider}"
@@ -90,7 +97,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         highlighted-face-color="${this.highlightedFaceColor}"
                         dragged-face-color="${this.draggedFaceColor}"
                         selected-face-color="${this.fixedFaceColor}"
-                        show-debug-data="${this.showOptimizationDataMonitor}"
+                        ?show-debug-data="${HelpersExports.isVisible(this.optimizationDataMonitorVisibility)}"
                         show-grid-texture="${this.showGridTextureInSoupView}">
                     </mesh-view>
                 </vaadin-split-layout>
@@ -124,10 +131,14 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: String,
                 attribute: 'soup-color'
             },
-            wireframeVisibility: {
+            modelWireframeVisibility: {
                 type: String,
-                attribute: 'wireframe-visibility'
+                attribute: 'model-wireframe-visibility'
             },
+            soupWireframeVisibility: {
+                type: String,
+                attribute: 'soup-wireframe-visibility'
+            },            
             modelViewVisibility: {
                 type: String,
                 attribute: 'model-view-visibility'
@@ -254,7 +265,9 @@ export class AutoquadsView extends connect(store)(LitElement) {
     constructor() {
         super();
         this._modelMeshProvider = new MeshProvider();
-        this._soupMeshProvider = new MeshProvider();           
+        this._soupMeshProvider = new MeshProvider();
+        this._modelMeshViewClasses = { hidden: false };
+        this._soupMeshViewClasses = { hidden: false };           
     }
 
     /**
@@ -312,19 +325,42 @@ export class AutoquadsView extends connect(store)(LitElement) {
         return this._soupColor;
     }
 
-    set wireframeVisibility(value) {
-        const oldValue = this._wireframeVisibility;
-        this._wireframeVisibility = value;
-        this.requestUpdate('wireframeVisibility', oldValue);
+    set modelWireframeVisibility(value) {
+        const oldValue = this._modelWireframeVisibility;
+        this._modelWireframeVisibility = value;
+        this.requestUpdate('modelWireframeVisibility', oldValue);
     }
 
-    get wireframeVisibility() {
-        return this._wireframeVisibility;        
+    get modelWireframeVisibility() {
+        return this._modelWireframeVisibility;        
+    }
+
+    set soupWireframeVisibility(value) {
+        const oldValue = this._soupWireframeVisibility;
+        this._soupWireframeVisibility = value;
+        this.requestUpdate('soupWireframeVisibility', oldValue);
+    }
+
+    get soupWireframeVisibility() {
+        return this._soupWireframeVisibility;        
+    }
+
+    set optimizationDataMonitorVisibility(value) {
+        const oldValue = this._optimizationDataMonitorVisibility;
+        this._optimizationDataMonitorVisibility = value;
+        this.requestUpdate('optimizationDataMonitorVisibility', oldValue);
+    }
+
+    get optimizationDataMonitorVisibility() {
+        return this._optimizationDataMonitorVisibility;        
     }
 
     set modelViewVisibility(value) {
         const oldValue = this._modelViewVisibility;
         this._modelViewVisibility = value;
+        this._modelMeshViewClasses = {
+            hidden: !HelpersExports.isVisible(value)
+        }
         this.requestUpdate('modelViewVisibility', oldValue);
     }
 
@@ -335,6 +371,9 @@ export class AutoquadsView extends connect(store)(LitElement) {
     set soupViewVisibility(value) {
         const oldValue = this._soupViewVisibility;
         this._soupViewVisibility = value;
+        this._soupMeshViewClasses = {
+            hidden: !HelpersExports.isVisible(value)
+        }
         this.requestUpdate('soupViewVisibility', oldValue);        
     }
 
