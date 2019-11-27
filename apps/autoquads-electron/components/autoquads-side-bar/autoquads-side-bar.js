@@ -86,6 +86,17 @@ export class AutoquadsSideBar extends SideBar {
             <side-bar-collapsable-section
                 caption="Numeric Properties">
                 <side-bar-parameter-input
+                    id="autocuts-weight"
+                    increase-key="f"
+                    decrease-key="g"
+                    value="${this._autocutsWeight}"
+                    min="0"
+                    max="1000000"
+                    step="0.01"
+                    label="Autocuts Weight"
+                    @value-changed="${this._autocutsWeightInputChanged}">
+                </side-bar-parameter-input>
+                <side-bar-parameter-input
                     id="lambda"
                     increase-key="d"
                     decrease-key="a"
@@ -137,7 +148,7 @@ export class AutoquadsSideBar extends SideBar {
                     value="${this._singularityInterval}"
                     min="0"
                     max="10000"
-                    step="2"
+                    step="1.1"
                     label="Singularity Interval"
                     @value-changed="${this._singularityIntervalInputChanged}"
                     is-exponential>
@@ -348,6 +359,10 @@ export class AutoquadsSideBar extends SideBar {
                 type: String,
                 attribute: 'soup-view-visibility'
             },
+            autocutsWeight: {
+                type: Number,
+                attribute: 'autocuts-weight'
+            },            
             delta: {
                 type: Number,
                 attribute: 'delta'
@@ -559,6 +574,16 @@ export class AutoquadsSideBar extends SideBar {
     get soupViewVisibility() {
         return this._soupViewVisibility;
     }
+
+    set autocutsWeight(value) {
+        const oldValue = this._autocutsWeight;
+        this._autocutsWeight = value;
+        this.requestUpdate('autocutsWeight', oldValue);
+    }
+
+    get autocutsWeight() {
+        return this._autocutsWeight;
+    }    
 
     set delta(value) {
         const oldValue = this._delta;
@@ -954,6 +979,10 @@ export class AutoquadsSideBar extends SideBar {
         } else {
             store.dispatch(ActionsExports.hideOptimizationDataMonitor());
         }
+    }
+
+    _autocutsWeightInputChanged(e) {
+        store.dispatch(ActionsExports.setAutocutsWeight(e.srcElement.value)); 
     }
 
     _deltaInputChanged(e) {

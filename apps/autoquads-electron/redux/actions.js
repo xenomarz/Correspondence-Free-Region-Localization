@@ -10,6 +10,7 @@ export const CHANGE_MODEL_WIREFRAME_VISIBILITY = 'CHANGE_MODEL_WIREFRAME_VISIBIL
 export const CHANGE_SOUP_WIREFRAME_VISIBILITY = 'CHANGE_SOUP_WIREFRAME_VISIBILITY';
 export const CHANGE_MODEL_VIEW_VISIBILITY = 'CHANGE_MODEL_VIEW_VISIBILITY';
 export const CHANGE_SOUP_VIEW_VISIBILITY = 'CHANGE_SOUP_VIEW_VISIBILITY';
+export const CHANGE_AUTOCUTS_WEIGHT = 'CHANGE_AUTOCUTS_WEIGHT';
 export const CHANGE_DELTA = 'CHANGE_DELTA';
 export const CHANGE_LAMBDA = 'CHANGE_LAMBDA';
 export const CHANGE_SEAMLESS_WEIGHT = 'CHANGE_SEAMLESS_WEIGHT';
@@ -125,6 +126,13 @@ export const hideSoupView = () => {
     return {
         type: CHANGE_SOUP_VIEW_VISIBILITY,
         visibility: Enums.Visibility.HIDDEN
+    };
+};
+
+export const setAutocutsWeight = weight => {
+    return {
+        type: CHANGE_AUTOCUTS_WEIGHT,
+        weight: weight
     };
 };
 

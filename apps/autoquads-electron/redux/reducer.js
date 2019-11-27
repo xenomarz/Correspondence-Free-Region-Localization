@@ -8,6 +8,7 @@ import {
     CHANGE_SOUP_WIREFRAME_VISIBILITY, 
     CHANGE_MODEL_VIEW_VISIBILITY,
     CHANGE_SOUP_VIEW_VISIBILITY,
+    CHANGE_AUTOCUTS_WEIGHT,    
     CHANGE_DELTA,
     CHANGE_LAMBDA,
     CHANGE_SEAMLESS_WEIGHT,
@@ -48,6 +49,7 @@ const INITIAL_STATE = {
     soupWireframeVisibility: EnumsExports.Visibility.VISIBLE, 
     modelViewVisibility: EnumsExports.Visibility.VISIBLE,
     soupViewVisibility: EnumsExports.Visibility.VISIBLE,
+    autocutsWeight: 1,
     delta: 0.5,
     lambda: 0.2,
     seamlessWeight: 0,
@@ -157,6 +159,11 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 soupViewVisibility: action.visibility
             };
+        case CHANGE_AUTOCUTS_WEIGHT:
+            return {
+                ...state,
+                autocutsWeight: action.weight
+            };            
         case CHANGE_DELTA:
             return {
                 ...state,
