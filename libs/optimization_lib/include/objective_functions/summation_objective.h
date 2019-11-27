@@ -60,26 +60,11 @@ public:
 	}
 
 	/**
-	 * Public overrides
-	 */
-	 void Update(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
-	 {
-	 	#pragma omp parallel for if(parallel_update_)
-	 	for (int32_t i = 0; i < objective_functions_.size(); i++)
-	 	{
-	 		objective_functions_[i]->Update(x, updated_objects);
-	 	}
-
-		DenseObjectiveFunction<static_cast<Eigen::StorageOptions>(ObjectiveFunctionType_::StorageOrder)>::Update(x, updated_objects);
-	 }
-
-	/**
 	 * Public Methods
 	 */
 	void AddObjectiveFunction(const std::shared_ptr<ObjectiveFunctionType_>& objective_function)
 	{
 		std::lock_guard<std::mutex> lock(m_);
-		objective_function->SetEnforcePsd(this->GetEnforcePsd());
 		objective_functions_.push_back(objective_function);
 	}
 
@@ -88,7 +73,6 @@ public:
 		std::lock_guard<std::mutex> lock(m_);
 		for (auto& objective_function : objective_functions)
 		{
-			objective_function->SetEnforcePsd(this->GetEnforcePsd());
 			objective_functions_.push_back(objective_function);
 		}
 	}

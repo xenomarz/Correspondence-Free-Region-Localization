@@ -31,7 +31,7 @@ export class AutoquadsMeshProvider extends MeshProvider {
                 let colorArray = color.toArray();
                 for (let i = 0; i < this._bufferedFacesCount; i++) {
                     let baseIndex = 3 * i;
-                    let factor = Math.min(vector[this._bufferedFaces[i]] * 100, 1);
+                    let factor = Math.min(vector[i] * 100, 1);
                     for(let j = 0; j < 3; j++) { 
                         bufferedVertexColors[baseIndex + j] = 1 * (1 - factor) + colorArray[j] * (factor);
                     }

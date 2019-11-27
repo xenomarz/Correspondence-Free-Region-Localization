@@ -251,7 +251,10 @@ public:
 		InitializeGradient(g_);
 		InitializeHessian(H_);
 		InitializeSparseVariableIndices(sparse_variable_indices_);
-		InitializeMappings(sparse_variable_index_to_dense_variable_index_map_, dense_variable_index_to_sparse_variable_index_map_);
+		InitializeMappings(
+			sparse_variable_index_to_dense_variable_index_map_, 
+			dense_variable_index_to_sparse_variable_index_map_,
+			sparse_variable_index_to_vertex_index_map_);
 		InitializeTriplets(triplets_);
 		PostInitialize();
 	}
@@ -503,13 +506,17 @@ private:
 		// Empty implementation
 	}
 
-	virtual void InitializeMappings(RDS::SparseVariableIndexToDenseVariableIndexMap& sparse_variable_index_to_dense_variable_index_map, RDS::DenseVariableIndexToSparseVariableIndexMap& dense_variable_index_to_sparse_variable_index_map)
+	virtual void InitializeMappings(
+		RDS::SparseVariableIndexToDenseVariableIndexMap& sparse_variable_index_to_dense_variable_index_map,
+		RDS::DenseVariableIndexToSparseVariableIndexMap& dense_variable_index_to_sparse_variable_index_map,
+		RDS::SparseVariableIndexToVertexIndexMap& sparse_variable_index_to_vertex_index_map)
 	{
 		std::sort(sparse_variable_indices_.begin(), sparse_variable_indices_.end());
 		for (std::size_t i = 0; i < sparse_variable_indices_.size(); i++)
 		{
 			dense_variable_index_to_sparse_variable_index_map.insert({ i, sparse_variable_indices_[i] });
 			sparse_variable_index_to_dense_variable_index_map.insert({ sparse_variable_indices_[i], i });
+			sparse_variable_index_to_vertex_index_map.insert({ sparse_variable_indices_[i], data_provider_->GetMeshDataProvider()->GetVertexIndex(sparse_variable_indices_[i])});
 		}
 	}
 
@@ -535,7 +542,18 @@ private:
 
 	// Value, gradient and hessian calculation functions
 	virtual void CalculateValue(double& f) = 0;
-	virtual void CalculateValuePerVertex(VectorType_& f_per_vertex) { /* Empty implementation */ };
+
+	virtual void CalculateValuePerVertex(VectorType_& f_per_vertex)
+	{
+		const double value = this->GetValueInternal();
+		f_per_vertex.setZero();
+		const auto sparse_variables_indices_count = sparse_variable_indices_.size();
+		for (std::size_t i = 0; i < sparse_variables_indices_count; i++)
+		{
+			f_per_vertex.coeffRef(sparse_variable_index_to_vertex_index_map_[sparse_variable_indices_[i]]) += value;
+		}
+	}
+
 	virtual void CalculateGradient(VectorType_& g) = 0;
 	virtual void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) = 0;
 	void CalculateConvexTriplets(std::vector<Eigen::Triplet<double>>& triplets)
@@ -621,6 +639,7 @@ private:
 	RDS::HessianEntryToTripletIndexMap hessian_entry_to_triplet_index_map_;
 	RDS::SparseVariableIndexToDenseVariableIndexMap sparse_variable_index_to_dense_variable_index_map_;
 	RDS::DenseVariableIndexToSparseVariableIndexMap dense_variable_index_to_sparse_variable_index_map_;
+	RDS::SparseVariableIndexToVertexIndexMap sparse_variable_index_to_vertex_index_map_;
 
 	// Name
 	const std::string name_;

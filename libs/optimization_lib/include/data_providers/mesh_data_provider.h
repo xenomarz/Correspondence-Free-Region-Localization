@@ -21,14 +21,25 @@ public:
 	virtual const Eigen::MatrixX3d& GetD1() const = 0;
 	virtual const Eigen::MatrixX3d& GetD2() const = 0;
 
-	RDS::SparseVariableIndex GetVertexXIndex(RDS::VertexIndex vertex_index) const
+	RDS::SparseVariableIndex GetXVariableIndex(RDS::VertexIndex vertex_index) const
 	{
 		return vertex_index;
 	}
 
-	RDS::SparseVariableIndex GetVertexYIndex(RDS::VertexIndex vertex_index) const
+	RDS::SparseVariableIndex GetYVariableIndex(RDS::VertexIndex vertex_index) const
 	{
 		return vertex_index + GetImageVerticesCount();
+	}
+
+	RDS::VertexIndex GetVertexIndex(RDS::SparseVariableIndex variable_index) const
+	{
+		const auto image_variables_count = GetImageVerticesCount();
+		if(variable_index < image_variables_count)
+		{
+			return variable_index;
+		}
+
+		return variable_index - image_variables_count;
 	}
 
 	int64_t GetVariablesCount() const

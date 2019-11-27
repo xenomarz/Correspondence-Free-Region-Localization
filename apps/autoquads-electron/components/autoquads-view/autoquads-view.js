@@ -81,7 +81,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         id="soup-mesh-view"
                         class="${classMap(this._soupMeshViewClasses)}"
                         enable-face-dragging caption="Soup View"
-                        ?show-unit-grid="${HelpersExports.isVisible2(this.unitGridVisibility)}"
+                        ?show-unit-grid="${HelpersExports.isVisible(this.unitGridVisibility)}"
                         grid-horizontal-color="${this.gridHorizontalColor}"
                         grid-vertical-color="${this.gridVerticalColor}"
                         grid-background-color1="${this.gridBackgroundColor1}"

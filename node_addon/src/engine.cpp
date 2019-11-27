@@ -75,15 +75,6 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 
 	empty_data_provider_ = std::make_shared<EmptyDataProvider>(mesh_wrapper_);
 	plain_data_provider_ = std::make_shared<PlainDataProvider>(mesh_wrapper_);
-	for(auto& edge_pair_descriptor : mesh_wrapper_->GetEdgePairDescriptors())
-	{
-		edge_pair_data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptor));
-	}
-
-	for (auto& face_fan : mesh_wrapper_->GetFaceFans())
-	{
-		face_fan_data_providers_.push_back(std::make_shared<FaceFanDataProvider>(mesh_wrapper_, face_fan));
-	}
 	
 	// TODO: Expose interface for addition and removal of objective function
 	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(plain_data_provider_);
@@ -98,11 +89,21 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	objective_functions.push_back(seamless_);
 	objective_functions.push_back(singular_points_);
 	summation_objective_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(empty_data_provider_, objective_functions, false, true);
-	mesh_wrapper_->RegisterModelLoadedCallback([&]() {
+	mesh_wrapper_->RegisterModelLoadedCallback([this]() {
 		/**
 		 * Initialize objective functions
 		 */
 		summation_objective_->Initialize();
+
+		for (auto& edge_pair_descriptor : mesh_wrapper_->GetEdgePairDescriptors())
+		{
+			edge_pair_data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptor));
+		}
+
+		for (auto& face_fan : mesh_wrapper_->GetFaceFans())
+		{
+			face_fan_data_providers_.push_back(std::make_shared<FaceFanDataProvider>(mesh_wrapper_, face_fan));
+		}
 
 		for (auto& edge_pair_data_provider : edge_pair_data_providers_)
 		{
@@ -113,23 +114,6 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 		{
 			singular_points_->AddSingularPointObjective(face_fan_data_provider);
 		}
-
-		//auto& dom_v_2_im_v_map = mesh_wrapper_->GetDomainVerticesToImageVerticesMap();
-		//for(int64_t i = 0; i < mesh_wrapper_->GetDomainVerticesCount(); i++)
-		//{
-		//	std::vector<SingularityObjective<Eigen::StorageOptions::RowMajor>::SingularCorner> singular_corners;
-		//	auto& image_indices = dom_v_2_im_v_map.at(i);
-		//	for(int64_t corner_index = 0; corner_index < image_indices.size(); corner_index++)
-		//	{
-		//		auto image_index = image_indices[corner_index];
-		//		auto& neighbours = mesh_wrapper_->GetImageNeighbours().at(image_index);
-		//		singular_corners.push_back(std::make_pair(image_index, neighbours));
-		//	}
-
-		//	singularity_->AddSingularCorners(singular_corners);
-		//}
-		//singularity_->AddSingularCornersTest();
-
 
 		/**
 		 * Create newton method iterator
@@ -364,7 +348,8 @@ Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	/**
 	 * Get objective function by name
 	 */
-	const auto objective_function = summation_objective_->GetObjectiveFunction(info[0].ToString());
+	const std::string objective_function_name = info[0].ToString();
+	const auto objective_function = summation_objective_->GetObjectiveFunction(objective_function_name);
 	if(objective_function == nullptr)
 	{
 		Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
@@ -432,7 +417,8 @@ Napi::Value Engine::SetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	/**
 	 * Get objective function by name
 	 */
-	const auto objective_function = summation_objective_->GetObjectiveFunction(info[0].ToString());
+	const std::string objective_function_name = info[0].ToString();
+	const auto objective_function = summation_objective_->GetObjectiveFunction(objective_function_name);
 	if (objective_function == nullptr)
 	{
 		Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();

@@ -29,14 +29,14 @@ void FaceFanDataProvider::Update(const Eigen::VectorXd& x)
 		Eigen::Vector2d v1;
 		Eigen::Vector2d v2;
 
-		v0.coeffRef(0) = x.coeffRef(mesh_data_provider_->GetVertexXIndex(v0_index));
-		v0.coeffRef(1) = x.coeffRef(mesh_data_provider_->GetVertexYIndex(v0_index));
+		v0.coeffRef(0) = x.coeffRef(mesh_data_provider_->GetXVariableIndex(v0_index));
+		v0.coeffRef(1) = x.coeffRef(mesh_data_provider_->GetYVariableIndex(v0_index));
 
-		v1.coeffRef(0) = x.coeffRef(mesh_data_provider_->GetVertexXIndex(v1_index));
-		v1.coeffRef(1) = x.coeffRef(mesh_data_provider_->GetVertexYIndex(v1_index));
+		v1.coeffRef(0) = x.coeffRef(mesh_data_provider_->GetXVariableIndex(v1_index));
+		v1.coeffRef(1) = x.coeffRef(mesh_data_provider_->GetYVariableIndex(v1_index));
 
-		v2.coeffRef(0) = x.coeffRef(mesh_data_provider_->GetVertexXIndex(v2_index));
-		v2.coeffRef(1) = x.coeffRef(mesh_data_provider_->GetVertexYIndex(v2_index));
+		v2.coeffRef(0) = x.coeffRef(mesh_data_provider_->GetXVariableIndex(v2_index));
+		v2.coeffRef(1) = x.coeffRef(mesh_data_provider_->GetYVariableIndex(v2_index));
 
 		Eigen::Vector2d e1 = v1 - v0;
 		Eigen::Vector2d e2 = v2 - v0;

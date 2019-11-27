@@ -246,6 +246,7 @@ namespace RDS
 	 * Map types
 	 */
 	using SparseVariableIndexToDenseVariableIndexMap = std::unordered_map<RDS::SparseVariableIndex, RDS::DenseVariableIndex>;
+	using SparseVariableIndexToVertexIndexMap = std::unordered_map<RDS::SparseVariableIndex, RDS::VertexIndex>;
 	using DenseVariableIndexToSparseVariableIndexMap = std::unordered_map<RDS::DenseVariableIndex, RDS::SparseVariableIndex>;
 	using HessianEntryToTripletIndexMap = std::unordered_map<RDS::HessianEntry, RDS::HessianTripletIndex, HessianEntryHash, HessianEntryEquals>;
 

@@ -9,10 +9,10 @@ CoordinateDataProvider::CoordinateDataProvider(const std::shared_ptr<MeshDataPro
 	switch(coordinate_type)
 	{
 	case CoordinateType::X:
-		sparse_variable_index_ = GetMeshDataProvider()->GetVertexXIndex(vertex_index);
+		sparse_variable_index_ = GetMeshDataProvider()->GetXVariableIndex(vertex_index);
 		break;
 	case CoordinateType::Y:
-		sparse_variable_index_ = GetMeshDataProvider()->GetVertexYIndex(vertex_index);
+		sparse_variable_index_ = GetMeshDataProvider()->GetYVariableIndex(vertex_index);
 		break;
 	}
 }

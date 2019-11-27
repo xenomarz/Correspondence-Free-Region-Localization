@@ -18,8 +18,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	EdgePairObjective(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider, const std::string& name) :
-		SparseObjectiveFunction(edge_pair_data_provider, name, 4, false)
+	EdgePairObjective(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider, const std::string& name, const bool enforce_psd = false) :
+		SparseObjectiveFunction(edge_pair_data_provider, name, 4, enforce_psd)
 	{
 
 	}
@@ -85,16 +85,6 @@ private:
 		sparse_variable_indices.push_back(edge_pair_data_provider.GetEdge2Vertex1YIndex());
 		sparse_variable_indices.push_back(edge_pair_data_provider.GetEdge2Vertex2XIndex());
 		sparse_variable_indices.push_back(edge_pair_data_provider.GetEdge2Vertex2YIndex());
-	}
-
-	void CalculateValuePerVertex(Eigen::SparseVector<double>& f_per_vertex) override
-	{
-		//double value = this->GetValueInternal();
-		//f_per_vertex.setZero();
-		//for(int i = 0; i < indices_.size(); i++)
-		//{
-		//	f_per_vertex.coeffRef(indices_[i]) += value;
-		//}
 	}
 
 	void CalculateGradient(Eigen::SparseVector<double>& g) override

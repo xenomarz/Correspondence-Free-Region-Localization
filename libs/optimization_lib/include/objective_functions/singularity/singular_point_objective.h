@@ -33,15 +33,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SingularPointObjective(const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider, const std::string& name, const double interval, const bool enforce_psd = true) :
-		SummationObjective(face_fan_data_provider, name, enforce_psd, false),
+	SingularPointObjective(const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider, const std::string& name, const double interval) :
+		SummationObjective(face_fan_data_provider, name, false, false),
 		interval_(interval)
 	{
 		this->Initialize();
 	}
 
-	SingularPointObjective(const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider, const double interval, const bool enforce_psd = true) :
-		SingularPointObjective(face_fan_data_provider, "Singular Point", interval, enforce_psd)
+	SingularPointObjective(const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider, const double interval) :
+		SingularPointObjective(face_fan_data_provider, "Singular Point", interval)
 	{
 
 	}
@@ -127,8 +127,8 @@ public:
 			auto x_coordinate_objective = std::make_shared<CoordinateObjective<StorageOrder_>>(x_coordinate_data_provider);
 			auto y_coordinate_objective = std::make_shared<CoordinateObjective<StorageOrder_>>(y_coordinate_data_provider);
 
-			std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_x_coordinate_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(x_coordinate_objective, interval_);
-			std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_y_coordinate_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(y_coordinate_objective, interval_);
+			std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_x_coordinate_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(x_coordinate_objective, interval_, true);
+			std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_y_coordinate_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(y_coordinate_objective, interval_, true);
 			
 			this->AddObjectiveFunction(periodic_x_coordinate_objective);
 			this->AddObjectiveFunction(periodic_y_coordinate_objective);
@@ -148,6 +148,8 @@ private:
 		{
 			this->GetObjectiveFunctionInternal(i)->SetWeight(weight);
 		}
+
+		SummationObjective<PeriodicObjective<StorageOrder_>>::PreUpdate(x, updated_objects);
 	}
 
 	/**

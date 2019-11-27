@@ -144,6 +144,8 @@ export class AutoquadsSideBar extends SideBar {
                 </side-bar-parameter-input>
                 <side-bar-parameter-input
                     id="position-weight"
+                    increase-key="m"
+                    decrease-key="n"
                     value="${this._positionWeight}"
                     min="0"
                     max="10000"
@@ -995,11 +997,11 @@ export class AutoquadsSideBar extends SideBar {
     }
 
     _gridBackgroundColor1InputChanged(e) {
-        store.dispatch(ActionsExports.setBackgroundColor1(e.detail.color));
+        store.dispatch(ActionsExports.setGridBackgroundColor1(e.detail.color));
     }
 
     _gridBackgroundColor2InputChanged(e) {
-        store.dispatch(ActionsExports.setBackgroundColor2(e.detail.color));
+        store.dispatch(ActionsExports.setGridBackgroundColor2(e.detail.color));
     }
 
     _gridSizeInputChanged(e) {
