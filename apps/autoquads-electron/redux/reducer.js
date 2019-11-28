@@ -98,7 +98,15 @@ const INITIAL_STATE = {
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN            
-        }        
+        },
+        {
+            objectiveFunctionId: 'Singular Points',
+            propertyId: 'singularity_weight_per_vertex',
+            objectiveFunctionName: 'Singular Points',
+            propertyName: 'Singularity Weight Per Vertex',
+            color: 'rgb(255,0,0)',
+            visibility: EnumsExports.Visibility.HIDDEN            
+        }              
     ]
 };
 

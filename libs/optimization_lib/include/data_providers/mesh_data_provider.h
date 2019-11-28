@@ -42,6 +42,8 @@ public:
 		return variable_index - image_variables_count;
 	}
 
+	virtual RDS::VertexIndex GetDomainVertexIndex(RDS::VertexIndex image_vertex_index) const = 0;
+
 	int64_t GetVariablesCount() const
 	{
 		return 	2 * GetImageVerticesCount();

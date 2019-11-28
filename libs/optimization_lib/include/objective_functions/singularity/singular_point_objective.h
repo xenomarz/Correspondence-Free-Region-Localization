@@ -113,7 +113,7 @@ public:
 	}
 
 	/**
-	 * Public methods
+	 * Public overrides
 	 */
 	void PreInitialize() override
 	{
@@ -135,6 +135,30 @@ public:
 		}
 	}
 
+	/**
+	 * Public methods
+	 */
+	[[nodiscard]] double GetSingularityWeight() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return singular_weight_;
+	}
+
+	[[nodiscard]] std::vector<RDS::VertexIndex> GetSingularVertexIndices() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		std::vector<RDS::VertexIndex> singular_vertex_indices;
+		const auto face_fan_data_provider = GetFaceFanDataProvider();
+		auto face_fan = face_fan_data_provider->GetFaceFan();
+		const auto face_fan_size = face_fan.size();
+		for (std::size_t face_fan_index = 0; face_fan_index < face_fan_size; face_fan_index++)
+		{
+			singular_vertex_indices.push_back(face_fan[face_fan_index].first);
+		}
+
+		return singular_vertex_indices;
+	}
+	
 private:
 
 	/**
@@ -142,11 +166,11 @@ private:
 	 */
 	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
 	{
-		double weight = abs(GetFaceFanDataProvider()->GetAngle() - 2 * M_PI);
+		singular_weight_ = abs(GetFaceFanDataProvider()->GetAngle() - 2 * M_PI);
 		auto objective_functions_count = this->GetObjectiveFunctionsCountInternal();
 		for(std::size_t i = 0; i < objective_functions_count; i++)
 		{
-			this->GetObjectiveFunctionInternal(i)->SetWeight(weight);
+			this->GetObjectiveFunctionInternal(i)->SetWeight(singular_weight_);
 		}
 
 		SummationObjective<PeriodicObjective<StorageOrder_>>::PreUpdate(x, updated_objects);
@@ -156,6 +180,7 @@ private:
 	 * Private fields
 	 */
 	double interval_;
+	double singular_weight_;
 };
 
 #endif

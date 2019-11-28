@@ -22,7 +22,8 @@ public:
 	 */
 	enum class Properties : int32_t
 	{
-		Interval = SummationObjective<SingularPointObjective<StorageOrder_>>::Properties::Count_
+		Interval = SummationObjective<SingularPointObjective<StorageOrder_>>::Properties::Count_,
+		SingularityWeightPerVertex
 	};
 
 	
@@ -84,6 +85,11 @@ public:
 		return interval_;
 	}
 
+	const Eigen::VectorXd& GetSingularityWeightPerVertex() const
+	{
+		return singularity_weight_per_vertex_;
+	}
+
 	bool GetProperty(const int32_t property_id, std::any& property_value) override
 	{
 		if (SummationObjective<SingularPointObjective<StorageOrder_>>::GetProperty(property_id, property_value))
@@ -97,9 +103,21 @@ public:
 		case Properties::Interval:
 			property_value = GetInterval();
 			return true;
+		case Properties::SingularityWeightPerVertex:
+			property_value = GetSingularityWeightPerVertex();
+			return true;
 		}
 
 		return false;
+	}
+
+	/**
+	 * Public overrides
+	 */
+	void PreInitialize() override
+	{
+		SummationObjective<SingularPointObjective<StorageOrder_>>::PreInitialize();
+		singularity_weight_per_vertex_.resize(this->GetDataProvider()->GetMeshDataProvider()->GetImageVerticesCount());
 	}
 
 	/**
@@ -110,11 +128,32 @@ public:
 		this->AddObjectiveFunction(std::make_shared<SingularPointObjective<StorageOrder_>>(face_fan_data_provider, interval_));
 	}
 
+protected:
+	/**
+	 * Protected overrides
+	 */
+	void PostUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
+	{
+		singularity_weight_per_vertex_.setZero();
+		for (int64_t i = 0; i < this->GetObjectiveFunctionsCountInternal(); i++)
+		{
+			auto objective_function = this->GetObjectiveFunctionInternal(i);
+			const std::vector<RDS::VertexIndex> singular_vertex_indices = objective_function->GetSingularVertexIndices();
+			const double singularity_weight = objective_function->GetSingularityWeight();
+			const auto singular_vertex_indices_size = singular_vertex_indices.size();
+			for(std::size_t i = 0; i < singular_vertex_indices_size; i++)
+			{
+				singularity_weight_per_vertex_.coeffRef(singular_vertex_indices.at(i)) += singularity_weight;
+			}
+		}
+	}
+
 private:
 	/**
 	 * Private fields
 	 */
 	double interval_;
+	Eigen::VectorXd singularity_weight_per_vertex_;
 };
 
 #endif

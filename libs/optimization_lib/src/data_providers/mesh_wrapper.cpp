@@ -543,3 +543,8 @@ const RDS::FaceFans& MeshWrapper::GetFaceFans() const
 {
 	return face_fans_;
 }
+
+RDS::VertexIndex MeshWrapper::GetDomainVertexIndex(RDS::VertexIndex image_vertex_index) const
+{
+	return v_im_2_v_dom_.at(image_vertex_index);
+}

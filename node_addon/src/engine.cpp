@@ -72,7 +72,8 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "name", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Name) });
 	properties_map_.insert({ "delta", static_cast<uint32_t>(Separation<Eigen::StorageOptions::RowMajor>::Properties::Delta) });
 	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
-
+	properties_map_.insert({ "singularity_weight_per_vertex", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::SingularityWeightPerVertex) });
+	
 	empty_data_provider_ = std::make_shared<EmptyDataProvider>(mesh_wrapper_);
 	plain_data_provider_ = std::make_shared<PlainDataProvider>(mesh_wrapper_);
 	

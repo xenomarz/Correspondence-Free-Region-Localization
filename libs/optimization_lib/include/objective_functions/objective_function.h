@@ -299,7 +299,7 @@ public:
 				CalculateConvexTriplets(triplets_);
 			}
 
-			PostUpdate(x);
+			PostUpdate(x, updated_objects);
 		}
 	}
 
@@ -419,7 +419,7 @@ protected:
 		// Empty implementation
 	}
 
-	virtual void PostUpdate(const Eigen::VectorXd& x)
+	virtual void PostUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects)
 	{
 		// Empty implementation
 	}

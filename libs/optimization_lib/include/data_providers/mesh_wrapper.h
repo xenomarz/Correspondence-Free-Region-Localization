@@ -77,6 +77,7 @@ public:
 	int64_t GetDomainVerticesCount() const override;
 	const RDS::EdgePairDescriptors& GetEdgePairDescriptors() const;
 	const RDS::FaceFans& GetFaceFans() const;
+	RDS::VertexIndex GetDomainVertexIndex(RDS::VertexIndex image_vertex_index) const override;
 
 	/**
 	 * Public methods
