@@ -22,7 +22,6 @@ file(GLOB SOURCES
 	src/objective_functions/periodic_objective.cpp
 	src/objective_functions/coordinate_objective.cpp
 	src/objective_functions/seamless_objective.cpp
-	src/objective_functions/singularity_objective.cpp
 	src/objective_functions/position/position_objective.cpp
 	src/objective_functions/position/vertex_position_objective.cpp
 	src/objective_functions/position/barycenter_position_objective.cpp
@@ -58,7 +57,6 @@ file(GLOB SOURCES
 	include/objective_functions/periodic_objective.h
 	include/objective_functions/coordinate_objective.h
 	include/objective_functions/seamless_objective.h
-	include/objective_functions/singularity_objective.h
 	include/objective_functions/position/position_objective.h
 	include/objective_functions/position/vertex_position_objective.h
 	include/objective_functions/position/barycenter_position_objective.h
