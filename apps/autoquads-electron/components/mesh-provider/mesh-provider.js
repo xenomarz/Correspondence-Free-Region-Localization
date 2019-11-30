@@ -36,6 +36,10 @@ export class MeshProvider {
         return new Float32Array();
     }
 
+    getAdditionalSceneObjects() {
+        return [];
+    }
+
     get shadersFolderName() {
         return 'shaders';
     }

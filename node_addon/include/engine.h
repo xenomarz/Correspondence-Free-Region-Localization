@@ -121,6 +121,7 @@ private:
 	Napi::Array CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F);
 	Napi::Value NativeToJS(Napi::Env env, const std::any& property_value);
 	Napi::Value NativeToJS(Napi::Env env, const Eigen::VectorXd& property_value);
+	Napi::Value NativeToJS(Napi::Env env, const std::vector<RDS::VertexIndex>& property_value);
 	Napi::Value NativeToJS(Napi::Env env, const double property_value);
 	Napi::Value NativeToJS(Napi::Env env, const std::string& property_value);
 	std::any JSToNative(Napi::Env env, const Napi::Value& value);

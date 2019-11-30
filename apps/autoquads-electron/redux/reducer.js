@@ -78,6 +78,7 @@ const INITIAL_STATE = {
         {
             objectiveFunctionId: 'Separation',
             propertyId: 'value_per_vertex',
+            propertyEffectType: 'vertex_color',
             objectiveFunctionName: 'Separation',
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
@@ -86,6 +87,7 @@ const INITIAL_STATE = {
         {
             objectiveFunctionId: 'Symmetric Dirichlet',
             propertyId: 'value_per_vertex',
+            propertyEffectType: 'vertex_color',
             objectiveFunctionName: 'Symmetric Dirichlet',
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
@@ -94,6 +96,7 @@ const INITIAL_STATE = {
         {
             objectiveFunctionId: 'Seamless',
             propertyId: 'value_per_vertex',
+            propertyEffectType: 'vertex_color',
             objectiveFunctionName: 'Seamless',
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
@@ -102,11 +105,30 @@ const INITIAL_STATE = {
         {
             objectiveFunctionId: 'Singular Points',
             propertyId: 'singularity_weight_per_vertex',
+            propertyEffectType: 'vertex_color',
             objectiveFunctionName: 'Singular Points',
             propertyName: 'Singularity Weight Per Vertex',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN            
-        }              
+        },
+        {
+            objectiveFunctionId: 'Singular Points',
+            propertyId: 'positive_angular_defect_singularities_indices',
+            propertyEffectType: 'scene_objects',
+            objectiveFunctionName: 'Singular Points',
+            propertyName: 'Positive Angular Defect',
+            color: 'rgb(0,0,255)',
+            visibility: EnumsExports.Visibility.HIDDEN            
+        },
+        {
+            objectiveFunctionId: 'Singular Points',
+            propertyId: 'negative_angular_defect_singularities_indices',
+            propertyEffectType: 'scene_objects',
+            objectiveFunctionName: 'Singular Points',
+            propertyName: 'Negative Angular Defect',
+            color: 'rgb(255,0,0)',
+            visibility: EnumsExports.Visibility.HIDDEN            
+        }             
     ]
 };
 

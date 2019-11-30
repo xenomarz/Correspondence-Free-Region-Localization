@@ -5,7 +5,7 @@ FaceFanDataProvider::FaceFanDataProvider(const std::shared_ptr<MeshDataProvider>
 	DataProvider(mesh_data_provider),
 	face_fan_(face_fan)
 {
-
+	domain_vertex_index_ = this->mesh_data_provider_->GetDomainVertexIndex(face_fan_[0].first);
 }
 
 FaceFanDataProvider::~FaceFanDataProvider()
@@ -59,4 +59,9 @@ double FaceFanDataProvider::GetAngle() const
 const RDS::FaceFan& FaceFanDataProvider::GetFaceFan() const
 {
 	return face_fan_;
+}
+
+RDS::VertexIndex FaceFanDataProvider::GetDomainVertexIndex() const
+{
+	return domain_vertex_index_;
 }

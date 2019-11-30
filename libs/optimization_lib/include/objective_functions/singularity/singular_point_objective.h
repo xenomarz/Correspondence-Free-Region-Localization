@@ -84,9 +84,21 @@ public:
 	/**
 	 * Getters
 	 */
-	double GetInterval() const
+	[[nodiscard]] double GetInterval() const
 	{
 		return interval_;
+	}
+
+	[[nodiscard]] double GetSingularityWeight() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return singular_weight_;
+	}
+
+	[[nodiscard]] double GetAngularDefect() const
+	{
+		std::lock_guard<std::mutex> lock(m_);
+		return angular_defect_;
 	}
 
 	[[nodiscard]] std::shared_ptr<FaceFanDataProvider> GetFaceFanDataProvider() const
@@ -138,12 +150,6 @@ public:
 	/**
 	 * Public methods
 	 */
-	[[nodiscard]] double GetSingularityWeight() const
-	{
-		std::lock_guard<std::mutex> lock(m_);
-		return singular_weight_;
-	}
-
 	[[nodiscard]] std::vector<RDS::VertexIndex> GetSingularVertexIndices() const
 	{
 		std::lock_guard<std::mutex> lock(m_);
@@ -166,7 +172,8 @@ private:
 	 */
 	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
 	{
-		singular_weight_ = abs(GetFaceFanDataProvider()->GetAngle() - 2 * M_PI);
+		angular_defect_ = GetFaceFanDataProvider()->GetAngle() - 2 * M_PI;
+		singular_weight_ = abs(angular_defect_);
 		auto objective_functions_count = this->GetObjectiveFunctionsCountInternal();
 		for(std::size_t i = 0; i < objective_functions_count; i++)
 		{
@@ -181,6 +188,7 @@ private:
 	 */
 	double interval_;
 	double singular_weight_;
+	double angular_defect_;
 };
 
 #endif

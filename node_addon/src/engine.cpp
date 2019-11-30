@@ -73,7 +73,9 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "delta", static_cast<uint32_t>(Separation<Eigen::StorageOptions::RowMajor>::Properties::Delta) });
 	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
 	properties_map_.insert({ "singularity_weight_per_vertex", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::SingularityWeightPerVertex) });
-	
+	properties_map_.insert({ "negative_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::NegativeAngularDefectSingularitiesIndices) });
+	properties_map_.insert({ "positive_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::PositiveAngularDefectSingularitiesIndices) });
+
 	empty_data_provider_ = std::make_shared<EmptyDataProvider>(mesh_wrapper_);
 	plain_data_provider_ = std::make_shared<PlainDataProvider>(mesh_wrapper_);
 	
@@ -479,6 +481,11 @@ Napi::Value Engine::NativeToJS(Napi::Env env, const std::any& property_value)
 		return NativeToJS(env, std::any_cast<const Eigen::VectorXd&>(property_value));
 	}
 
+	if (property_value.type() == typeid(std::vector<RDS::VertexIndex>))
+	{
+		return NativeToJS(env, std::any_cast<const std::vector<RDS::VertexIndex>&>(property_value));
+	}
+
 	if (property_value.type() == typeid(std::string))
 	{
 		return NativeToJS(env, std::any_cast<const std::string&>(property_value));
@@ -495,6 +502,18 @@ Napi::Value Engine::NativeToJS(Napi::Env env, const Eigen::VectorXd& property_va
 	for (int32_t i = 0; i < rows_count; i++)
 	{
 		array[i] = Napi::Number::New(env, property_value.coeffRef(i));
+	}
+
+	return array;
+}
+
+Napi::Value Engine::NativeToJS(Napi::Env env, const std::vector<RDS::VertexIndex>& property_value)
+{
+	const auto vector_size = property_value.size();
+	Napi::Array array = Napi::Array::New(env, vector_size);
+	for (int32_t i = 0; i < vector_size; i++)
+	{
+		array[i] = Napi::Number::New(env, property_value.at(i));
 	}
 
 	return array;

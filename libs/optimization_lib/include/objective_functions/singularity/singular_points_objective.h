@@ -23,7 +23,9 @@ public:
 	enum class Properties : int32_t
 	{
 		Interval = SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::Properties::Count_,
-		SingularityWeightPerVertex
+		SingularityWeightPerVertex,
+		PositiveAngularDefectSingularitiesIndices,
+		NegativeAngularDefectSingularitiesIndices
 	};
 
 	
@@ -81,14 +83,24 @@ public:
 	/**
 	 * Getters
 	 */
-	double GetInterval() const
+	[[nodiscard]] double GetInterval() const
 	{
 		return interval_;
 	}
 
-	const Eigen::VectorXd& GetSingularityWeightPerVertex() const
+	[[nodiscard]] const Eigen::VectorXd& GetSingularityWeightPerVertex() const
 	{
 		return singularity_weight_per_vertex_;
+	}
+
+	[[nodiscard]] const std::vector<RDS::VertexIndex>& GetPositiveAngularDefectSingularityIndices() const
+	{
+		return positive_angular_defect_singularity_indices_;
+	}
+
+	[[nodiscard]] const std::vector<RDS::VertexIndex>& GetNegativeAngularDefectSingularityIndices() const
+	{
+		return negative_angular_defect_singularity_indices_;
 	}
 
 	bool GetProperty(const int32_t property_id, std::any& property_value) override
@@ -106,6 +118,12 @@ public:
 			return true;
 		case Properties::SingularityWeightPerVertex:
 			property_value = GetSingularityWeightPerVertex();
+			return true;
+		case Properties::PositiveAngularDefectSingularitiesIndices:
+			property_value = GetPositiveAngularDefectSingularityIndices();
+			return true;
+		case Properties::NegativeAngularDefectSingularitiesIndices:
+			property_value = GetNegativeAngularDefectSingularityIndices();
 			return true;
 		}
 
@@ -135,6 +153,8 @@ protected:
 	 */
 	void PostUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
 	{
+		positive_angular_defect_singularity_indices_.clear();
+		negative_angular_defect_singularity_indices_.clear();
 		singularity_weight_per_vertex_.setZero();
 		for (int64_t i = 0; i < this->GetObjectiveFunctionsCountInternal(); i++)
 		{
@@ -146,6 +166,16 @@ protected:
 			{
 				singularity_weight_per_vertex_.coeffRef(singular_vertex_indices.at(i)) += singularity_weight;
 			}
+
+			RDS::VertexIndex singularity_domain_vertex_index = objective_function->GetFaceFanDataProvider()->GetDomainVertexIndex();
+			if(objective_function->GetAngularDefect() > 0.05)
+			{
+				positive_angular_defect_singularity_indices_.push_back(singularity_domain_vertex_index);
+			}
+			else if (objective_function->GetAngularDefect() < -0.05)
+			{
+				negative_angular_defect_singularity_indices_.push_back(singularity_domain_vertex_index);
+			}
 		}
 	}
 
@@ -155,6 +185,8 @@ private:
 	 */
 	double interval_;
 	Eigen::VectorXd singularity_weight_per_vertex_;
+	std::vector<RDS::VertexIndex> positive_angular_defect_singularity_indices_;
+	std::vector<RDS::VertexIndex> negative_angular_defect_singularity_indices_;
 };
 
 #endif

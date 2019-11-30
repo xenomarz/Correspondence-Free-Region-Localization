@@ -1270,7 +1270,19 @@ export class MeshView extends LitElement {
         this._mesh.geometry.attributes.position.needsUpdate = true;
         this._mesh.geometry.attributes.uv.needsUpdate = true;
         this._mesh.geometry.attributes.color.needsUpdate = true;
-        this._pointcloud.geometry.attributes.position.needsUpdate = true;        
+        this._pointcloud.geometry.attributes.position.needsUpdate = true;
+        
+        if(this._additionalSceneObjects) {
+            for(let i = 0; i < this._additionalSceneObjects.length; i++) {
+                this._scene.remove(this._additionalSceneObjects[i]);
+            }
+        }
+
+        this._additionalSceneObjects = this._meshProvider.getAdditionalSceneObjects();
+        for(let i = 0; i < this._additionalSceneObjects.length; i++) {
+            this._scene.add(this._additionalSceneObjects[i]);
+        }        
+
         this._renderer.render(this._scene, this._camera);
         this.scheduledAnimationFrameId = requestAnimationFrame(() => this._renderScene());
     }

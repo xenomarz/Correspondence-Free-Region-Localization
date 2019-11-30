@@ -31,10 +31,12 @@ public:
 	 */
 	double GetAngle() const;
 	const RDS::FaceFan& GetFaceFan() const;
+	RDS::VertexIndex GetDomainVertexIndex() const;
 
 private:
 	RDS::FaceFan face_fan_;
 	double angle_;
+	RDS::VertexIndex domain_vertex_index_;
 };
 
 #endif

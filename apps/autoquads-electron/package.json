@@ -53,6 +53,7 @@
       "pwa-helpers",
       "redux",
       "three",
+      "three/examples/jsm/loaders/OBJLoader.js",
       "three-orbit-controls",
       "xstate",
       "chroma-js"
