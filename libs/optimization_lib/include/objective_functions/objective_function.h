@@ -303,23 +303,27 @@ public:
 		}
 	}
 
-	virtual void AddValuePerVertex(Eigen::VectorXd& f_per_vertex, const double w = 1) const
+	template<typename ValueVectorType_>
+	void AddValuePerVertex(ValueVectorType_& f_per_vertex, const double w = 1) const
 	{
-		f_per_vertex += w * f_per_vertex_;
+		f_per_vertex = f_per_vertex + w * f_per_vertex_;
 	}
 
-	virtual void AddGradient(Eigen::VectorXd& g, const double w = 1) const
+	template<typename GradientVectorType_>
+	void AddGradient(GradientVectorType_& g, const double w = 1) const
 	{
-		g += w * g_;
+		g = g + w * g_;
 	}
 
-	void AddValuePerVertexSafe(Eigen::VectorXd& f_per_vertex, const double w = 1) const
+	template<typename ValueVectorType_>
+	void AddValuePerVertexSafe(ValueVectorType_& f_per_vertex, const double w = 1) const
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		AddValuePerVertex(f_per_vertex, w);
 	}
 
-	void AddGradientSafe(Eigen::VectorXd& g, const double w = 1) const
+	template<typename GradientVectorType_>
+	void AddGradientSafe(GradientVectorType_& g, const double w = 1) const
 	{
 		std::lock_guard<std::mutex> lock(m_);
 		AddGradient(g, w);

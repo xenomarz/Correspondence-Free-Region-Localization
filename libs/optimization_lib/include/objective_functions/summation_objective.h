@@ -7,49 +7,51 @@
 #include <vector>
 
 // Optimization lib includes
-#include "./dense_objective_function.h"
+#include "./objective_function.h"
 
-template<typename ObjectiveFunctionType_>
-class SummationObjective : public DenseObjectiveFunction<static_cast<Eigen::StorageOptions>(ObjectiveFunctionType_::StorageOrder)>
+template<typename ObjectiveFunctionType_, typename VectorType_>
+class SummationObjective : public ObjectiveFunction<static_cast<Eigen::StorageOptions>(ObjectiveFunctionType_::StorageOrder), VectorType_>
 {
 public:
 	/**
 	 * Constructors and destructor
 	 */
-	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const bool enforce_psd = false, const bool parallel_update = false) :
-		DenseObjectiveFunction(data_provider, "Summation Objective", 0, enforce_psd),
-		parallel_update_(parallel_update)
+	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const bool enforce_psd = false, const bool enforce_children_psd = false, const bool parallel_update = false) :
+		ObjectiveFunction(data_provider, "Summation Objective", 0, enforce_psd),
+		parallel_update_(parallel_update),
+		enforce_children_psd_(enforce_children_psd)
 	{
 		this->Initialize();
 	}
 
-	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const bool enforce_psd = false, const bool parallel_update = false) :
-		DenseObjectiveFunction(data_provider, name, 0, enforce_psd),
-		parallel_update_(parallel_update)
+	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const bool enforce_psd = false, const bool enforce_children_psd = false, const bool parallel_update = false) :
+		ObjectiveFunction(data_provider, name, 0, enforce_psd),
+		parallel_update_(parallel_update),
+		enforce_children_psd_(enforce_children_psd)
 	{
 		this->Initialize();
 	}
 
-	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool enforce_psd = false, const bool parallel_update = false) :
-		SummationObjective(data_provider, name, enforce_psd, parallel_update)
+	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool enforce_psd = false, const bool enforce_children_psd = false, const bool parallel_update = false) :
+		SummationObjective(data_provider, name, enforce_psd, enforce_children_psd, parallel_update)
 	{
 		AddObjectiveFunctions(objective_functions);
 	}
 
-	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, const bool enforce_psd = false, const bool parallel_update = false) :
-		SummationObjective(data_provider, std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, enforce_psd, parallel_update)
+	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, const bool enforce_psd = false, const bool enforce_children_psd = false, const bool parallel_update = false) :
+		SummationObjective(data_provider, std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, enforce_psd, enforce_children_psd, parallel_update)
 	{
 
 	}
 
-	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const bool enforce_psd = false, const bool parallel_update = false) :
-		SummationObjective(data_provider, objective_functions, "Summation Objective", enforce_psd, parallel_update)
+	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const bool enforce_psd = false, const bool enforce_children_psd = false, const bool parallel_update = false) :
+		SummationObjective(data_provider, objective_functions, "Summation Objective", enforce_psd, enforce_children_psd, parallel_update)
 	{
 
 	}
 
-	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const bool enforce_psd = false, const bool parallel_update = false) :
-		SummationObjective(data_provider, objective_function, "Summation Objective", enforce_psd, parallel_update)
+	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const bool enforce_psd = false, const bool enforce_children_psd = false, const bool parallel_update = false) :
+		SummationObjective(data_provider, objective_function, "Summation Objective", enforce_psd, enforce_children_psd, parallel_update)
 	{
 
 	}
@@ -59,6 +61,22 @@ public:
 
 	}
 
+	/**
+	 * Public getters
+	 */
+	bool GetEnforceChildrenPsd() const
+	{
+		return enforce_children_psd_;
+	}
+
+	/**
+	 * Public setters
+	 */
+	void SetEnforceChildrenPsd(const bool enforce_children_psd)
+	{
+		enforce_children_psd_ = enforce_children_psd;
+	}
+	
 	/**
 	 * Public Methods
 	 */
@@ -155,8 +173,10 @@ protected:
 
 	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
 	{
+		auto objective_functions_size = objective_functions_.size();
+		
 		#pragma omp parallel for if(parallel_update_)
-		for (int32_t i = 0; i < objective_functions_.size(); i++)
+		for (int32_t i = 0; i < objective_functions_size; i++)
 		{
 			objective_functions_[i]->Update(x, updated_objects);
 		}
@@ -177,7 +197,7 @@ private:
 		}
 	}
 
-	void CalculateValuePerVertex(Eigen::VectorXd& f_per_vertex) override
+	void CalculateValuePerVertex(VectorType_& f_per_vertex) override
 	{
 		f_per_vertex.setZero();
 		for (int64_t i = 0; i < objective_functions_.size(); i++)
@@ -188,14 +208,14 @@ private:
 		}
 	}
 
-	void CalculateGradient(Eigen::VectorXd& g) override
+	void CalculateGradient(VectorType_& g) override
 	{
 		g.setZero();
 		for(int64_t i = 0; i < objective_functions_.size(); i++)
 		{
 			auto& objective_function = objective_functions_.at(i);
 			auto w = objective_function->GetWeight();
-			objective_function->AddGradientSafe(g, w);
+			objective_function->AddGradientSafe<VectorType_>(g, w);
 		}
 	}
 
@@ -219,6 +239,7 @@ private:
 	 */
 	std::vector<std::shared_ptr<ObjectiveFunctionType_>> objective_functions_;
 	bool parallel_update_;
+	bool enforce_children_psd_;
 };
 
 #endif

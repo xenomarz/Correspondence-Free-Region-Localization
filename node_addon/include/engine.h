@@ -241,8 +241,8 @@ private:
 	std::vector<std::shared_ptr<EdgePairDataProvider>> edge_pair_data_providers_;
 	std::vector<std::shared_ptr<FaceFanDataProvider>> face_fan_data_providers_;
 	
-	std::shared_ptr<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> summation_objective_;
-	std::shared_ptr<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> position_;
+	std::shared_ptr<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>> summation_objective_;
+	std::shared_ptr<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>> position_;
 	std::shared_ptr<Separation<Eigen::StorageOptions::RowMajor>> separation_;
 	std::shared_ptr<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>> symmetric_dirichlet_;
 	std::shared_ptr<SeamlessObjective<Eigen::StorageOptions::RowMajor>> seamless_;

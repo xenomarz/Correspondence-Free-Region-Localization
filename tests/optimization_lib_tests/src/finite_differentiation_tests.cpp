@@ -180,11 +180,11 @@ protected:
 
 	void CreateObjectiveFunction() override
 	{
-		objective_function_ = std::make_shared<EdgePairLengthObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<EdgePairDataProvider>(data_providers_[0]));
+		objective_function_ = std::make_shared<EdgePairLengthObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<EdgePairDataProvider>(data_providers_[0]), false);
 	}
 };
 
-class SingularPointObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>
+class SingularPointObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
 {
 protected:
 	SingularPointObjectiveFDTest() :
@@ -206,7 +206,7 @@ protected:
 
 	void CreateObjectiveFunction() override
 	{
-		objective_function_ = std::make_shared<SingularPointObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<FaceFanDataProvider>(data_providers_[0]), 1);
+		objective_function_ = std::make_shared<SingularPointObjective<Eigen::StorageOptions::RowMajor>>(std::dynamic_pointer_cast<FaceFanDataProvider>(data_providers_[0]), 1, false);
 	}
 };
 
@@ -235,7 +235,7 @@ protected:
 
 	void CreateObjectiveFunction() override
 	{
-		std::shared_ptr<SingularPointsObjective<Eigen::StorageOptions::RowMajor>> singular_points_objective = std::make_shared<SingularPointsObjective<Eigen::StorageOptions::RowMajor>>(std::static_pointer_cast<EmptyDataProvider>(data_providers_[0]), 1);
+		std::shared_ptr<SingularPointsObjective<Eigen::StorageOptions::RowMajor>> singular_points_objective = std::make_shared<SingularPointsObjective<Eigen::StorageOptions::RowMajor>>(std::static_pointer_cast<EmptyDataProvider>(data_providers_[0]), 1, false);
 		singular_points_objective->AddSingularPointObjective(std::static_pointer_cast<FaceFanDataProvider>(data_providers_[1]));
 		singular_points_objective->AddSingularPointObjective(std::static_pointer_cast<FaceFanDataProvider>(data_providers_[2]));
 		objective_function_ = singular_points_objective;
@@ -267,7 +267,7 @@ protected:
 
 	void CreateObjectiveFunction() override
 	{
-		auto seamless_objective = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(std::static_pointer_cast<EmptyDataProvider>(data_providers_[0]));
+		auto seamless_objective = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(std::static_pointer_cast<EmptyDataProvider>(data_providers_[0]), false);
 		seamless_objective->AddEdgePairObjectives(std::static_pointer_cast<EdgePairDataProvider>(data_providers_[1]));
 		seamless_objective->AddEdgePairObjectives(std::static_pointer_cast<EdgePairDataProvider>(data_providers_[2]));
 		objective_function_ = seamless_objective;

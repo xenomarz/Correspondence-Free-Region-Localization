@@ -63,13 +63,13 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	Napi::ObjectWrap<Engine>(info),
 	mesh_wrapper_(std::make_shared<MeshWrapper>())
 {
-	properties_map_.insert({ "value", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Value) });
-	properties_map_.insert({ "value_per_vertex", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::ValuePerVertex) });
-	properties_map_.insert({ "gradient", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Gradient) });
-	properties_map_.insert({ "gradient_norm", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::GradientNorm) });
-	properties_map_.insert({ "hessian", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Hessian) });
-	properties_map_.insert({ "weight", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Weight) });
-	properties_map_.insert({ "name", static_cast<uint32_t>(DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>::Properties::Name) });
+	properties_map_.insert({ "value", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Value) });
+	properties_map_.insert({ "value_per_vertex", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::ValuePerVertex) });
+	properties_map_.insert({ "gradient", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Gradient) });
+	properties_map_.insert({ "gradient_norm", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::GradientNorm) });
+	properties_map_.insert({ "hessian", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Hessian) });
+	properties_map_.insert({ "weight", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Weight) });
+	properties_map_.insert({ "name", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Name) });
 	properties_map_.insert({ "delta", static_cast<uint32_t>(Separation<Eigen::StorageOptions::RowMajor>::Properties::Delta) });
 	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
 	properties_map_.insert({ "singularity_weight_per_vertex", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::SingularityWeightPerVertex) });
@@ -82,14 +82,14 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(plain_data_provider_);
 	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(empty_data_provider_);
 	singular_points_ = std::make_shared<SingularPointsObjective<Eigen::StorageOptions::RowMajor>>(empty_data_provider_, 1);
-  	position_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(empty_data_provider_, std::string("Position"));
-	std::vector<std::shared_ptr<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>> objective_functions;
+  	position_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(empty_data_provider_, std::string("Position"));
+	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> objective_functions;
 	objective_functions.push_back(position_);
 	objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
 	objective_functions.push_back(seamless_);
 	objective_functions.push_back(singular_points_);
-	summation_objective_ = std::make_shared<SummationObjective<DenseObjectiveFunction<Eigen::StorageOptions::RowMajor>>>(empty_data_provider_, objective_functions, false, true);
+	summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(empty_data_provider_, objective_functions, false, false, true);
 	mesh_wrapper_->RegisterModelLoadedCallback([this]() {
 		/**
 		 * Initialize objective functions

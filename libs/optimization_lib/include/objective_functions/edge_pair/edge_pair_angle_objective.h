@@ -13,8 +13,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	EdgePairAngleObjective(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider) :
-		EdgePairObjective(edge_pair_data_provider, "Edge Pair Angle Objective")
+	EdgePairAngleObjective(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider, const bool enforce_psd = false) :
+		EdgePairObjective(edge_pair_data_provider, "Edge Pair Angle Objective", enforce_psd)
 	{
 		this->Initialize();
 	}

@@ -18,7 +18,7 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	EdgePairObjective(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider, const std::string& name, const bool enforce_psd = false) :
+	EdgePairObjective(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider, const std::string& name, const bool enforce_psd) :
 		SparseObjectiveFunction(edge_pair_data_provider, name, 4, enforce_psd)
 	{
 

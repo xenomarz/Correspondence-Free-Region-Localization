@@ -21,7 +21,7 @@ template <class Derived, Eigen::StorageOptions StorageOrder_>
 class NewtonMethod : public IterativeMethod<StorageOrder_>
 {
 public:
-	NewtonMethod(std::shared_ptr<DenseObjectiveFunction<StorageOrder_>> objective_function, const Eigen::VectorXd& x0) :
+	NewtonMethod(std::shared_ptr<ObjectiveFunction<StorageOrder_, Eigen::VectorXd>> objective_function, const Eigen::VectorXd& x0) :
 		IterativeMethod(objective_function, x0)
 	{
 		// TODO: Call 'AnalyzePattern' after any objective function addition/removal

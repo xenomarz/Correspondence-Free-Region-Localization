@@ -28,7 +28,7 @@ template <Eigen::StorageOptions StorageOrder_>
 class IterativeMethod
 {
 public:
-	IterativeMethod(std::shared_ptr<DenseObjectiveFunction<StorageOrder_>> objective_function, const Eigen::VectorXd& x0) :
+	IterativeMethod(std::shared_ptr<ObjectiveFunction<StorageOrder_, Eigen::VectorXd>> objective_function, const Eigen::VectorXd& x0) :
 		objective_function_(objective_function),
 		x_(x0),
 		p_(Eigen::VectorXd::Zero(x0.size())),
@@ -45,7 +45,7 @@ public:
 		Terminate();
 	}
 
-	const std::shared_ptr<DenseObjectiveFunction<StorageOrder_>> GetObjectiveFunction() const
+	const std::shared_ptr<ObjectiveFunction<StorageOrder_, Eigen::VectorXd>> GetObjectiveFunction() const
 	{
 		return objective_function_;
 	}
@@ -219,7 +219,7 @@ private:
 	mutable std::mutex x_mutex_;
 
 	// Objective function
-	std::shared_ptr<DenseObjectiveFunction<StorageOrder_>> objective_function_;
+	std::shared_ptr<ObjectiveFunction<StorageOrder_, Eigen::VectorXd>> objective_function_;
 
 	// Line search
 	const long max_backtracking_iterations_;

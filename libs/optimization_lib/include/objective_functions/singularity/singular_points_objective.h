@@ -14,7 +14,7 @@
 #include "./singular_point_objective.h"
 
 template <Eigen::StorageOptions StorageOrder_>
-class SingularPointsObjective : public SummationObjective<SingularPointObjective<StorageOrder_>>
+class SingularPointsObjective : public SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>
 {
 public:
 	/**
@@ -22,7 +22,7 @@ public:
 	 */
 	enum class Properties : int32_t
 	{
-		Interval = SummationObjective<SingularPointObjective<StorageOrder_>>::Properties::Count_,
+		Interval = SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::Properties::Count_,
 		SingularityWeightPerVertex
 	};
 
@@ -30,14 +30,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SingularPointsObjective(const std::shared_ptr<EmptyDataProvider>& empty_data_provider, const std::string& name, double interval) :
-		SummationObjective(empty_data_provider, name, false, false)
+	SingularPointsObjective(const std::shared_ptr<EmptyDataProvider>& empty_data_provider, const std::string& name, double interval, const bool enforce_children_psd = true) :
+		SummationObjective(empty_data_provider, name, false, enforce_children_psd, false),
+		interval_(interval)
 	{
-
+		this->Initialize();
 	}
 
-	SingularPointsObjective(const std::shared_ptr<EmptyDataProvider>& empty_data_provider, double interval) :
-		SingularPointsObjective(empty_data_provider, "Singular Points", interval)
+	SingularPointsObjective(const std::shared_ptr<EmptyDataProvider>& empty_data_provider, double interval, const bool enforce_children_psd = true) :
+		SingularPointsObjective(empty_data_provider, "Singular Points", interval, enforce_children_psd)
 	{
 
 	}
@@ -61,7 +62,7 @@ public:
 
 	bool SetProperty(const int32_t property_id, const std::any& property_value) override
 	{
-		if (SummationObjective<SingularPointObjective<StorageOrder_>>::SetProperty(property_id, property_value))
+		if (SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::SetProperty(property_id, property_value))
 		{
 			return true;
 		}
@@ -92,7 +93,7 @@ public:
 
 	bool GetProperty(const int32_t property_id, std::any& property_value) override
 	{
-		if (SummationObjective<SingularPointObjective<StorageOrder_>>::GetProperty(property_id, property_value))
+		if (SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::GetProperty(property_id, property_value))
 		{
 			return true;
 		}
@@ -116,7 +117,7 @@ public:
 	 */
 	void PreInitialize() override
 	{
-		SummationObjective<SingularPointObjective<StorageOrder_>>::PreInitialize();
+		SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::PreInitialize();
 		singularity_weight_per_vertex_.resize(this->GetDataProvider()->GetMeshDataProvider()->GetImageVerticesCount());
 	}
 
@@ -125,7 +126,7 @@ public:
 	 */
 	void AddSingularPointObjective(const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider)
 	{
-		this->AddObjectiveFunction(std::make_shared<SingularPointObjective<StorageOrder_>>(face_fan_data_provider, interval_));
+		this->AddObjectiveFunction(std::make_shared<SingularPointObjective<StorageOrder_>>(face_fan_data_provider, interval_, this->GetEnforceChildrenPsd()));
 	}
 
 protected:
