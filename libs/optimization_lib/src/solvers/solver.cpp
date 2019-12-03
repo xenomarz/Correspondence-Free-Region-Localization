@@ -3,6 +3,7 @@
 
 solver::solver(const bool isConstrObjFunc, const int solverID)
 	:
+	solverID(solverID),
 	parameters_mutex(make_unique<mutex>()),
 	data_mutex(make_unique<shared_timed_mutex>()),
 	param_cv(make_unique<condition_variable>()),
@@ -35,11 +36,7 @@ void solver::setFlipAvoidingLineSearch(MatrixX3i & F)
 int solver::run()
 {
 	std::ofstream myfile;
-	string filePath = "C:\\Users\\user\\Desktop\\OptimizationResults";
-	filePath += std::to_string(solverID);
-	filePath += ".csv";
-
-	myfile.open(filePath);
+	myfile.open("C:\\Users\\user\\Desktop\\Solver" + std::to_string(solverID) + ".csv");
 	is_running = true;
 	halt = false;
 	int steps = 0;
