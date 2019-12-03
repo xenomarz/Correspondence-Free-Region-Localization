@@ -37,3 +37,4 @@ endif()
 
 # applications
 add_subdirectory("apps/autoquads")
+add_subdirectory("apps/console_app")
