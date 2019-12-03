@@ -342,17 +342,6 @@ public:
 
 	//Constructor & initialization
 	Output(igl::opengl::glfw::Viewer* viewer, const bool isConstrObjFunc,const app_utils::SolverType solver_type) {
-		// Initialize solver thread
-		newton = make_shared<NewtonSolver>(isConstrObjFunc);
-		gradient_descent = make_shared<GradientDescentSolver>(isConstrObjFunc);
-		
-		if (solver_type == app_utils::NEWTON) 
-			solver = newton;
-		else 
-			solver = gradient_descent;
-		
-		totalObjective = make_shared<TotalObjective>();
-
 		//update viewer
 		CoreID = viewer->append_core(Vector4f::Zero());
 		viewer->core(CoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
@@ -362,7 +351,16 @@ public:
 		viewer->core(CoreID).trackball_angle = Quaternionf::Identity();
 		viewer->core(CoreID).orthographic = true;
 		viewer->core(CoreID).set_rotation_type(ViewerCore::RotationType(2));
-
+		
+		// Initialize solver thread
+		cout << "CoreID = " << CoreID << endl;
+		newton = make_shared<NewtonSolver>(isConstrObjFunc, CoreID);
+		gradient_descent = make_shared<GradientDescentSolver>(isConstrObjFunc, CoreID);
+		if (solver_type == app_utils::NEWTON) 
+			solver = newton;
+		else 
+			solver = gradient_descent;
+		totalObjective = make_shared<TotalObjective>();
 	}
 	~Output() {}
 };

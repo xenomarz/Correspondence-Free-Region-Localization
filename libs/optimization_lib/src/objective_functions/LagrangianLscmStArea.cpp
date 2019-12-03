@@ -8,6 +8,7 @@ LagrangianLscmStArea::LagrangianLscmStArea()
 double LagrangianLscmStArea::value(bool update)
 {
 	// L = LSCM + lambda * area
+	
 	VectorXd LSCM = 2 * d.cwiseAbs2() + (b + c).cwiseAbs2() + 2 * a.cwiseAbs2();
 	VectorXd areaE = detJ - VectorXd::Ones(F.rows());
 	

@@ -9,7 +9,7 @@
 class solver
 {
 public:
-	solver(const bool IsConstrObjFunc);
+	solver(const bool IsConstrObjFunc, const int solverID);
 	int run();
 	void stop();
 	void get_data(VectorXd& X);
@@ -58,12 +58,17 @@ protected:
 	vector<double> SS;
 
 private:
+	int solverID;
 	// energy output from the last step
 	double currentEnergy;
 	virtual double step() = 0;
 	virtual void linesearch();
 	virtual bool test_progress() = 0;
 	virtual void internal_init() = 0;
+	void saveResults(int numIteration, std::ofstream& myfile);
+	double alfa[601] = { 0 };
+	double y_value[601] = { 0 };
+	double y_augmentedValue[601] = { 0 };
 
 	// Mutex stuff
 	unique_ptr<mutex> parameters_mutex;

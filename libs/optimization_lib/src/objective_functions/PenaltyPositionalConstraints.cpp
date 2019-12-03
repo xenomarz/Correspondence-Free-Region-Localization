@@ -3,7 +3,7 @@
 PenaltyPositionalConstraints::PenaltyPositionalConstraints(bool isConstrObjFunc)
 {
     name = "Positional Constraints";
-	w = 10000;
+	w = 50;
 	IsConstrObjFunc = isConstrObjFunc;
 }
 

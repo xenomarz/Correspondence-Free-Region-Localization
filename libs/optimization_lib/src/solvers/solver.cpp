@@ -1,6 +1,7 @@
 #include <solvers/solver.h>
+#include <fstream>
 
-solver::solver(const bool isConstrObjFunc)
+solver::solver(const bool isConstrObjFunc, const int solverID)
 	:
 	parameters_mutex(make_unique<mutex>()),
 	data_mutex(make_unique<shared_timed_mutex>()),
@@ -33,18 +34,74 @@ void solver::setFlipAvoidingLineSearch(MatrixX3i & F)
 
 int solver::run()
 {
+	std::ofstream myfile;
+	string filePath = "C:\\Users\\user\\Desktop\\OptimizationResults";
+	filePath += std::to_string(solverID);
+	filePath += ".csv";
+
+	myfile.open(filePath);
 	is_running = true;
 	halt = false;
 	int steps = 0;
 	do
 	{
 		currentEnergy = step();
+		saveResults(steps, myfile);
 		linesearch();
 		update_external_data();
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
+	myfile.close();
 	cout << ">> solver stopped" << endl;
 	return 0;
+}
+
+void solver::saveResults(int numIteration, std::ofstream& myfile) {
+	int counter;
+	double alpha = 0;
+	for ( alpha = -3, counter = 0; alpha <= 3; alpha += 0.01, counter++) {
+		MatrixXd curr_x = X + alpha * p;
+		objective->updateX(curr_x);
+		alfa[counter] = alpha;
+		y_value[counter] = objective->value();
+		y_augmentedValue[counter] = objective->AugmentedValue();
+	}
+
+	if(!numIteration)
+		myfile << "Round" << endl;
+
+	
+
+	myfile << numIteration << ",";
+	myfile << "alfa,";
+	for (int i = 0; i < counter; i++) {
+		myfile << alfa[i] << ",";
+	}
+	myfile << endl;
+
+	myfile << ",value,";
+	for (int i = 0; i < counter; i++) {
+		myfile << y_value[i] << ",";
+	}
+	myfile << endl;
+
+	myfile << ",augmentedValue,";
+	for (int i = 0; i < counter; i++) {
+		myfile << y_augmentedValue[i] << ",";
+	}
+	myfile << endl;
+
+
+	shared_ptr<TotalObjective> a =  dynamic_pointer_cast<TotalObjective>(objective);
+	for (auto& obj : a->objectiveList) {
+		myfile << ",";
+		myfile << obj->name;
+		myfile << endl;
+			
+	}
+	
+
+	myfile << endl;
 }
 
 void solver::linesearch()
@@ -94,6 +151,7 @@ void solver::linesearch()
 		}
 		cur_iter++;
 	}
+	cout << "cur_iter  = " << cur_iter << endl;
 }
 
 void solver::stop()
