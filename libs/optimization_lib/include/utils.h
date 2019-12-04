@@ -18,6 +18,9 @@
 #include <igl/local_basis.h>
 #include <igl/boundary_loop.h>
 #include <igl/per_face_normals.h>
+#include <fstream>
+#include <direct.h>
+
 // for EXCEPTION_POINTERS
 //#include <Windows.h>
 

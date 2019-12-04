@@ -10,6 +10,7 @@ class solver
 {
 public:
 	solver(const bool IsConstrObjFunc, const int solverID);
+	~solver();
 	int run();
 	void stop();
 	void get_data(VectorXd& X);
@@ -54,8 +55,8 @@ protected:
 	unique_ptr<shared_timed_mutex> data_mutex;
 
 	// pardiso variables
-	vector<int> II, JJ;
-	vector<double> SS;
+	//vector<int> II, JJ;
+	//vector<double> SS;
 
 private:
 	int solverID;
@@ -71,6 +72,7 @@ private:
 	double alfa[601] = { 0 };
 	double y_value[601] = { 0 };
 	double y_augmentedValue[601] = { 0 };
+	std::ofstream SearchDirInfo, solverInfo, hessianInfo;
 
 	// Mutex stuff
 	unique_ptr<mutex> parameters_mutex;

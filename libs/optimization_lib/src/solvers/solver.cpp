@@ -1,8 +1,4 @@
 #include <solvers/solver.h>
-#include <fstream>
-
-#include <direct.h>
-
 
 solver::solver(const bool isConstrObjFunc, const int solverID)
 	:
@@ -12,7 +8,22 @@ solver::solver(const bool isConstrObjFunc, const int solverID)
 	param_cv(make_unique<condition_variable>()),
 	num_steps(2147483647),
 	IsConstrObjFunc(isConstrObjFunc)
-{}
+{
+	//save data in csv files
+	string path = "C:\\Users\\user\\Desktop\\Solver" + std::to_string(solverID) + "\\";
+	mkdir(path.c_str());
+	SearchDirInfo.open(path + "SearchDirInfo.csv");
+	solverInfo.open(path + "solverInfo.csv");
+	hessianInfo.open(path + "hessianInfo.csv");
+}
+
+solver::~solver() {
+	//close csv files
+	SearchDirInfo.close();
+	solverInfo.close();
+	hessianInfo.close();
+	cout << "csv files has been closed!";
+}
 
 void solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
 {
@@ -38,15 +49,6 @@ void solver::setFlipAvoidingLineSearch(MatrixX3i & F)
 
 int solver::run()
 {
-	//save data in csv files
-	std::ofstream SearchDirInfo,solverInfo,hessianInfo;
-	string path = "C:\\Users\\user\\Desktop\\Solver" + std::to_string(solverID) + "\\";
-	mkdir(path.c_str());
-	SearchDirInfo.open(path + "SearchDirInfo.csv");
-	solverInfo.open(path + "solverInfo.csv");
-	hessianInfo.open(path + "hessianInfo.csv");
-
-	//solver
 	is_running = true;
 	halt = false;
 	int steps = 0;
@@ -60,10 +62,6 @@ int solver::run()
 		update_external_data();
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
-	//close csv files
-	SearchDirInfo.close();
-	solverInfo.close();
-	hessianInfo.close();
 	cout << ">> solver stopped" << endl;
 	return 0;
 }
@@ -121,6 +119,23 @@ void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {
 		}
 		hessianInfo << endl;
 	}
+
+	//prepare the hessian
+	objective->updateX(X);
+	objective->hessian();
+	Eigen::SparseMatrix<double> A;
+	std::vector<Eigen::Triplet<double>> tripletList;
+	tripletList.reserve((objective->II).size());
+	int rows = *std::max_element((objective->II).begin(), (objective->II).end()) + 1;
+	int cols = *std::max_element((objective->JJ).begin(), (objective->JJ).end()) + 1;
+	assert(rows == cols && "Rows == Cols at solver's saveHessianInfo() method");
+	for (int i = 0; i < (objective->II).size(); i++)
+		tripletList.push_back(Eigen::Triplet<double>((objective->II)[i], (objective->JJ)[i], (objective->SS)[i]));
+	A.resize(rows, cols);
+	A.setFromTriplets(tripletList.begin(), tripletList.end());
+
+	//output the hessian
+	hessianInfo << A << endl << endl;
 }
 
 void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
