@@ -22,7 +22,7 @@ solver::~solver() {
 	SearchDirInfo.close();
 	solverInfo.close();
 	hessianInfo.close();
-	cout << "csv files has been closed!";
+	cout << ">> csv files has been closed!" << endl;
 }
 
 void solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
@@ -120,9 +120,8 @@ void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {
 		hessianInfo << endl;
 	}
 
-	//prepare the hessian
-	objective->updateX(X);
-	objective->hessian();
+	
+	//prepare the hessian matrix
 	Eigen::SparseMatrix<double> A;
 	std::vector<Eigen::Triplet<double>> tripletList;
 	tripletList.reserve((objective->II).size());
@@ -135,7 +134,15 @@ void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
 
 	//output the hessian
-	hessianInfo << A << endl << endl;
+	hessianInfo << ("Round " + std::to_string(numIteration)).c_str() << endl;
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			hessianInfo << A.coeff(i, j) << ",";
+		}
+		
+		hessianInfo << "," << g(i) << endl;
+	}
+	hessianInfo << endl;
 }
 
 void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
