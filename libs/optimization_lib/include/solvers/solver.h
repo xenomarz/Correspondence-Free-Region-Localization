@@ -62,7 +62,7 @@ private:
 	// energy output from the last step
 	double currentEnergy;
 	virtual double step() = 0;
-	virtual void linesearch();
+	virtual void linesearch(std::ofstream& myfile);
 	virtual bool test_progress() = 0;
 	virtual void internal_init() = 0;
 	void saveResults(int numIteration, std::ofstream& myfile);

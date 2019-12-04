@@ -44,7 +44,7 @@ int solver::run()
 	{
 		currentEnergy = step();
 		saveResults(steps, myfile);
-		linesearch();
+		linesearch(myfile);
 		update_external_data();
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
@@ -64,10 +64,16 @@ void solver::saveResults(int numIteration, std::ofstream& myfile) {
 		y_augmentedValue[counter] = objective->AugmentedValue();
 	}
 
-	if(!numIteration)
-		myfile << "Round" << endl;
+	if (!numIteration) {
+		shared_ptr<TotalObjective> a =  dynamic_pointer_cast<TotalObjective>(objective);
+		myfile << "Obj name,weight,Augmented parameter," << endl;
+		for (auto& obj : a->objectiveList) {
+			myfile << obj->name << "," << obj->w << "," << obj->augmented_value_parameter << "," << endl;
+		}
 
-	
+		myfile << endl << "Round" << endl;
+	}
+		
 
 	myfile << numIteration << ",";
 	myfile << "alfa,";
@@ -82,26 +88,16 @@ void solver::saveResults(int numIteration, std::ofstream& myfile) {
 	}
 	myfile << endl;
 
-	myfile << ",augmentedValue,";
-	for (int i = 0; i < counter; i++) {
-		myfile << y_augmentedValue[i] << ",";
-	}
-	myfile << endl;
-
-
-	shared_ptr<TotalObjective> a =  dynamic_pointer_cast<TotalObjective>(objective);
-	for (auto& obj : a->objectiveList) {
-		myfile << ",";
-		myfile << obj->name;
+	if (IsConstrObjFunc) {
+		myfile << ",augmentedValue,";
+		for (int i = 0; i < counter; i++) {
+			myfile << y_augmentedValue[i] << ",";
+		}
 		myfile << endl;
-			
 	}
-	
-
-	myfile << endl;
 }
 
-void solver::linesearch()
+void solver::linesearch(std::ofstream& myfile)
 {
 	double step_size;
 	if (/*FlipAvoidingLineSearch*/false)
@@ -148,7 +144,8 @@ void solver::linesearch()
 		}
 		cur_iter++;
 	}
-	cout << "cur_iter  = " << cur_iter << endl;
+	myfile << ",Chosen alfa," << step_size << "," << endl;
+	myfile << ",LineSearch iter," << cur_iter << "," << endl;
 }
 
 void solver::stop()
