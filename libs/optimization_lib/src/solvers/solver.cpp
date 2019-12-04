@@ -1,6 +1,9 @@
 #include <solvers/solver.h>
 #include <fstream>
 
+#include <direct.h>
+
+
 solver::solver(const bool isConstrObjFunc, const int solverID)
 	:
 	solverID(solverID),
@@ -35,25 +38,93 @@ void solver::setFlipAvoidingLineSearch(MatrixX3i & F)
 
 int solver::run()
 {
-	std::ofstream myfile;
-	myfile.open("C:\\Users\\user\\Desktop\\Solver" + std::to_string(solverID) + ".csv");
+	//save data in csv files
+	std::ofstream SearchDirInfo,solverInfo,hessianInfo;
+	string path = "C:\\Users\\user\\Desktop\\Solver" + std::to_string(solverID) + "\\";
+	mkdir(path.c_str());
+	SearchDirInfo.open(path + "SearchDirInfo.csv");
+	solverInfo.open(path + "solverInfo.csv");
+	hessianInfo.open(path + "hessianInfo.csv");
+
+	//solver
 	is_running = true;
 	halt = false;
 	int steps = 0;
 	do
 	{
 		currentEnergy = step();
-		saveResults(steps, myfile);
-		linesearch(myfile);
+		saveSearchDirInfo(steps, SearchDirInfo);
+		saveSolverInfo(steps, solverInfo);
+		saveHessianInfo(steps, hessianInfo);
+		linesearch(SearchDirInfo);
 		update_external_data();
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
-	myfile.close();
+	//close csv files
+	SearchDirInfo.close();
+	solverInfo.close();
+	hessianInfo.close();
 	cout << ">> solver stopped" << endl;
 	return 0;
 }
 
-void solver::saveResults(int numIteration, std::ofstream& myfile) {
+void solver::saveSolverInfo(int numIteration, std::ofstream& solverInfo) {
+	//show only once the objective's function data
+	shared_ptr<TotalObjective> totalObj = dynamic_pointer_cast<TotalObjective>(objective);
+	if (!numIteration) {
+		solverInfo << "Obj name,weight,Augmented parameter," << endl;
+		for (auto& obj : totalObj->objectiveList) {
+			solverInfo << obj->name << "," << obj->w << "," << obj->augmented_value_parameter << "," << endl;
+		}
+		solverInfo << endl << endl;
+
+		solverInfo << ",," << totalObj->name << ",,,,,,,";
+		for (auto& obj : totalObj->objectiveList) {
+			solverInfo << obj->name << ",,,,,,,";
+		}
+
+		solverInfo << endl
+			<< "Round,,value,obj value,constr value,grad,obj grad,constr grad,";
+		for (auto& obj : totalObj->objectiveList) {
+			solverInfo << ",value,obj value,constr value,grad,obj grad,constr grad,";
+		}
+		solverInfo << endl;
+	}
+
+	solverInfo <<
+		numIteration << ",," <<
+		totalObj->energy_value << "," <<
+		totalObj->objective_value << "," <<
+		totalObj->constraint_value << "," <<
+		totalObj->gradient_norm << "," <<
+		totalObj->objective_gradient_norm << "," <<
+		totalObj->constraint_gradient_norm << ",,";
+	for (auto& obj : totalObj->objectiveList) {
+		solverInfo <<
+			obj->energy_value << "," << 
+			obj->objective_value << ","<< 
+			obj->constraint_value << "," <<
+			obj->gradient_norm << "," << 
+			obj->objective_gradient_norm << "," <<
+			obj->constraint_gradient_norm << ",,";
+	}
+	solverInfo << endl;
+}
+
+void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {
+	//show only once the objective's function data
+	if (!numIteration) {
+		shared_ptr<TotalObjective> a = dynamic_pointer_cast<TotalObjective>(objective);
+		hessianInfo << "Obj name,weight,Augmented parameter," << endl;
+		for (auto& obj : a->objectiveList) {
+			hessianInfo << obj->name << "," << obj->w << "," << obj->augmented_value_parameter << "," << endl;
+		}
+		hessianInfo << endl;
+	}
+}
+
+void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
+	//calculate values in the search direction vector
 	int counter;
 	double alpha = 0;
 	for ( alpha = -3, counter = 0; alpha <= 3; alpha += 0.01, counter++) {
@@ -63,41 +134,44 @@ void solver::saveResults(int numIteration, std::ofstream& myfile) {
 		y_value[counter] = objective->value();
 		y_augmentedValue[counter] = objective->AugmentedValue();
 	}
+	objective->updateX(X);
 
+	//show only once the objective's function data
 	if (!numIteration) {
 		shared_ptr<TotalObjective> a =  dynamic_pointer_cast<TotalObjective>(objective);
-		myfile << "Obj name,weight,Augmented parameter," << endl;
+		SearchDirInfo << "Obj name,weight,Augmented parameter," << endl;
 		for (auto& obj : a->objectiveList) {
-			myfile << obj->name << "," << obj->w << "," << obj->augmented_value_parameter << "," << endl;
+			SearchDirInfo << obj->name << "," << obj->w << "," << obj->augmented_value_parameter << "," << endl;
 		}
-
-		myfile << endl << "Round" << endl;
+		SearchDirInfo << endl << "Round" << endl;
 	}
 		
-
-	myfile << numIteration << ",";
-	myfile << "alfa,";
+	//add the alfa values as one row
+	SearchDirInfo << numIteration << ",";
+	SearchDirInfo << "alfa,";
 	for (int i = 0; i < counter; i++) {
-		myfile << alfa[i] << ",";
+		SearchDirInfo << alfa[i] << ",";
 	}
-	myfile << endl;
+	SearchDirInfo << endl;
 
-	myfile << ",value,";
+	//add the total objective's values as one row
+	SearchDirInfo << ",value,";
 	for (int i = 0; i < counter; i++) {
-		myfile << y_value[i] << ",";
+		SearchDirInfo << y_value[i] << ",";
 	}
-	myfile << endl;
+	SearchDirInfo << endl;
 
+	//add the total objective's augmented values as one row
 	if (IsConstrObjFunc) {
-		myfile << ",augmentedValue,";
+		SearchDirInfo << ",augmentedValue,";
 		for (int i = 0; i < counter; i++) {
-			myfile << y_augmentedValue[i] << ",";
+			SearchDirInfo << y_augmentedValue[i] << ",";
 		}
-		myfile << endl;
+		SearchDirInfo << endl;
 	}
 }
 
-void solver::linesearch(std::ofstream& myfile)
+void solver::linesearch(std::ofstream& SearchDirInfo)
 {
 	double step_size;
 	if (/*FlipAvoidingLineSearch*/false)
@@ -144,8 +218,10 @@ void solver::linesearch(std::ofstream& myfile)
 		}
 		cur_iter++;
 	}
-	myfile << ",Chosen alfa," << step_size << "," << endl;
-	myfile << ",LineSearch iter," << cur_iter << "," << endl;
+
+	//add the solver's choice of alfa
+	SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
+	SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
 }
 
 void solver::stop()

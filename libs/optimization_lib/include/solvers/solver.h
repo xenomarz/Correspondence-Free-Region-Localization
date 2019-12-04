@@ -62,10 +62,12 @@ private:
 	// energy output from the last step
 	double currentEnergy;
 	virtual double step() = 0;
-	virtual void linesearch(std::ofstream& myfile);
+	virtual void linesearch(std::ofstream& SearchDirInfo);
 	virtual bool test_progress() = 0;
 	virtual void internal_init() = 0;
-	void saveResults(int numIteration, std::ofstream& myfile);
+	void saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo);
+	void saveSolverInfo(int numIteration, std::ofstream& solverInfo);
+	void saveHessianInfo(int numIteration, std::ofstream& hessianInfo);
 	double alfa[601] = { 0 };
 	double y_value[601] = { 0 };
 	double y_augmentedValue[601] = { 0 };
