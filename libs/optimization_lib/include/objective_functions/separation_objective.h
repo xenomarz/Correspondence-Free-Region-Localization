@@ -95,7 +95,18 @@ private:
 	void CalculateValue(double& f) override
 	{
 		EsepP = Esep * X;
-		EsepP_squared_rowwise_sum = EsepP.array().pow(2.0).rowwise().sum();
+
+		EsepP_squared.resize(EsepP.rows(), 2);
+		
+		int rows = EsepP.rows();
+		//#pragma omp parallel for
+		for(int i = 0; i < rows; i++)
+		{
+			EsepP_squared.coeffRef(i, 0) = EsepP.coeffRef(i, 0) * EsepP.coeffRef(i, 0);
+			EsepP_squared.coeffRef(i, 1) = EsepP.coeffRef(i, 1) * EsepP.coeffRef(i, 1);
+		}
+		
+		EsepP_squared_rowwise_sum = EsepP_squared.rowwise().sum();
 		EsepP_squared_rowwise_sum_plus_delta = EsepP_squared_rowwise_sum.array() + delta_;
 		f_per_pair = EsepP_squared_rowwise_sum.cwiseQuotient(EsepP_squared_rowwise_sum_plus_delta);
 
@@ -142,6 +153,11 @@ private:
 	
 	void PreInitialize() override
 	{
+		Esep4 << 1,  0, -1,  0,
+				 0,  1,  0, -1,
+				-1,  0,  1,  0,
+				 0, -1,  0,  1;
+		
 		Esep = this->data_provider_->GetMeshDataProvider()->GetCorrespondingVertexPairsCoefficients();
 		Esept = Esep.transpose();
 		edge_lenghts_per_pair = this->data_provider_->GetMeshDataProvider()->GetCorrespondingVertexPairsEdgeLength();
@@ -185,11 +201,12 @@ private:
 	
 	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
+		int threads = omp_get_max_threads();
 		// no inner loop because there are only 2 nnz values per col
-		#pragma omp parallel for
+		#pragma omp parallel for num_threads(threads)
 		for (int i = 0; i < Esept.outerSize(); ++i)
 		{
-			int tid = omp_get_thread_num();
+			//int tid = omp_get_thread_num();
 
 			Eigen::Vector2d xi, xj;
 			Eigen::Matrix4d sh;
@@ -207,13 +224,6 @@ private:
 			FindSingleHessian(xi, xj, sh);
 			sh *= factor;
 
-			Eigen::Matrix4d Esep4;
-			Esep4 << 1,  0, -1,  0,
-					 0,  1,  0, -1,
-					-1,  0,  1,  0,
-					 0, -1,  0,  1;
-
-			sh += Esep4;
 			sh *= edge_lenghts_per_pair(i);
 
 			int ind = 10 * i;
@@ -259,6 +269,8 @@ private:
 	Eigen::SparseMatrix<double> Esep;
 	Eigen::SparseMatrix<double> Esept;
 	Eigen::MatrixX2d EsepP;
+	Eigen::Matrix4d Esep4;
+	Eigen::MatrixX2d EsepP_squared;
 
 	Eigen::VectorXd f_per_pair;
 	Eigen::VectorXd edge_lenghts_per_pair;

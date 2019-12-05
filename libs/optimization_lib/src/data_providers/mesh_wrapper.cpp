@@ -184,7 +184,7 @@ void MeshWrapper::FixFlippedFaces(const Eigen::MatrixX3i& f_im, Eigen::MatrixX2d
 
 void MeshWrapper::GenerateRandom2DSoup(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out, Eigen::MatrixX2d& v_out)
 {
-	srand((unsigned int)time(0));
+	//srand((unsigned int)time(0));
 	GenerateSoupFaces(f_in, f_out);
 	v_out = Eigen::MatrixX2d::Random(3 * f_out.rows(), 2) * 2.0;
 	FixFlippedFaces(f_out, v_out);

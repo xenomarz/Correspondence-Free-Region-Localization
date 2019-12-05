@@ -590,7 +590,7 @@ private:
 				}
 			}
 
-			H = V * D * V.inverse();
+			H = V * D * V.transpose();
 
 			for (auto column = 0; column < objective_variables_count_; column++)
 			{

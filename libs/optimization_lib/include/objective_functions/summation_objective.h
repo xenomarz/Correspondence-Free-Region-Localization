@@ -174,8 +174,8 @@ protected:
 	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
 	{
 		auto objective_functions_size = objective_functions_.size();
-		
-		#pragma omp parallel for if(parallel_update_)
+
+		//#pragma omp parallel for if(parallel_update_)
 		for (int32_t i = 0; i < objective_functions_size; i++)
 		{
 			objective_functions_[i]->Update(x, updated_objects);

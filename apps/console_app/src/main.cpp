@@ -40,10 +40,13 @@ void main()
 	//objective_functions.push_back(position_);
 	objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
-	//objective_functions.push_back(seamless_);
+	objective_functions.push_back(seamless_);
 	//objective_functions.push_back(singular_points_);
 	auto summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(empty_data_provider_, objective_functions, false, false, true);
 
+	std::vector<std::shared_ptr<EdgePairDataProvider>> edge_pair_data_providers_;
+	std::vector<std::shared_ptr<FaceFanDataProvider>> face_fan_data_providers_;
+	
 	std::shared_ptr<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>> newton_method_;
 	mesh_wrapper_->RegisterModelLoadedCallback([&]() {
 		/**
@@ -51,6 +54,27 @@ void main()
 		 */
 		summation_objective_->Initialize();
 
+		for (auto& edge_pair_descriptor : mesh_wrapper_->GetEdgePairDescriptors())
+		{
+			edge_pair_data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptor));
+		}
+
+		for (auto& face_fan : mesh_wrapper_->GetFaceFans())
+		{
+			face_fan_data_providers_.push_back(std::make_shared<FaceFanDataProvider>(mesh_wrapper_, face_fan));
+		}
+
+		for (auto& edge_pair_data_provider : edge_pair_data_providers_)
+		{
+			seamless_->AddEdgePairObjectives(edge_pair_data_provider);
+		}
+
+		for (auto& face_fan_data_provider : face_fan_data_providers_)
+		{
+			singular_points_->AddSingularPointObjective(face_fan_data_provider);
+		}
+
+		
 		/**
 		 * Create newton method iterator
 		 */
@@ -63,5 +87,5 @@ void main()
 
 	mesh_wrapper_->LoadModel("C:\\Users\\Roy\\Documents\\GitHub\\RDS\\models\\obj\\cow.obj");
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+	std::this_thread::sleep_for(std::chrono::milliseconds(60000));
 }
