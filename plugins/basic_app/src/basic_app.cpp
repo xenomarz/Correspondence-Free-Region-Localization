@@ -778,9 +778,10 @@ void basic_app::Draw_menu_for_solver_settings() {
 				ImGui::Text(("Output " + std::to_string(Outputs[i].CoreID)).c_str());
 				ImGui::NextColumn();
 				for (auto& obj : Outputs[i].totalObjective->objectiveList) {
+					shared_ptr<ConstrainedObjectiveFunction> constr = dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
 					ImGui::PushID(id++);
-					ImGui::DragFloat("w", &(obj->w), 0.05f, 0.0f, 100000.0f);
-					ImGui::DragFloat("augmented param.", &(obj)->augmented_value_parameter, 0.05f, 0.0f, 100000.0f);
+					ImGui::DragFloat("w", &(constr->w), 0.05f, 0.0f, 100000.0f);
+					ImGui::DragFloat("augmented param.", &(constr)->augmented_value_parameter, 0.05f, 0.0f, 100000.0f);
 					ImGui::NextColumn();
 					ImGui::PopID();
 				}
@@ -871,13 +872,15 @@ void basic_app::Draw_menu_for_text_results() {
 					
 				ImGui::TextColored(c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
 				if (out.solver->IsConstrObjFunc) {
-					ImGui::TextColored(c, (std::string(obj->name) + std::string(" objective_value ") + std::to_string(obj->objective_value)).c_str());
-					ImGui::TextColored(c, (std::string(obj->name) + std::string(" constraint_value ") + std::to_string(obj->constraint_value)).c_str());
+					shared_ptr<ConstrainedObjectiveFunction> constr = dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
+					ImGui::TextColored(c, (std::string(constr->name) + std::string(" objective_value ") + std::to_string(constr->objective_value)).c_str());
+					ImGui::TextColored(c, (std::string(constr->name) + std::string(" constraint_value ") + std::to_string(constr->constraint_value)).c_str());
 				}
 				ImGui::TextColored(c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
 				if (out.solver->IsConstrObjFunc) {
-					ImGui::TextColored(c, (std::string(obj->name) + std::string(" objective_gradient ") + std::to_string(obj->objective_gradient_norm)).c_str());
-					ImGui::TextColored(c, (std::string(obj->name) + std::string(" constraint_gradient ") + std::to_string(obj->constraint_gradient_norm)).c_str());
+					shared_ptr<ConstrainedObjectiveFunction> constr = dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
+					ImGui::TextColored(c, (std::string(constr->name) + std::string(" objective_gradient ") + std::to_string(constr->objective_gradient_norm)).c_str());
+					ImGui::TextColored(c, (std::string(constr->name) + std::string(" constraint_gradient ") + std::to_string(constr->constraint_gradient_norm)).c_str());
 				}
 			}
 			ImGui::End();

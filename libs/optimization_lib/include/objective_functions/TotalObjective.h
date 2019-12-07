@@ -1,8 +1,8 @@
 #pragma once
 
-#include <libs/optimization_lib/include/objective_functions/ObjectiveFunction.h>
+#include <libs/optimization_lib/include/objective_functions/ConstrainedObjectiveFunction.h>
 
-class TotalObjective : public ObjectiveFunction
+class TotalObjective : public ConstrainedObjectiveFunction
 {
 private:
 	virtual void init_hessian() override;

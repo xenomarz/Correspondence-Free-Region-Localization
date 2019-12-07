@@ -13,4 +13,11 @@ protected:
 public:
 	ConstrainedObjectiveFunction() {}
 	virtual void init() override;
+
+	//save values to show results
+	double objective_value = 0;
+	double constraint_value = 0;
+	double objective_gradient_norm = 0;
+	double constraint_gradient_norm = 0;
+	float augmented_value_parameter = 1;
 };

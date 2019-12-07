@@ -43,15 +43,9 @@ public:
 
 	//weight for each objective function
 	float w = 0;
-	float augmented_value_parameter = 1;
 	VectorXd Efi;     
 	double energy_value = 0;
-	double objective_value = 0;
-	double constraint_value = 0;
-
 	double gradient_norm = 0;
-	double objective_gradient_norm = 0;
-	double constraint_gradient_norm = 0;
 	string name = "Objective function";
 };
 

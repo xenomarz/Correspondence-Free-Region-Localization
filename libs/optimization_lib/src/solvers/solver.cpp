@@ -1,4 +1,5 @@
 #include <solvers/solver.h>
+//#define SAVE_RESULTS_TO_CSV
 
 solver::solver(const bool isConstrObjFunc, const int solverID)
 	:
@@ -9,20 +10,24 @@ solver::solver(const bool isConstrObjFunc, const int solverID)
 	num_steps(2147483647),
 	IsConstrObjFunc(isConstrObjFunc)
 {
-	//save data in csv files
-	string path = "C:\\Users\\user\\Desktop\\Solver" + std::to_string(solverID) + "\\";
-	mkdir(path.c_str());
-	SearchDirInfo.open(path + "SearchDirInfo.csv");
-	solverInfo.open(path + "solverInfo.csv");
-	hessianInfo.open(path + "hessianInfo.csv");
+	#ifdef SAVE_RESULTS_TO_CSV
+		//save data in csv files
+		string path = "C:\\Users\\user\\Desktop\\Solver" + std::to_string(solverID) + "\\";
+		mkdir(path.c_str());
+		SearchDirInfo.open(path + "SearchDirInfo.csv");
+		solverInfo.open(path + "solverInfo.csv");
+		hessianInfo.open(path + "hessianInfo.csv");
+	#endif
 }
 
 solver::~solver() {
-	//close csv files
-	SearchDirInfo.close();
-	solverInfo.close();
-	hessianInfo.close();
-	cout << ">> csv files has been closed!" << endl;
+	#ifdef SAVE_RESULTS_TO_CSV
+		//close csv files
+		SearchDirInfo.close();
+		solverInfo.close();
+		hessianInfo.close();
+		cout << ">> csv files has been closed!" << endl;
+	#endif
 }
 
 void solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
@@ -55,9 +60,11 @@ int solver::run()
 	do
 	{
 		currentEnergy = step();
-		saveSearchDirInfo(steps, SearchDirInfo);
-		saveSolverInfo(steps, solverInfo);
-		saveHessianInfo(steps, hessianInfo);
+		#ifdef SAVE_RESULTS_TO_CSV
+			saveSearchDirInfo(steps, SearchDirInfo);
+			saveSolverInfo(steps, solverInfo);
+			saveHessianInfo(steps, hessianInfo);
+		#endif  
 		linesearch(SearchDirInfo);
 		update_external_data();
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
@@ -70,41 +77,71 @@ void solver::saveSolverInfo(int numIteration, std::ofstream& solverInfo) {
 	//show only once the objective's function data
 	shared_ptr<TotalObjective> totalObj = dynamic_pointer_cast<TotalObjective>(objective);
 	if (!numIteration) {
-		solverInfo << "Obj name,weight,Augmented parameter," << endl;
+		if(IsConstrObjFunc)
+			solverInfo << "Obj name,weight,Augmented parameter," << endl;
+		else 
+			solverInfo << "Obj name,weight," << endl;
 		for (auto& obj : totalObj->objectiveList) {
-			solverInfo << obj->name << "," << obj->w << "," << obj->augmented_value_parameter << "," << endl;
+			solverInfo << obj->name << "," << obj->w << ",";
+			if(IsConstrObjFunc)
+				solverInfo << dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj)->augmented_value_parameter << "," ;
+			solverInfo << endl;
 		}
 		solverInfo << endl << endl;
 
-		solverInfo << ",," << totalObj->name << ",,,,,,,";
+		if (IsConstrObjFunc)
+			solverInfo << ",," << totalObj->name << ",,,,,,,";
+		else 
+			solverInfo << ",," << totalObj->name << ",,,";
 		for (auto& obj : totalObj->objectiveList) {
-			solverInfo << obj->name << ",,,,,,,";
+			if (IsConstrObjFunc)
+				solverInfo << obj->name << ",,,,,,,";
+			else 
+				solverInfo << obj->name << ",,,";
 		}
-
-		solverInfo << endl
-			<< "Round,,value,obj value,constr value,grad,obj grad,constr grad,";
+		solverInfo << endl;
+		if (IsConstrObjFunc)
+			solverInfo << "Round,,value,obj value,constr value,grad,obj grad,constr grad,";
+		else 
+			solverInfo << "Round,,value,grad,";
 		for (auto& obj : totalObj->objectiveList) {
-			solverInfo << ",value,obj value,constr value,grad,obj grad,constr grad,";
+			if (IsConstrObjFunc)
+				solverInfo << ",value,obj value,constr value,grad,obj grad,constr grad,";
+			else
+				solverInfo << ",value,grad,";
 		}
 		solverInfo << endl;
 	}
 
-	solverInfo <<
+	if (IsConstrObjFunc)
+		solverInfo <<
+			numIteration << ",," <<
+			totalObj->energy_value << "," <<
+			totalObj->objective_value << "," <<
+			totalObj->constraint_value << "," <<
+			totalObj->gradient_norm << "," <<
+			totalObj->objective_gradient_norm << "," <<
+			totalObj->constraint_gradient_norm << ",,";
+	else
+		solverInfo <<
 		numIteration << ",," <<
 		totalObj->energy_value << "," <<
-		totalObj->objective_value << "," <<
-		totalObj->constraint_value << "," <<
-		totalObj->gradient_norm << "," <<
-		totalObj->objective_gradient_norm << "," <<
-		totalObj->constraint_gradient_norm << ",,";
+		totalObj->gradient_norm << ",,";
+
 	for (auto& obj : totalObj->objectiveList) {
-		solverInfo <<
-			obj->energy_value << "," << 
-			obj->objective_value << ","<< 
-			obj->constraint_value << "," <<
-			obj->gradient_norm << "," << 
-			obj->objective_gradient_norm << "," <<
-			obj->constraint_gradient_norm << ",,";
+		shared_ptr<ConstrainedObjectiveFunction> constr = dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
+		if (IsConstrObjFunc)
+			solverInfo <<
+				constr->energy_value << "," <<
+				constr->objective_value << ","<<
+				constr->constraint_value << "," <<
+				constr->gradient_norm << "," <<
+				constr->objective_gradient_norm << "," <<
+				constr->constraint_gradient_norm << ",,";
+		else
+			solverInfo <<
+				obj->energy_value << "," <<
+				obj->gradient_norm << ",,";
 	}
 	solverInfo << endl;
 }
@@ -112,10 +149,16 @@ void solver::saveSolverInfo(int numIteration, std::ofstream& solverInfo) {
 void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {
 	//show only once the objective's function data
 	if (!numIteration) {
-		shared_ptr<TotalObjective> a = dynamic_pointer_cast<TotalObjective>(objective);
-		hessianInfo << "Obj name,weight,Augmented parameter," << endl;
-		for (auto& obj : a->objectiveList) {
-			hessianInfo << obj->name << "," << obj->w << "," << obj->augmented_value_parameter << "," << endl;
+		shared_ptr<TotalObjective> t = dynamic_pointer_cast<TotalObjective>(objective);
+		hessianInfo << "Obj name,weight,";
+		if(IsConstrObjFunc)
+			hessianInfo << "Augmented parameter,";
+		hessianInfo << endl;
+		for (auto& obj : t->objectiveList) {
+			hessianInfo << obj->name << "," << obj->w << ",";
+			if (IsConstrObjFunc)
+				hessianInfo << dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj)->augmented_value_parameter << ",";
+			hessianInfo << endl;
 		}
 		hessianInfo << endl;
 	}
@@ -160,10 +203,16 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 
 	//show only once the objective's function data
 	if (!numIteration) {
-		shared_ptr<TotalObjective> a =  dynamic_pointer_cast<TotalObjective>(objective);
-		SearchDirInfo << "Obj name,weight,Augmented parameter," << endl;
-		for (auto& obj : a->objectiveList) {
-			SearchDirInfo << obj->name << "," << obj->w << "," << obj->augmented_value_parameter << "," << endl;
+		shared_ptr<TotalObjective> t = dynamic_pointer_cast<TotalObjective>(objective);
+		SearchDirInfo << "Obj name,weight,";
+		if (IsConstrObjFunc)
+			SearchDirInfo << "Augmented parameter,";
+		SearchDirInfo << endl;
+		for (auto& obj : t->objectiveList) {
+			SearchDirInfo << obj->name << "," << obj->w << ",";
+			if (IsConstrObjFunc)
+				SearchDirInfo << dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj)->augmented_value_parameter << ",";
+			SearchDirInfo << endl;
 		}
 		SearchDirInfo << endl << "Round" << endl;
 	}
@@ -241,9 +290,11 @@ void solver::linesearch(std::ofstream& SearchDirInfo)
 		cur_iter++;
 	}
 
-	//add the solver's choice of alfa
-	SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
-	SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
+	#ifdef SAVE_RESULTS_TO_CSV
+		//add the solver's choice of alfa
+		SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
+		SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
+	#endif
 }
 
 void solver::stop()
