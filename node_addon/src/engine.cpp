@@ -91,7 +91,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	objective_functions.push_back(symmetric_dirichlet_);
 	objective_functions.push_back(seamless_);
 	objective_functions.push_back(singular_points_);
-	summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(empty_data_provider_, objective_functions, false, false, true);
+	summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(empty_data_provider_, objective_functions, false, false, false);
 	mesh_wrapper_->RegisterModelLoadedCallback([this]() {
 		/**
 		 * Initialize objective functions
@@ -455,7 +455,7 @@ Napi::Int32Array Engine::CreateBufferedFacesArray(Napi::Env env, const Eigen::Ma
 	const uint32_t entries_per_face = 3;
 	auto buffered_faces_array = Napi::Int32Array::New(env, entries_per_face * F.rows());
 
-	#pragma omp parallel for
+	//#pragma omp parallel for
 	for (int32_t face_index = 0; face_index < F.rows(); face_index++)
 	{
 		const int base_index = entries_per_face * face_index;

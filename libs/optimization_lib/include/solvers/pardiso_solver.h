@@ -39,9 +39,9 @@ public:
 		}
 
 		iparm_[0] = 1;		/* No solver default */
-		iparm_[1] = 3;		/* The parallel (OpenMP) version of the nested dissection algorithm */
-		iparm_[23] = 1;		/* Intel MKL PARDISO uses a two-level factorization algorithm */
-		iparm_[24] = 1;		/* Intel MKL PARDISO uses a parallel algorithm for the solve step */
+		//iparm_[1] = 3;		/* The parallel (OpenMP) version of the nested dissection algorithm */
+		//iparm_[23] = 1;		/* Intel MKL PARDISO uses a two-level factorization algorithm */
+		//iparm_[24] = 1;		/* Intel MKL PARDISO uses a parallel algorithm for the solve step */
 		iparm_[7] = 1;		/* Max numbers of iterative refinement steps */
 		iparm_[34] = 1;		/* PARDISO use C-style indexing for ia and ja arrays */
 		maxfct_ = 1;		/* Maximum number of numerical factorizations. */
@@ -84,19 +84,19 @@ public:
 		MKL_INT* ja = const_cast<MKL_INT*>(A.innerIndexPtr());
 		double* a = const_cast<double*>(A.valuePtr());
 
-		#pragma omp parallel for
+		//#pragma omp parallel for
 		for (MKL_INT i = 0; i < A.outerSize() + 1; i++)
 		{
 			ia_[i] = ia[i];
 		}
 
-		#pragma omp parallel for
+		//#pragma omp parallel for
 		for (MKL_INT i = 0; i < A.nonZeros(); i++)
 		{
 			ja_[i] = ja[i];
 		}
 
-		#pragma omp parallel for
+		//#pragma omp parallel for
 		for (MKL_INT i = 0; i < A.nonZeros(); i++)
 		{
 			a_[i] = 0;

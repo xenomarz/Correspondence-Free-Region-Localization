@@ -82,13 +82,13 @@ public:
 	 */
 	void AddObjectiveFunction(const std::shared_ptr<ObjectiveFunctionType_>& objective_function)
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		objective_functions_.push_back(objective_function);
 	}
 
 	void AddObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions)
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		for (auto& objective_function : objective_functions)
 		{
 			objective_functions_.push_back(objective_function);
@@ -97,13 +97,13 @@ public:
 
 	void RemoveObjectiveFunction(const std::shared_ptr<ObjectiveFunctionType_>& objective_function)
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		objective_functions_.erase(std::remove(objective_functions_.begin(), objective_functions_.end(), objective_function), objective_functions_.end());
 	}
 
 	void RemoveObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions)
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		for (const auto& objective_function : objective_functions)
 		{
 			objective_functions_.erase(std::remove(objective_functions_.begin(), objective_functions_.end(), objective_function), objective_functions_.end());
@@ -112,19 +112,19 @@ public:
 
 	std::uint32_t GetObjectiveFunctionsCount() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return GetObjectiveFunctionsCountInternal();
 	}
 
 	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(std::uint32_t index) const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return GetObjectiveFunctionInternal(index);
 	}
 
 	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(const std::string& name) const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return GetObjectiveFunctionInternal(name);
 	}
 
@@ -175,7 +175,7 @@ protected:
 	{
 		auto objective_functions_size = objective_functions_.size();
 
-		//#pragma omp parallel for if(parallel_update_)
+		#pragma omp parallel for
 		for (int32_t i = 0; i < objective_functions_size; i++)
 		{
 			objective_functions_[i]->Update(x, updated_objects);
@@ -204,7 +204,7 @@ private:
 		{
 			auto& objective_function = objective_functions_.at(i);
 			auto w = objective_function->GetWeight();
-			objective_function->AddValuePerVertexSafe(f_per_vertex, w);
+			objective_function->AddValuePerVertex(f_per_vertex, w);
 		}
 	}
 
@@ -215,7 +215,7 @@ private:
 		{
 			auto& objective_function = objective_functions_.at(i);
 			auto w = objective_function->GetWeight();
-			objective_function->AddGradientSafe<VectorType_>(g, w);
+			objective_function->AddGradient<VectorType_>(g, w);
 		}
 	}
 

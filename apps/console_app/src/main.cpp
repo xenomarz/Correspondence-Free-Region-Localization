@@ -4,6 +4,7 @@
 #include <vector>
 #include <chrono>
 #include <thread>
+#include <omp.h>
 
 // LIBIGL includes
 #include <igl/readOFF.h>
@@ -38,7 +39,7 @@ void main()
 	auto position_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(empty_data_provider_, std::string("Position"));
 	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> objective_functions;
 	//objective_functions.push_back(position_);
-	objective_functions.push_back(separation_);
+	//objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
 	objective_functions.push_back(seamless_);
 	//objective_functions.push_back(singular_points_);
@@ -59,20 +60,20 @@ void main()
 			edge_pair_data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptor));
 		}
 
-		for (auto& face_fan : mesh_wrapper_->GetFaceFans())
-		{
-			face_fan_data_providers_.push_back(std::make_shared<FaceFanDataProvider>(mesh_wrapper_, face_fan));
-		}
+		//for (auto& face_fan : mesh_wrapper_->GetFaceFans())
+		//{
+		//	face_fan_data_providers_.push_back(std::make_shared<FaceFanDataProvider>(mesh_wrapper_, face_fan));
+		//}
 
 		for (auto& edge_pair_data_provider : edge_pair_data_providers_)
 		{
 			seamless_->AddEdgePairObjectives(edge_pair_data_provider);
 		}
 
-		for (auto& face_fan_data_provider : face_fan_data_providers_)
-		{
-			singular_points_->AddSingularPointObjective(face_fan_data_provider);
-		}
+		//for (auto& face_fan_data_provider : face_fan_data_providers_)
+		//{
+		//	singular_points_->AddSingularPointObjective(face_fan_data_provider);
+		//}
 
 		
 		/**

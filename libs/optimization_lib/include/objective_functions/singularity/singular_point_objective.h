@@ -91,13 +91,13 @@ public:
 
 	[[nodiscard]] double GetSingularityWeight() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return singular_weight_;
 	}
 
 	[[nodiscard]] double GetAngularDefect() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return angular_defect_;
 	}
 
@@ -152,7 +152,7 @@ public:
 	 */
 	[[nodiscard]] std::vector<RDS::VertexIndex> GetSingularVertexIndices() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		std::vector<RDS::VertexIndex> singular_vertex_indices;
 		const auto face_fan_data_provider = GetFaceFanDataProvider();
 		auto face_fan = face_fan_data_provider->GetFaceFan();

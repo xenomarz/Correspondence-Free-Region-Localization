@@ -161,7 +161,7 @@ private:
 		Napi::Float32Array buffered_vertices_array = Napi::Float32Array::New(env, 3 * V.rows());
 		uint32_t entries_per_vertex = V.cols();
 
-		#pragma omp parallel for
+		//#pragma omp parallel for
 		for (int32_t vertex_index = 0; vertex_index < V.rows(); vertex_index++)
 		{
 			float x = V(vertex_index, 0);
@@ -184,7 +184,7 @@ private:
 		uint32_t entries_per_vertex = V.cols();
 		Napi::Float32Array buffered_vertices_array = Napi::Float32Array::New(env, entries_per_face * F.rows());
 
-		#pragma omp parallel for
+		//#pragma omp parallel for
 		for (int32_t face_index = 0; face_index < F.rows(); face_index++)
 		{
 			int base_index = entries_per_face * face_index;
@@ -212,7 +212,7 @@ private:
 		uint32_t entries_per_vertex = V.cols();
 		Napi::Float32Array buffered_uvs_array = Napi::Float32Array::New(env, entries_per_face * F.rows());
 
-		#pragma omp parallel for
+		//#pragma omp parallel for
 		for (int32_t face_index = 0; face_index < F.rows(); face_index++)
 		{
 			int base_index = entries_per_face * face_index;

@@ -86,25 +86,25 @@ public:
 	 */
 	double GetValue() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return f_;
 	}
 
 	const VectorType_& GetValuePerVertex() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return f_per_vertex_;
 	}
 
 	const VectorType_& GetGradient() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return g_;
 	}
 
 	const Eigen::SparseMatrix<double, StorageOrder_>& GetHessian()
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 
 		//auto variables_count = this->data_provider_->GetMeshDataProvider()->GetVariablesCount();
 		//for(int64_t i = 0; i < variables_count; i++)
@@ -118,31 +118,31 @@ public:
 
 	const std::vector<Eigen::Triplet<double>>& GetTriplets() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return triplets_;
 	}
 
 	int64_t GetObjectiveVerticesCount() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return objective_vertices_count_;
 	}
 
 	int64_t GetObjectiveVariablesCount() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return objective_variables_count_;
 	}
 
 	double GetWeight() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return w_;
 	}
 
 	std::string GetName() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return name_;
 	}
 
@@ -153,7 +153,7 @@ public:
 
 	std::shared_ptr<DataProvider> GetDataProvider() const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		return data_provider_;
 	}
 
@@ -214,7 +214,7 @@ public:
 	 */
 	void SetWeight(const double w)
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		w_ = w;
 	}
 
@@ -272,14 +272,9 @@ public:
 	
 	void Update(const Eigen::VectorXd& x, UpdatedObjectSet& updated_objects, const UpdateOptions update_options)
 	{
-		std::lock_guard<std::mutex> lock(m_);
 		if (ShouldUpdate(updated_objects))
 		{
-			if (data_provider_ != nullptr)
-			{
-				data_provider_->Update(x, updated_objects);
-			}
-			
+			data_provider_->Update(x, updated_objects);
 			PreUpdate(x, updated_objects);
 
 			if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
@@ -318,23 +313,25 @@ public:
 	template<typename ValueVectorType_>
 	void AddValuePerVertexSafe(ValueVectorType_& f_per_vertex, const double w = 1) const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		AddValuePerVertex(f_per_vertex, w);
 	}
 
 	template<typename GradientVectorType_>
 	void AddGradientSafe(GradientVectorType_& g, const double w = 1) const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		AddGradient(g, w);
 	}
 
 	virtual void AddTriplets(std::vector<Eigen::Triplet<double>>& triplets, const double w = 1) const
 	{
-		std::lock_guard<std::mutex> lock(m_);
+		//std::lock_guard<std::mutex> lock(m_);
 		const int64_t start_index = triplets.size();
 		const int64_t end_index = start_index + triplets_.size();
 		triplets.insert(triplets.end(), triplets_.begin(), triplets_.end());
+
+		#pragma omp parallel for
 		for(int64_t i = start_index; i < end_index; i++)
 		{
 			double& value = const_cast<double&>(triplets[i].value());
