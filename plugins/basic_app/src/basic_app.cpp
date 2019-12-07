@@ -1232,6 +1232,7 @@ void basic_app::initializeSolver(const int index)
 
 
 	Outputs[index].totalObjective->objectiveList.clear();
+	Outputs[index].totalObjective->init_mesh(V, F);
 
 	if (Outputs[index].solver->IsConstrObjFunc) {
 		Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianLscmStArea));

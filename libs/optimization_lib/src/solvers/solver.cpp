@@ -1,5 +1,5 @@
 #include <solvers/solver.h>
-//#define SAVE_RESULTS_TO_CSV
+#define SAVE_RESULTS_TO_CSV
 
 solver::solver(const bool isConstrObjFunc, const int solverID)
 	:

@@ -23,12 +23,24 @@ void TotalObjective::updateX(const VectorXd& X)
 double TotalObjective::value(bool update)
 {
 	double f=0;
-    for (auto &objective : objectiveList)
-        if (objective->w != 0)
-		    f+= objective->w*objective->value(update);
-	
+	double Cconstraint_value = 0;
+	double Cobjective_value = 0;
+	for (auto &obj : objectiveList) {
+		if (obj->w != 0) {
+			shared_ptr<ConstrainedObjectiveFunction> constr = dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
+			f += obj->w * obj->value(update);
+			
+			if (constr != NULL) {
+				Cconstraint_value += constr->w * constr->constraint_value;
+				Cobjective_value += constr->w * constr->objective_value;
+			}
+		}
+	}
+		
 	if (update) {
 		energy_value = f;
+		constraint_value = Cconstraint_value;
+		objective_value = Cobjective_value;
 	}
 	return f;
 }
@@ -52,7 +64,12 @@ void TotalObjective::gradient(VectorXd& g)
 			g += objective->w*gi;
 		}
 	}
+
 	gradient_norm = g.norm();
+	if (g.rows() == (F.rows() + 2 * V.rows())) {
+		objective_gradient_norm = g.head(2 * V.rows()).norm();
+		constraint_gradient_norm = g.tail(F.rows()).norm();
+	}
 }
 
 void TotalObjective::hessian()

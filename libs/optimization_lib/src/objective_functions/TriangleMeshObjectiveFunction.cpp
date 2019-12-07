@@ -76,7 +76,7 @@ void TriangleMeshObjectiveFunction::updateX(const VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
-		cout << name << " Error! inversion exists." << endl;
+		//cout << name << " Error! inversion exists." << endl;
 	}
 }
 
