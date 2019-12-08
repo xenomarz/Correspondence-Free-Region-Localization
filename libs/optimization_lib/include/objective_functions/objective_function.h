@@ -71,7 +71,8 @@ public:
 		objective_variables_count_(objective_variables_count),
 		enforce_psd_(enforce_psd),
 		name_(name),
-		data_provider_(data_provider)
+		data_provider_(data_provider),
+		parallelism_enabled_(false)
 	{
 
 	}
@@ -272,30 +273,42 @@ public:
 	
 	void Update(const Eigen::VectorXd& x, UpdatedObjectSet& updated_objects, const UpdateOptions update_options)
 	{
-		if (ShouldUpdate(updated_objects))
+		data_provider_->Update(x, updated_objects);
+		PreUpdate(x, updated_objects);
+
+		#pragma omp parallel sections if(parallelism_enabled_)
 		{
-			data_provider_->Update(x, updated_objects);
-			PreUpdate(x, updated_objects);
-
-			if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
 			{
-				CalculateValue(f_);
-				CalculateValuePerVertex(f_per_vertex_);
+				if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
+				{
+					CalculateValue(f_);
+				}
 			}
-
-			if ((update_options & UpdateOptions::GRADIENT) != UpdateOptions::NONE)
+			#pragma omp section
 			{
-				CalculateGradient(g_);
+				if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
+				{
+					CalculateValuePerVertex(f_per_vertex_);
+				}
 			}
-
-			if ((update_options & UpdateOptions::HESSIAN) != UpdateOptions::NONE)
+			#pragma omp section
 			{
-				CalculateTriplets(triplets_);
-				CalculateConvexTriplets(triplets_);
+				if ((update_options & UpdateOptions::GRADIENT) != UpdateOptions::NONE)
+				{
+					CalculateGradient(g_);
+				}
 			}
-
-			PostUpdate(x, updated_objects);
+			#pragma omp section
+			{
+				if ((update_options & UpdateOptions::HESSIAN) != UpdateOptions::NONE)
+				{
+					CalculateTriplets(triplets_);
+					CalculateConvexTriplets(triplets_);
+				}
+			}
 		}
+
+		PostUpdate(x, updated_objects);
 	}
 
 	template<typename ValueVectorType_>
@@ -472,6 +485,9 @@ protected:
 	int64_t objective_vertices_count_;
 	int64_t objective_variables_count_;
 
+	// Parallelism enabled flag
+	bool parallelism_enabled_;
+	
 private:
 
 	/**

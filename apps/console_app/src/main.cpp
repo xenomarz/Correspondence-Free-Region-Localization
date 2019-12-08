@@ -39,7 +39,7 @@ void main()
 	auto position_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(empty_data_provider_, std::string("Position"));
 	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> objective_functions;
 	//objective_functions.push_back(position_);
-	//objective_functions.push_back(separation_);
+	objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
 	objective_functions.push_back(seamless_);
 	//objective_functions.push_back(singular_points_);
@@ -90,3 +90,28 @@ void main()
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(60000));
 }
+
+//int i = 1;
+//
+//int main()
+//{
+//#pragma omp parallel sections if(false)// starts a new team
+//	{
+//		{
+//			printf("num = %d\n", omp_get_thread_num());
+//			i++;
+//		}
+//#pragma omp section
+//		{
+//			printf("num = %d\n", omp_get_thread_num());
+//			i = 5;
+//		}
+//#pragma omp section
+//		{
+//			printf("num = %d\n", omp_get_thread_num());
+//			i++;
+//		}
+//	}
+//
+//	printf("i = %d\n", i);
+//}

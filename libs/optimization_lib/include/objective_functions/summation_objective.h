@@ -21,6 +21,7 @@ public:
 		parallel_update_(parallel_update),
 		enforce_children_psd_(enforce_children_psd)
 	{
+		this->parallelism_enabled_ = true;
 		this->Initialize();
 	}
 
@@ -29,6 +30,7 @@ public:
 		parallel_update_(parallel_update),
 		enforce_children_psd_(enforce_children_psd)
 	{
+		this->parallelism_enabled_ = true;
 		this->Initialize();
 	}
 
