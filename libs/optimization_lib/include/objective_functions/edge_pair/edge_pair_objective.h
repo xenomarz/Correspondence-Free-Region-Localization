@@ -42,45 +42,67 @@ protected:
 	{
 		SparseObjectiveFunction<StorageOrder_>::PostInitialize();
 
+		auto& edge_pair_data_provider = this->GetEdgePairDataProvider();
 		auto& dense_variable_index_to_sparse_variable_index_map = this->GetDenseVariableIndexToSparseVariableIndexMap();
 		auto& sparse_variable_index_to_dense_variable_index_map = this->GetSparseVariableIndexToDenseVariableIndexMap();
 
-		InitializeSparseIndexToFirstDerivativeSignMap(sparse_index_to_first_derivative_sign_map_);
+		dense_index_to_first_derivative_sign_map_.resize(this->objective_variables_count_);
+		InitializeSparseIndexToFirstDerivativeSignMap(dense_index_to_first_derivative_sign_map_);
 
-		for (RDS::DenseVariableIndex dense_variable_index = 0; dense_variable_index < this->objective_variables_count_; dense_variable_index++)
-		{
-			const RDS::SparseVariableIndex sparse_variable_index = dense_variable_index_to_sparse_variable_index_map.at(dense_variable_index);
-			sparse_index_to_first_derivative_value_map_.insert({ sparse_variable_index, 0 });
-		}
-
-		sparse_indices_to_second_derivative_value_map_.resize(this->objective_variables_count_);
+		dense_index_to_first_derivative_value_map_.resize(this->objective_variables_count_);
+		dense_indices_to_second_derivative_value_map_.resize(this->objective_variables_count_);
 		for (RDS::DenseVariableIndex i = 0; i < this->objective_variables_count_; i++)
 		{
-			sparse_indices_to_second_derivative_value_map_[i].resize(this->objective_variables_count_);
+			dense_indices_to_second_derivative_value_map_[i].resize(this->objective_variables_count_);
 			for (RDS::DenseVariableIndex j = 0; j < this->objective_variables_count_; j++)
 			{
-				sparse_indices_to_second_derivative_value_map_[i][j] = 0;
+				dense_indices_to_second_derivative_value_map_[i][j] = 0;
 			}
 		}
 		
-		//for (RDS::DenseVariableIndex dense_variable_index1 = 0; dense_variable_index1 < this->objective_variables_count_; dense_variable_index1++)
-		//{
-		//	for (RDS::DenseVariableIndex dense_variable_index2 = 0; dense_variable_index2 < this->objective_variables_count_; dense_variable_index2++)
-		//	{
-		//		const RDS::SparseVariableIndex sparse_variable_index1 = dense_variable_index_to_sparse_variable_index_map.at(dense_variable_index1);
-		//		const RDS::SparseVariableIndex sparse_variable_index2 = dense_variable_index_to_sparse_variable_index_map.at(dense_variable_index2);
-		//		sparse_indices_to_second_derivative_value_map_.insert({ std::make_pair(sparse_variable_index1, sparse_variable_index2), 0 });
-		//	}
-		//}
+		e1_v1_x_sparse_index_ = edge_pair_data_provider.GetEdge1Vertex1XIndex();
+		e1_v1_y_sparse_index_ = edge_pair_data_provider.GetEdge1Vertex1YIndex();
+		e1_v2_x_sparse_index_ = edge_pair_data_provider.GetEdge1Vertex2XIndex();
+		e1_v2_y_sparse_index_ = edge_pair_data_provider.GetEdge1Vertex2YIndex();
+		e2_v1_x_sparse_index_ = edge_pair_data_provider.GetEdge2Vertex1XIndex();
+		e2_v1_y_sparse_index_ = edge_pair_data_provider.GetEdge2Vertex1YIndex();
+		e2_v2_x_sparse_index_ = edge_pair_data_provider.GetEdge2Vertex2XIndex();
+		e2_v2_y_sparse_index_ = edge_pair_data_provider.GetEdge2Vertex2YIndex();
+
+		e1_v1_x_dense_index_ = sparse_variable_index_to_dense_variable_index_map[e1_v1_x_sparse_index_];
+		e1_v1_y_dense_index_ = sparse_variable_index_to_dense_variable_index_map[e1_v1_y_sparse_index_];
+		e1_v2_x_dense_index_ = sparse_variable_index_to_dense_variable_index_map[e1_v2_x_sparse_index_];
+		e1_v2_y_dense_index_ = sparse_variable_index_to_dense_variable_index_map[e1_v2_y_sparse_index_];
+		e2_v1_x_dense_index_ = sparse_variable_index_to_dense_variable_index_map[e2_v1_x_sparse_index_];
+		e2_v1_y_dense_index_ = sparse_variable_index_to_dense_variable_index_map[e2_v1_y_sparse_index_];
+		e2_v2_x_dense_index_ = sparse_variable_index_to_dense_variable_index_map[e2_v2_x_sparse_index_];
+		e2_v2_y_dense_index_ = sparse_variable_index_to_dense_variable_index_map[e2_v2_y_sparse_index_];
 	}
 
 	/**
 	 * Protected fields
 	 */
-	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_sign_map_;
-	std::unordered_map<RDS::SparseVariableIndex, double> sparse_index_to_first_derivative_value_map_;
-	//std::unordered_map<std::pair<RDS::SparseVariableIndex, RDS::SparseVariableIndex>, double, RDS::OrderedPairHash, RDS::OrderedPairEquals> sparse_indices_to_second_derivative_value_map_;
-	std::vector<std::vector<double>> sparse_indices_to_second_derivative_value_map_;
+	std::vector<double> dense_index_to_first_derivative_sign_map_;
+	std::vector<double> dense_index_to_first_derivative_value_map_;
+	std::vector<std::vector<double>> dense_indices_to_second_derivative_value_map_;
+
+	RDS::SparseVariableIndex e1_v1_x_sparse_index_;
+	RDS::SparseVariableIndex e1_v1_y_sparse_index_;
+	RDS::SparseVariableIndex e1_v2_x_sparse_index_;
+	RDS::SparseVariableIndex e1_v2_y_sparse_index_;
+	RDS::SparseVariableIndex e2_v1_x_sparse_index_;
+	RDS::SparseVariableIndex e2_v1_y_sparse_index_;
+	RDS::SparseVariableIndex e2_v2_x_sparse_index_;
+	RDS::SparseVariableIndex e2_v2_y_sparse_index_;
+
+	RDS::DenseVariableIndex e1_v1_x_dense_index_;
+	RDS::DenseVariableIndex e1_v1_y_dense_index_;
+	RDS::DenseVariableIndex e1_v2_x_dense_index_;
+	RDS::DenseVariableIndex e1_v2_y_dense_index_;
+	RDS::DenseVariableIndex e2_v1_x_dense_index_;
+	RDS::DenseVariableIndex e2_v1_y_dense_index_;
+	RDS::DenseVariableIndex e2_v2_x_dense_index_;
+	RDS::DenseVariableIndex e2_v2_y_dense_index_;
 
 private:
 	/**
@@ -121,17 +143,20 @@ private:
 	/**
 	 * Private methods
 	 */
-	virtual void InitializeSparseIndexToFirstDerivativeSignMap(std::unordered_map<RDS::SparseVariableIndex, double>& sparse_index_to_first_derivative_sign_map) = 0;
+	virtual void InitializeSparseIndexToFirstDerivativeSignMap(std::vector<double>& sparse_index_to_first_derivative_sign_map) = 0;
 	
 	double CalculateFirstPartialDerivative(const RDS::SparseVariableIndex sparse_variable_index)
 	{
-		return sparse_index_to_first_derivative_sign_map_[sparse_variable_index] * sparse_index_to_first_derivative_value_map_[sparse_variable_index];
+		return dense_index_to_first_derivative_sign_map_[sparse_variable_index] * dense_index_to_first_derivative_value_map_[sparse_variable_index];
 	}
 
 
 	double CalculateSecondPartialDerivative(const RDS::SparseVariableIndex sparse_variable_index1, const RDS::SparseVariableIndex sparse_variable_index2)
 	{
-		return sparse_index_to_first_derivative_sign_map_[sparse_variable_index1] * sparse_indices_to_second_derivative_value_map_[{ sparse_variable_index1, sparse_variable_index2 }];
+		auto& sparse_variable_index_to_dense_variable_index_map = this->GetSparseVariableIndexToDenseVariableIndexMap();
+		auto dense_variable_index1 = sparse_variable_index_to_dense_variable_index_map[sparse_variable_index1];
+		auto dense_variable_index2 = sparse_variable_index_to_dense_variable_index_map[sparse_variable_index2];
+		return dense_index_to_first_derivative_sign_map_[dense_variable_index1] * dense_indices_to_second_derivative_value_map_[dense_variable_index1][dense_variable_index2];
 	}
 };
 

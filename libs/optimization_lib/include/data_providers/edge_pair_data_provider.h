@@ -29,34 +29,115 @@ public:
 	/**
 	 * Getters
 	 */
-	const Eigen::Vector2d& GetEdge1() const;
-	const Eigen::Vector2d& GetEdge2() const;
-	
-	int64_t GetEdge1Vertex1XIndex() const;
-	int64_t GetEdge1Vertex1YIndex() const;
-	int64_t GetEdge1Vertex2XIndex() const;
-	int64_t GetEdge1Vertex2YIndex() const;
+	inline const Eigen::Vector2d& EdgePairDataProvider::GetEdge1() const
+	{
+		return edge1_;
+	}
 
-	int64_t GetEdge2Vertex1XIndex() const;
-	int64_t GetEdge2Vertex1YIndex() const;
-	int64_t GetEdge2Vertex2XIndex() const;
-	int64_t GetEdge2Vertex2YIndex() const;
+	inline const Eigen::Vector2d& EdgePairDataProvider::GetEdge2() const
+	{
+		return edge2_;
+	}
 
-	double GetEdge1XDiff() const;
-	double GetEdge1YDiff() const;
-	double GetEdge2XDiff() const;
-	double GetEdge2YDiff() const;
+	inline int64_t EdgePairDataProvider::GetEdge1Vertex1XIndex() const
+	{
+		return edge1_v1_x_index_;
+	}
 
-	double GetEdge1XSquaredDiff() const;
-	double GetEdge1YSquaredDiff() const;
-	double GetEdge2XSquaredDiff() const;
-	double GetEdge2YSquaredDiff() const;
+	inline int64_t EdgePairDataProvider::GetEdge1Vertex1YIndex() const
+	{
+		return edge1_v1_y_index_;
+	}
 
-	double GetEdge1SquaredNrom() const;
-	double GetEdge2SquaredNrom() const;
+	inline int64_t EdgePairDataProvider::GetEdge1Vertex2XIndex() const
+	{
+		return edge1_v2_x_index_;
+	}
 
-	double GetEdge1QuadrupledNrom() const;
-	double GetEdge2QuadrupledNrom() const;
+	inline int64_t EdgePairDataProvider::GetEdge1Vertex2YIndex() const
+	{
+		return edge1_v2_y_index_;
+	}
+
+	inline int64_t EdgePairDataProvider::GetEdge2Vertex1XIndex() const
+	{
+		return edge2_v1_x_index_;
+	}
+
+	inline int64_t EdgePairDataProvider::GetEdge2Vertex1YIndex() const
+	{
+		return edge2_v1_y_index_;
+	}
+
+	inline int64_t EdgePairDataProvider::GetEdge2Vertex2XIndex() const
+	{
+		return edge2_v2_x_index_;
+	}
+
+	inline int64_t EdgePairDataProvider::GetEdge2Vertex2YIndex() const
+	{
+		return edge2_v2_y_index_;
+	}
+
+	inline double EdgePairDataProvider::GetEdge1XDiff() const
+	{
+		return edge1_x_diff_;
+	}
+
+	inline double EdgePairDataProvider::GetEdge1YDiff() const
+	{
+		return edge1_y_diff_;
+	}
+
+	inline double EdgePairDataProvider::GetEdge2XDiff() const
+	{
+		return edge2_x_diff_;
+	}
+
+	inline double EdgePairDataProvider::GetEdge2YDiff() const
+	{
+		return edge2_y_diff_;
+	}
+
+	inline double EdgePairDataProvider::GetEdge1XSquaredDiff() const
+	{
+		return edge1_x_diff_squared_;
+	}
+
+	inline double EdgePairDataProvider::GetEdge1YSquaredDiff() const
+	{
+		return edge1_y_diff_squared_;
+	}
+
+	inline double EdgePairDataProvider::GetEdge2XSquaredDiff() const
+	{
+		return edge2_x_diff_squared_;
+	}
+
+	inline double EdgePairDataProvider::GetEdge2YSquaredDiff() const
+	{
+		return edge2_y_diff_squared_;
+	}
+
+	inline double EdgePairDataProvider::GetEdge1SquaredNrom() const
+	{
+		return edge1_squared_norm_;
+	}
+
+	inline double EdgePairDataProvider::GetEdge2SquaredNrom() const
+	{
+		return edge2_squared_norm_;
+	}
+
+	inline double EdgePairDataProvider::GetEdge1QuadrupledNrom() const
+	{
+		return edge1_quadrupled_norm_;
+	}
+
+	inline double EdgePairDataProvider::GetEdge2QuadrupledNrom() const
+	{
+		return edge2_quadrupled_norm_;
+	}
 
 private:
 	RDS::EdgePairDescriptor edge_pair_descriptor_;

@@ -84,89 +84,89 @@ protected:
 		/**
 		 * First partial derivatives
 		 */
-		this->sparse_index_to_first_derivative_value_map_[e1_v1_x_index] = edge1_scaled.coeff(0);
-		this->sparse_index_to_first_derivative_value_map_[e1_v1_y_index] = edge1_scaled.coeff(1);
-		this->sparse_index_to_first_derivative_value_map_[e1_v2_x_index] = edge1_scaled.coeff(0);
-		this->sparse_index_to_first_derivative_value_map_[e1_v2_y_index] = edge1_scaled.coeff(1);
-		this->sparse_index_to_first_derivative_value_map_[e2_v1_x_index] = edge2_scaled.coeff(0);
-		this->sparse_index_to_first_derivative_value_map_[e2_v1_y_index] = edge2_scaled.coeff(1);
-		this->sparse_index_to_first_derivative_value_map_[e2_v2_x_index] = edge2_scaled.coeff(0);
-		this->sparse_index_to_first_derivative_value_map_[e2_v2_y_index] = edge2_scaled.coeff(1);
+		this->dense_index_to_first_derivative_value_map_[e1_v1_x_index] = edge1_scaled.coeff(0);
+		this->dense_index_to_first_derivative_value_map_[e1_v1_y_index] = edge1_scaled.coeff(1);
+		this->dense_index_to_first_derivative_value_map_[e1_v2_x_index] = edge1_scaled.coeff(0);
+		this->dense_index_to_first_derivative_value_map_[e1_v2_y_index] = edge1_scaled.coeff(1);
+		this->dense_index_to_first_derivative_value_map_[e2_v1_x_index] = edge2_scaled.coeff(0);
+		this->dense_index_to_first_derivative_value_map_[e2_v1_y_index] = edge2_scaled.coeff(1);
+		this->dense_index_to_first_derivative_value_map_[e2_v2_x_index] = edge2_scaled.coeff(0);
+		this->dense_index_to_first_derivative_value_map_[e2_v2_y_index] = edge2_scaled.coeff(1);
 
 		/**
 		 * Second partial derivatives
 		 */
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e1_v1_x_index }] = d_edge1_v1_d_edge1_v1(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e1_v1_y_index }] = d_edge1_v1_d_edge1_v1(0, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e1_v2_x_index }] = d_edge1_v1_d_edge1_v2(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e1_v2_y_index }] = d_edge1_v1_d_edge1_v2(0, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e2_v1_x_index }] = d_edge1_v1_d_edge2_v1(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e2_v1_y_index }] = d_edge1_v1_d_edge2_v1(0, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e2_v2_x_index }] = d_edge1_v1_d_edge2_v2(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e2_v2_y_index }] = d_edge1_v1_d_edge2_v2(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e1_v1_x_index }] = d_edge1_v1_d_edge1_v1(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e1_v1_y_index }] = d_edge1_v1_d_edge1_v1(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e1_v2_x_index }] = d_edge1_v1_d_edge1_v2(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e1_v2_y_index }] = d_edge1_v1_d_edge1_v2(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e2_v1_x_index }] = d_edge1_v1_d_edge2_v1(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e2_v1_y_index }] = d_edge1_v1_d_edge2_v1(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e2_v2_x_index }] = d_edge1_v1_d_edge2_v2(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_x_index, e2_v2_y_index }] = d_edge1_v1_d_edge2_v2(0, 1);
 
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e1_v1_x_index }] = d_edge1_v2_d_edge1_v1(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e1_v1_y_index }] = d_edge1_v2_d_edge1_v1(0, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e1_v2_x_index }] = d_edge1_v2_d_edge1_v2(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e1_v2_y_index }] = d_edge1_v2_d_edge1_v2(0, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e2_v1_x_index }] = d_edge1_v2_d_edge2_v1(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e2_v1_y_index }] = d_edge1_v2_d_edge2_v1(0, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e2_v2_x_index }] = d_edge1_v2_d_edge2_v2(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e2_v2_y_index }] = d_edge1_v2_d_edge2_v2(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e1_v1_x_index }] = d_edge1_v2_d_edge1_v1(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e1_v1_y_index }] = d_edge1_v2_d_edge1_v1(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e1_v2_x_index }] = d_edge1_v2_d_edge1_v2(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e1_v2_y_index }] = d_edge1_v2_d_edge1_v2(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e2_v1_x_index }] = d_edge1_v2_d_edge2_v1(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e2_v1_y_index }] = d_edge1_v2_d_edge2_v1(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e2_v2_x_index }] = d_edge1_v2_d_edge2_v2(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_x_index, e2_v2_y_index }] = d_edge1_v2_d_edge2_v2(0, 1);
 
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e1_v1_x_index }] = d_edge1_v1_d_edge1_v1(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e1_v1_y_index }] = d_edge1_v1_d_edge1_v1(1, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e1_v2_x_index }] = d_edge1_v1_d_edge1_v2(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e1_v2_y_index }] = d_edge1_v1_d_edge1_v2(1, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e2_v1_x_index }] = d_edge1_v1_d_edge2_v1(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e2_v1_y_index }] = d_edge1_v1_d_edge2_v1(1, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e2_v2_x_index }] = d_edge1_v1_d_edge2_v2(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e2_v2_y_index }] = d_edge1_v1_d_edge2_v2(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e1_v1_x_index }] = d_edge1_v1_d_edge1_v1(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e1_v1_y_index }] = d_edge1_v1_d_edge1_v1(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e1_v2_x_index }] = d_edge1_v1_d_edge1_v2(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e1_v2_y_index }] = d_edge1_v1_d_edge1_v2(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e2_v1_x_index }] = d_edge1_v1_d_edge2_v1(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e2_v1_y_index }] = d_edge1_v1_d_edge2_v1(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e2_v2_x_index }] = d_edge1_v1_d_edge2_v2(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v1_y_index, e2_v2_y_index }] = d_edge1_v1_d_edge2_v2(1, 1);
 
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e1_v1_x_index }] = d_edge1_v2_d_edge1_v1(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e1_v1_y_index }] = d_edge1_v2_d_edge1_v1(1, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e1_v2_x_index }] = d_edge1_v2_d_edge1_v2(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e1_v2_y_index }] = d_edge1_v2_d_edge1_v2(1, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e2_v1_x_index }] = d_edge1_v2_d_edge2_v1(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e2_v1_y_index }] = d_edge1_v2_d_edge2_v1(1, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e2_v2_x_index }] = d_edge1_v2_d_edge2_v2(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e2_v2_y_index }] = d_edge1_v2_d_edge2_v2(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e1_v1_x_index }] = d_edge1_v2_d_edge1_v1(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e1_v1_y_index }] = d_edge1_v2_d_edge1_v1(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e1_v2_x_index }] = d_edge1_v2_d_edge1_v2(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e1_v2_y_index }] = d_edge1_v2_d_edge1_v2(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e2_v1_x_index }] = d_edge1_v2_d_edge2_v1(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e2_v1_y_index }] = d_edge1_v2_d_edge2_v1(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e2_v2_x_index }] = d_edge1_v2_d_edge2_v2(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e1_v2_y_index, e2_v2_y_index }] = d_edge1_v2_d_edge2_v2(1, 1);
 
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e1_v1_x_index }] = d_edge2_v1_d_edge1_v1(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e1_v1_y_index }] = d_edge2_v1_d_edge1_v1(0, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e1_v2_x_index }] = d_edge2_v1_d_edge1_v2(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e1_v2_y_index }] = d_edge2_v1_d_edge1_v2(0, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e2_v1_x_index }] = d_edge2_v1_d_edge2_v1(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e2_v1_y_index }] = d_edge2_v1_d_edge2_v1(0, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e2_v2_x_index }] = d_edge2_v1_d_edge2_v2(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e2_v2_y_index }] = d_edge2_v1_d_edge2_v2(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e1_v1_x_index }] = d_edge2_v1_d_edge1_v1(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e1_v1_y_index }] = d_edge2_v1_d_edge1_v1(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e1_v2_x_index }] = d_edge2_v1_d_edge1_v2(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e1_v2_y_index }] = d_edge2_v1_d_edge1_v2(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e2_v1_x_index }] = d_edge2_v1_d_edge2_v1(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e2_v1_y_index }] = d_edge2_v1_d_edge2_v1(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e2_v2_x_index }] = d_edge2_v1_d_edge2_v2(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_x_index, e2_v2_y_index }] = d_edge2_v1_d_edge2_v2(0, 1);
 
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e1_v1_x_index }] = d_edge2_v2_d_edge1_v1(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e1_v1_y_index }] = d_edge2_v2_d_edge1_v1(0, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e1_v2_x_index }] = d_edge2_v2_d_edge1_v2(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e1_v2_y_index }] = d_edge2_v2_d_edge1_v2(0, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e2_v1_x_index }] = d_edge2_v2_d_edge2_v1(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e2_v1_y_index }] = d_edge2_v2_d_edge2_v1(0, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e2_v2_x_index }] = d_edge2_v2_d_edge2_v2(0, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e2_v2_y_index }] = d_edge2_v2_d_edge2_v2(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e1_v1_x_index }] = d_edge2_v2_d_edge1_v1(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e1_v1_y_index }] = d_edge2_v2_d_edge1_v1(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e1_v2_x_index }] = d_edge2_v2_d_edge1_v2(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e1_v2_y_index }] = d_edge2_v2_d_edge1_v2(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e2_v1_x_index }] = d_edge2_v2_d_edge2_v1(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e2_v1_y_index }] = d_edge2_v2_d_edge2_v1(0, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e2_v2_x_index }] = d_edge2_v2_d_edge2_v2(0, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_x_index, e2_v2_y_index }] = d_edge2_v2_d_edge2_v2(0, 1);
 
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e1_v1_x_index }] = d_edge2_v1_d_edge1_v1(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e1_v1_y_index }] = d_edge2_v1_d_edge1_v1(1, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e1_v2_x_index }] = d_edge2_v1_d_edge1_v2(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e1_v2_y_index }] = d_edge2_v1_d_edge1_v2(1, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e2_v1_x_index }] = d_edge2_v1_d_edge2_v1(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e2_v1_y_index }] = d_edge2_v1_d_edge2_v1(1, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e2_v2_x_index }] = d_edge2_v1_d_edge2_v2(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e2_v2_y_index }] = d_edge2_v1_d_edge2_v2(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e1_v1_x_index }] = d_edge2_v1_d_edge1_v1(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e1_v1_y_index }] = d_edge2_v1_d_edge1_v1(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e1_v2_x_index }] = d_edge2_v1_d_edge1_v2(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e1_v2_y_index }] = d_edge2_v1_d_edge1_v2(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e2_v1_x_index }] = d_edge2_v1_d_edge2_v1(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e2_v1_y_index }] = d_edge2_v1_d_edge2_v1(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e2_v2_x_index }] = d_edge2_v1_d_edge2_v2(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v1_y_index, e2_v2_y_index }] = d_edge2_v1_d_edge2_v2(1, 1);
 
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e1_v1_x_index }] = d_edge2_v2_d_edge1_v1(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e1_v1_y_index }] = d_edge2_v2_d_edge1_v1(1, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e1_v2_x_index }] = d_edge2_v2_d_edge1_v2(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e1_v2_y_index }] = d_edge2_v2_d_edge1_v2(1, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e2_v1_x_index }] = d_edge2_v2_d_edge2_v1(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e2_v1_y_index }] = d_edge2_v2_d_edge2_v1(1, 1);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e2_v2_x_index }] = d_edge2_v2_d_edge2_v2(1, 0);
-		this->sparse_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e2_v2_y_index }] = d_edge2_v2_d_edge2_v2(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e1_v1_x_index }] = d_edge2_v2_d_edge1_v1(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e1_v1_y_index }] = d_edge2_v2_d_edge1_v1(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e1_v2_x_index }] = d_edge2_v2_d_edge1_v2(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e1_v2_y_index }] = d_edge2_v2_d_edge1_v2(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e2_v1_x_index }] = d_edge2_v2_d_edge2_v1(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e2_v1_y_index }] = d_edge2_v2_d_edge2_v1(1, 1);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e2_v2_x_index }] = d_edge2_v2_d_edge2_v2(1, 0);
+		this->dense_indices_to_second_derivative_value_map_[{ e2_v2_y_index, e2_v2_y_index }] = d_edge2_v2_d_edge2_v2(1, 1);
 	}
 	
 private:
