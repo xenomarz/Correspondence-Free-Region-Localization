@@ -12,7 +12,7 @@ solver::solver(const bool isConstrObjFunc, const int solverID)
 {
 	#ifdef SAVE_RESULTS_TO_CSV
 		//save data in csv files
-		string path = "C:\\Users\\user\\Desktop\\Solver" + std::to_string(solverID) + "\\";
+		string path = "C:\\Users\\Elias\\Desktop\\Solver" + std::to_string(solverID) + "\\";
 		mkdir(path.c_str());
 		SearchDirInfo.open(path + "SearchDirInfo.csv");
 		solverInfo.open(path + "solverInfo.csv");
@@ -59,18 +59,23 @@ int solver::run()
 	int steps = 0;
 	do
 	{
-		currentEnergy = step();
-		#ifdef SAVE_RESULTS_TO_CSV
-			saveSearchDirInfo(steps, SearchDirInfo);
-			saveSolverInfo(steps, solverInfo);
-			saveHessianInfo(steps, hessianInfo);
-		#endif  
-		linesearch(SearchDirInfo);
-		update_external_data();
+		run_one_iteration();
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
 	cout << ">> solver stopped" << endl;
 	return 0;
+}
+
+void solver::run_one_iteration() {
+	int steps = 0;
+	currentEnergy = step();
+	#ifdef SAVE_RESULTS_TO_CSV
+		saveSearchDirInfo(steps, SearchDirInfo);
+		saveSolverInfo(steps, solverInfo);
+		saveHessianInfo(steps, hessianInfo);
+	#endif  
+	linesearch(SearchDirInfo);
+	update_external_data();
 }
 
 void solver::saveSolverInfo(int numIteration, std::ofstream& solverInfo) {
