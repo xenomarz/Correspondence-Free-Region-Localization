@@ -13,7 +13,7 @@ public:
 	solver(const bool IsConstrObjFunc, const int solverID);
 	~solver();
 	int run();
-	void run_one_iteration();
+	void run_one_iteration(const int steps);
 	void stop();
 	void get_data(VectorXd& X);
 	void init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0);

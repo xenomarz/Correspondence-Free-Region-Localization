@@ -58,21 +58,19 @@ int solver::run()
 	halt = false;
 	int steps = 0;
 	do {
-		run_one_iteration();
+		run_one_iteration(steps);
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
 	cout << ">> solver stopped" << endl;
 	return 0;
 }
 
-void solver::run_one_iteration() {
-	static int steps = 0;
+void solver::run_one_iteration(const int steps) {
 	currentEnergy = step();
 	#ifdef SAVE_RESULTS_TO_CSV
 		saveSolverInfo(steps, solverInfo);
 		saveHessianInfo(steps, hessianInfo);
 		saveSearchDirInfo(steps, SearchDirInfo);
-		steps++;
 	#endif  
 	linesearch(SearchDirInfo);
 	update_external_data();
