@@ -31,7 +31,8 @@ public:
 	void release_parameter_update_slot();
 
 	// External (interface) and internal working mesh
-	VectorXd ext_x, X;
+	VectorXd ext_x;
+	VectorXd X;
 	MatrixX3i F;
 	int num_steps;
 	bool IsConstrObjFunc;

@@ -25,14 +25,14 @@ double LagrangianLscmStArea::value(bool update)
 	return value;
 }
 
-double LagrangianLscmStArea::AugmentedValue()
+double LagrangianLscmStArea::AugmentedValue(const bool update)
 {
 	// Augmented_L = L + k * ||LSCM||^2
 	VectorXd areaE = detJ - VectorXd::Ones(F.rows());
 	//I am not sure of multiplying areaE by Area!!!
 	double augmented_part = (Area.asDiagonal() * areaE.cwiseAbs2()).sum();
 	
-	return value(true) + augmented_value_parameter * augmented_part;
+	return value(update) + augmented_value_parameter * augmented_part;
 }
 
 void LagrangianLscmStArea::gradient(VectorXd& g)

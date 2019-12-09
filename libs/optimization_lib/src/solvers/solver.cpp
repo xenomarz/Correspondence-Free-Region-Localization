@@ -57,8 +57,7 @@ int solver::run()
 	is_running = true;
 	halt = false;
 	int steps = 0;
-	do
-	{
+	do {
 		run_one_iteration();
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
@@ -67,12 +66,14 @@ int solver::run()
 }
 
 void solver::run_one_iteration() {
-	int steps = 0;
+	static int steps = 0;
 	currentEnergy = step();
 	#ifdef SAVE_RESULTS_TO_CSV
 		saveSearchDirInfo(steps, SearchDirInfo);
 		saveSolverInfo(steps, solverInfo);
 		saveHessianInfo(steps, hessianInfo);
+		//saveSearchDirInfo(steps, SearchDirInfo);
+		steps++;
 	#endif  
 	linesearch(SearchDirInfo);
 	update_external_data();
@@ -201,8 +202,8 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 		MatrixXd curr_x = X + alpha * p;
 		objective->updateX(curr_x);
 		alfa[counter] = alpha;
-		y_value[counter] = objective->value();
-		y_augmentedValue[counter] = objective->AugmentedValue();
+		y_value[counter] = objective->value(false);
+		y_augmentedValue[counter] = objective->AugmentedValue(false);
 	}
 	objective->updateX(X);
 
@@ -279,9 +280,9 @@ void solver::linesearch(std::ofstream& SearchDirInfo)
 		objective->updateX(curr_x);
 
 		if (IsConstrObjFunc) 
-			new_energy = objective->AugmentedValue();
+			new_energy = objective->AugmentedValue(false);
 		else
-			new_energy = objective->value();
+			new_energy = objective->value(false);
 		
 		if (new_energy >= currentEnergy)
 		{

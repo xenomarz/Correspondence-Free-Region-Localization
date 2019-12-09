@@ -4,9 +4,9 @@ double GradientDescentSolver::step()
 {
 	objective->updateX(X);
 	if (IsConstrObjFunc)
-		f = objective->AugmentedValue();
+		f = objective->AugmentedValue(true);
 	else
-		f = objective->value();
+		f = objective->value(true);
 
 	objective->gradient(g);
 	p = -g;

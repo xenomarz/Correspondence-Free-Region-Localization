@@ -9,10 +9,10 @@ public:
 	PenaltyPositionalConstraints(bool isConstrObjFunc);
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
-	virtual double value(const bool update = true) override;
+	virtual double value(const bool update) override;
 	virtual void gradient(Eigen::VectorXd& g) override;
 	virtual void hessian() override;
-	virtual double AugmentedValue() override;
+	virtual double AugmentedValue(const bool update) override;
 
 	vector<int> ConstrainedVerticesInd;
 	MatrixX2d ConstrainedVerticesPos;

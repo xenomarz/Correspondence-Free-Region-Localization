@@ -8,5 +8,5 @@ public:
 	virtual double value(const bool update = true) override;
 	virtual void gradient(VectorXd& g) override;
 	virtual void hessian() override;
-	virtual double AugmentedValue() override;
+	virtual double AugmentedValue(const bool update = true) override;
 };

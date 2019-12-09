@@ -12,11 +12,11 @@ void ObjectiveFunction::FDGradient(const VectorXd& X, VectorXd& g)
         double tmpVal = X(i);
         Xd(i) = tmpVal + dX;
         updateX(Xd);
-        f_P = value();
+        f_P = value(false);
 
         Xd(i) = tmpVal - dX;
         updateX(Xd);
-        f_M = value();
+        f_M = value(false);
 
         //now reset the ith param value
         Xd(i) = tmpVal;

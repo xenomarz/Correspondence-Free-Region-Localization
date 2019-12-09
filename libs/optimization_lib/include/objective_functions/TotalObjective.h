@@ -12,10 +12,10 @@ public:
 	TotalObjective();
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
-	virtual double value(bool update = true) override;
+	virtual double value(const bool update) override;
 	virtual void gradient(VectorXd& g) override;
 	virtual void hessian() override;
-	virtual double AugmentedValue() override;
+	virtual double AugmentedValue(const bool update) override;
 
 	// sub objectives
 	float Shift_eigen_values = 0;

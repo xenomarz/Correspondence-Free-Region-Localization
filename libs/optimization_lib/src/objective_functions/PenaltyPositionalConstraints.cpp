@@ -36,8 +36,8 @@ double PenaltyPositionalConstraints::value(bool update)
 	return E;
 }
 
-double PenaltyPositionalConstraints::AugmentedValue() {
-	return value(false);
+double PenaltyPositionalConstraints::AugmentedValue(const bool update) {
+	return value(update);
 }
 
 void PenaltyPositionalConstraints::gradient(VectorXd& g)

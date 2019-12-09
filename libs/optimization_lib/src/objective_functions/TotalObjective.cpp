@@ -45,11 +45,15 @@ double TotalObjective::value(bool update)
 	return f;
 }
 
-double TotalObjective::AugmentedValue() {
+double TotalObjective::AugmentedValue(const bool update) {
+	//Just for updating the data
+	if (update)
+		value(update);
+	//augmented_value calculation...
 	double f = 0;
 	for (auto &objective : objectiveList)
 		if (objective->w != 0)
-			f += objective->w*objective->AugmentedValue();
+			f += objective->w*objective->AugmentedValue(update);
 	return f;
 }
 
