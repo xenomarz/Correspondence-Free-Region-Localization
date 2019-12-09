@@ -21,7 +21,7 @@ void LeastSquaresConformal::init()
 	}
 }
 
-double LeastSquaresConformal::value(bool update)
+double LeastSquaresConformal::value(const bool update)
 {
 	VectorXd E = 2*(d.cwiseAbs2()) + (b+c).cwiseAbs2() + 2 * (a.cwiseAbs2());
 	double value = (Area.asDiagonal() * E).sum();

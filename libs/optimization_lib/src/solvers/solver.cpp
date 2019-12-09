@@ -69,10 +69,9 @@ void solver::run_one_iteration() {
 	static int steps = 0;
 	currentEnergy = step();
 	#ifdef SAVE_RESULTS_TO_CSV
-		saveSearchDirInfo(steps, SearchDirInfo);
 		saveSolverInfo(steps, solverInfo);
 		saveHessianInfo(steps, hessianInfo);
-		//saveSearchDirInfo(steps, SearchDirInfo);
+		saveSearchDirInfo(steps, SearchDirInfo);
 		steps++;
 	#endif  
 	linesearch(SearchDirInfo);

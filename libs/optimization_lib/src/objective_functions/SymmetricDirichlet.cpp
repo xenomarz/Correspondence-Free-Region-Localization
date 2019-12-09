@@ -11,7 +11,7 @@ void SymmetricDirichlet::init()
 	dirichlet.resize(F.rows());
 }
 
-double SymmetricDirichlet::value(bool update)
+double SymmetricDirichlet::value(const bool update)
 {
 	VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
 	VectorXd E = dirichlet + invDirichlet;

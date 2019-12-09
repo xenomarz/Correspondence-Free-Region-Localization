@@ -5,18 +5,18 @@ AreaDistortion::AreaDistortion()
 	name = "Area Preserving";
 }
 
-double AreaDistortion::value(bool update)
+double AreaDistortion::value(const bool update)
 {
 	// E = 0.5(det(J) - 1)^2
 	VectorXd E = (detJ - VectorXd::Ones(F.rows())).cwiseAbs2();
-	double value = 0.5 * (Area.asDiagonal() * E).sum();
+	double Evalue = 0.5 * (Area.asDiagonal() * E).sum();
 	
 	if (update) {
 		Efi = E;
-		energy_value = value;
+		energy_value = Evalue;
 	}
 	
-	return value;
+	return Evalue;
 }
 
 void AreaDistortion::gradient(VectorXd& g)

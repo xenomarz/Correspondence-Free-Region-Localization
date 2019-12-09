@@ -20,7 +20,7 @@ void TotalObjective::updateX(const VectorXd& X)
 		objective->updateX(X);
 }
 
-double TotalObjective::value(bool update)
+double TotalObjective::value(const bool update)
 {
 	double f=0;
 	double Cconstraint_value = 0;

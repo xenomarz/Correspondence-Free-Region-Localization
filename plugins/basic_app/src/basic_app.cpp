@@ -1189,7 +1189,7 @@ void basic_app::start_solver_thread() {
 	for (auto&o : Outputs) {
 		cout << ">> start new solver" << endl;
 		solver_on = true;
-		solver_thread = thread(&solver::run_one_iteration, o.solver.get());
+		solver_thread = thread(&solver::run/*run_one_iteration*/, o.solver.get());
 		solver_thread.detach();
 	}
 }

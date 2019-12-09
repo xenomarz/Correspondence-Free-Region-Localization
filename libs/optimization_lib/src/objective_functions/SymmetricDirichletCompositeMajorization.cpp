@@ -58,7 +58,7 @@ void SymmetricDirichletCompositeMajorization::init()
 	init_hessian();
 }
 
-double SymmetricDirichletCompositeMajorization::value(bool update)
+double SymmetricDirichletCompositeMajorization::value(const bool update)
 {
 	// E = ||J||^2+||J^-1||^2 = ||J||^2+||J||^2/det(J)^2
 	VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();

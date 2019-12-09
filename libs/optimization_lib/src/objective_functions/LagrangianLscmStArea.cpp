@@ -5,7 +5,7 @@ LagrangianLscmStArea::LagrangianLscmStArea()
 	name = "LagrangianLscmStArea";
 }
 
-double LagrangianLscmStArea::value(bool update)
+double LagrangianLscmStArea::value(const bool update)
 {
 	// L = LSCM + lambda * area
 	

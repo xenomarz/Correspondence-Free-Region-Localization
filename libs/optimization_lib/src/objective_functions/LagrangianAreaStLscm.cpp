@@ -5,7 +5,7 @@ LagrangianAreaStLscm::LagrangianAreaStLscm()
 	name = "LagrangianAreaStLscm";
 }
 
-double LagrangianAreaStLscm::value(bool update)
+double LagrangianAreaStLscm::value(const bool update)
 {
 	// L = area + lambda * LSCM
 	VectorXd LSCM = 2 * d.cwiseAbs2() + (b + c).cwiseAbs2() + 2 * a.cwiseAbs2();

@@ -23,7 +23,7 @@ void PenaltyPositionalConstraints::updateX(const VectorXd& X)
 	}
 }
 
-double PenaltyPositionalConstraints::value(bool update)
+double PenaltyPositionalConstraints::value(const bool update)
 {
 	if (CurrConstrainedVerticesPos.rows() != ConstrainedVerticesPos.rows()) {
 		return 0;
