@@ -12,10 +12,10 @@ void LeastSquaresConformal::init()
 	//prepare hessian and dJ/dX
 	MatrixXd d2E_dJ2(4, 4);
 	d2E_dJ2 <<
-		4, 0, 0, 0,
-		0, 2, 2, 0,
-		0, 2, 2, 0,
-		0, 0, 0, 4;
+		2 , 0, 0, -2,
+		0 , 2, 2, 0 ,
+		0 , 2, 2, 0 ,
+		-2, 0, 0, 2;
 	for (int i = 0; i < F.rows(); i++) {
 		Hessian[i] = Area(i)*dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
 	}
@@ -23,7 +23,7 @@ void LeastSquaresConformal::init()
 
 double LeastSquaresConformal::value(const bool update)
 {
-	VectorXd E = 2*(d.cwiseAbs2()) + (b+c).cwiseAbs2() + 2 * (a.cwiseAbs2());
+	VectorXd E = (a-d).cwiseAbs2() + (b+c).cwiseAbs2();
 	double value = (Area.asDiagonal() * E).sum();
 	
 	if (update) {
@@ -41,7 +41,13 @@ void LeastSquaresConformal::gradient(VectorXd& g)
 
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		//prepare gradient
-		Vector4d dE_dJ(4 * a(fi), 2 * b(fi) + 2 * c(fi), 2 * b(fi) + 2 * c(fi), 4 * d(fi));
+		Vector4d dE_dJ(
+			a(fi) - d(fi), 
+			b(fi) + c(fi), 
+			b(fi) + c(fi), 
+			d(fi) - a(fi)
+		);
+		dE_dJ *= 2;
 		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
 
 		//Update the gradient of the x-axis

@@ -9,7 +9,7 @@ double LagrangianLscmStArea::value(const bool update)
 {
 	// L = LSCM + lambda * area
 	
-	VectorXd LSCM = 2 * d.cwiseAbs2() + (b + c).cwiseAbs2() + 2 * a.cwiseAbs2();
+	VectorXd LSCM = (a - d).cwiseAbs2() + (b + c).cwiseAbs2();
 	VectorXd areaE = detJ - VectorXd::Ones(F.rows());
 	
 	VectorXd E = LSCM + lambda.cwiseProduct(areaE);
@@ -43,10 +43,10 @@ void LagrangianLscmStArea::gradient(VectorXd& g)
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		//prepare gradient
 		Vector4d dE_dJ(
-			4 * a(fi) + lambda(fi) * d(fi), 
+			2 * a(fi) - 2 * d(fi) + lambda(fi) * d(fi), 
 			2 * b(fi) + 2 * c(fi) - lambda(fi) * c(fi),
 			2 * b(fi) + 2 * c(fi) - lambda(fi) * b(fi),
-			4 * d(fi) + lambda(fi) * a(fi)
+			2 * d(fi) - 2 * a(fi) + lambda(fi) * a(fi)
 		);
 		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
 		
@@ -75,10 +75,10 @@ void LagrangianLscmStArea::hessian()
 		//prepare hessian
 		MatrixXd d2E_dJ2(4, 4);
 		d2E_dJ2 <<
-			4			, 0				, 0				, lambda(i),
+			2			, 0				, 0				, lambda(i)-2,
 			0			, 2				, 2-lambda(i)	, 0			,
 			0			, 2 - lambda(i)	, 2				, 0			,
-			lambda(i)	, 0				, 0				, 4;
+			lambda(i)-2	, 0				, 0				, 2;
 
 		Hessian[i] = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
 
