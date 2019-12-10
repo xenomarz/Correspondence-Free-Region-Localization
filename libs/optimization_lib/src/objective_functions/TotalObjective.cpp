@@ -65,6 +65,10 @@ void TotalObjective::gradient(VectorXd& g)
 		if (objective->w != 0)
 		{
 			objective->gradient(gi);
+			if (g.size() == 0) {
+				g.resize(gi.rows());
+				g.setZero();
+			}
 			g += objective->w*gi;
 		}
 	}

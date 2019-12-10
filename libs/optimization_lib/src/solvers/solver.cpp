@@ -72,7 +72,7 @@ void solver::run_one_iteration(const int steps) {
 		saveHessianInfo(steps, hessianInfo);
 		saveSearchDirInfo(steps, SearchDirInfo);
 	#endif  
-	linesearch(SearchDirInfo);
+	gradNorm_linesearch(SearchDirInfo);
 	update_external_data();
 }
 
@@ -245,7 +245,7 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 	}
 }
 
-void solver::linesearch(std::ofstream& SearchDirInfo)
+void solver::value_linesearch(std::ofstream& SearchDirInfo)
 {
 	double step_size;
 	if (/*FlipAvoidingLineSearch*/false)
@@ -298,6 +298,45 @@ void solver::linesearch(std::ofstream& SearchDirInfo)
 		SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
 		SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
 	#endif
+}
+
+void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
+{
+	double step_size = 1;
+	VectorXd grad;
+
+	objective->updateX(X);
+	objective->gradient(grad);
+	double current_GradNrom = grad.norm();
+	double new_GradNrom = current_GradNrom;
+
+	int cur_iter = 0; int MAX_STEP_SIZE_ITER = 12;
+
+	while (cur_iter < MAX_STEP_SIZE_ITER)
+	{
+		MatrixXd curr_x = X + step_size * p;
+
+		objective->updateX(curr_x);
+		objective->gradient(grad);
+		new_GradNrom = grad.norm();
+		
+		if (new_GradNrom >= current_GradNrom)
+		{
+			step_size /= 2;
+		}
+		else
+		{
+			X = curr_x;
+			break;
+		}
+		cur_iter++;
+	}
+
+#ifdef SAVE_RESULTS_TO_CSV
+	//add the solver's choice of alfa
+	SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
+	SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
+#endif
 }
 
 void solver::stop()

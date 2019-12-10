@@ -66,7 +66,8 @@ private:
 	// energy output from the last step
 	double currentEnergy;
 	virtual double step() = 0;
-	virtual void linesearch(std::ofstream& SearchDirInfo);
+	virtual void value_linesearch(std::ofstream& SearchDirInfo);
+	virtual void gradNorm_linesearch(std::ofstream& SearchDirInfo);
 	virtual bool test_progress() = 0;
 	virtual void internal_init() = 0;
 	void saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo);
