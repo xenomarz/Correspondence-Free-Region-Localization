@@ -37,11 +37,11 @@ void ObjectiveFunction::FDHessian(const VectorXd& X)
         double tmpVal = X(i);
         Xd(i) = tmpVal + dX;
         updateX(Xd);
-        gradient(gp);
+        gradient(gp,false);
 
         Xd(i) = tmpVal - dX;
         updateX(Xd);
-        gradient(gm);
+        gradient(gm,false);
         //now reset the ith param value
         Xd(i) = tmpVal;
         //and compute the row of the hessian
@@ -68,7 +68,7 @@ bool ObjectiveFunction::checkGradient(const VectorXd& X)
     VectorXd Analytic_gradient(X.size());
 
     updateX(X);
-    gradient(Analytic_gradient);
+    gradient(Analytic_gradient,false);
     FDGradient(X, FD_gradient);
 
     cout << name << ": g.norm() = " << Analytic_gradient.norm() << "(analytic) , " << FD_gradient.norm() << "(FD)" << endl;

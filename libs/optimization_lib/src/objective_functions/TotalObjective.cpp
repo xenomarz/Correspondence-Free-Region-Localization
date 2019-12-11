@@ -57,14 +57,14 @@ double TotalObjective::AugmentedValue(const bool update) {
 	return f;
 }
 
-void TotalObjective::gradient(VectorXd& g)
+void TotalObjective::gradient(VectorXd& g, const bool update)
 {
 	VectorXd gi;
 	g.setZero();
 	for (auto &objective : objectiveList) {
 		if (objective->w != 0)
 		{
-			objective->gradient(gi);
+			objective->gradient(gi, update);
 			if (g.size() == 0) {
 				g.resize(gi.rows());
 				g.setZero();
@@ -73,10 +73,12 @@ void TotalObjective::gradient(VectorXd& g)
 		}
 	}
 
-	gradient_norm = g.norm();
-	if (g.rows() == (F.rows() + 2 * V.rows())) {
-		objective_gradient_norm = g.head(2 * V.rows()).norm();
-		constraint_gradient_norm = g.tail(F.rows()).norm();
+	if(update){
+		gradient_norm = g.norm();
+		if (g.rows() == (F.rows() + 2 * V.rows())) {
+			objective_gradient_norm = g.head(2 * V.rows()).norm();
+			constraint_gradient_norm = g.tail(F.rows()).norm();
+		}
 	}
 }
 

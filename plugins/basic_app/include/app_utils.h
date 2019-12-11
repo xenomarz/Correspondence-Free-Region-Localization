@@ -341,7 +341,12 @@ public:
 	shared_ptr<TotalObjective> totalObjective;
 
 	//Constructor & initialization
-	Output(igl::opengl::glfw::Viewer* viewer, const bool isConstrObjFunc,const app_utils::SolverType solver_type) {
+	Output(
+		igl::opengl::glfw::Viewer* viewer, 
+		const bool isConstrObjFunc,
+		const app_utils::SolverType solver_type,
+		const Utils::LineSearch linesearchType) 
+	{
 		//update viewer
 		CoreID = viewer->append_core(Vector4f::Zero());
 		viewer->core(CoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
@@ -360,6 +365,7 @@ public:
 			solver = newton;
 		else 
 			solver = gradient_descent;
+		solver->lineSearch_type = linesearchType;
 		totalObjective = make_shared<TotalObjective>();
 	}
 	~Output() {}

@@ -7,7 +7,7 @@ double NewtonSolver::step()
 		f = objective->AugmentedValue(true);
 	else
 		f = objective->value(true);
-	objective->gradient(g);
+	objective->gradient(g,true);
 	objective->hessian();
 
 #ifdef USE_PARDISO

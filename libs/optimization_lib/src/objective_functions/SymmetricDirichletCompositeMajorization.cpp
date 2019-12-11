@@ -74,7 +74,7 @@ double SymmetricDirichletCompositeMajorization::value(const bool update)
 	return value;
 }
 
-void SymmetricDirichletCompositeMajorization::gradient(VectorXd& g)
+void SymmetricDirichletCompositeMajorization::gradient(VectorXd& g, const bool update)
 {
     // Energy is h(S(x),s(x)), then grad_x h = grad_(S,s) h * [grad(S); grad(s)]
     MatrixX2d S(alpha);
@@ -103,7 +103,8 @@ void SymmetricDirichletCompositeMajorization::gradient(VectorXd& g)
 		g(F(fi,1) + V.rows()) += gi(4);
 		g(F(fi,2) + V.rows()) += gi(5);
 	}
-	gradient_norm = g.norm();
+	if(update)
+		gradient_norm = g.norm();
 }
 
 void SymmetricDirichletCompositeMajorization::hessian()

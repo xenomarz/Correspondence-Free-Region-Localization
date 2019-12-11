@@ -87,7 +87,7 @@ double AreaDistortionOneRing::value(const bool update)
 	return value;
 }
 
-void AreaDistortionOneRing::gradient(VectorXd& g)
+void AreaDistortionOneRing::gradient(VectorXd& g, const bool update)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
@@ -113,7 +113,8 @@ void AreaDistortionOneRing::gradient(VectorXd& g)
 			g(global_xi + V.rows()) += grad[vi](xi + OneRingVertices[vi].size());
 		}
 	}
-	gradient_norm = g.norm();
+	if(update)
+		gradient_norm = g.norm();
 }
 
 void AreaDistortionOneRing::hessian()

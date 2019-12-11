@@ -13,7 +13,7 @@ public:
 	virtual void init() override;
 	virtual void updateX(const VectorXd& X) override;
 	virtual double value(const bool update) override;
-	virtual void gradient(VectorXd& g) override;
+	virtual void gradient(VectorXd& g, const bool update) override;
 	virtual void hessian() override;
 	virtual double AugmentedValue(const bool update) override;
 

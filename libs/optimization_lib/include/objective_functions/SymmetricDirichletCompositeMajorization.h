@@ -28,6 +28,6 @@ public:
 	SymmetricDirichletCompositeMajorization();
 	virtual void init() override;
 	virtual double value(const bool update) override;
-	virtual void gradient(VectorXd& g) override;
+	virtual void gradient(VectorXd& g, const bool update) override;
     virtual void hessian() override;	
 };

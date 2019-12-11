@@ -8,7 +8,7 @@ double GradientDescentSolver::step()
 	else
 		f = objective->value(true);
 
-	objective->gradient(g);
+	objective->gradient(g,true);
 	p = -g;
 	return f;
 }

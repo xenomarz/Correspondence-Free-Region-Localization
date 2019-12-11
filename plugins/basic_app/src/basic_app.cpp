@@ -14,6 +14,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		show_text = true;
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
+		linesearch_type = Utils::FunctionValue;
 		param_type = app_utils::None;
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
@@ -35,7 +36,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		viewer->core(inputCoreID).lighting_factor = 0.2;
 
 		//Load multiple views
-		Outputs.push_back(Output(viewer,false, solver_type));
+		Outputs.push_back(Output(viewer,false, solver_type,linesearch_type));
 		core_size = 1.0 / (Outputs.size() + 1.0);
 		
 		//maximize window
@@ -167,7 +168,7 @@ void basic_app::remove_output(const int output_index) {
 
 void basic_app::add_output(const bool isConstrObjFunc) {
 	stop_solver_thread();
-	Outputs.push_back(Output(viewer, isConstrObjFunc, solver_type));
+	Outputs.push_back(Output(viewer, isConstrObjFunc, solver_type,linesearch_type));
 	
 	viewer->load_mesh_from_file(modelPath.c_str());
 	Outputs[Outputs.size() - 1].ModelID = viewer->data_list[Outputs.size()].id;
@@ -483,6 +484,11 @@ void basic_app::Draw_menu_for_Solver() {
 				Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
 			}
 			start_solver_thread();
+		}
+
+		if (ImGui::Combo("line search", (int *)(&linesearch_type), "GradientNorm\0FunctionValue\0\0")) {
+			for (auto& o:Outputs)
+				o.solver->lineSearch_type = linesearch_type;
 		}
 
 		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");

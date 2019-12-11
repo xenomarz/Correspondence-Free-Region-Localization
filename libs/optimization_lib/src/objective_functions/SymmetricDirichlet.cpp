@@ -24,7 +24,7 @@ double SymmetricDirichlet::value(const bool update)
 	return value;
 }
 
-void SymmetricDirichlet::gradient(VectorXd& g)
+void SymmetricDirichlet::gradient(VectorXd& g, const bool update)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
@@ -49,7 +49,8 @@ void SymmetricDirichlet::gradient(VectorXd& g)
 		g(F(fi, 1) + V.rows()) += grad(fi, 4);
 		g(F(fi, 2) + V.rows()) += grad(fi, 5);
 	}
-	gradient_norm = g.norm();
+	if(update)
+		gradient_norm = g.norm();
 }
 
 void SymmetricDirichlet::hessian()

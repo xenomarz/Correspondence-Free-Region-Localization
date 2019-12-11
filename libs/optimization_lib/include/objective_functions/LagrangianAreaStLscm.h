@@ -6,7 +6,7 @@ class LagrangianAreaStLscm : public ConstrainedObjectiveFunction
 public:
 	LagrangianAreaStLscm();
 	virtual double value(const bool update) override;
-	virtual void gradient(VectorXd& g) override;
+	virtual void gradient(VectorXd& g, const bool update) override;
 	virtual void hessian() override;
 	virtual double AugmentedValue(const bool update) override;
 };

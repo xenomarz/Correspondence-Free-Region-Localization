@@ -35,7 +35,7 @@ double LagrangianLscmStArea::AugmentedValue(const bool update)
 	return value(update) + augmented_value_parameter * augmented_part;
 }
 
-void LagrangianLscmStArea::gradient(VectorXd& g)
+void LagrangianLscmStArea::gradient(VectorXd& g, const bool update)
 {
 	g.conservativeResize(V.rows() * 2 + F.rows());
 	g.setZero();
@@ -43,14 +43,14 @@ void LagrangianLscmStArea::gradient(VectorXd& g)
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		//prepare gradient
 		Vector4d dE_dJ(
-			2 * a(fi) - 2 * d(fi) + lambda(fi) * d(fi), 
+			2 * a(fi) - 2 * d(fi) + lambda(fi) * d(fi),
 			2 * b(fi) + 2 * c(fi) - lambda(fi) * c(fi),
 			2 * b(fi) + 2 * c(fi) - lambda(fi) * b(fi),
 			2 * d(fi) - 2 * a(fi) + lambda(fi) * a(fi)
 		);
 		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
-		
-		
+
+
 		//Update the gradient of the x-axis
 		g(F(fi, 0)) += grad(fi, 0);
 		g(F(fi, 1)) += grad(fi, 1);
@@ -62,9 +62,11 @@ void LagrangianLscmStArea::gradient(VectorXd& g)
 		//Update the gradient of lambda
 		g(fi + 2 * V.rows()) += Area(fi)*(detJ(fi) - 1);
 	}
-	gradient_norm = g.norm();
-	objective_gradient_norm = g.head(2 * V.rows()).norm();
-	constraint_gradient_norm = g.tail(F.rows()).norm();
+	if (update) {
+		gradient_norm = g.norm();
+		objective_gradient_norm = g.head(2 * V.rows()).norm();
+		constraint_gradient_norm = g.tail(F.rows()).norm();
+	}
 }
 
 void LagrangianLscmStArea::hessian()

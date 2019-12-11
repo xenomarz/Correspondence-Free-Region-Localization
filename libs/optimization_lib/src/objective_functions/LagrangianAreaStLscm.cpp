@@ -34,7 +34,7 @@ double LagrangianAreaStLscm::AugmentedValue(const bool update)
 	return value(update) + augmented_value_parameter * augmented_part;
 }
 
-void LagrangianAreaStLscm::gradient(VectorXd& g)
+void LagrangianAreaStLscm::gradient(VectorXd& g, const bool update)
 {
 	g.conservativeResize(V.rows() * 2 + F.rows());
 	g.setZero();
@@ -61,9 +61,12 @@ void LagrangianAreaStLscm::gradient(VectorXd& g)
 		//Update the gradient of lambda
 		g(fi + 2 * V.rows()) += Area(fi)* (pow(a(fi) - d(fi), 2) + pow(b(fi) + c(fi), 2));
 	}
-	gradient_norm = g.norm();
-	objective_gradient_norm = g.head(2 * V.rows()).norm();
-	constraint_gradient_norm = g.tail(F.rows()).norm();
+
+	if (update) {
+		gradient_norm = g.norm();
+		objective_gradient_norm = g.head(2 * V.rows()).norm();
+		constraint_gradient_norm = g.tail(F.rows()).norm();
+	}
 }
 
 void LagrangianAreaStLscm::hessian()

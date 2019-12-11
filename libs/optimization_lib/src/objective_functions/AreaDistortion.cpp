@@ -19,7 +19,7 @@ double AreaDistortion::value(const bool update)
 	return Evalue;
 }
 
-void AreaDistortion::gradient(VectorXd& g)
+void AreaDistortion::gradient(VectorXd& g, const bool update)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
@@ -39,7 +39,9 @@ void AreaDistortion::gradient(VectorXd& g)
 		g(F(fi, 1) + V.rows()) += grad(fi, 4);
 		g(F(fi, 2) + V.rows()) += grad(fi, 5);
 	}
-	gradient_norm = g.norm();
+
+	if(update)
+		gradient_norm = g.norm();
 }
 
 void AreaDistortion::hessian()

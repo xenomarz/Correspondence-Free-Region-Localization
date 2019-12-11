@@ -40,7 +40,7 @@ double PenaltyPositionalConstraints::AugmentedValue(const bool update) {
 	return value(update);
 }
 
-void PenaltyPositionalConstraints::gradient(VectorXd& g)
+void PenaltyPositionalConstraints::gradient(VectorXd& g, const bool update)
 {
 	if (IsConstrObjFunc) {
 		g.conservativeResize(numV * 2 + numF);
@@ -59,7 +59,9 @@ void PenaltyPositionalConstraints::gradient(VectorXd& g)
 			g(ConstrainedVerticesInd[i] + numV) = 2 * diff(i, 1);
 		}
 	}
-	gradient_norm = g.norm();
+
+	if(update)
+		gradient_norm = g.norm();
 }
 
 void PenaltyPositionalConstraints::hessian()

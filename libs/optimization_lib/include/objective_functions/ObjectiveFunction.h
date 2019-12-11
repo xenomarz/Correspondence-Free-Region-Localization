@@ -26,7 +26,7 @@ public:
 	virtual void updateX(const VectorXd& X) = 0;
 	virtual double value(const bool update) = 0;
 	virtual double AugmentedValue(const bool update) { return -1; }
-	virtual void gradient(VectorXd& g) = 0;
+	virtual void gradient(VectorXd& g, const bool update) = 0;
 	virtual void hessian() = 0;
 	
 	void init_mesh(const MatrixXd& V, const MatrixX3i& F);

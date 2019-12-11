@@ -34,7 +34,7 @@ double LeastSquaresConformal::value(const bool update)
 	return value;
 }
 
-void LeastSquaresConformal::gradient(VectorXd& g)
+void LeastSquaresConformal::gradient(VectorXd& g, const bool update)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
@@ -59,7 +59,8 @@ void LeastSquaresConformal::gradient(VectorXd& g)
 		g(F(fi, 1) + V.rows()) += grad(fi, 4);
 		g(F(fi, 2) + V.rows()) += grad(fi, 5);
 	}
-	gradient_norm = g.norm();
+	if(update)
+		gradient_norm = g.norm();
 }
 
 void LeastSquaresConformal::hessian()

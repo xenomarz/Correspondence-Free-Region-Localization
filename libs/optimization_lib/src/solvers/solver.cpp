@@ -67,12 +67,15 @@ int solver::run()
 
 void solver::run_one_iteration(const int steps) {
 	currentEnergy = step();
-	#ifdef SAVE_RESULTS_TO_CSV
-		saveSolverInfo(steps, solverInfo);
-		saveHessianInfo(steps, hessianInfo);
-		saveSearchDirInfo(steps, SearchDirInfo);
-	#endif  
-	gradNorm_linesearch(SearchDirInfo);
+#ifdef SAVE_RESULTS_TO_CSV
+	saveSolverInfo(steps, solverInfo);
+	saveHessianInfo(steps, hessianInfo);
+	saveSearchDirInfo(steps, SearchDirInfo);
+#endif  
+	if (lineSearch_type == Utils::GradientNorm)
+		gradNorm_linesearch(SearchDirInfo);
+	else
+		value_linesearch(SearchDirInfo);
 	update_external_data();
 }
 
@@ -197,10 +200,13 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 	double alpha = 0;
 	for ( alpha = -3, counter = 0; alpha <= 3; alpha += 0.01, counter++) {
 		MatrixXd curr_x = X + alpha * p;
+		VectorXd grad;
 		objective->updateX(curr_x);
+		objective->gradient(grad,false);
 		alfa[counter] = alpha;
 		y_value[counter] = objective->value(false);
 		y_augmentedValue[counter] = objective->AugmentedValue(false);
+		y_gradientNorm[counter] = grad.norm();
 	}
 	objective->updateX(X);
 
@@ -240,6 +246,14 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 		SearchDirInfo << ",augmentedValue,";
 		for (int i = 0; i < counter; i++) {
 			SearchDirInfo << y_augmentedValue[i] << ",";
+		}
+		SearchDirInfo << endl;
+	}
+	//add the total objective's augmented values as one row
+	if (IsConstrObjFunc) {
+		SearchDirInfo << ",grad norm,";
+		for (int i = 0; i < counter; i++) {
+			SearchDirInfo << y_gradientNorm[i] << ",";
 		}
 		SearchDirInfo << endl;
 	}
@@ -306,7 +320,7 @@ void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
 	VectorXd grad;
 
 	objective->updateX(X);
-	objective->gradient(grad);
+	objective->gradient(grad,false);
 	double current_GradNrom = grad.norm();
 	double new_GradNrom = current_GradNrom;
 
@@ -317,7 +331,7 @@ void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
 		MatrixXd curr_x = X + step_size * p;
 
 		objective->updateX(curr_x);
-		objective->gradient(grad);
+		objective->gradient(grad,false);
 		new_GradNrom = grad.norm();
 		
 		if (new_GradNrom >= current_GradNrom)
@@ -332,11 +346,11 @@ void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
 		cur_iter++;
 	}
 
-#ifdef SAVE_RESULTS_TO_CSV
-	//add the solver's choice of alfa
-	SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
-	SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
-#endif
+	#ifdef SAVE_RESULTS_TO_CSV
+		//add the solver's choice of alfa
+		SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
+		SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
+	#endif
 }
 
 void solver::stop()

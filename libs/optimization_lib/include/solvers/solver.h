@@ -36,6 +36,7 @@ public:
 	MatrixX3i F;
 	int num_steps;
 	bool IsConstrObjFunc;
+	Utils::LineSearch lineSearch_type;
 protected:
 	// Give the wrapper a chance to intersect gracefully
 	void give_parameter_update_slot();
@@ -76,6 +77,7 @@ private:
 	double alfa[601] = { 0 };
 	double y_value[601] = { 0 };
 	double y_augmentedValue[601] = { 0 };
+	double y_gradientNorm[601] = { 0 };
 	std::ofstream SearchDirInfo, solverInfo, hessianInfo;
 
 	// Mutex stuff

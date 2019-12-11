@@ -14,6 +14,7 @@ private:
 	bool solver_on, solver_settings, IsMouseHoveringAnyWindow, IsMouseDraggingAnyWindow;
 	app_utils::Distortion distortion_type;
 	app_utils::SolverType solver_type;
+	Utils::LineSearch linesearch_type;
 	MatrixXd Vertices_Input, color_per_vertex;
 	Vector3f
 		Highlighted_face_color,
