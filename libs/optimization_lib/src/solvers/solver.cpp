@@ -1,5 +1,5 @@
 #include <solvers/solver.h>
-//#define SAVE_RESULTS_TO_CSV
+#define SAVE_RESULTS_TO_CSV
 
 solver::solver(const bool isConstrObjFunc, const int solverID)
 	:
@@ -10,24 +10,24 @@ solver::solver(const bool isConstrObjFunc, const int solverID)
 	num_steps(2147483647),
 	IsConstrObjFunc(isConstrObjFunc)
 {
-	#ifdef SAVE_RESULTS_TO_CSV
-		//save data in csv files
-		string path = "C:\\Users\\Elias\\Desktop\\Solver" + std::to_string(solverID) + "\\";
-		mkdir(path.c_str());
-		SearchDirInfo.open(path + "SearchDirInfo.csv");
-		solverInfo.open(path + "solverInfo.csv");
-		hessianInfo.open(path + "hessianInfo.csv");
-	#endif
+#ifdef SAVE_RESULTS_TO_CSV
+	//save data in csv files
+	string path = "C:\\Users\\Elias\\Desktop\\Solver" + std::to_string(solverID) + "\\";
+	mkdir(path.c_str());
+	SearchDirInfo.open(path + "SearchDirInfo.csv");
+	solverInfo.open(path + "solverInfo.csv");
+	hessianInfo.open(path + "hessianInfo.csv");
+#endif
 }
 
 solver::~solver() {
-	#ifdef SAVE_RESULTS_TO_CSV
-		//close csv files
-		SearchDirInfo.close();
-		solverInfo.close();
-		hessianInfo.close();
-		cout << ">> csv files has been closed!" << endl;
-	#endif
+#ifdef SAVE_RESULTS_TO_CSV
+	//close csv files
+	SearchDirInfo.close();
+	solverInfo.close();
+	hessianInfo.close();
+	cout << ">> csv files has been closed!" << endl;
+#endif
 }
 
 void solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
@@ -307,11 +307,15 @@ void solver::value_linesearch(std::ofstream& SearchDirInfo)
 		cur_iter++;
 	}
 
-	#ifdef SAVE_RESULTS_TO_CSV
-		//add the solver's choice of alfa
-		SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
-		SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
-	#endif
+#ifdef SAVE_RESULTS_TO_CSV
+	//add the solver's choice of alfa
+	if (lineSearch_type == Utils::GradientNorm)
+		SearchDirInfo << ",line search type,Gradient norm," << endl;
+	else
+		SearchDirInfo << ",line search type,Function value," << endl;
+	SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
+	SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
+#endif
 }
 
 void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
@@ -346,11 +350,15 @@ void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
 		cur_iter++;
 	}
 
-	#ifdef SAVE_RESULTS_TO_CSV
-		//add the solver's choice of alfa
-		SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
-		SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
-	#endif
+#ifdef SAVE_RESULTS_TO_CSV
+	//add the solver's choice of alfa
+	if(lineSearch_type == Utils::GradientNorm)
+		SearchDirInfo << ",line search type,Gradient norm," << endl;
+	else
+		SearchDirInfo << ",line search type,Function value," << endl;
+	SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
+	SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
+#endif
 }
 
 void solver::stop()
