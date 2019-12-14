@@ -56,73 +56,73 @@ protected:
 		/**
 		 * First partial derivatives
 		 */
-		this->dense_index_to_first_derivative_value_map_[e1_v1_x_dense_index_] = e1_y_to_e1_squared_norm;
-		this->dense_index_to_first_derivative_value_map_[e1_v1_y_dense_index_] = e1_x_to_e1_squared_norm;
-		this->dense_index_to_first_derivative_value_map_[e1_v2_x_dense_index_] = e1_y_to_e1_squared_norm;
-		this->dense_index_to_first_derivative_value_map_[e1_v2_y_dense_index_] = e1_x_to_e1_squared_norm;
-		this->dense_index_to_first_derivative_value_map_[e2_v1_x_dense_index_] = e2_y_to_e2_squared_norm;
-		this->dense_index_to_first_derivative_value_map_[e2_v1_y_dense_index_] = e2_x_to_e2_squared_norm;
-		this->dense_index_to_first_derivative_value_map_[e2_v2_x_dense_index_] = e2_y_to_e2_squared_norm;
-		this->dense_index_to_first_derivative_value_map_[e2_v2_y_dense_index_] = e2_x_to_e2_squared_norm;
+		this->dense_index_to_first_derivative_value_map_[this->e1_v1_x_dense_index_] = e1_y_to_e1_squared_norm;
+		this->dense_index_to_first_derivative_value_map_[this->e1_v1_y_dense_index_] = e1_x_to_e1_squared_norm;
+		this->dense_index_to_first_derivative_value_map_[this->e1_v2_x_dense_index_] = e1_y_to_e1_squared_norm;
+		this->dense_index_to_first_derivative_value_map_[this->e1_v2_y_dense_index_] = e1_x_to_e1_squared_norm;
+		this->dense_index_to_first_derivative_value_map_[this->e2_v1_x_dense_index_] = e2_y_to_e2_squared_norm;
+		this->dense_index_to_first_derivative_value_map_[this->e2_v1_y_dense_index_] = e2_x_to_e2_squared_norm;
+		this->dense_index_to_first_derivative_value_map_[this->e2_v2_x_dense_index_] = e2_y_to_e2_squared_norm;
+		this->dense_index_to_first_derivative_value_map_[this->e2_v2_y_dense_index_] = e2_x_to_e2_squared_norm;
 
 		/**
 		 * Second partial derivatives
 		 */
-		this->dense_indices_to_second_derivative_value_map_[e1_v1_x_dense_index_][e1_v1_x_dense_index_] = e1_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e1_v1_x_dense_index_][e1_v1_y_dense_index_] = -e1_squares_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e1_v1_x_dense_index_][e1_v2_x_dense_index_] = -e1_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e1_v1_x_dense_index_][e1_v2_y_dense_index_] = e1_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v1_x_dense_index_][this->e1_v1_x_dense_index_] = e1_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v1_x_dense_index_][this->e1_v1_y_dense_index_] = -e1_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v1_x_dense_index_][this->e1_v2_x_dense_index_] = -e1_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v1_x_dense_index_][this->e1_v2_y_dense_index_] = e1_squares_diff_prod_to_quad_norm;
 
-		this->dense_indices_to_second_derivative_value_map_[e1_v2_x_dense_index_][e1_v1_x_dense_index_] = e1_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e1_v2_x_dense_index_][e1_v1_y_dense_index_] = -e1_squares_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e1_v2_x_dense_index_][e1_v2_x_dense_index_] = -e1_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e1_v2_x_dense_index_][e1_v2_y_dense_index_] = e1_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v2_x_dense_index_][this->e1_v1_x_dense_index_] = e1_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v2_x_dense_index_][this->e1_v1_y_dense_index_] = -e1_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v2_x_dense_index_][this->e1_v2_x_dense_index_] = -e1_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v2_x_dense_index_][this->e1_v2_y_dense_index_] = e1_squares_diff_prod_to_quad_norm;
 
-		this->dense_indices_to_second_derivative_value_map_[e1_v1_y_dense_index_][e1_v1_x_dense_index_] = e1_squares_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e1_v1_y_dense_index_][e1_v1_y_dense_index_] = e1_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e1_v1_y_dense_index_][e1_v2_x_dense_index_] = -e1_squares_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e1_v1_y_dense_index_][e1_v2_y_dense_index_] = -e1_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v1_y_dense_index_][this->e1_v1_x_dense_index_] = e1_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v1_y_dense_index_][this->e1_v1_y_dense_index_] = e1_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v1_y_dense_index_][this->e1_v2_x_dense_index_] = -e1_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v1_y_dense_index_][this->e1_v2_y_dense_index_] = -e1_diff_prod_to_quad_norm;
 
-		this->dense_indices_to_second_derivative_value_map_[e1_v2_y_dense_index_][e1_v1_x_dense_index_] = e1_squares_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e1_v2_y_dense_index_][e1_v1_y_dense_index_] = e1_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e1_v2_y_dense_index_][e1_v2_x_dense_index_] = -e1_squares_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e1_v2_y_dense_index_][e1_v2_y_dense_index_] = -e1_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v2_y_dense_index_][this->e1_v1_x_dense_index_] = e1_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v2_y_dense_index_][this->e1_v1_y_dense_index_] = e1_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v2_y_dense_index_][this->e1_v2_x_dense_index_] = -e1_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e1_v2_y_dense_index_][this->e1_v2_y_dense_index_] = -e1_diff_prod_to_quad_norm;
 
-		this->dense_indices_to_second_derivative_value_map_[e2_v1_x_dense_index_][e2_v1_x_dense_index_] = e2_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e2_v1_x_dense_index_][e2_v1_y_dense_index_] = -e2_squares_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e2_v1_x_dense_index_][e2_v2_x_dense_index_] = -e2_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e2_v1_x_dense_index_][e2_v2_y_dense_index_] = e2_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v1_x_dense_index_][this->e2_v1_x_dense_index_] = e2_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v1_x_dense_index_][this->e2_v1_y_dense_index_] = -e2_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v1_x_dense_index_][this->e2_v2_x_dense_index_] = -e2_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v1_x_dense_index_][this->e2_v2_y_dense_index_] = e2_squares_diff_prod_to_quad_norm;
 
-		this->dense_indices_to_second_derivative_value_map_[e2_v2_x_dense_index_][e2_v1_x_dense_index_] = e2_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e2_v2_x_dense_index_][e2_v1_y_dense_index_] = -e2_squares_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e2_v2_x_dense_index_][e2_v2_x_dense_index_] = -e2_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e2_v2_x_dense_index_][e2_v2_y_dense_index_] = e2_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v2_x_dense_index_][this->e2_v1_x_dense_index_] = e2_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v2_x_dense_index_][this->e2_v1_y_dense_index_] = -e2_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v2_x_dense_index_][this->e2_v2_x_dense_index_] = -e2_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v2_x_dense_index_][this->e2_v2_y_dense_index_] = e2_squares_diff_prod_to_quad_norm;
 
-		this->dense_indices_to_second_derivative_value_map_[e2_v1_y_dense_index_][e2_v1_x_dense_index_] = e2_squares_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e2_v1_y_dense_index_][e2_v1_y_dense_index_] = e2_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e2_v1_y_dense_index_][e2_v2_x_dense_index_] = -e2_squares_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e2_v1_y_dense_index_][e2_v2_y_dense_index_] = -e2_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v1_y_dense_index_][this->e2_v1_x_dense_index_] = e2_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v1_y_dense_index_][this->e2_v1_y_dense_index_] = e2_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v1_y_dense_index_][this->e2_v2_x_dense_index_] = -e2_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v1_y_dense_index_][this->e2_v2_y_dense_index_] = -e2_diff_prod_to_quad_norm;
 
-		this->dense_indices_to_second_derivative_value_map_[e2_v2_y_dense_index_][e2_v1_x_dense_index_] = e2_squares_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e2_v2_y_dense_index_][e2_v1_y_dense_index_] = e2_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e2_v2_y_dense_index_][e2_v2_x_dense_index_] = -e2_squares_diff_prod_to_quad_norm;
-		this->dense_indices_to_second_derivative_value_map_[e2_v2_y_dense_index_][e2_v2_y_dense_index_] = -e2_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v2_y_dense_index_][this->e2_v1_x_dense_index_] = e2_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v2_y_dense_index_][this->e2_v1_y_dense_index_] = e2_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v2_y_dense_index_][this->e2_v2_x_dense_index_] = -e2_squares_diff_prod_to_quad_norm;
+		this->dense_indices_to_second_derivative_value_map_[this->e2_v2_y_dense_index_][this->e2_v2_y_dense_index_] = -e2_diff_prod_to_quad_norm;
 	}
 
 private:
 	/**
 	 * Private overrides
 	 */
-	void InitializeSparseIndexToFirstDerivativeSignMap(std::vector<double>& sparse_index_to_first_derivative_sign_map) override
+	void InitializeDenseIndexToFirstDerivativeSignMap(std::vector<double>& dense_index_to_first_derivative_sign_map) override
 	{
-		sparse_index_to_first_derivative_sign_map[e1_v1_x_dense_index_] =  1;
-		sparse_index_to_first_derivative_sign_map[e1_v1_y_dense_index_] = -1;
-		sparse_index_to_first_derivative_sign_map[e1_v2_x_dense_index_] = -1;
-		sparse_index_to_first_derivative_sign_map[e1_v2_y_dense_index_] =  1;
-		sparse_index_to_first_derivative_sign_map[e2_v1_x_dense_index_] = -1;
-		sparse_index_to_first_derivative_sign_map[e2_v1_y_dense_index_] =  1;
-		sparse_index_to_first_derivative_sign_map[e2_v2_x_dense_index_] =  1;
-		sparse_index_to_first_derivative_sign_map[e2_v2_y_dense_index_] = -1;
+		dense_index_to_first_derivative_sign_map[this->e1_v1_x_dense_index_] =  1;
+		dense_index_to_first_derivative_sign_map[this->e1_v1_y_dense_index_] = -1;
+		dense_index_to_first_derivative_sign_map[this->e1_v2_x_dense_index_] = -1;
+		dense_index_to_first_derivative_sign_map[this->e1_v2_y_dense_index_] =  1;
+		dense_index_to_first_derivative_sign_map[this->e2_v1_x_dense_index_] = -1;
+		dense_index_to_first_derivative_sign_map[this->e2_v1_y_dense_index_] =  1;
+		dense_index_to_first_derivative_sign_map[this->e2_v2_x_dense_index_] =  1;
+		dense_index_to_first_derivative_sign_map[this->e2_v2_y_dense_index_] = -1;
 	}
 	
 	void CalculateValue(double& f) override
@@ -130,27 +130,6 @@ private:
 		auto& edge_pair_data_provider = this->GetEdgePairDataProvider();
 		f = std::atan2(edge_pair_data_provider.GetEdge1YDiff(), edge_pair_data_provider.GetEdge1XDiff()) - atan2(edge_pair_data_provider.GetEdge2YDiff(), edge_pair_data_provider.GetEdge2XDiff());
 	}
-
-	/**
-	 * Private fields
-	 */
-	RDS::SparseVariableIndex e1_v1_x_index_;
-	RDS::SparseVariableIndex e1_v1_y_index_;
-	RDS::SparseVariableIndex e1_v2_x_index_;
-	RDS::SparseVariableIndex e1_v2_y_index_;
-	RDS::SparseVariableIndex e2_v1_x_index_;
-	RDS::SparseVariableIndex e2_v1_y_index_;
-	RDS::SparseVariableIndex e2_v2_x_index_;
-	RDS::SparseVariableIndex e2_v2_y_index_;
-
-	RDS::DenseVariableIndex e1_v1_x_dense_index_;
-	RDS::DenseVariableIndex e1_v1_y_dense_index_;
-	RDS::DenseVariableIndex e1_v2_x_dense_index_;
-	RDS::DenseVariableIndex e1_v2_y_dense_index_;
-	RDS::DenseVariableIndex e2_v1_x_dense_index_;
-	RDS::DenseVariableIndex e2_v1_y_dense_index_;
-	RDS::DenseVariableIndex e2_v2_x_dense_index_;
-	RDS::DenseVariableIndex e2_v2_y_dense_index_;
 };
 
 #endif
