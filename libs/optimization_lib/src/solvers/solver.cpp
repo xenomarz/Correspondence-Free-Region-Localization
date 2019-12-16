@@ -12,7 +12,7 @@ solver::solver(const bool isConstrObjFunc, const int solverID)
 {
 #ifdef SAVE_RESULTS_TO_CSV
 	//save data in csv files
-	string path = "C:\\Users\\Elias\\Desktop\\Solver" + std::to_string(solverID) + "\\";
+	string path = "C:\\Users\\user\\Desktop\\Solver" + std::to_string(solverID) + "\\";
 	mkdir(path.c_str());
 	SearchDirInfo.open(path + "SearchDirInfo.csv");
 	solverInfo.open(path + "solverInfo.csv");
@@ -198,7 +198,7 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 	//calculate values in the search direction vector
 	int counter;
 	double alpha = 0;
-	for ( alpha = -3, counter = 0; alpha <= 3; alpha += 0.01, counter++) {
+	for ( alpha = -1, counter = 0; alpha <= 1; alpha += 0.005, counter++) {
 		MatrixXd curr_x = X + alpha * p;
 		VectorXd grad;
 		objective->updateX(curr_x);
@@ -208,6 +208,7 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 		y_augmentedValue[counter] = objective->AugmentedValue(false);
 		y_gradientNorm[counter] = grad.norm();
 	}
+	cout << "counter = " << counter << endl;
 	objective->updateX(X);
 
 	//show only once the objective's function data
@@ -282,7 +283,7 @@ void solver::value_linesearch(std::ofstream& SearchDirInfo)
 
 	double new_energy = currentEnergy;
 	
-	int cur_iter = 0; int MAX_STEP_SIZE_ITER = 12;
+	int cur_iter = 0; int MAX_STEP_SIZE_ITER = 50;
 
 	while (cur_iter < MAX_STEP_SIZE_ITER)
 	{
@@ -307,6 +308,33 @@ void solver::value_linesearch(std::ofstream& SearchDirInfo)
 		cur_iter++;
 	}
 
+	if (cur_iter == MAX_STEP_SIZE_ITER) {
+		cur_iter = 0;
+		step_size = -1;
+		while (cur_iter < MAX_STEP_SIZE_ITER)
+		{
+			MatrixXd curr_x = X + step_size * p;
+
+			objective->updateX(curr_x);
+
+			if (IsConstrObjFunc)
+				new_energy = objective->AugmentedValue(false);
+			else
+				new_energy = objective->value(false);
+
+			if (new_energy >= currentEnergy)
+			{
+				step_size /= 2;
+			}
+			else
+			{
+				X = curr_x;
+				break;
+			}
+			cur_iter++;
+		}
+	}
+
 #ifdef SAVE_RESULTS_TO_CSV
 	//add the solver's choice of alfa
 	if (lineSearch_type == Utils::GradientNorm)
@@ -328,7 +356,7 @@ void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
 	double current_GradNrom = grad.norm();
 	double new_GradNrom = current_GradNrom;
 
-	int cur_iter = 0; int MAX_STEP_SIZE_ITER = 12;
+	int cur_iter = 0; int MAX_STEP_SIZE_ITER = 50;
 
 	while (cur_iter < MAX_STEP_SIZE_ITER)
 	{
@@ -348,6 +376,32 @@ void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
 			break;
 		}
 		cur_iter++;
+	}
+
+	if (cur_iter == MAX_STEP_SIZE_ITER) {
+		cur_iter = 0;
+		step_size = -1;
+	
+		while (cur_iter < MAX_STEP_SIZE_ITER)
+		{
+			MatrixXd curr_x = X + step_size * p;
+
+			objective->updateX(curr_x);
+			objective->gradient(grad, false);
+			new_GradNrom = grad.norm();
+
+			if (new_GradNrom >= current_GradNrom)
+			{
+				step_size /= 2;
+			}
+			else
+			{
+				X = curr_x;
+				break;
+			}
+			cur_iter++;
+		}
+	
 	}
 
 #ifdef SAVE_RESULTS_TO_CSV

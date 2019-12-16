@@ -74,10 +74,10 @@ private:
 	void saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo);
 	void saveSolverInfo(int numIteration, std::ofstream& solverInfo);
 	void saveHessianInfo(int numIteration, std::ofstream& hessianInfo);
-	double alfa[601] = { 0 };
-	double y_value[601] = { 0 };
-	double y_augmentedValue[601] = { 0 };
-	double y_gradientNorm[601] = { 0 };
+	double alfa[400] = { 0 };
+	double y_value[400] = { 0 };
+	double y_augmentedValue[400] = { 0 };
+	double y_gradientNorm[400] = { 0 };
 	std::ofstream SearchDirInfo, solverInfo, hessianInfo;
 
 	// Mutex stuff

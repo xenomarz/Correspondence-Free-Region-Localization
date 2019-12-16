@@ -58,6 +58,11 @@ bool TriangleMeshObjectiveFunction::update_variables(const VectorXd& X)
 		d(i) = Dy.transpose() * Yi;
 		detJ(i) = a(i) * d(i) - b(i) * c(i);
 	}
+	/*cout << "name = " << name << endl;
+	cout << "a = " << a << endl;
+	cout << "b = " << b << endl;
+	cout << "c = " << c << endl;
+	cout << "d = " << d << endl;*/
 	return ((detJ.array() < 0).any());
 }
 
