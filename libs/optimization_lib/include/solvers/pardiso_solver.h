@@ -84,19 +84,16 @@ public:
 		MKL_INT* ja = const_cast<MKL_INT*>(A.innerIndexPtr());
 		double* a = const_cast<double*>(A.valuePtr());
 
-		//#pragma omp parallel for
 		for (MKL_INT i = 0; i < A.outerSize() + 1; i++)
 		{
 			ia_[i] = ia[i];
 		}
 
-		//#pragma omp parallel for
 		for (MKL_INT i = 0; i < A.nonZeros(); i++)
 		{
 			ja_[i] = ja[i];
 		}
 
-		//#pragma omp parallel for
 		for (MKL_INT i = 0; i < A.nonZeros(); i++)
 		{
 			a_[i] = 0;

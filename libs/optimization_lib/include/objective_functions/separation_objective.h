@@ -99,7 +99,8 @@ private:
 		EsepP_squared.resize(EsepP.rows(), 2);
 		
 		int rows = EsepP.rows();
-		//#pragma omp parallel for
+		
+		#pragma omp parallel for
 		for(int i = 0; i < rows; i++)
 		{
 			EsepP_squared.coeffRef(i, 0) = EsepP.coeffRef(i, 0) * EsepP.coeffRef(i, 0);
@@ -201,13 +202,10 @@ private:
 	
 	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-		int threads = omp_get_max_threads();
 		// no inner loop because there are only 2 nnz values per col
-		#pragma omp parallel for num_threads(threads)
+		#pragma omp parallel for
 		for (int i = 0; i < Esept.outerSize(); ++i)
 		{
-			//int tid = omp_get_thread_num();
-
 			Eigen::Vector2d xi, xj;
 			Eigen::Matrix4d sh;
 

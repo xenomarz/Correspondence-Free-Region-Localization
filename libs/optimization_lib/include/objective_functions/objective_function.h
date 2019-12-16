@@ -276,36 +276,25 @@ public:
 		data_provider_->Update(x, updated_objects);
 		PreUpdate(x, updated_objects);
 
-		#pragma omp parallel sections if(parallelism_enabled_)
+		if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
 		{
-			{
-				if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
-				{
-					CalculateValue(f_);
-				}
-			}
-			#pragma omp section
-			{
-				if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
-				{
-					CalculateValuePerVertex(f_per_vertex_);
-				}
-			}
-			#pragma omp section
-			{
-				if ((update_options & UpdateOptions::GRADIENT) != UpdateOptions::NONE)
-				{
-					CalculateGradient(g_);
-				}
-			}
-			#pragma omp section
-			{
-				if ((update_options & UpdateOptions::HESSIAN) != UpdateOptions::NONE)
-				{
-					CalculateTriplets(triplets_);
-					CalculateConvexTriplets(triplets_);
-				}
-			}
+			CalculateValue(f_);
+		}
+
+		if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
+		{
+			CalculateValuePerVertex(f_per_vertex_);
+		}
+
+		if ((update_options & UpdateOptions::GRADIENT) != UpdateOptions::NONE)
+		{
+			CalculateGradient(g_);
+		}
+
+		if ((update_options & UpdateOptions::HESSIAN) != UpdateOptions::NONE)
+		{
+			CalculateTriplets(triplets_);
+			CalculateConvexTriplets(triplets_);
 		}
 
 		PostUpdate(x, updated_objects);
@@ -344,7 +333,6 @@ public:
 		const int64_t end_index = start_index + triplets_.size();
 		triplets.insert(triplets.end(), triplets_.begin(), triplets_.end());
 
-		#pragma omp parallel for
 		for(int64_t i = start_index; i < end_index; i++)
 		{
 			double& value = const_cast<double&>(triplets[i].value());

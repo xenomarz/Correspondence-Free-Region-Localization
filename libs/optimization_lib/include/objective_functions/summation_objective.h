@@ -177,7 +177,6 @@ protected:
 	{
 		auto objective_functions_size = objective_functions_.size();
 
-		#pragma omp parallel for
 		for (int32_t i = 0; i < objective_functions_size; i++)
 		{
 			objective_functions_[i]->Update(x, updated_objects);
