@@ -37,6 +37,7 @@
 #include <igl/slice.h>
 #include "../../libs/optimization_lib/include/solvers/NewtonSolver.h"
 #include "../../libs/optimization_lib/include/solvers/GradientDescentSolver.h"
+#include "../../libs/optimization_lib/include/solvers/worhpSolver.h"
 #include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichlet.h"
 #include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichletCompositeMajorization.h"
 #include "../../libs/optimization_lib/include/objective_functions/AreaDistortion.h"
@@ -338,6 +339,7 @@ public:
 	shared_ptr<NewtonSolver> newton;
 	shared_ptr<GradientDescentSolver> gradient_descent;
 	shared_ptr<solver> solver;
+	shared_ptr<worhpSolver> worhpsolver;
 	shared_ptr<TotalObjective> totalObjective;
 
 	//Constructor & initialization

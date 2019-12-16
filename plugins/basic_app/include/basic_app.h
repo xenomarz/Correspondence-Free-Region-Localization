@@ -11,7 +11,7 @@ class basic_app : public ImGuiMenu
 private:
 	bool model_loaded;
 	float Max_Distortion;
-	bool solver_on, solver_settings, IsMouseHoveringAnyWindow, IsMouseDraggingAnyWindow;
+	bool worhp_on, solver_on, solver_settings, IsMouseHoveringAnyWindow, IsMouseDraggingAnyWindow;
 	app_utils::Distortion distortion_type;
 	app_utils::SolverType solver_type;
 	Utils::LineSearch linesearch_type;
@@ -92,6 +92,7 @@ public:
 	void initializeSolver(const int index);
 	void stop_solver_thread();
 	void start_solver_thread();
+	void start_worhp_solver_thread();
 
 	//FD check
 	void checkGradients();

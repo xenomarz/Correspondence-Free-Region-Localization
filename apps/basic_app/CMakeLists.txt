@@ -17,3 +17,7 @@ target_link_libraries(${PROJECT_NAME}
         igl::opengl_glfw_imgui
         rds::optimization_lib
         rds::plugins)
+
+set_target_properties(${PROJECT_NAME} 
+    PROPERTIES
+    	VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/ext/worhp/bin")

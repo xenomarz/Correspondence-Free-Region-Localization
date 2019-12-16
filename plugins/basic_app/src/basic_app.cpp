@@ -10,7 +10,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 	if (_viewer)
 	{
 		IsMouseDraggingAnyWindow = IsMouseHoveringAnyWindow = solver_settings =
-			solver_on = Outputs_Settings = Highlighted_face = IsTranslate = model_loaded = false;
+			worhp_on = solver_on = Outputs_Settings = Highlighted_face = IsTranslate = model_loaded = false;
 		show_text = true;
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
@@ -467,6 +467,10 @@ void basic_app::Draw_menu_for_Solver() {
 		if (ImGui::Checkbox(solver_on ? "On" : "Off", &solver_on)) {
 			solver_on ? start_solver_thread() : stop_solver_thread();
 		}
+		if (ImGui::Checkbox("worhp", &worhp_on)) {
+			if(worhp_on) start_worhp_solver_thread();
+		}
+
 		ImGui::Checkbox("Solver settings", &solver_settings);
 
 		if (ImGui::Combo("step", (int *)(&solver_type), "NEWTON\0Gradient Descent\0\0")) {
@@ -1196,6 +1200,13 @@ void basic_app::start_solver_thread() {
 		cout << ">> start new solver" << endl;
 		solver_on = true;
 		solver_thread = thread(&solver::run/*run*//*run_one_iteration*/, o.solver.get());
+		solver_thread.detach();
+	}
+}
+
+void basic_app::start_worhp_solver_thread() {
+	for (auto& o : Outputs) {
+		solver_thread = thread(&worhpSolver::run, o.worhpsolver.get());
 		solver_thread.detach();
 	}
 }
