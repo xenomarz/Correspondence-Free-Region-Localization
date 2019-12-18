@@ -14,19 +14,6 @@ public:
 	 */
 	DataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider);
 	virtual ~DataProvider();
-
-	/**
-	 * Public methods
-	 */
-	[[nodiscard]] std::shared_ptr<MeshDataProvider> GetMeshDataProvider() const;
-
-protected:
-	/**
-	 * Protected Fields
-	 */
-
-	// Mesh data provider
-	std::shared_ptr<MeshDataProvider> mesh_data_provider_;
 };
 
 #endif

@@ -159,16 +159,16 @@ private:
 				-1,  0,  1,  0,
 				 0, -1,  0,  1;
 		
-		Esep = this->data_provider_->GetMeshDataProvider()->GetCorrespondingVertexPairsCoefficients();
+		Esep = this->mesh_data_provider_->GetCorrespondingVertexPairsCoefficients();
 		Esept = Esep.transpose();
-		edge_lenghts_per_pair = this->data_provider_->GetMeshDataProvider()->GetCorrespondingVertexPairsEdgeLength();
+		edge_lenghts_per_pair = this->mesh_data_provider_->GetCorrespondingVertexPairsEdgeLength();
 	}
 	
 	void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		const int64_t outer_size = Esept.outerSize();
 		triplets.reserve(10 * outer_size);
-		auto image_vertices_count = this->data_provider_->GetMeshDataProvider()->GetImageVerticesCount();
+		auto image_vertices_count = this->mesh_data_provider_->GetImageVerticesCount();
 		for (int i = 0; i < outer_size; ++i)
 		{
 			Eigen::SparseMatrix<double>::InnerIterator it(Esept, i);

@@ -13,11 +13,10 @@
 // Eigen Includes
 #include <Eigen/Core>
 #include <Eigen/Sparse>
-#include <Eigen/Eigenvalues> 
 
 // Optimization Lib Includes
 #include "../core/core.h"
-#include "../data_providers/data_provider.h"
+#include "../core/updatable_object.h"
 
 template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
 class ObjectiveFunction : public UpdatableObject
@@ -26,20 +25,14 @@ public:
 	/**
 	 * Public type definitions
 	 */
-	using GradientType = VectorType_;
-	
-	enum TemplateSettings
-	{
-		StorageOrder = StorageOrder_
-	};
-	
 	enum class UpdateOptions : int32_t
 	{
 		NONE = 0,
 		VALUE = 1,
-		GRADIENT = 2,
-		HESSIAN = 4,
-		ALL = 7
+		VALUE_PER_VERTEX = 2,
+		GRADIENT = 4,
+		HESSIAN = 8,
+		ALL = 15
 	};
 
 	enum class Properties : int32_t
@@ -57,22 +50,11 @@ public:
 	/**
 	 * Constructor and destructor
 	 */
-	ObjectiveFunction(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const int64_t objective_vertices_count, const bool enforce_psd) :
-		ObjectiveFunction(data_provider, name, objective_vertices_count, 2 * objective_vertices_count, enforce_psd)
-	{
-		
-	}
-
-	ObjectiveFunction(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const int64_t objective_vertices_count, const int64_t objective_variables_count, const bool enforce_psd) :
-		UpdatableObject(),
+	ObjectiveFunction(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::string& name) :
+		UpdatableObject(mesh_data_provider),
 		f_(0),
 		w_(1),
-		objective_vertices_count_(objective_vertices_count),
-		objective_variables_count_(objective_variables_count),
-		enforce_psd_(enforce_psd),
-		name_(name),
-		data_provider_(data_provider),
-		parallelism_enabled_(false)
+		name_(name)
 	{
 
 	}
@@ -83,99 +65,42 @@ public:
 	}
 
 	/**
-	 * Thread-safe getters
+	 * Getters
 	 */
 	double GetValue() const
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		return f_;
 	}
 
 	const VectorType_& GetValuePerVertex() const
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		return f_per_vertex_;
 	}
 
 	const VectorType_& GetGradient() const
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		return g_;
 	}
 
 	const Eigen::SparseMatrix<double, StorageOrder_>& GetHessian()
 	{
-		//std::lock_guard<std::mutex> lock(m_);
-
-		//auto variables_count = this->data_provider_->GetMeshDataProvider()->GetVariablesCount();
-		//for(int64_t i = 0; i < variables_count; i++)
-		//{
-		//	triplets_.push_back(Eigen::Triplet<double>(i,i,0));
-		//}
-		
 		H_.setFromTriplets(triplets_.begin(), triplets_.end());
 		return H_;
 	}
 
 	const std::vector<Eigen::Triplet<double>>& GetTriplets() const
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		return triplets_;
-	}
-
-	int64_t GetObjectiveVerticesCount() const
-	{
-		//std::lock_guard<std::mutex> lock(m_);
-		return objective_vertices_count_;
-	}
-
-	int64_t GetObjectiveVariablesCount() const
-	{
-		//std::lock_guard<std::mutex> lock(m_);
-		return objective_variables_count_;
 	}
 
 	double GetWeight() const
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		return w_;
 	}
 
 	std::string GetName() const
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		return name_;
-	}
-
-	bool GetEnforcePsd() const
-	{
-		return enforce_psd_;
-	}
-
-	std::shared_ptr<DataProvider> GetDataProvider() const
-	{
-		//std::lock_guard<std::mutex> lock(m_);
-		return data_provider_;
-	}
-
-	const std::vector<RDS::SparseVariableIndex>& GetSparseVariablesIndices() const
-	{
-		return sparse_variable_indices_;
-	}
-
-	const RDS::HessianEntryToTripletIndexMap& GetHessianEntryToTripletIndexMap() const
-	{
-		return hessian_entry_to_triplet_index_map_;
-	}
-
-	const RDS::SparseVariableIndexToDenseVariableIndexMap& GetSparseVariableIndexToDenseVariableIndexMap() const
-	{
-		return sparse_variable_index_to_dense_variable_index_map_;
-	}
-
-	const RDS::DenseVariableIndexToSparseVariableIndexMap& GetDenseVariableIndexToSparseVariableIndexMap() const
-	{
-		return dense_variable_index_to_sparse_variable_index_map_;
 	}
 
 	// Generic property getter
@@ -215,15 +140,8 @@ public:
 	 */
 	void SetWeight(const double w)
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		w_ = w;
 	}
-
-	void SetEnforcePsd(const bool enforce_psd)
-	{
-		enforce_psd_ = enforce_psd;
-	}
-
 
 	// Generic property setter
 	virtual bool SetProperty(const int32_t property_id, const std::any& property_value)
@@ -251,11 +169,6 @@ public:
 		InitializeValuePerVertex(f_per_vertex_);
 		InitializeGradient(g_);
 		InitializeHessian(H_);
-		InitializeSparseVariableIndices(sparse_variable_indices_);
-		InitializeMappings(
-			sparse_variable_index_to_dense_variable_index_map_, 
-			dense_variable_index_to_sparse_variable_index_map_,
-			sparse_variable_index_to_vertex_index_map_);
 		InitializeTriplets(triplets_);
 		PostInitialize();
 	}
@@ -263,25 +176,19 @@ public:
 	// Update value, gradient and hessian for a given x
 	void Update(const Eigen::VectorXd& x) override
 	{
-		Update(x, UpdatedObjectSet(), UpdateOptions::ALL);
+		Update(x, UpdateOptions::ALL);
 	}
 	
-	void Update(const Eigen::VectorXd& x, UpdatedObjectSet& updated_objects) override
+	void Update(const Eigen::VectorXd& x, const UpdateOptions update_options)
 	{
-		Update(x, updated_objects, UpdateOptions::ALL);
-	}
-	
-	void Update(const Eigen::VectorXd& x, UpdatedObjectSet& updated_objects, const UpdateOptions update_options)
-	{
-		data_provider_->Update(x, updated_objects);
-		PreUpdate(x, updated_objects);
+		PreUpdate(x);
 
 		if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
 		{
 			CalculateValue(f_);
 		}
 
-		if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
+		if ((update_options & UpdateOptions::VALUE_PER_VERTEX) != UpdateOptions::NONE)
 		{
 			CalculateValuePerVertex(f_per_vertex_);
 		}
@@ -294,10 +201,9 @@ public:
 		if ((update_options & UpdateOptions::HESSIAN) != UpdateOptions::NONE)
 		{
 			CalculateTriplets(triplets_);
-			CalculateConvexTriplets(triplets_);
 		}
 
-		PostUpdate(x, updated_objects);
+		PostUpdate(x);
 	}
 
 	template<typename ValueVectorType_>
@@ -315,24 +221,20 @@ public:
 	template<typename ValueVectorType_>
 	void AddValuePerVertexSafe(ValueVectorType_& f_per_vertex, const double w = 1) const
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		AddValuePerVertex(f_per_vertex, w);
 	}
 
 	template<typename GradientVectorType_>
 	void AddGradientSafe(GradientVectorType_& g, const double w = 1) const
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		AddGradient(g, w);
 	}
 
 	virtual void AddTriplets(std::vector<Eigen::Triplet<double>>& triplets, const double w = 1) const
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		const int64_t start_index = triplets.size();
 		const int64_t end_index = start_index + triplets_.size();
 		triplets.insert(triplets.end(), triplets_.begin(), triplets_.end());
-
 		for(int64_t i = start_index; i < end_index; i++)
 		{
 			double& value = const_cast<double&>(triplets[i].value());
@@ -416,12 +318,12 @@ protected:
 		// Empty implementation
 	}
 
-	virtual void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects)
+	virtual void PreUpdate(const Eigen::VectorXd& x)
 	{
 		// Empty implementation
 	}
 
-	virtual void PostUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects)
+	virtual void PostUpdate(const Eigen::VectorXd& x)
 	{
 		// Empty implementation
 	}
@@ -462,19 +364,9 @@ protected:
 	/**
 	 * Protected Fields
 	 */
-
-	// Data provider
-	std::shared_ptr<DataProvider> data_provider_;
 	
 	// Mutex
 	mutable std::mutex m_;
-
-	// Elements count
-	int64_t objective_vertices_count_;
-	int64_t objective_variables_count_;
-
-	// Parallelism enabled flag
-	bool parallelism_enabled_;
 	
 private:
 
@@ -490,119 +382,29 @@ private:
 
 	void InitializeValuePerVertex(VectorType_& f_per_vertex)
 	{
-		f_per_vertex.resize(data_provider_->GetMeshDataProvider()->GetImageVerticesCount());
+		f_per_vertex.resize(mesh_data_provider_->GetImageVerticesCount());
 		f_per_vertex.setZero();
 	}
 
 	void InitializeGradient(VectorType_& g)
 	{
-		g.resize(data_provider_->GetMeshDataProvider()->GetVariablesCount());
+		g.resize(mesh_data_provider_->GetVariablesCount());
 		g.setZero();
 	}
 
 	void InitializeHessian(Eigen::SparseMatrix<double, StorageOrder_>& H)
 	{
-		auto variables_count = data_provider_->GetMeshDataProvider()->GetVariablesCount();
+		auto variables_count = mesh_data_provider_->GetVariablesCount();
 		H.resize(variables_count, variables_count);
 	}
 
-	virtual void InitializeSparseVariableIndices(std::vector<RDS::SparseVariableIndex>& sparse_variable_indices)
-	{
-		// Empty implementation
-	}
-
-	virtual void InitializeMappings(
-		RDS::SparseVariableIndexToDenseVariableIndexMap& sparse_variable_index_to_dense_variable_index_map,
-		RDS::DenseVariableIndexToSparseVariableIndexMap& dense_variable_index_to_sparse_variable_index_map,
-		RDS::SparseVariableIndexToVertexIndexMap& sparse_variable_index_to_vertex_index_map)
-	{
-		std::sort(sparse_variable_indices_.begin(), sparse_variable_indices_.end());
-		for (std::size_t i = 0; i < sparse_variable_indices_.size(); i++)
-		{
-			dense_variable_index_to_sparse_variable_index_map.insert({ i, sparse_variable_indices_[i] });
-			sparse_variable_index_to_dense_variable_index_map.insert({ sparse_variable_indices_[i], i });
-			sparse_variable_index_to_vertex_index_map.insert({ sparse_variable_indices_[i], data_provider_->GetMeshDataProvider()->GetVertexIndex(sparse_variable_indices_[i])});
-		}
-	}
-
-	virtual void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets)
-	{	
-		const auto objective_variables_count_squared = objective_variables_count_ * objective_variables_count_;
-		triplets.resize(((objective_variables_count_squared - objective_variables_count_) / 2) + objective_variables_count_);
-		auto triplet_index = 0;
-		for (auto column = 0; column < objective_variables_count_; column++)
-		{
-			for (auto row = 0; row <= column; row++)
-			{
-				triplets[triplet_index] = Eigen::Triplet<double>(
-					dense_variable_index_to_sparse_variable_index_map_[row],
-					dense_variable_index_to_sparse_variable_index_map_[column],
-					0);
-
-				hessian_entry_to_triplet_index_map_[{ row, column }] = triplet_index;
-				triplet_index++;
-			}
-		}
-	}
+	virtual void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) = 0;
 
 	// Value, gradient and hessian calculation functions
 	virtual void CalculateValue(double& f) = 0;
-
-	virtual void CalculateValuePerVertex(VectorType_& f_per_vertex)
-	{
-		const double value = this->GetValueInternal();
-		f_per_vertex.setZero();
-		const auto sparse_variables_indices_count = sparse_variable_indices_.size();
-		for (std::size_t i = 0; i < sparse_variables_indices_count; i++)
-		{
-			f_per_vertex.coeffRef(sparse_variable_index_to_vertex_index_map_[sparse_variable_indices_[i]]) += value;
-		}
-	}
-
+	virtual void CalculateValuePerVertex(VectorType_& f_per_vertex) = 0;
 	virtual void CalculateGradient(VectorType_& g) = 0;
 	virtual void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) = 0;
-	void CalculateConvexTriplets(std::vector<Eigen::Triplet<double>>& triplets)
-	{
-		if (enforce_psd_)
-		{
-			Eigen::MatrixXd H;
-			H.resize(objective_variables_count_, objective_variables_count_);
-			H.setZero();
-
-			auto triplets_count = triplets.size();
-			for (std::size_t i = 0; i < triplets_count; i++)
-			{
-				auto row = sparse_variable_index_to_dense_variable_index_map_[triplets[i].row()];
-				auto col = sparse_variable_index_to_dense_variable_index_map_[triplets[i].col()];
-				auto value = triplets[i].value();
-				H.coeffRef(row, col) = value;
-				H.coeffRef(col, row) = value;
-			}
-
-			Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(H);
-			Eigen::MatrixXd D = solver.eigenvalues().asDiagonal();
-			Eigen::MatrixXd V = solver.eigenvectors();
-			for (auto i = 0; i < objective_variables_count_; i++)
-			{
-				auto& value = D.coeffRef(i, i);
-				if (value < 0)
-				{
-					value = 10e-8;
-				}
-			}
-
-			H = V * D * V.transpose();
-
-			for (auto column = 0; column < objective_variables_count_; column++)
-			{
-				for (auto row = 0; row <= column; row++)
-				{
-					const auto triplet_index = hessian_entry_to_triplet_index_map_[{row, column}];
-					const_cast<double&>(triplets[triplet_index].value()) = H.coeffRef(row, column);
-				}
-			}
-		}
-	}
 
 	// Epsilon calculation for finite differences
 	static double CalculateEpsilon(const Eigen::VectorXd& x)
@@ -633,18 +435,6 @@ private:
 	
 	// Weight
 	double w_;
-
-	// Enforce PSD
-	bool enforce_psd_;
-
-	// Sparse variable indices
-	std::vector<RDS::SparseVariableIndex> sparse_variable_indices_;
-
-	// Mappings
-	RDS::HessianEntryToTripletIndexMap hessian_entry_to_triplet_index_map_;
-	RDS::SparseVariableIndexToDenseVariableIndexMap sparse_variable_index_to_dense_variable_index_map_;
-	RDS::DenseVariableIndexToSparseVariableIndexMap dense_variable_index_to_sparse_variable_index_map_;
-	RDS::SparseVariableIndexToVertexIndexMap sparse_variable_index_to_vertex_index_map_;
 
 	// Name
 	const std::string name_;

@@ -5,35 +5,34 @@
 // Eigen Includes
 #include <Eigen/Core>
 
-// TBB includes
-#include <tbb/concurrent_unordered_set.h>
+// Optimization lib includes
+#include "data_providers/mesh_data_provider.h"
+
 //#include <unordered_set>
 
 class UpdatableObject
 {
 public:
 	/**
-	 * Public type definitions
-	 */
-	using UpdatedObjectSet = tbb::concurrent_unordered_set<UpdatableObject*>;
-	
-	/**
 	 * Constructors and destructor
 	 */
-	UpdatableObject();
+	UpdatableObject(const std::shared_ptr<MeshDataProvider>& mesh_data_provider);
 	virtual ~UpdatableObject();
 
 	/**
 	 * Public methods
 	 */
 	virtual void Update(const Eigen::VectorXd& x) = 0;
-	virtual void Update(const Eigen::VectorXd& x, UpdatedObjectSet& updated_objects);
+	[[nodiscard]] std::shared_ptr<MeshDataProvider> GetMeshDataProvider() const;
 
 protected:
 	/**
-	 * Protected methods
+	 * Protected Fields
 	 */
-	bool ShouldUpdate(UpdatedObjectSet& updated_objects);
+
+	// Mesh data provider
+	std::shared_ptr<MeshDataProvider> mesh_data_provider_;
+	std::vector<std::shared_ptr<UpdatableObject>> dependencies_;
 };
 
 #endif

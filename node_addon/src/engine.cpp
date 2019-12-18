@@ -96,8 +96,6 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 		/**
 		 * Initialize objective functions
 		 */
-		summation_objective_->Initialize();
-
 		for (auto& edge_pair_descriptor : mesh_wrapper_->GetEdgePairDescriptors())
 		{
 			edge_pair_data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptor));
@@ -117,6 +115,8 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 		{
 			singular_points_->AddSingularPointObjective(face_fan_data_provider);
 		}
+
+		summation_objective_->Initialize();
 
 		/**
 		 * Create newton method iterator

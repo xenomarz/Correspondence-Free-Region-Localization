@@ -136,7 +136,7 @@ public:
 	void PreInitialize() override
 	{
 		SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::PreInitialize();
-		singularity_weight_per_vertex_.resize(this->GetDataProvider()->GetMeshDataProvider()->GetImageVerticesCount());
+		singularity_weight_per_vertex_.resize(this->mesh_data_provider_->GetImageVerticesCount());
 	}
 
 	/**

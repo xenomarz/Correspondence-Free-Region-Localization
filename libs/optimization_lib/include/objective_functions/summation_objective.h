@@ -16,44 +16,21 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const bool enforce_psd = false, const bool enforce_children_psd = false, const bool parallel_update = false) :
-		ObjectiveFunction(data_provider, "Summation Objective", 0, enforce_psd),
-		parallel_update_(parallel_update),
+	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const bool enforce_children_psd = false) :
+		ObjectiveFunction(mesh_data_provider, "Summation Objective"),
 		enforce_children_psd_(enforce_children_psd)
 	{
-		this->parallelism_enabled_ = true;
 		this->Initialize();
 	}
 
-	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const bool enforce_psd = false, const bool enforce_children_psd = false, const bool parallel_update = false) :
-		ObjectiveFunction(data_provider, name, 0, enforce_psd),
-		parallel_update_(parallel_update),
-		enforce_children_psd_(enforce_children_psd)
-	{
-		this->parallelism_enabled_ = true;
-		this->Initialize();
-	}
-
-	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool enforce_psd = false, const bool enforce_children_psd = false, const bool parallel_update = false) :
-		SummationObjective(data_provider, name, enforce_psd, enforce_children_psd, parallel_update)
+	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool enforce_children_psd = false) :
+		SummationObjective(mesh_data_provider, name, enforce_psd, enforce_children_psd, parallel_update)
 	{
 		AddObjectiveFunctions(objective_functions);
 	}
 
-	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, const bool enforce_psd = false, const bool enforce_children_psd = false, const bool parallel_update = false) :
-		SummationObjective(data_provider, std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, enforce_psd, enforce_children_psd, parallel_update)
-	{
-
-	}
-
-	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const bool enforce_psd = false, const bool enforce_children_psd = false, const bool parallel_update = false) :
-		SummationObjective(data_provider, objective_functions, "Summation Objective", enforce_psd, enforce_children_psd, parallel_update)
-	{
-
-	}
-
-	SummationObjective(const std::shared_ptr<DataProvider>& data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const bool enforce_psd = false, const bool enforce_children_psd = false, const bool parallel_update = false) :
-		SummationObjective(data_provider, objective_function, "Summation Objective", enforce_psd, enforce_children_psd, parallel_update)
+	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, const bool enforce_children_psd = false) :
+		SummationObjective(mesh_data_provider, std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, enforce_children_psd)
 	{
 
 	}

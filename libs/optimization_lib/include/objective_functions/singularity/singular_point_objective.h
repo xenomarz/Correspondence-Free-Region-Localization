@@ -133,8 +133,8 @@ public:
 		auto face_fan = face_fan_data_provider->GetFaceFan();
 		for (auto& face_fan_slice : face_fan)
 		{
-			auto x_coordinate_data_provider = std::make_shared<CoordinateDataProvider>(this->data_provider_->GetMeshDataProvider(), face_fan_slice.first, CoordinateDataProvider::CoordinateType::X);
-			auto y_coordinate_data_provider = std::make_shared<CoordinateDataProvider>(this->data_provider_->GetMeshDataProvider(), face_fan_slice.first, CoordinateDataProvider::CoordinateType::Y);
+			auto x_coordinate_data_provider = std::make_shared<CoordinateDataProvider>(this->mesh_data_provider_, face_fan_slice.first, CoordinateDataProvider::CoordinateType::X);
+			auto y_coordinate_data_provider = std::make_shared<CoordinateDataProvider>(this->mesh_data_provider_, face_fan_slice.first, CoordinateDataProvider::CoordinateType::Y);
 
 			auto x_coordinate_objective = std::make_shared<CoordinateObjective<StorageOrder_>>(x_coordinate_data_provider);
 			auto y_coordinate_objective = std::make_shared<CoordinateObjective<StorageOrder_>>(y_coordinate_data_provider);

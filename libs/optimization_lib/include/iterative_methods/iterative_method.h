@@ -70,7 +70,7 @@ public:
 					}
 					lock.unlock();
 
-					objective_function_->Update(x_, UpdatableObject::UpdatedObjectSet(), DenseObjectiveFunction<StorageOrder_>::UpdateOptions::GRADIENT | DenseObjectiveFunction<StorageOrder_>::UpdateOptions::HESSIAN);
+					objective_function_->Update(x_, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::GRADIENT | DenseObjectiveFunction<StorageOrder_>::UpdateOptions::HESSIAN);
 					ComputeDescentDirection(p_);
 					LineSearch(p_);
 				}
@@ -188,7 +188,7 @@ private:
 		while (current_iteration < max_backtracking_iterations_)
 		{
 			current_x = x_ + step_size * p;
-			objective_function_->Update(current_x, UpdatableObject::UpdatedObjectSet(), DenseObjectiveFunction<StorageOrder_>::UpdateOptions::VALUE);
+			objective_function_->Update(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::VALUE);
 			updated_value = objective_function_->GetValue();
 
 			if (updated_value >= current_value)
@@ -202,6 +202,8 @@ private:
 
 			current_iteration++;
 		}
+
+		objective_function_->Update(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::VALUE_PER_VERTEX);
 
 		std::lock_guard<std::mutex> x_lock(x_mutex_);
 		x_ = std::move(current_x);

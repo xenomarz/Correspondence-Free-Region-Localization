@@ -1,7 +1,8 @@
 // Optimization lib includes
 #include <core/updatable_object.h>
 
-UpdatableObject::UpdatableObject()
+UpdatableObject::UpdatableObject(const std::shared_ptr<MeshDataProvider>& mesh_data_provider) :
+	mesh_data_provider_(mesh_data_provider)
 {
 	
 }
@@ -11,21 +12,7 @@ UpdatableObject::~UpdatableObject()
 	
 }
 
-void UpdatableObject::Update(const Eigen::VectorXd& x, UpdatedObjectSet& updated_objects)
+[[nodiscard]] std::shared_ptr<MeshDataProvider> UpdatableObject::GetMeshDataProvider() const
 {
-	if(ShouldUpdate(updated_objects))
-	{
-		Update(x);
-	}
-}
-
-bool UpdatableObject::ShouldUpdate(UpdatedObjectSet& updated_objects)
-{
-	if (updated_objects.find(this) == updated_objects.end())
-	{
-		updated_objects.insert(this);
-		return true;
-	}
-
-	return false;
+	return mesh_data_provider_;
 }
