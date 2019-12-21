@@ -229,7 +229,8 @@ private:
 		Eigen::VectorXd dY = 0.5 * (b + c);
 
 		#pragma omp parallel for
-		for (int i = 0; i < numF; ++i) {
+		for (int i = 0; i < numF; ++i) 
+		{
 			//vectors of size 6
 			//svd derivatives
 			Eigen::Matrix<double, 6, 1> dSi = Dsd[0].col(i);
@@ -266,7 +267,8 @@ private:
 		}
 
 		std::size_t nf = F.rows();
-		for (std::size_t i = 0; i < nf; i++)
+		#pragma omp parallel for
+		for (long i = 0; i < nf; i++)
 		{
 			std::size_t base = 21 * i;
 			const_cast<double&>(triplets[base].value()) += 1e-6;

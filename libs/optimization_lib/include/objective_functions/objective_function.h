@@ -225,6 +225,8 @@ public:
 			const auto& current_layer = dependency_layers_[current_layer_index];
 			const auto objects_count = current_layer.size();
 
+			// HACK: Remove this 'if' branch once Separation and Symmetric Dirichlet
+			// objectives are composed as sum of sub-objectives
 			if(current_layer_index == 0)
 			{
 				#pragma omp parallel for
@@ -233,8 +235,15 @@ public:
 					current_layer[i]->Update(x, update_options);
 				}
 
-				current_layer[0]->Update(x, update_options);
-				current_layer[1]->Update(x, update_options);
+				if (objects_count > 0)
+				{
+					current_layer[0]->Update(x, update_options);
+				}
+
+				if (objects_count > 1)
+				{
+					current_layer[1]->Update(x, update_options);
+				}
 			}
 			else
 			{
@@ -306,10 +315,10 @@ public:
 			Eigen::VectorXd x_plus_eps = x + perturbation;
 			Eigen::VectorXd x_minus_eps = x - perturbation;
 
-			objective_function->Update(x_plus_eps);
+			objective_function->UpdateLayers(x_plus_eps);
 			const double value_plus = objective_function->GetValue();
 
-			objective_function->Update(x_minus_eps);
+			objective_function->UpdateLayers(x_minus_eps);
 			const double value_minus = objective_function->GetValue();
 
 			g.coeffRef(i) = (value_plus - value_minus) / epsilon2;
@@ -335,10 +344,10 @@ public:
 			Eigen::VectorXd x_plus_eps = x + perturbation;
 			Eigen::VectorXd x_minus_eps = x - perturbation;
 
-			objective_function->Update(x_plus_eps);
+			objective_function->UpdateLayers(x_plus_eps);
 			const Eigen::VectorXd g_plus = objective_function->GetGradient();
 
-			objective_function->Update(x_minus_eps);
+			objective_function->UpdateLayers(x_minus_eps);
 			const Eigen::VectorXd g_minus = objective_function->GetGradient();
 
 			H.row(i) = (g_plus - g_minus) / epsilon2;

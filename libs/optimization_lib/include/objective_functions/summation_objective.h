@@ -26,7 +26,7 @@ public:
 		ObjectiveFunction(mesh_data_provider, data_provider, name),
 		enforce_children_psd_(enforce_children_psd)
 	{
-		this->Initialize();
+		//this->Initialize();
 	}
 
 	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool enforce_children_psd = false) :
