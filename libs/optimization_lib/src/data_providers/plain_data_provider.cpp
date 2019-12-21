@@ -17,6 +17,11 @@ void PlainDataProvider::Update(const Eigen::VectorXd& x)
 	x_ = x;
 }
 
+void PlainDataProvider::Update(const Eigen::VectorXd& x, const UpdateOptions update_options)
+{
+	Update(x);
+}
+
 const Eigen::VectorXd& PlainDataProvider::GetX() const
 {
 	return x_;

@@ -80,7 +80,7 @@ private:
 		}
 	}
 
-	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
+	void CalculateRawTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		for (int64_t i = 0; i < this->objective_variables_count_; i++)
 		{
@@ -88,7 +88,7 @@ private:
 		}
 	}
 
-	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
+	void PreUpdate(const Eigen::VectorXd& x) override
 	{
 		auto X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
 		for (int64_t i = 0; i < this->objective_vertices_count_; i++)

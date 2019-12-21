@@ -26,6 +26,12 @@ void CoordinateDataProvider::Update(const Eigen::VectorXd& x)
 {
 	coordinate_value_ = x.coeff(sparse_variable_index_);
 }
+
+void CoordinateDataProvider::Update(const Eigen::VectorXd& x, const UpdateOptions update_options)
+{
+	Update(x);
+}
+
 double CoordinateDataProvider::GetCoordinateValue() const
 {
 	return coordinate_value_;

@@ -16,21 +16,39 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const bool enforce_children_psd = false) :
-		ObjectiveFunction(mesh_data_provider, "Summation Objective"),
+	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const bool enforce_children_psd = false) :
+		SummationObjective(mesh_data_provider, data_provider, "Summation Objective", enforce_children_psd)
+	{
+
+	}
+	
+	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const bool enforce_children_psd = false) :
+		ObjectiveFunction(mesh_data_provider, data_provider, name),
 		enforce_children_psd_(enforce_children_psd)
 	{
 		this->Initialize();
 	}
 
-	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool enforce_children_psd = false) :
-		SummationObjective(mesh_data_provider, name, enforce_psd, enforce_children_psd, parallel_update)
+	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const std::string& name, const bool enforce_children_psd = false) :
+		SummationObjective(mesh_data_provider, data_provider, name, enforce_children_psd)
 	{
 		AddObjectiveFunctions(objective_functions);
 	}
 
-	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, const bool enforce_children_psd = false) :
-		SummationObjective(mesh_data_provider, std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, enforce_children_psd)
+	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const std::string& name, const bool enforce_children_psd = false) :
+		SummationObjective(mesh_data_provider, data_provider, std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, name, enforce_children_psd)
+	{
+
+	}
+
+	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions, const bool enforce_children_psd = false) :
+		SummationObjective(mesh_data_provider, data_provider, "Summation Objective", enforce_children_psd)
+	{
+		AddObjectiveFunctions(objective_functions);
+	}
+
+	SummationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const std::shared_ptr<ObjectiveFunctionType_> objective_function, const bool enforce_children_psd = false) :
+		SummationObjective(mesh_data_provider, data_provider, std::vector<std::shared_ptr<ObjectiveFunctionType_>>{ objective_function }, "Summation Objective", enforce_children_psd)
 	{
 
 	}
@@ -61,62 +79,40 @@ public:
 	 */
 	void AddObjectiveFunction(const std::shared_ptr<ObjectiveFunctionType_>& objective_function)
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		objective_functions_.push_back(objective_function);
+		this->dependencies_.push_back(objective_function);
 	}
 
 	void AddObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions)
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		for (auto& objective_function : objective_functions)
 		{
 			objective_functions_.push_back(objective_function);
+			this->dependencies_.push_back(objective_function);
 		}
 	}
 
 	void RemoveObjectiveFunction(const std::shared_ptr<ObjectiveFunctionType_>& objective_function)
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		objective_functions_.erase(std::remove(objective_functions_.begin(), objective_functions_.end(), objective_function), objective_functions_.end());
+		this->dependencies_.erase(std::remove(this->dependencies_.begin(), this->dependencies_.end(), objective_function), this->dependencies_.end());
 	}
 
 	void RemoveObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions)
 	{
-		//std::lock_guard<std::mutex> lock(m_);
 		for (const auto& objective_function : objective_functions)
 		{
 			objective_functions_.erase(std::remove(objective_functions_.begin(), objective_functions_.end(), objective_function), objective_functions_.end());
+			this->dependencies_.erase(std::remove(this->dependencies_.begin(), this->dependencies_.end(), objective_function), this->dependencies_.end());
 		}
 	}
 
-	std::uint32_t GetObjectiveFunctionsCount() const
-	{
-		//std::lock_guard<std::mutex> lock(m_);
-		return GetObjectiveFunctionsCountInternal();
-	}
-
-	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(std::uint32_t index) const
-	{
-		//std::lock_guard<std::mutex> lock(m_);
-		return GetObjectiveFunctionInternal(index);
-	}
-
-	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(const std::string& name) const
-	{
-		//std::lock_guard<std::mutex> lock(m_);
-		return GetObjectiveFunctionInternal(name);
-	}
-
-protected:
-	/**
-	 * Protected getters
-	 */
-	std::uint32_t GetObjectiveFunctionsCountInternal() const
+	std::size_t GetObjectiveFunctionsCount() const
 	{
 		return objective_functions_.size();
 	}
 
-	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunctionInternal(std::uint32_t index) const
+	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(std::uint32_t index) const
 	{
 		if (index < objective_functions_.size())
 		{
@@ -126,7 +122,7 @@ protected:
 		return nullptr;
 	}
 
-	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunctionInternal(const std::string& name) const
+	std::shared_ptr<ObjectiveFunctionType_> GetObjectiveFunction(const std::string& name) const
 	{
 		for (auto& objective_function : objective_functions_)
 		{
@@ -138,7 +134,8 @@ protected:
 
 		return nullptr;
 	}
-	
+
+protected:
 	/**
 	 * Protected overrides
 	 */
@@ -147,16 +144,6 @@ protected:
 		for (const auto& objective_function : objective_functions_)
 		{
 			objective_function->Initialize();
-		}
-	}
-
-	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
-	{
-		auto objective_functions_size = objective_functions_.size();
-
-		for (int32_t i = 0; i < objective_functions_size; i++)
-		{
-			objective_functions_[i]->Update(x, updated_objects);
 		}
 	}
 	
@@ -209,7 +196,7 @@ private:
 
 	void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-		
+		// Empty implementation
 	}
 
 	/**

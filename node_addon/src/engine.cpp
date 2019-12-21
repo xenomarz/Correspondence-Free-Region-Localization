@@ -80,18 +80,18 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	plain_data_provider_ = std::make_shared<PlainDataProvider>(mesh_wrapper_);
 	
 	// TODO: Expose interface for addition and removal of objective function
-	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(plain_data_provider_);
-	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(plain_data_provider_);
-	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(empty_data_provider_);
-	singular_points_ = std::make_shared<SingularPointsObjective<Eigen::StorageOptions::RowMajor>>(empty_data_provider_, 1);
-  	position_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(empty_data_provider_, std::string("Position"));
+	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_);
+	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_);
+	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_);
+	singular_points_ = std::make_shared<SingularPointsObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_, 1);
+  	position_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, std::string("Position"));
 	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> objective_functions;
 	//objective_functions.push_back(position_);
 	objective_functions.push_back(separation_);
 	objective_functions.push_back(symmetric_dirichlet_);
 	objective_functions.push_back(seamless_);
 	objective_functions.push_back(singular_points_);
-	summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(empty_data_provider_, objective_functions, false, false, false);
+	summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, objective_functions, false);
 	mesh_wrapper_->RegisterModelLoadedCallback([this]() {
 		/**
 		 * Initialize objective functions
@@ -852,7 +852,7 @@ Napi::Value Engine::ConstrainFacePosition(const Napi::CallbackInfo& info)
 
 	//auto vertex_position_objective = std::make_shared<VertexPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, index_vertex_pairs);
 	
-	auto barycenter_position_objective = std::make_shared<BarycenterPositionObjective<Eigen::StorageOptions::RowMajor>>(plain_data_provider_, indices, barycenter);
+	auto barycenter_position_objective = std::make_shared<BarycenterPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, plain_data_provider_, indices, barycenter);
 	position_->AddObjectiveFunction(barycenter_position_objective);
 	indices_2_position_objective_map.insert(std::make_pair(indices, barycenter_position_objective));
 

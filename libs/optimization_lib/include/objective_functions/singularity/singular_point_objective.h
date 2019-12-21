@@ -33,15 +33,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SingularPointObjective(const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider, const std::string& name, const double interval, const bool enforce_children_psd = true) :
-		SummationObjective(face_fan_data_provider, name, false, enforce_children_psd, false),
+	SingularPointObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider, const std::string& name, const double interval, const bool enforce_children_psd = true) :
+		SummationObjective(mesh_data_provider, face_fan_data_provider, name, enforce_children_psd),
 		interval_(interval)
 	{
 		this->Initialize();
 	}
 
-	SingularPointObjective(const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider, const double interval, const bool enforce_children_psd = true) :
-		SingularPointObjective(face_fan_data_provider, "Singular Point", interval, enforce_children_psd)
+	SingularPointObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider, const double interval, const bool enforce_children_psd = true) :
+		SingularPointObjective(mesh_data_provider, face_fan_data_provider, "Singular Point", interval, enforce_children_psd)
 	{
 
 	}
@@ -136,11 +136,12 @@ public:
 			auto x_coordinate_data_provider = std::make_shared<CoordinateDataProvider>(this->mesh_data_provider_, face_fan_slice.first, CoordinateDataProvider::CoordinateType::X);
 			auto y_coordinate_data_provider = std::make_shared<CoordinateDataProvider>(this->mesh_data_provider_, face_fan_slice.first, CoordinateDataProvider::CoordinateType::Y);
 
-			auto x_coordinate_objective = std::make_shared<CoordinateObjective<StorageOrder_>>(x_coordinate_data_provider);
-			auto y_coordinate_objective = std::make_shared<CoordinateObjective<StorageOrder_>>(y_coordinate_data_provider);
+			auto x_coordinate_objective = std::make_shared<CoordinateObjective<StorageOrder_>>(this->GetMeshDataProvider(), x_coordinate_data_provider);
+			auto y_coordinate_objective = std::make_shared<CoordinateObjective<StorageOrder_>>(this->GetMeshDataProvider(), y_coordinate_data_provider);
 
-			std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_x_coordinate_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(x_coordinate_objective, interval_, this->GetEnforceChildrenPsd());
-			std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_y_coordinate_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(y_coordinate_objective, interval_, this->GetEnforceChildrenPsd());
+			auto empty_data_provider = std::make_shared<EmptyDataProvider>(this->GetMeshDataProvider());
+			std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_x_coordinate_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(this->GetMeshDataProvider(), empty_data_provider, x_coordinate_objective, interval_, this->GetEnforceChildrenPsd());
+			std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_y_coordinate_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(this->GetMeshDataProvider(), empty_data_provider, y_coordinate_objective, interval_, this->GetEnforceChildrenPsd());
 			
 			this->AddObjectiveFunction(periodic_x_coordinate_objective);
 			this->AddObjectiveFunction(periodic_y_coordinate_objective);
@@ -170,17 +171,17 @@ private:
 	/**
 	 * Private overrides
 	 */
-	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
+	void PreUpdate(const Eigen::VectorXd& x) override
 	{
 		angular_defect_ = GetFaceFanDataProvider()->GetAngle() - 2 * M_PI;
 		singular_weight_ = abs(angular_defect_);
-		auto objective_functions_count = this->GetObjectiveFunctionsCountInternal();
+		auto objective_functions_count = this->GetObjectiveFunctionsCount();
 		for(std::size_t i = 0; i < objective_functions_count; i++)
 		{
-			this->GetObjectiveFunctionInternal(i)->SetWeight(singular_weight_);
+			this->GetObjectiveFunction(i)->SetWeight(singular_weight_);
 		}
 
-		SummationObjective<PeriodicObjective<StorageOrder_>, Eigen::SparseVector<double>>::PreUpdate(x, updated_objects);
+		SummationObjective<PeriodicObjective<StorageOrder_>, Eigen::SparseVector<double>>::PreUpdate(x);
 	}
 
 	/**

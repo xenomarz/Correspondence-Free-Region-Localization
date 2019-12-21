@@ -34,13 +34,12 @@ public:
 	}
 
 	ConcreteObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const int64_t objective_vertices_count, const int64_t objective_variables_count, const bool enforce_psd) :
-		ObjectiveFunction(mesh_data_provider),
-		data_provider_(data_provider),
+		ObjectiveFunction(mesh_data_provider, data_provider, name),
 		objective_vertices_count_(objective_vertices_count),
 		objective_variables_count_(objective_variables_count),
 		enforce_psd_(enforce_psd)
 	{
-		this->dependencies_.push_back(data_provider_);
+
 	}
 
 	virtual ~ConcreteObjective()
@@ -65,12 +64,6 @@ public:
 	bool GetEnforcePsd() const
 	{
 		return enforce_psd_;
-	}
-
-	std::shared_ptr<DataProvider> GetDataProvider() const
-	{
-		//std::lock_guard<std::mutex> lock(m_);
-		return data_provider_;
 	}
 
 	const std::vector<RDS::SparseVariableIndex>& GetSparseVariablesIndices() const
@@ -105,9 +98,6 @@ protected:
 	/**
 	 * Protected Fields
 	 */
-
-	// Data provider
-	std::shared_ptr<DataProvider> data_provider_;
 	
 	// Mutex
 	mutable std::mutex m_;
@@ -143,8 +133,8 @@ private:
 		}
 	}
 
-	virtual void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets)
-	{	
+	void CreateTriplets(std::vector<Eigen::Triplet<double>>& triplets)
+	{
 		const auto objective_variables_count_squared = objective_variables_count_ * objective_variables_count_;
 		triplets.resize(((objective_variables_count_squared - objective_variables_count_) / 2) + objective_variables_count_);
 		auto triplet_index = 0;
@@ -163,6 +153,16 @@ private:
 		}
 	}
 
+	virtual void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets)
+	{
+		InitializeSparseVariableIndices(sparse_variable_indices_);
+		InitializeMappings(
+			sparse_variable_index_to_dense_variable_index_map_,
+			dense_variable_index_to_sparse_variable_index_map_,
+			sparse_variable_index_to_vertex_index_map_);
+		CreateTriplets(triplets);
+	}
+
 	// Value, gradient and hessian calculation functions
 	virtual void CalculateValuePerVertex(VectorType_& f_per_vertex)
 	{
@@ -175,10 +175,13 @@ private:
 		}
 	}
 
-	virtual void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets)
+	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets)
 	{
-		
+		CalculateRawTriplets(triplets);
+		CalculateConvexTriplets(triplets);
 	}
+
+	virtual void CalculateRawTriplets(std::vector<Eigen::Triplet<double>>& triplets) = 0;
 	
 	void CalculateConvexTriplets(std::vector<Eigen::Triplet<double>>& triplets)
 	{
@@ -223,35 +226,9 @@ private:
 		}
 	}
 
-	// Epsilon calculation for finite differences
-	static double CalculateEpsilon(const Eigen::VectorXd& x)
-	{
-		const double machine_epsilon = std::numeric_limits<double>::epsilon();
-		const double max = x.cwiseAbs().maxCoeff();
-		return std::cbrt(machine_epsilon) * max;
-	}
-
 	/**
 	 * Private fields
 	 */
-
-	// Value
-	double f_;
-
-	// Value per vertex
-	VectorType_ f_per_vertex_;
-
-	// Gradient
-	VectorType_ g_;
-
-	// Triplets
-	std::vector<Eigen::Triplet<double>> triplets_;
-
-	// Hessian
-	Eigen::SparseMatrix<double, StorageOrder_> H_;
-	
-	// Weight
-	double w_;
 
 	// Enforce PSD
 	bool enforce_psd_;
@@ -264,20 +241,6 @@ private:
 	RDS::SparseVariableIndexToDenseVariableIndexMap sparse_variable_index_to_dense_variable_index_map_;
 	RDS::DenseVariableIndexToSparseVariableIndexMap dense_variable_index_to_sparse_variable_index_map_;
 	RDS::SparseVariableIndexToVertexIndexMap sparse_variable_index_to_vertex_index_map_;
-
-	// Name
-	const std::string name_;
 };
-
-// http://blog.bitwigglers.org/using-enum-classes-as-type-safe-bitmasks/
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions operator | (const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions& operator |= (ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions operator & (const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions& operator &= (ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions rhs);
-
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions operator | (const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions& operator |= (ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions operator & (const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions& operator &= (ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions rhs);
 
 #endif

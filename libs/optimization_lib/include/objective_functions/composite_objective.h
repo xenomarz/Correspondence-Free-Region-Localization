@@ -16,15 +16,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	CompositeObjective(const std::string& name, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective) :
-		SparseObjectiveFunction(inner_objective->GetDataProvider(), name, inner_objective->GetObjectiveVerticesCount(), inner_objective->GetObjectiveVariablesCount(), enforce_psd),
+	CompositeObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const std::string& name, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective) :
+		SparseObjectiveFunction(mesh_data_provider, data_provider, name, inner_objective->GetObjectiveVerticesCount(), inner_objective->GetObjectiveVariablesCount(), enforce_psd),
 		inner_objective_(inner_objective)
 	{
 
 	}
 
-	CompositeObjective(const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective) :
-		CompositeObjective(inner_objective->GetDataProvider(), "Composite Objective", enforce_psd, inner_objective)
+	CompositeObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective) :
+		CompositeObjective(mesh_data_provider, data_provider, "Composite Objective", enforce_psd, inner_objective)
 	{
 
 	}
@@ -38,7 +38,7 @@ protected:
 	/**
 	 * Protected overrides
 	 */
-	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
+	void PreUpdate(const Eigen::VectorXd& x) override
 	{
 		inner_objective_->Update(x);
 		CalculateDerivativesOuter(inner_objective_->GetValue(), outer_value_, outer_first_derivative_, outer_second_derivative_);
@@ -68,7 +68,7 @@ private:
 		g = outer_first_derivative_ * inner_objective_->GetGradient();
 	}
 
-	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
+	void CalculateRawTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		const auto triplets_count = triplets.size();
 		auto& g_inner = inner_objective_->GetGradient();

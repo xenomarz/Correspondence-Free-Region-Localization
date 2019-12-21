@@ -32,15 +32,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SingularPointsObjective(const std::shared_ptr<EmptyDataProvider>& empty_data_provider, const std::string& name, double interval, const bool enforce_children_psd = true) :
-		SummationObjective(empty_data_provider, name, false, enforce_children_psd, false),
+	SingularPointsObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EmptyDataProvider>& empty_data_provider, const std::string& name, double interval, const bool enforce_children_psd = true) :
+		SummationObjective(mesh_data_provider, empty_data_provider, name, enforce_children_psd),
 		interval_(interval)
 	{
 		this->Initialize();
 	}
 
-	SingularPointsObjective(const std::shared_ptr<EmptyDataProvider>& empty_data_provider, double interval, const bool enforce_children_psd = true) :
-		SingularPointsObjective(empty_data_provider, "Singular Points", interval, enforce_children_psd)
+	SingularPointsObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EmptyDataProvider>& empty_data_provider, double interval, const bool enforce_children_psd = true) :
+		SingularPointsObjective(mesh_data_provider, empty_data_provider, "Singular Points", interval, enforce_children_psd)
 	{
 
 	}
@@ -144,21 +144,21 @@ public:
 	 */
 	void AddSingularPointObjective(const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider)
 	{
-		this->AddObjectiveFunction(std::make_shared<SingularPointObjective<StorageOrder_>>(face_fan_data_provider, interval_, this->GetEnforceChildrenPsd()));
+		this->AddObjectiveFunction(std::make_shared<SingularPointObjective<StorageOrder_>>(this->GetMeshDataProvider(), face_fan_data_provider, interval_, this->GetEnforceChildrenPsd()));
 	}
 
 protected:
 	/**
 	 * Protected overrides
 	 */
-	void PostUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
+	void PostUpdate(const Eigen::VectorXd& x) override
 	{
 		positive_angular_defect_singularity_indices_.clear();
 		negative_angular_defect_singularity_indices_.clear();
 		singularity_weight_per_vertex_.setZero();
-		for (int64_t i = 0; i < this->GetObjectiveFunctionsCountInternal(); i++)
+		for (int64_t i = 0; i < this->GetObjectiveFunctionsCount(); i++)
 		{
-			auto objective_function = this->GetObjectiveFunctionInternal(i);
+			auto objective_function = this->GetObjectiveFunction(i);
 			const std::vector<RDS::VertexIndex> singular_vertex_indices = objective_function->GetSingularVertexIndices();
 			const double singularity_weight = objective_function->GetSingularityWeight();
 			const auto singular_vertex_indices_size = singular_vertex_indices.size();

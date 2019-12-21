@@ -25,15 +25,15 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	PeriodicObjective(const std::string& name, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period, const bool enforce_psd = true) :
-		CompositeObjective(name, enforce_psd, inner_objective)
+	PeriodicObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EmptyDataProvider>& empty_data_provider, const std::string& name, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period, const bool enforce_psd = true) :
+		CompositeObjective(mesh_data_provider, empty_data_provider, name, enforce_psd, inner_objective)
 	{
 		SetPeriod(period);
 		this->Initialize();
 	}
 	
-	PeriodicObjective(const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period, const bool enforce_psd = true) :
-		PeriodicObjective("Periodic Objective", inner_objective, period, enforce_psd)
+	PeriodicObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EmptyDataProvider>& empty_data_provider, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective, const double period, const bool enforce_psd = true) :
+		PeriodicObjective(mesh_data_provider, empty_data_provider, "Periodic Objective", inner_objective, period, enforce_psd)
 	{
 
 	}
@@ -179,6 +179,7 @@ private:
 	double p4_;
 	double p5_;
 	Eigen::VectorXd polynomial_coeffs_;
+	
 };
 
 #endif

@@ -25,8 +25,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SymmetricDirichlet(const std::shared_ptr<PlainDataProvider>& plain_data_provider)
-		: DenseObjectiveFunction(plain_data_provider, "Symmetric Dirichlet", 0, false)
+	SymmetricDirichlet(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EmptyDataProvider>& empty_data_provider)
+		: DenseObjectiveFunction(mesh_data_provider, empty_data_provider, "Symmetric Dirichlet", 0, false)
 	{
 		this->Initialize();
 	}
@@ -86,7 +86,7 @@ private:
 		}
 	}
 	
-	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
+	void PreUpdate(const Eigen::VectorXd& x) override
 	{
 		X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
 	}
@@ -207,7 +207,7 @@ private:
 		}
 	}
 	
-	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
+	void CalculateRawTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		auto lambda1 = [](double a) {return a - 1.0 / (a * a * a); };
 

@@ -45,3 +45,8 @@ void EdgePairDataProvider::Update(const Eigen::VectorXd& x)
 	edge1_quadrupled_norm_ = edge1_squared_norm_ * edge1_squared_norm_;
 	edge2_quadrupled_norm_ = edge2_squared_norm_ * edge2_squared_norm_;
 }
+
+void EdgePairDataProvider::Update(const Eigen::VectorXd& x, const UpdateOptions update_options)
+{
+	Update(x);
+}

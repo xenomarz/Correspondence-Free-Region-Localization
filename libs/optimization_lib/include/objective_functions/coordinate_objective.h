@@ -22,8 +22,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	CoordinateObjective(const std::shared_ptr<CoordinateDataProvider>& coordinate_data_provider) :
-		SparseObjectiveFunction(coordinate_data_provider, "Integer Objective", 1, 1, false),
+	CoordinateObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<CoordinateDataProvider>& coordinate_data_provider) :
+		SparseObjectiveFunction(mesh_data_provider, coordinate_data_provider, "Integer Objective", 1, 1, false),
 		coordinate_data_provider_(coordinate_data_provider)
 	{
 		this->Initialize();
@@ -45,7 +45,7 @@ protected:
 		g.coeffRef(coordinate_data_provider_->GetSparseVariableIndex()) = 1;
 	}
 
-	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
+	void CalculateRawTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		const auto sparse_variable_index = coordinate_data_provider_->GetSparseVariableIndex();
 		triplets[0] = Eigen::Triplet<double>(sparse_variable_index, sparse_variable_index, 0);

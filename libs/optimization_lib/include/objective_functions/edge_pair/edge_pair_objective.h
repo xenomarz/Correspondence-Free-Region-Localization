@@ -18,8 +18,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	EdgePairObjective(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider, const std::string& name, const bool enforce_psd) :
-		SparseObjectiveFunction(edge_pair_data_provider, name, 4, enforce_psd)
+	EdgePairObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider, const std::string& name, const bool enforce_psd) :
+		SparseObjectiveFunction(mesh_data_provider, edge_pair_data_provider, name, 4, enforce_psd)
 	{
 
 	}
@@ -132,7 +132,7 @@ private:
 		}
 	}
 
-	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
+	void CalculateRawTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		const auto triplets_count = triplets.size();
 		auto sparse_variable_index_to_dense_variable_index_map = this->GetSparseVariableIndexToDenseVariableIndexMap();

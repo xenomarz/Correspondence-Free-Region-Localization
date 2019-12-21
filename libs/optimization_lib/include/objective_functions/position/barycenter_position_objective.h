@@ -20,8 +20,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	BarycenterPositionObjective(const std::shared_ptr<PlainDataProvider>& plain_data_provider, const std::vector<RDS::VertexIndex>& indices, const Eigen::Vector2d& objective_barycenter) :
-		PositionObjective(plain_data_provider, "Barycenter Position Objective", indices.size()),
+	BarycenterPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<PlainDataProvider>& plain_data_provider, const std::vector<RDS::VertexIndex>& indices, const Eigen::Vector2d& objective_barycenter) :
+		PositionObjective(mesh_data_provider, plain_data_provider, "Barycenter Position Objective", indices.size()),
 		indices_(indices),
 		objective_barycenter_(objective_barycenter)
 	{
@@ -31,8 +31,8 @@ public:
 		this->Initialize();
 	}
 
-	BarycenterPositionObjective(const std::shared_ptr<PlainDataProvider>& plain_data_provider, const Eigen::VectorXi& indices, const Eigen::Vector2d& objective_barycenter) :
-		BarycenterPositionObjective(plain_data_provider, std::vector<int64_t>(indices.data(), indices.data() + indices.rows()), objective_barycenter)
+	BarycenterPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<PlainDataProvider>& plain_data_provider, const Eigen::VectorXi& indices, const Eigen::Vector2d& objective_barycenter) :
+		BarycenterPositionObjective(mesh_data_provider, plain_data_provider, std::vector<int64_t>(indices.data(), indices.data() + indices.rows()), objective_barycenter)
 	{
 
 	}
@@ -91,7 +91,7 @@ private:
 		}
 	}
 	
-	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
+	void CalculateRawTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		int64_t vertex_index;
 		for (int64_t i = 0; i < this->objective_vertices_count_; i++)
@@ -101,7 +101,7 @@ private:
 		}		
 	}
 
-	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects)
+	void PreUpdate(const Eigen::VectorXd& x) override
 	{
 		auto X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
 		Utils::CalculateBarycenter(indices_, X, current_barycenter_);

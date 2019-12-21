@@ -16,3 +16,8 @@ void EmptyDataProvider::Update(const Eigen::VectorXd& x)
 {
 	// Empty implementation
 }
+
+void EmptyDataProvider::Update(const Eigen::VectorXd& x, const UpdateOptions update_options)
+{
+	Update(x);
+}

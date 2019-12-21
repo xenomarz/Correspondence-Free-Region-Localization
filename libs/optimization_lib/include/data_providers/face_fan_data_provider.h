@@ -25,6 +25,7 @@ public:
 	 * Public methods
 	 */
 	void Update(const Eigen::VectorXd& x) override;
+	void Update(const Eigen::VectorXd& x, const UpdateOptions update_options) override;
 
 	/**
 	 * Getters

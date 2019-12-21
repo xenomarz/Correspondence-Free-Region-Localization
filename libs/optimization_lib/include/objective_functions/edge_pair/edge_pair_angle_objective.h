@@ -13,8 +13,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	EdgePairAngleObjective(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider, const bool enforce_psd = false) :
-		EdgePairObjective(edge_pair_data_provider, "Edge Pair Angle Objective", enforce_psd)
+	EdgePairAngleObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider, const bool enforce_psd = false) :
+		EdgePairObjective(mesh_data_provider, edge_pair_data_provider, "Edge Pair Angle Objective", enforce_psd)
 	{
 		this->Initialize();
 	}
@@ -28,7 +28,7 @@ protected:
 	/**
 	 * Protected overrides
 	 */	
-	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
+	void PreUpdate(const Eigen::VectorXd& x) override
 	{
 		auto& edge_pair_data_provider = this->GetEdgePairDataProvider();
 

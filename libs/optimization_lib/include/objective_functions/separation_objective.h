@@ -24,8 +24,8 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	Separation(const std::shared_ptr<PlainDataProvider>& plain_data_provider) :
-		DenseObjectiveFunction(plain_data_provider, "Separation", 0, false)
+	Separation(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EmptyDataProvider>& empty_data_provider) :
+		DenseObjectiveFunction(mesh_data_provider, empty_data_provider, "Separation", 0, false)
 	{
 		this->Initialize();
 	}
@@ -147,7 +147,7 @@ private:
 		g = Eigen::Map<Eigen::VectorXd>(ge.data(), 2.0 * ge.rows(), 1);
 	}
 	
-	void PreUpdate(const Eigen::VectorXd& x, UpdatableObject::UpdatedObjectSet& updated_objects) override
+	void PreUpdate(const Eigen::VectorXd& x) override
 	{
 		X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
 	}
@@ -200,7 +200,7 @@ private:
 		}
 	}
 	
-	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
+	void CalculateRawTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		// no inner loop because there are only 2 nnz values per col
 		#pragma omp parallel for

@@ -17,6 +17,7 @@
 // Optimization Lib Includes
 #include "../core/core.h"
 #include "../core/updatable_object.h"
+#include "../data_providers/data_provider.h"
 
 template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
 class ObjectiveFunction : public UpdatableObject
@@ -25,14 +26,9 @@ public:
 	/**
 	 * Public type definitions
 	 */
-	enum class UpdateOptions : int32_t
+	enum TemplateSettings
 	{
-		NONE = 0,
-		VALUE = 1,
-		VALUE_PER_VERTEX = 2,
-		GRADIENT = 4,
-		HESSIAN = 8,
-		ALL = 15
+		StorageOrder = StorageOrder_
 	};
 
 	enum class Properties : int32_t
@@ -50,13 +46,17 @@ public:
 	/**
 	 * Constructor and destructor
 	 */
-	ObjectiveFunction(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::string& name) :
+	ObjectiveFunction(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const std::string& name) :
 		UpdatableObject(mesh_data_provider),
 		f_(0),
 		w_(1),
-		name_(name)
+		name_(name),
+		data_provider_(data_provider)
 	{
-
+		if (std::dynamic_pointer_cast<EmptyDataProvider>(data_provider_) == nullptr)
+		{
+			this->dependencies_.push_back(data_provider_);
+		}
 	}
 
 	virtual ~ObjectiveFunction()
@@ -101,6 +101,11 @@ public:
 	std::string GetName() const
 	{
 		return name_;
+	}
+
+	std::shared_ptr<DataProvider> GetDataProvider() const
+	{
+		return data_provider_;
 	}
 
 	// Generic property getter
@@ -171,6 +176,7 @@ public:
 		InitializeHessian(H_);
 		InitializeTriplets(triplets_);
 		PostInitialize();
+		UpdatableObject::Initialize();
 	}
 
 	// Update value, gradient and hessian for a given x
@@ -204,6 +210,43 @@ public:
 		}
 
 		PostUpdate(x);
+	}
+
+	void UpdateLayers(const Eigen::VectorXd& x)
+	{
+		UpdateLayers(x, UpdateOptions::ALL);
+	}
+
+	void UpdateLayers(const Eigen::VectorXd& x, const UpdateOptions update_options)
+	{
+		const auto layers_count = dependency_layers_.size();
+		for(std::size_t current_layer_index = 0; current_layer_index < layers_count; current_layer_index++)
+		{
+			const auto& current_layer = dependency_layers_[current_layer_index];
+			const auto objects_count = current_layer.size();
+
+			if(current_layer_index == 0)
+			{
+				#pragma omp parallel for
+				for (long i = 2; i < objects_count; i++)
+				{
+					current_layer[i]->Update(x, update_options);
+				}
+
+				current_layer[0]->Update(x, update_options);
+				current_layer[1]->Update(x, update_options);
+			}
+			else
+			{
+				#pragma omp parallel for
+				for (long i = 0; i < objects_count; i++)
+				{
+					current_layer[i]->Update(x, update_options);
+				}
+			}
+		}
+
+		Update(x, update_options);
 	}
 
 	template<typename ValueVectorType_>
@@ -308,6 +351,11 @@ protected:
 	/**
 	 * Protected methods
 	 */
+	virtual void InitializeDependencyLayers()
+	{
+		
+	}
+	
 	virtual void PreInitialize()
 	{
 		// Empty implementation
@@ -329,7 +377,7 @@ protected:
 	}
 
 	/**
-	 * Protected Getters
+	 * Protected getters
 	 */
 	double GetValueInternal() const
 	{
@@ -362,11 +410,14 @@ protected:
 	}
 
 	/**
-	 * Protected Fields
+	 * Protected fields
 	 */
 	
 	// Mutex
 	mutable std::mutex m_;
+
+	// Data provider
+	std::shared_ptr<DataProvider> data_provider_;
 	
 private:
 
@@ -439,16 +490,5 @@ private:
 	// Name
 	const std::string name_;
 };
-
-// http://blog.bitwigglers.org/using-enum-classes-as-type-safe-bitmasks/
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions operator | (const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions& operator |= (ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions operator & (const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions& operator &= (ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::UpdateOptions rhs);
-
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions operator | (const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions& operator |= (ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions operator & (const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions lhs, const ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions rhs);
-ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions& operator &= (ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions& lhs, ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>::UpdateOptions rhs);
 
 #endif
