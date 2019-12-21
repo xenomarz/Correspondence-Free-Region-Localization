@@ -20,7 +20,7 @@ public:
 		SparseObjectiveFunction(mesh_data_provider, data_provider, name, inner_objective->GetObjectiveVerticesCount(), inner_objective->GetObjectiveVariablesCount(), enforce_psd),
 		inner_objective_(inner_objective)
 	{
-
+		this->dependencies_.push_back(inner_objective_);
 	}
 
 	CompositeObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const bool enforce_psd, const std::shared_ptr<SparseObjectiveFunction<StorageOrder_>>& inner_objective) :
@@ -40,7 +40,6 @@ protected:
 	 */
 	void PreUpdate(const Eigen::VectorXd& x) override
 	{
-		inner_objective_->Update(x);
 		CalculateDerivativesOuter(inner_objective_->GetValue(), outer_value_, outer_first_derivative_, outer_second_derivative_);
 	}
 
