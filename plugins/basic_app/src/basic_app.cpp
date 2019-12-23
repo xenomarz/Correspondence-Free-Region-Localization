@@ -36,7 +36,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		viewer->core(inputCoreID).lighting_factor = 0.2;
 
 		//Load multiple views
-		Outputs.push_back(Output(viewer,false, solver_type,linesearch_type));
+		Outputs.push_back(Output(viewer,true, solver_type,linesearch_type));
 		core_size = 1.0 / (Outputs.size() + 1.0);
 		
 		//maximize window
@@ -417,8 +417,6 @@ IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 		load_new_model(app_utils::RDSPath() + "\\models\\cube.off");
 	if (key == '2')
 		load_new_model(app_utils::RDSPath() + "\\models\\Triangle306090degree.obj");
-			
-	
 	
 	return ImGuiMenu::key_pressed(key, modifiers);
 }
