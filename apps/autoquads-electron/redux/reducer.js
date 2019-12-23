@@ -11,6 +11,7 @@ import {
     CHANGE_AUTOCUTS_WEIGHT,    
     CHANGE_DELTA,
     CHANGE_LAMBDA,
+    CHANGE_ZETA,
     CHANGE_SEAMLESS_WEIGHT,
     CHANGE_SINGULARITY_WEIGHT,
     CHANGE_SINGULARITY_INTERVAL,
@@ -52,6 +53,7 @@ const INITIAL_STATE = {
     autocutsWeight: 1,
     delta: 0.5,
     lambda: 0.2,
+    zeta: 0.5,
     seamlessWeight: 0,
     singularityWeight: 0,
     singularityInterval: 1,
@@ -204,6 +206,11 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 lambda: action.lambda
             };
+        case CHANGE_ZETA:
+            return {
+                ...state,
+                zeta: action.zeta
+            };            
         case CHANGE_SEAMLESS_WEIGHT:
             return {
                 ...state,

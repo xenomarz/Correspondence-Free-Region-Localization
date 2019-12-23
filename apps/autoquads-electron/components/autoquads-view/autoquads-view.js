@@ -159,6 +159,10 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: Number,
                 attribute: 'lambda'
             },
+            zeta: {
+                type: Number,
+                attribute: 'zeta'
+            },            
             seamlessWeight: {
                 type: Number,
                 attribute: 'seamless-weight'
@@ -429,6 +433,21 @@ export class AutoquadsView extends connect(store)(LitElement) {
             return this._engine.getObjectiveFunctionProperty('Separation', 'weight');
         }
     }
+
+    set zeta(value) {
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            const oldValue = this._zeta;
+            this._zeta = value;
+            this._engine.setObjectiveFunctionProperty('Seamless', 'zeta', value);
+            this.requestUpdate('zeta', oldValue);
+        }
+    }
+
+    get zeta() {
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            return this._engine.getObjectiveFunctionProperty('Seamless', 'zeta');
+        }
+    }    
 
     set seamlessWeight(value) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {

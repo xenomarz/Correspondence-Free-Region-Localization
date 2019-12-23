@@ -13,6 +13,7 @@ export const CHANGE_SOUP_VIEW_VISIBILITY = 'CHANGE_SOUP_VIEW_VISIBILITY';
 export const CHANGE_AUTOCUTS_WEIGHT = 'CHANGE_AUTOCUTS_WEIGHT';
 export const CHANGE_DELTA = 'CHANGE_DELTA';
 export const CHANGE_LAMBDA = 'CHANGE_LAMBDA';
+export const CHANGE_ZETA = 'CHANGE_ZETA';
 export const CHANGE_SEAMLESS_WEIGHT = 'CHANGE_SEAMLESS_WEIGHT';
 export const CHANGE_SINGULARITY_WEIGHT = 'CHANGE_SINGULARITY_WEIGHT';
 export const CHANGE_SINGULARITY_INTERVAL = 'CHANGE_SINGULARITY_INTERVAL';
@@ -147,6 +148,13 @@ export const setLambda = lambda => {
     return {
         type: CHANGE_LAMBDA,
         lambda: lambda
+    };
+};
+
+export const setZeta = zeta => {
+    return {
+        type: CHANGE_ZETA,
+        zeta: zeta
     };
 };
 

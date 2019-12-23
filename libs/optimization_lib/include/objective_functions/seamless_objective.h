@@ -26,10 +26,19 @@ class SeamlessObjective : public SummationObjective<SparseObjectiveFunction<Stor
 {
 public:
 	/**
+	 * Public type definitions
+	 */
+	enum class Properties : int32_t
+	{
+		Zeta = SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::Properties::Count_
+	};
+	
+	/**
 	 * Constructors and destructor
 	 */
 	SeamlessObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EmptyDataProvider>& empty_data_provider, const std::string& name, const bool enforce_children_psd = true) :
-		SummationObjective(mesh_data_provider, empty_data_provider, name, enforce_children_psd)
+		SummationObjective(mesh_data_provider, empty_data_provider, name, enforce_children_psd),
+		zeta_(1)
 	{
 
 	}
@@ -46,6 +55,69 @@ public:
 	}
 
 	/**
+	 * Setters
+	 */
+	void SetZeta(const double zeta)
+	{
+		for(auto& periodic_edge_pair_angle_objective : periodic_edge_pair_angle_objectives)
+		{
+			periodic_edge_pair_angle_objective->SetWeight(1.0 - zeta);
+			//edge_pair_angle_objective->SetWeight(1.0 - zeta);
+		}
+
+		for (auto& edge_pair_length_objective : edge_pair_length_objectives)
+		{
+			edge_pair_length_objective->SetWeight(zeta);
+		}
+		
+		zeta_ = zeta;
+	}
+
+	bool SetProperty(const int32_t property_id, const std::any& property_value) override
+	{
+		if (SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::SetProperty(property_id, property_value))
+		{
+			return true;
+		}
+
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::Zeta:
+			SetZeta(std::any_cast<const double>(property_value));
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Getters
+	 */
+	double GetZeta() const
+	{
+		return zeta_;
+	}
+
+	bool GetProperty(const int32_t property_id, std::any& property_value) override
+	{
+		if (SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::GetProperty(property_id, property_value))
+		{
+			return true;
+		}
+
+		const Properties properties = static_cast<Properties>(property_id);
+		switch (properties)
+		{
+		case Properties::Zeta:
+			property_value = GetZeta();
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Public methods
 	 */
 	void AddEdgePairObjectives(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider)
@@ -59,7 +131,19 @@ public:
 
 		this->AddObjectiveFunction(periodic_edge_pair_angle_objective);
 		this->AddObjectiveFunction(edge_pair_length_objective);
+
+		periodic_edge_pair_angle_objectives.push_back(periodic_edge_pair_angle_objective);
+		edge_pair_length_objectives.push_back(edge_pair_length_objective);
+		edge_pair_angle_objectives.push_back(edge_pair_angle_objective);
 	}
+
+	/**
+	 * Fields
+	 */
+	double zeta_;
+	std::vector<std::shared_ptr<EdgePairLengthObjective<StorageOrder_>>> edge_pair_length_objectives;
+	std::vector<std::shared_ptr<EdgePairAngleObjective<StorageOrder_>>> edge_pair_angle_objectives;
+	std::vector<std::shared_ptr<PeriodicObjective<StorageOrder_>>> periodic_edge_pair_angle_objectives;
 };
 
 #endif

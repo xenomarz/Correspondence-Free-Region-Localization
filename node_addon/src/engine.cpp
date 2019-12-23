@@ -71,6 +71,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "weight", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Weight) });
 	properties_map_.insert({ "name", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Name) });
 	properties_map_.insert({ "delta", static_cast<uint32_t>(Separation<Eigen::StorageOptions::RowMajor>::Properties::Delta) });
+	properties_map_.insert({ "zeta", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::Zeta) });
 	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
 	properties_map_.insert({ "singularity_weight_per_vertex", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::SingularityWeightPerVertex) });
 	properties_map_.insert({ "negative_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::NegativeAngularDefectSingularitiesIndices) });

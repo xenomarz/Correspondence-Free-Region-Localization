@@ -120,13 +120,24 @@ export class AutoquadsSideBar extends SideBar {
                     is-exponential>
                 </side-bar-parameter-input>
                 <side-bar-parameter-input
+                    id="zeta"
+                    increase-key="b"
+                    decrease-key="v"
+                    value="${this._zeta}"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    label="Zeta"
+                    @value-changed="${this._zetaInputChanged}">
+                </side-bar-parameter-input>
+                <side-bar-parameter-input
                     id="seamless-weight"
                     increase-key="c"
                     decrease-key="x"
                     value="${this._seamlessWeight}"
                     min="0"
-                    max="10000"
-                    step="1"
+                    max="3"
+                    step="0.01"
                     label="Seamless Weight"
                     @value-changed="${this._seamlessWeightInputChanged}">
                 </side-bar-parameter-input>
@@ -136,8 +147,8 @@ export class AutoquadsSideBar extends SideBar {
                     decrease-key="l"
                     value="${this._singularityWeight}"
                     min="0"
-                    max="10000"
-                    step="1"
+                    max="3"
+                    step="0.001"
                     label="Singularity Weight"
                     @value-changed="${this._singularityWeightInputChanged}">
                 </side-bar-parameter-input>
@@ -148,7 +159,7 @@ export class AutoquadsSideBar extends SideBar {
                     value="${this._singularityInterval}"
                     min="0"
                     max="10000"
-                    step="1.1"
+                    step="1.05"
                     label="Singularity Interval"
                     @value-changed="${this._singularityIntervalInputChanged}"
                     is-exponential>
@@ -370,6 +381,10 @@ export class AutoquadsSideBar extends SideBar {
             lambda: {
                 type: Number,
                 attribute: 'lambda'
+            },
+            zeta: {
+                type: Number,
+                attribute: 'zeta'
             },
             seamlessWeight: {
                 type: Number,
@@ -604,6 +619,16 @@ export class AutoquadsSideBar extends SideBar {
     get lambda() {
         return this._lambda;
     }
+
+    set zeta(value) {
+        const oldValue = this._zeta;
+        this._zeta = value;
+        this.requestUpdate('zeta', oldValue);
+    }
+
+    get zeta() {
+        return this._zeta;
+    }    
 
     set seamlessWeight(value) {
         const oldValue = this._seamlessWeight;
@@ -991,6 +1016,10 @@ export class AutoquadsSideBar extends SideBar {
 
     _lambdaInputChanged(e) {
         store.dispatch(ActionsExports.setLambda(e.srcElement.value)); 
+    }
+
+    _zetaInputChanged(e) {
+        store.dispatch(ActionsExports.setZeta(e.srcElement.value)); 
     }
 
     _seamlessWeightInputChanged(e) {
