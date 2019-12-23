@@ -44,6 +44,47 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 	}
 }
 
+void basic_app::load_new_model(const string modelpath) {
+	modelPath = modelpath;
+	if (modelPath.length() != 0)
+	{
+		modelName = app_utils::ExtractModelName(modelPath);
+
+		stop_solver_thread();
+
+		if (model_loaded) {
+			//remove previous data
+			while (Outputs.size() > 0)
+				remove_output(0);
+
+			viewer->load_mesh_from_file(modelPath.c_str());
+			viewer->erase_mesh(0);
+		}
+		else {
+			viewer->load_mesh_from_file(modelPath.c_str());
+		}
+
+		inputModelID = viewer->data_list[0].id;
+
+		for (int i = 0; i < Outputs.size(); i++)
+		{
+			viewer->load_mesh_from_file(modelPath.c_str());
+			Outputs[i].ModelID = viewer->data_list[i + 1].id;
+			initializeSolver(i);
+		}
+
+		if (model_loaded) {
+			//add new data
+			add_output(false);
+		}
+
+		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
+		for (int i = 0; i < Outputs.size(); i++)
+			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
+		model_loaded = true;
+	}
+}
+
 IGL_INLINE void basic_app::draw_viewer_menu()
 {
 	float w = ImGui::GetContentRegionAvailWidth();
@@ -52,43 +93,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	{
 		//Load new model that has two copies
 		modelPath = file_dialog_open();
-		if (modelPath.length() != 0)
-		{
-			modelName = app_utils::ExtractModelName(modelPath);
-			
-			stop_solver_thread();
-
-			if (model_loaded) {
-				//remove previous data
-				while (Outputs.size() > 0)
-					remove_output(0);
-
-				viewer->load_mesh_from_file(modelPath.c_str());
-				viewer->erase_mesh(0);
-			}
-			else {
-				viewer->load_mesh_from_file(modelPath.c_str());
-			}
-			
-			inputModelID = viewer->data_list[0].id;
-			
-			for (int i = 0; i < Outputs.size(); i++)
-			{
-				viewer->load_mesh_from_file(modelPath.c_str());
-				Outputs[i].ModelID = viewer->data_list[i+1].id;
-				initializeSolver(i);
-			}
-
-			if (model_loaded) {
-				//add new data
-				add_output(false);
-			}
-
-			viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
-			for (int i = 0; i < Outputs.size(); i++)
-				viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
-			model_loaded = true;
-		}
+		load_new_model(modelPath);
 	}
 	ImGui::SameLine(0, p);
 	if (ImGui::Button("Save##Mesh", ImVec2((w - p) / 2.f, 0)))
@@ -400,18 +405,21 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 
 IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 
-	if (key == 'F' || key == 'f') {
+	if (key == 'F' || key == 'f')
 		mouse_mode = app_utils::FACE_SELECT;
-	}
-	if (key == 'V' || key == 'v') {
+	if (key == 'V' || key == 'v')
 		mouse_mode = app_utils::VERTEX_SELECT;
-	}
-	if (key == 'C' || key == 'c') {
+	if (key == 'C' || key == 'c')
 		mouse_mode = app_utils::CLEAR;
-	}
 	if (key == ' ')
 		solver_on ? stop_solver_thread() : start_solver_thread();
+	if (key == '1')
+		load_new_model(app_utils::RDSPath() + "\\models\\cube.off");
+	if (key == '2')
+		load_new_model(app_utils::RDSPath() + "\\models\\Triangle306090degree.obj");
 			
+	
+	
 	return ImGuiMenu::key_pressed(key, modifiers);
 }
 

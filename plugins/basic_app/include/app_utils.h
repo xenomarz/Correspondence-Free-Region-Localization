@@ -98,6 +98,25 @@ public:
 		GRADIENT_DESCENT
 	};
 
+	static string workingdir() {
+		char buf[256];
+		GetCurrentDirectoryA(256, buf);
+		return std::string(buf) + '\\';
+	}
+
+	static string ExePath() {
+		char buffer[MAX_PATH];
+		GetModuleFileName(NULL, buffer, MAX_PATH);
+		string::size_type pos = string(buffer).find_last_of("\\/");
+		return string(buffer).substr(0, pos);
+	}
+	
+	static string RDSPath() {
+		char buffer[MAX_PATH];
+		GetModuleFileName(NULL, buffer, MAX_PATH);
+		string::size_type pos = string(buffer).find("\\RDS\\");
+		return string(buffer).substr(0, pos+5);
+	}
 	
 	static Vector3f computeTranslation(
 		const int mouse_x, 

@@ -84,6 +84,7 @@ public:
 	ViewerData& InputModel();
 	ViewerData& OutputModel(const int index);
 
+	void load_new_model(const string modelpath);
 	void Update_view();
 	void update_mesh();
 	void update_texture(MatrixXd& V_uv, const int index);
