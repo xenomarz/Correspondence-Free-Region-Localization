@@ -98,6 +98,15 @@ public:
 		GRADIENT_DESCENT
 	};
 
+	// The directory path returned by native GetCurrentDirectory() no end backslash
+	static string getCurrentDirectoryOnWindows()
+	{
+		const unsigned long maxDir = 260;
+		char currentDir[maxDir];
+		GetCurrentDirectory(maxDir, currentDir);
+		return string(currentDir);
+	}
+
 	static string workingdir() {
 		char buf[256];
 		GetCurrentDirectoryA(256, buf);
