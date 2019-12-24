@@ -53,7 +53,7 @@ const INITIAL_STATE = {
     autocutsWeight: 1,
     delta: 0.5,
     lambda: 0.2,
-    zeta: 0.5,
+    zeta: 0.95,
     seamlessWeight: 0,
     singularityWeight: 0,
     singularityInterval: 1,

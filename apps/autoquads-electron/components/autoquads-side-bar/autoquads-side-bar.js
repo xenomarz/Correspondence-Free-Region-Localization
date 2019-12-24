@@ -136,18 +136,18 @@ export class AutoquadsSideBar extends SideBar {
                     decrease-key="x"
                     value="${this._seamlessWeight}"
                     min="0"
-                    max="3"
+                    max="300"
                     step="0.01"
                     label="Seamless Weight"
                     @value-changed="${this._seamlessWeightInputChanged}">
                 </side-bar-parameter-input>
                 <side-bar-parameter-input
                     id="singularity-weight"
-                    increase-key="k"
-                    decrease-key="l"
+                    increase-key="l"
+                    decrease-key="k"
                     value="${this._singularityWeight}"
                     min="0"
-                    max="3"
+                    max="300"
                     step="0.001"
                     label="Singularity Weight"
                     @value-changed="${this._singularityWeightInputChanged}">
