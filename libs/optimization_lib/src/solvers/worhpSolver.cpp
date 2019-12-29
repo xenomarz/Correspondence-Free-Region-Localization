@@ -69,7 +69,7 @@ int worhpSolver::run()
 	 * Parameter XML import routine that does not reset
 	 * all parameters to default values (InitParams does this)
 	 */
-	ReadParamsNoInit(&status, "worhp.xml", &par);
+	ReadParamsNoInit(&status, "worhpFD.xml", &par);
 	if (status == DataError || status == InitError)
 	{
 		return EXIT_FAILURE;
@@ -95,9 +95,9 @@ int worhpSolver::run()
 
 	// All derivatives for this problem have a sparse structure, so
 	// set the amount of nonzeros here
-	wsp.DF.nnz = 3;
-	wsp.DG.nnz = 6;
-	wsp.HM.nnz = 1 + opt.n;  // 1 entry on strict lower triangle
+	wsp.DF.nnz = opt.n;
+	wsp.DG.nnz = opt.n * opt.m;
+	wsp.HM.nnz = (opt.n)*(opt.n);  // 1 entry on strict lower triangle
 							 // plus full diagonal
 
 	WorhpInit(&opt, &wsp, &par, &cnt);
@@ -171,6 +171,8 @@ int worhpSolver::run()
 	 // Define DF as row vector, column index is ommited
 	if (wsp.DF.NeedStructure)
 	{
+		cout << "------------wsp.DF.NeedStructure" << endl;
+
 		// only set the nonzero entries, so omit the 4th entry,
 		// which is a structural zero
 		wsp.DF.row[0] = 1;
@@ -181,6 +183,8 @@ int worhpSolver::run()
 	// Define DG as CS-matrix
 	if (wsp.DG.NeedStructure)
 	{
+		cout << "------------wsp.DG.NeedStructure" << endl;
+
 		// only set the nonzero entries in column-major order
 		wsp.DG.row[0] = 1;
 		wsp.DG.col[0] = 1;
@@ -209,7 +213,7 @@ int worhpSolver::run()
 		 * followed by ALL diagonal entries, so even the entry at (4, 4)
 		 * even though it is a structural zero
 		 */
-
+		cout << "------------wsp.HM.NeedStructure" << endl;
 		 // strict lower triangle
 		wsp.HM.row[0] = 3;
 		wsp.HM.col[0] = 1;
@@ -324,6 +328,8 @@ int worhpSolver::run()
 
 void worhpSolver::UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
+	//cout << "-------------UserF" << endl;
+
 	double* X = opt->X;  // Abbreviate notation
 
 	opt->F = wsp->ScaleObj * (X[0] * X[0] + 2.0 * X[1] * X[1] - X[2]);
@@ -331,6 +337,7 @@ void worhpSolver::UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 
 void worhpSolver::UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
+	//cout << "-------------UserG" << endl;
 	double* X = opt->X;  // Abbreviate notation
 
 	opt->G[0] = X[0] * X[0] + X[2] * X[2] + X[0] * X[2];
@@ -340,6 +347,7 @@ void worhpSolver::UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 
 void worhpSolver::UserDF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
+	cout << "-------------UserDF" << endl;
 	wsp->DF.val[0] = wsp->ScaleObj * 2.0 * opt->X[0];
 	wsp->DF.val[1] = wsp->ScaleObj * 4.0 * opt->X[1];
 	wsp->DF.val[2] = wsp->ScaleObj * -1.0;
@@ -347,6 +355,7 @@ void worhpSolver::UserDF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 
 void worhpSolver::UserDG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
+	cout << "-------------UserDG" << endl;
 	wsp->DG.val[0] = 2.0 * opt->X[0] + opt->X[2];
 	wsp->DG.val[1] = 1.0;
 	wsp->DG.val[2] = opt->X[0] + 2.0 * opt->X[2];
@@ -357,6 +366,7 @@ void worhpSolver::UserDG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 
 void worhpSolver::UserHM(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
+	cout << "-------------UserHM" << endl;
 	// Only scale the F part of HM
 	wsp->HM.val[0] = opt->Mu[0];
 	wsp->HM.val[1] = wsp->ScaleObj * 2.0 + 2.0 * opt->Mu[0];
