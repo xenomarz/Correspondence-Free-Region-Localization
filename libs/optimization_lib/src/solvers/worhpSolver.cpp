@@ -1,20 +1,4 @@
 #include <solvers/worhpSolver.h>
-#include <iostream>
-#include <worhp.h>
-#include <windows.h>
-
-using namespace std;
-
-// Objective function
-void UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt);
-// Function of constraints
-void UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt);
-// Gradient of objective function
-void UserDF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt);
-// Jacobian of constraints
-void UserDG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt);
-// Hessian of Lagrangian
-void UserHM(OptVar* opt, Workspace* wsp, Params* par, Control* cnt);
 
 
 /*-----------------------------------------------------------------------
@@ -42,7 +26,7 @@ void UserHM(OptVar* opt, Workspace* wsp, Params* par, Control* cnt);
  *-----------------------------------------------------------------------*/
 
 
-int play()
+int worhpSolver::run()
 {
 	/*
 	 * WORHP data structures
@@ -60,8 +44,8 @@ int play()
 	// Check Version of library and header files
 	CHECK_WORHP_VERSION
 
-		// Properly zeros everything, or else the following routines could get confused
-		WorhpPreInit(&opt, &wsp, &par, &cnt);
+	// Properly zeros everything, or else the following routines could get confused
+	WorhpPreInit(&opt, &wsp, &par, &cnt);
 
 	// Uncomment this to get more info on data structures
 	//WorhpDiag(&opt, &wsp, &par, &cnt);
@@ -201,8 +185,8 @@ int play()
 		wsp.DG.row[0] = 1;
 		wsp.DG.col[0] = 1;
 
-		wsp.DG.row[1] = 3;
-		wsp.DG.col[1] = 2;
+		wsp.DG.row[1] = 3; // num of constr func
+		wsp.DG.col[1] = 2; // num of variable
 
 		wsp.DG.row[2] = 1;
 		wsp.DG.col[2] = 3;
@@ -338,14 +322,14 @@ int play()
 	return EXIT_SUCCESS;
 }
 
-void UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
+void worhpSolver::UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
 	double* X = opt->X;  // Abbreviate notation
 
 	opt->F = wsp->ScaleObj * (X[0] * X[0] + 2.0 * X[1] * X[1] - X[2]);
 }
 
-void UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
+void worhpSolver::UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
 	double* X = opt->X;  // Abbreviate notation
 
@@ -354,14 +338,14 @@ void UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 	opt->G[2] = X[1] + X[3];
 }
 
-void UserDF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
+void worhpSolver::UserDF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
 	wsp->DF.val[0] = wsp->ScaleObj * 2.0 * opt->X[0];
 	wsp->DF.val[1] = wsp->ScaleObj * 4.0 * opt->X[1];
 	wsp->DF.val[2] = wsp->ScaleObj * -1.0;
 }
 
-void UserDG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
+void worhpSolver::UserDG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
 	wsp->DG.val[0] = 2.0 * opt->X[0] + opt->X[2];
 	wsp->DG.val[1] = 1.0;
@@ -371,7 +355,7 @@ void UserDG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 	wsp->DG.val[5] = 1.0;
 }
 
-void UserHM(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
+void worhpSolver::UserHM(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
 	// Only scale the F part of HM
 	wsp->HM.val[0] = opt->Mu[0];
@@ -381,8 +365,3 @@ void UserHM(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 	wsp->HM.val[4] = 0.0;
 }
 
-int worhpSolver::run() {
-	cout << ">> worhp solver!" << endl;
-	play();
-	return 0;
-}
