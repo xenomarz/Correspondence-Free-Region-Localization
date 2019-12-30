@@ -95,9 +95,9 @@ int worhpSolver::run()
 
 	// All derivatives for this problem have a sparse structure, so
 	// set the amount of nonzeros here
-	wsp.DF.nnz = opt.n;
-	wsp.DG.nnz = opt.n * opt.m;
-	wsp.HM.nnz = (opt.n)*(opt.n);  // 1 entry on strict lower triangle
+	//wsp.DF.nnz = opt.n;
+	//wsp.DG.nnz = opt.n * opt.m;
+	//wsp.HM.nnz = 1 + opt.n;  // 1 entry on strict lower triangle
 							 // plus full diagonal
 
 	WorhpInit(&opt, &wsp, &par, &cnt);
@@ -111,10 +111,10 @@ int worhpSolver::run()
 	 * Set function types (optional). Possible values are:
 	 * WORHP_CONSTANT, WORHP_LINEAR, WORHP_QUADRATIC, WORHP_NONLINEAR
 	 */
-	opt.FType = WORHP_QUADRATIC;
+	/*opt.FType = WORHP_QUADRATIC;
 	opt.GType[0] = WORHP_QUADRATIC;
 	opt.GType[1] = WORHP_LINEAR;
-	opt.GType[2] = WORHP_LINEAR;
+	opt.GType[2] = WORHP_LINEAR;*/
 
 	/*
 	 * These pointers give access to the essential user data:

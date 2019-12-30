@@ -40,7 +40,7 @@
     <BOOL   name="UserDG"                  >False</BOOL>
     <BOOL   name="UserHM"                  >False</BOOL>
     <BOOL   name="FGtogether"              >False</BOOL>
-    <INT    name="UserHMstructure"         >2</INT>
+    <INT    name="UserHMstructure"         >0</INT>
     <!-- ........ Finite Differences       ........ -->
     <BOOL   name="FidifHM"                 >True</BOOL>
     <BOOL   name="FidifGroups"             >True</BOOL>
