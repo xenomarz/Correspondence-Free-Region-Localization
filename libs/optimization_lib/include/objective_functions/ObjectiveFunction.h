@@ -3,7 +3,8 @@
 
 class ObjectiveFunction
 {
-protected:
+//protected:
+public:
 	// mesh vertices and faces
 	MatrixX3i F;
 	MatrixXd V;

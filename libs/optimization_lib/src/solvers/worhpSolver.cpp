@@ -26,8 +26,12 @@
  *-----------------------------------------------------------------------*/
 
 
-int worhpSolver::run()
-{
+int worhpSolver::run(
+	shared_ptr<ObjectiveFunction> function,
+	const VectorXd& initialPoint, 
+	const int numVariables, 
+	const int numConstr
+) {
 	/*
 	 * WORHP data structures
 	 *
@@ -36,6 +40,7 @@ int worhpSolver::run()
 	 * Params contains all WORHP parameters.
 	 * Control contains things for reverse communication flow control.
 	 */
+	this->function = function;
 	OptVar    opt;
 	Workspace wsp;
 	Params    par;
@@ -90,8 +95,8 @@ int worhpSolver::run()
 	 * create a dense matrix structure appropriate for the matrix kind and
 	 * its dimensions. Setting it to its dense dimension achieves the same.
 	 */
-	opt.n = 4;  // This problem has 4 variables
-	opt.m = 3;  // and 3 constraints (excluding box constraints)
+	opt.n = numVariables;  // This problem has 4 variables
+	opt.m = numConstr;  // and 3 constraints (excluding box constraints)
 
 	// All derivatives for this problem have a sparse structure, so
 	// set the amount of nonzeros here
@@ -128,17 +133,22 @@ int worhpSolver::run()
 	 * Set initial values of X, Lambda and Mu here.
 	 * G need not be initialised.
 	 */
-	opt.X[0] = 2.0;
-	opt.X[1] = 2.0;
-	opt.X[2] = 1.0;
-	opt.X[3] = 0.0;
-	opt.Lambda[0] = 0.0;
-	opt.Lambda[1] = 0.0;
-	opt.Lambda[2] = 0.0;
-	opt.Lambda[3] = 0.0;
-	opt.Mu[0] = 0.0;
-	opt.Mu[1] = 0.0;
-	opt.Mu[2] = 0.0;
+
+	if (numVariables != initialPoint.rows()) {
+		assert("Error");
+	}
+
+	for (int i = 0; i < opt.n; i++) {
+		opt.X[i] = initialPoint(i);
+	}
+	
+	for (int i = 0; i < opt.n; i++) {
+		opt.Lambda[i] = 0.0;
+	}
+	
+	for (int i = 0; i < opt.m; i++) {
+		opt.Mu[i] = 0.0;
+	}
 
 	/*
 	 * Set lower and upper bounds on the variables and constraints.
@@ -147,21 +157,17 @@ int worhpSolver::run()
 	 * XL and XU are lower and upper bounds ("box constraints") on X.
 	 * GL and GU are lower and upper bounds on G.
 	 */
-	opt.XL[0] = -0.5;
-	opt.XU[0] = par.Infty;
-	opt.XL[1] = -2.0;
-	opt.XU[1] = par.Infty;
-	opt.XL[2] = 0.0;
-	opt.XU[2] = 2.0;
-	opt.XL[3] = -2.0;
-	opt.XU[3] = 2.0;
 
-	opt.GL[0] = 1.0;  // set opt.GL[i] == opt.GU[i]
-	opt.GU[0] = 1.0;  // for equality constraints
-	opt.GL[1] = -par.Infty;
-	opt.GU[1] = -1.0;
-	opt.GL[2] = 2.5;
-	opt.GU[2] = 5.0;
+	for (int i = 0; i < opt.n; i++) {
+		opt.XL[i] = -par.Infty;
+		opt.XU[i] = par.Infty;
+	}
+
+	for (int i = 0; i < opt.m; i++) {
+		opt.GL[i] = 0.0;  // set opt.GL[i] == opt.GU[i]
+		opt.GU[i] = 0.0;  // for equality constraints
+	}
+
 
 	/*
 	 * Specify matrix structures in CS format, using Fortran indexing,
@@ -328,21 +334,37 @@ int worhpSolver::run()
 
 void worhpSolver::UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	//cout << "-------------UserF" << endl;
+	VectorXd X;
+	X.resize(opt->n);
 
-	double* X = opt->X;  // Abbreviate notation
+	for (int i = 0; i < opt->n; i++) {
+		X(i) = opt->X[i];
+	}
+	this->function->updateX(X);
 
-	opt->F = wsp->ScaleObj * (X[0] * X[0] + 2.0 * X[1] * X[1] - X[2]);
+	VectorXd LSCM = (this->function->a - this->function->d).cwiseAbs2() +
+		(this->function->b + this->function->c).cwiseAbs2();
+	double obj_value = (this->function->Area.asDiagonal() * LSCM).sum();
+
+	opt->F = wsp->ScaleObj * (obj_value);
 }
 
 void worhpSolver::UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	//cout << "-------------UserG" << endl;
-	double* X = opt->X;  // Abbreviate notation
+	VectorXd X;
+	X.resize(opt->n);
 
-	opt->G[0] = X[0] * X[0] + X[2] * X[2] + X[0] * X[2];
-	opt->G[1] = X[2] - X[3];
-	opt->G[2] = X[1] + X[3];
+	for (int i = 0; i < opt->n; i++) {
+		X(i) = opt->X[i];
+	}
+	this->function->updateX(X);
+
+	VectorXd areaE = this->function->detJ - VectorXd::Ones(opt->m);
+	VectorXd constr = (this->function->Area.asDiagonal() * areaE);
+
+	for (int i = 0; i < opt->m; i++) {
+		opt->G[i] = constr(i);
+	}
 }
 
 void worhpSolver::UserDF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)

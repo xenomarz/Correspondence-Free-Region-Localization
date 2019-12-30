@@ -1211,8 +1211,17 @@ void basic_app::start_solver_thread() {
 }
 
 void basic_app::start_worhp_solver_thread() {
-	for (auto& o : Outputs) {
-		solver_thread = thread(&worhpSolver::run, o.worhpsolver.get());
+	for (int i = 0; i < Outputs.size();i++) {
+		VectorXd initialPoint = Map<const VectorXd>(OutputModel(i).V.leftCols(2).data(), OutputModel(i).V.leftCols(2).rows() * 2);
+	
+		solver_thread = thread(
+			&worhpSolver::run, 
+			Outputs[i].worhpsolver.get(),
+			Outputs[i].totalObjective,
+			initialPoint,
+			OutputModel(i).V.rows() * 2,
+			OutputModel(i).F.rows()
+		);
 		solver_thread.detach();
 	}
 }

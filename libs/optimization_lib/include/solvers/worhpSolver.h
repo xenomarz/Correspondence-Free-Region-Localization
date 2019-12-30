@@ -1,13 +1,21 @@
 #pragma once
 
 #include <libs/optimization_lib/include/utils.h>
+#include <libs/optimization_lib/include/objective_functions/ObjectiveFunction.h>
 #include <ext/worhp/worhp/worhp.h>
 
 class worhpSolver
 {
 public:
-	int run();
+	int run(
+		shared_ptr<ObjectiveFunction> function,
+		const VectorXd& initialPoint, 
+		const int numVariables, 
+		const int numConstr
+	);
 private:
+	shared_ptr <ObjectiveFunction> function;
+
 	// Objective function
 	void UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt);
 	// Function of constraints
