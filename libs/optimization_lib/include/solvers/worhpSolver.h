@@ -2,20 +2,22 @@
 
 #include <libs/optimization_lib/include/utils.h>
 #include <libs/optimization_lib/include/objective_functions/ObjectiveFunction.h>
+#include <libs/optimization_lib/include/objective_functions/LagrangianLscmStArea.h>
 #include <ext/worhp/worhp/worhp.h>
 
 class worhpSolver
 {
 public:
+	worhpSolver();
+	~worhpSolver();
 	int run(
-		shared_ptr<ObjectiveFunction> function,
-		const VectorXd& initialPoint, 
-		const int numVariables, 
-		const int numConstr
+		const MatrixXd& V,
+		const MatrixX3i& F,
+		const VectorXd& initialPoint
 	);
 private:
-	shared_ptr <ObjectiveFunction> function;
-
+	LagrangianLscmStArea* function;
+	int x;
 	// Objective function
 	void UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt);
 	// Function of constraints

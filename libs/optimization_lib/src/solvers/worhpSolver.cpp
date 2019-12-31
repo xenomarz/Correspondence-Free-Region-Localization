@@ -24,14 +24,23 @@
  *                   g(x*) = (1, -1, 2.5)
  *
  *-----------------------------------------------------------------------*/
+worhpSolver::worhpSolver() {
+	
+}
 
+worhpSolver::~worhpSolver() {
+	delete this->function;
+}
 
 int worhpSolver::run(
-	shared_ptr<ObjectiveFunction> function,
-	const VectorXd& initialPoint, 
-	const int numVariables, 
-	const int numConstr
-) {
+	const MatrixXd& V,
+	const MatrixX3i& F,
+	const VectorXd& initialPoint) 
+{
+	this->x = 10;
+	this->function = new LagrangianLscmStArea();
+	this->function->init_mesh(V, F);
+	this->function->init();
 	/*
 	 * WORHP data structures
 	 *
@@ -40,7 +49,6 @@ int worhpSolver::run(
 	 * Params contains all WORHP parameters.
 	 * Control contains things for reverse communication flow control.
 	 */
-	this->function = function;
 	OptVar    opt;
 	Workspace wsp;
 	Params    par;
@@ -95,8 +103,8 @@ int worhpSolver::run(
 	 * create a dense matrix structure appropriate for the matrix kind and
 	 * its dimensions. Setting it to its dense dimension achieves the same.
 	 */
-	opt.n = numVariables;  // This problem has 4 variables
-	opt.m = numConstr;  // and 3 constraints (excluding box constraints)
+	opt.n = V.rows() * 2;  // This problem has 4 variables
+	opt.m = F.rows();  // and 3 constraints (excluding box constraints)
 
 	// All derivatives for this problem have a sparse structure, so
 	// set the amount of nonzeros here
@@ -134,7 +142,7 @@ int worhpSolver::run(
 	 * G need not be initialised.
 	 */
 
-	if (numVariables != initialPoint.rows()) {
+	if ((V.rows() * 2) != initialPoint.rows()) {
 		assert("Error");
 	}
 
@@ -328,7 +336,6 @@ int worhpSolver::run(
 	// Deallocate all data structures.
 	// Data structures must not be accessed after this call.
 	WorhpFree(&opt, &wsp, &par, &cnt);
-
 	return EXIT_SUCCESS;
 }
 

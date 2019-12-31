@@ -46,6 +46,7 @@ private:
 
 	// Solver thread
 	thread solver_thread;
+	shared_ptr<worhpSolver> worhpsolver;
 
 public:
 	//Constructor & initialization

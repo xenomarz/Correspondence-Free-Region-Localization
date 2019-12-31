@@ -1211,19 +1211,22 @@ void basic_app::start_solver_thread() {
 }
 
 void basic_app::start_worhp_solver_thread() {
-	for (int i = 0; i < Outputs.size();i++) {
-		VectorXd initialPoint = Map<const VectorXd>(OutputModel(i).V.leftCols(2).data(), OutputModel(i).V.leftCols(2).rows() * 2);
 	
-		solver_thread = thread(
-			&worhpSolver::run, 
-			Outputs[i].worhpsolver.get(),
-			Outputs[i].totalObjective,
-			initialPoint,
-			OutputModel(i).V.rows() * 2,
-			OutputModel(i).F.rows()
-		);
-		solver_thread.detach();
-	}
+	worhpSolver* w = new worhpSolver;
+	VectorXd initialPoint = Map<const VectorXd>(OutputModel(0).V.leftCols(2).data(), OutputModel(0).V.leftCols(2).rows() * 2);
+	w->run(OutputModel(0).V,
+		OutputModel(0).F,
+		initialPoint);
+	
+	/*solver_thread = thread(
+		&worhpSolver::run, 
+		worhpsolver.get(),
+		OutputModel(0).V,
+		OutputModel(0).F,
+		initialPoint
+	);
+	solver_thread.detach();*/
+	
 }
 
 void basic_app::initializeSolver(const int index)

@@ -367,7 +367,6 @@ public:
 	shared_ptr<NewtonSolver> newton;
 	shared_ptr<GradientDescentSolver> gradient_descent;
 	shared_ptr<solver> solver;
-	shared_ptr<worhpSolver> worhpsolver;
 	shared_ptr<TotalObjective> totalObjective;
 
 	//Constructor & initialization
