@@ -368,6 +368,7 @@ public:
 	shared_ptr<GradientDescentSolver> gradient_descent;
 	shared_ptr<solver> solver;
 	shared_ptr<TotalObjective> totalObjective;
+	shared_ptr<worhpSolver> worhpsolver;
 
 	//Constructor & initialization
 	Output(
@@ -388,6 +389,7 @@ public:
 		
 		// Initialize solver thread
 		cout << "CoreID = " << CoreID << endl;
+		worhpsolver = make_shared<worhpSolver>();
 		newton = make_shared<NewtonSolver>(isConstrObjFunc, CoreID);
 		gradient_descent = make_shared<GradientDescentSolver>(isConstrObjFunc, CoreID);
 		if (solver_type == app_utils::NEWTON) 

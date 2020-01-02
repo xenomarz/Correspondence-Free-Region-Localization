@@ -10,14 +10,17 @@ class worhpSolver
 public:
 	worhpSolver();
 	~worhpSolver();
-	int run(
+	VectorXd run(
 		const MatrixXd& V,
 		const MatrixX3i& F,
 		const VectorXd& initialPoint
 	);
+	int get_data(VectorXd& data);
 private:
-	LagrangianLscmStArea* function;
-	int x;
+	bool IsDataReady;
+	VectorXd lastX;
+	LagrangianLscmStArea* functionF;
+	LagrangianLscmStArea* functionG;
 	// Objective function
 	void UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt);
 	// Function of constraints

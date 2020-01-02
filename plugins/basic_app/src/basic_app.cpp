@@ -1172,9 +1172,16 @@ void basic_app::update_mesh()
 	vector<VectorXd> X; X.resize(Outputs.size());
 	
 	for (int i = 0; i < Outputs.size(); i++){
-		Outputs[i].solver->get_data(X[i]);
-		V.push_back(MatrixXd::Zero(X[i].rows() / 2, 2));
-		V[i] = Map<MatrixXd>(X[i].data(), X[i].rows() / 2, 2);
+		//Outputs[i].solver->get_data(X[i]);
+		if (Outputs[i].worhpsolver->get_data(X[i])) {
+			V.push_back(MatrixXd::Zero(X[i].rows() / 2, 2));
+			V[i] = Map<MatrixXd>(X[i].data(), X[i].rows() / 2, 2);
+		}
+		else {
+			V[i] = OutputModel(i).V;
+		}
+		
+		
 		if (IsTranslate && mouse_mode == app_utils::VERTEX_SELECT) {
 			V[i].row(Translate_Index) = OutputModel(i).V.row(Translate_Index).head(2);
 		}
@@ -1211,22 +1218,21 @@ void basic_app::start_solver_thread() {
 }
 
 void basic_app::start_worhp_solver_thread() {
-	
-	worhpSolver* w = new worhpSolver;
-	VectorXd initialPoint = Map<const VectorXd>(OutputModel(0).V.leftCols(2).data(), OutputModel(0).V.leftCols(2).rows() * 2);
-	w->run(OutputModel(0).V,
-		OutputModel(0).F,
-		initialPoint);
-	
-	/*solver_thread = thread(
-		&worhpSolver::run, 
-		worhpsolver.get(),
-		OutputModel(0).V,
-		OutputModel(0).F,
-		initialPoint
-	);
-	solver_thread.detach();*/
-	
+	for (int i = 0; i < Outputs.size(); i++) {
+		VectorXd initialPoint = Map<const VectorXd>(
+			OutputModel(i).V.leftCols(2).data(),
+			OutputModel(i).V.leftCols(2).rows() * 2
+			);
+
+		solver_thread = thread(
+			&worhpSolver::run,
+			Outputs[i].worhpsolver.get(),
+			OutputModel(i).V,
+			OutputModel(i).F,
+			initialPoint
+		);
+		solver_thread.detach();
+	}
 }
 
 void basic_app::initializeSolver(const int index)

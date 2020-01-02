@@ -25,22 +25,25 @@
  *
  *-----------------------------------------------------------------------*/
 worhpSolver::worhpSolver() {
-	
+	this->functionF = new LagrangianLscmStArea();
+	this->functionG = new LagrangianLscmStArea();
 }
 
 worhpSolver::~worhpSolver() {
-	delete this->function;
+	delete this->functionF;
+	delete this->functionG;
 }
 
-int worhpSolver::run(
+VectorXd worhpSolver::run(
 	const MatrixXd& V,
 	const MatrixX3i& F,
 	const VectorXd& initialPoint) 
 {
-	this->x = 10;
-	this->function = new LagrangianLscmStArea();
-	this->function->init_mesh(V, F);
-	this->function->init();
+	IsDataReady = false;
+	this->functionF->init_mesh(V, F);
+	this->functionG->init_mesh(V, F);
+	this->functionF->init();
+	this->functionG->init();
 	/*
 	 * WORHP data structures
 	 *
@@ -85,7 +88,7 @@ int worhpSolver::run(
 	ReadParamsNoInit(&status, "worhpFD.xml", &par);
 	if (status == DataError || status == InitError)
 	{
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	}
 
 	/*
@@ -117,7 +120,7 @@ int worhpSolver::run(
 	if (cnt.status != FirstCall)
 	{
 		std::cout << "Main: Initialisation failed." << std::endl;
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	}
 
 	/*
@@ -266,6 +269,10 @@ int worhpSolver::run(
 		 */
 		if (GetUserAction(&cnt, iterOutput))
 		{
+			cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
+			IsDataReady = true;
+			lastX = Map<VectorXd>(opt.X, opt.n);
+
 			IterationOutput(&opt, &wsp, &par, &cnt);
 			DoneUserAction(&cnt, iterOutput);
 		}
@@ -336,39 +343,38 @@ int worhpSolver::run(
 	// Deallocate all data structures.
 	// Data structures must not be accessed after this call.
 	WorhpFree(&opt, &wsp, &par, &cnt);
-	return EXIT_SUCCESS;
+	return lastX;
+}
+
+int worhpSolver::get_data(VectorXd& data) {
+	if (IsDataReady) {
+		IsDataReady = false;
+		data = lastX;
+		return 1;
+	}
+	else return 0;
 }
 
 void worhpSolver::UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	VectorXd X;
-	X.resize(opt->n);
+	VectorXd X = Map<VectorXd>(opt->X, opt->n);
+	this->functionF->updateX(X);
 
-	for (int i = 0; i < opt->n; i++) {
-		X(i) = opt->X[i];
-	}
-	this->function->updateX(X);
-
-	VectorXd LSCM = (this->function->a - this->function->d).cwiseAbs2() +
-		(this->function->b + this->function->c).cwiseAbs2();
-	double obj_value = (this->function->Area.asDiagonal() * LSCM).sum();
+	VectorXd LSCM = (this->functionF->a - this->functionF->d).cwiseAbs2() +
+		(this->functionF->b + this->functionF->c).cwiseAbs2();
+	double obj_value = (this->functionF->Area.asDiagonal() * LSCM).sum();
 
 	opt->F = wsp->ScaleObj * (obj_value);
 }
 
 void worhpSolver::UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	VectorXd X;
-	X.resize(opt->n);
+	VectorXd X = Map<VectorXd>(opt->X, opt->n);
+	this->functionG->updateX(X);
 
-	for (int i = 0; i < opt->n; i++) {
-		X(i) = opt->X[i];
-	}
-	this->function->updateX(X);
-
-	VectorXd areaE = this->function->detJ - VectorXd::Ones(opt->m);
-	VectorXd constr = (this->function->Area.asDiagonal() * areaE);
-
+	VectorXd areaE = this->functionG->detJ - VectorXd::Ones(opt->m);
+	VectorXd constr = (this->functionG->Area.asDiagonal() * areaE);
+	
 	for (int i = 0; i < opt->m; i++) {
 		opt->G[i] = constr(i);
 	}
