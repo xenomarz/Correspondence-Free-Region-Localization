@@ -159,7 +159,7 @@ export class AutoquadsSideBar extends SideBar {
                     value="${this._singularityInterval}"
                     min="0"
                     max="10000"
-                    step="1.05"
+                    step="1.005"
                     label="Singularity Interval"
                     @value-changed="${this._singularityIntervalInputChanged}"
                     is-exponential>

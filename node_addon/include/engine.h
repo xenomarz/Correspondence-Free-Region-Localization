@@ -49,19 +49,26 @@ private:
 	enum class BufferedPrimitiveType : uint32_t
 	{
 		VERTEX = 0,
-		TRIANGLE
-	};
-
-	enum class VerticesSource
-	{
-		DOMAIN_VERTICES,
-		IMAGE_VERTICES
+		TRIANGLE,
+		EDGE
 	};
 
 	enum class FacesSource
 	{
 		DOMAIN_FACES,
 		IMAGE_FACES
+	};
+
+	enum class EdgesSource
+	{
+		DOMAIN_EDGES,
+		IMAGE_EDGES
+	};
+
+	enum class VerticesSource
+	{
+		DOMAIN_VERTICES,
+		IMAGE_VERTICES
 	};
 
 	static Napi::FunctionReference constructor;
@@ -86,16 +93,22 @@ private:
 	/**
 	 * NAPI private instance methods
 	 */
-	Napi::Value GetDomainVerticesCount(const Napi::CallbackInfo& info);
-	Napi::Value GetImageVerticesCount(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainFacesCount(const Napi::CallbackInfo& info);
 	Napi::Value GetImageFacesCount(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainEdgesCount(const Napi::CallbackInfo& info);
+	Napi::Value GetImageEdgesCount(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainVerticesCount(const Napi::CallbackInfo& info);
+	Napi::Value GetImageVerticesCount(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainFaces(const Napi::CallbackInfo& info);
 	Napi::Value GetImageFaces(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainEdges(const Napi::CallbackInfo& info);
+	Napi::Value GetImageEdges(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetImageVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainBufferedFaces(const Napi::CallbackInfo& info);
 	Napi::Value GetImageBufferedFaces(const Napi::CallbackInfo& info);
+	Napi::Value GetDomainBufferedEdges(const Napi::CallbackInfo& info);
+	Napi::Value GetImageBufferedEdges(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainBufferedVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetImageBufferedVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainBufferedUvs(const Napi::CallbackInfo& info);
@@ -116,9 +129,12 @@ private:
 	ModelFileType GetModelFileType(std::string filename);
 	void TryUpdateImageVertices();
 	Napi::Int32Array GetBufferedFaces(const Napi::CallbackInfo& info, const FacesSource faces_source) const;
+	Napi::Int32Array GetBufferedEdges(const Napi::CallbackInfo& info, const EdgesSource edges_source) const;
 	Napi::Float32Array GetBufferedVertices(const Napi::CallbackInfo& info, const VerticesSource vertices_source);
 	Napi::Int32Array CreateBufferedFacesArray(Napi::Env env, const Eigen::MatrixXi& F) const;
+	Napi::Int32Array CreateBufferedEdgesArray(Napi::Env env, const Eigen::MatrixXi& E) const;
 	Napi::Array CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F);
+	Napi::Array CreateEdges(Napi::Env env, const Eigen::MatrixX2i& E);
 	Napi::Value NativeToJS(Napi::Env env, const std::any& property_value);
 	Napi::Value NativeToJS(Napi::Env env, const Eigen::VectorXd& property_value);
 	Napi::Value NativeToJS(Napi::Env env, const std::vector<RDS::VertexIndex>& property_value);
@@ -134,7 +150,7 @@ private:
 	{
 		Napi::Array vertices_array = Napi::Array::New(env, V.rows());
 		auto entries_per_vertex = V.cols();
-		for (int vertex_index = 0; vertex_index < V.rows(); vertex_index++)
+		for (int32_t vertex_index = 0; vertex_index < V.rows(); vertex_index++)
 		{
 			Napi::Object vertex_object = Napi::Object::New(env);
 			float x = V(vertex_index, 0);
@@ -156,46 +172,24 @@ private:
 	}
 
 	template <typename Derived>
-	Napi::Float32Array CreateBufferedVerticesArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V)
+	Napi::Float32Array CreateBufferedVerticesArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V, const Eigen::MatrixX3i& F)
 	{
-		Napi::Float32Array buffered_vertices_array = Napi::Float32Array::New(env, 3 * V.rows());
-		uint32_t entries_per_vertex = V.cols();
-
-		//#pragma omp parallel for
-		for (int32_t vertex_index = 0; vertex_index < V.rows(); vertex_index++)
-		{
-			float x = V(vertex_index, 0);
-			float y = V(vertex_index, 1);
-			float z = entries_per_vertex == 2 ? 0 : V(vertex_index, 2);
-
-			int base_index = 3 * vertex_index;
-			buffered_vertices_array[base_index] = x;
-			buffered_vertices_array[base_index + 1] = y;
-			buffered_vertices_array[base_index + 2] = z;
-		}
-
-		return buffered_vertices_array;
-	}
-
-	template <typename Derived>
-	Napi::Float32Array CreateBufferedVerticesArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V, const Eigen::MatrixXi& F)
-	{
-		uint32_t entries_per_face = 9;
-		uint32_t entries_per_vertex = V.cols();
+		const uint32_t entries_per_face = 9;
+		const uint32_t entries_per_vertex = V.cols();
 		Napi::Float32Array buffered_vertices_array = Napi::Float32Array::New(env, entries_per_face * F.rows());
 
 		//#pragma omp parallel for
 		for (int32_t face_index = 0; face_index < F.rows(); face_index++)
 		{
-			int base_index = entries_per_face * face_index;
+			const int base_index = entries_per_face * face_index;
 			for (uint32_t i = 0; i < 3; i++)
 			{
 				uint32_t vertex_index = F(face_index, i);
-				float x = V(vertex_index, 0);
-				float y = V(vertex_index, 1);
-				float z = entries_per_vertex == 2 ? 0 : V(vertex_index, 2);
-				
-				int base_vertex_index = base_index + 3 * i;
+				const float x = V(vertex_index, 0);
+				const float y = V(vertex_index, 1);
+				const float z = entries_per_vertex == 2 ? 0 : V(vertex_index, 2);
+
+				const int base_vertex_index = base_index + 3 * i;
 				buffered_vertices_array[base_vertex_index] = x;
 				buffered_vertices_array[base_vertex_index + 1] = y;
 				buffered_vertices_array[base_vertex_index + 2] = z;
@@ -206,23 +200,73 @@ private:
 	}
 
 	template <typename Derived>
+	Napi::Float32Array CreateBufferedVerticesArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V, const Eigen::MatrixX2i& E)
+	{
+		const uint32_t entries_per_edge = 6;
+		const uint32_t entries_per_vertex = V.cols();
+		Napi::Float32Array buffered_vertices_array = Napi::Float32Array::New(env, entries_per_edge * E.rows());
+
+		//#pragma omp parallel for
+		for (int32_t edge_index = 0; edge_index < E.rows(); edge_index++)
+		{
+			const int base_index = entries_per_edge * edge_index;
+			for (uint32_t i = 0; i < 2; i++)
+			{
+				uint32_t vertex_index = E(edge_index, i);
+				const float x = V(vertex_index, 0);
+				const float y = V(vertex_index, 1);
+				const float z = entries_per_vertex == 2 ? 0 : V(vertex_index, 2);
+
+				const int base_vertex_index = base_index + 3 * i;
+				buffered_vertices_array[base_vertex_index] = x;
+				buffered_vertices_array[base_vertex_index + 1] = y;
+				buffered_vertices_array[base_vertex_index + 2] = z;
+			}
+		}
+
+		return buffered_vertices_array;
+	}
+
+	template <typename Derived>
+	Napi::Float32Array CreateBufferedVerticesArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V)
+	{
+		Napi::Float32Array buffered_vertices_array = Napi::Float32Array::New(env, 3 * V.rows());
+		const uint32_t entries_per_vertex = V.cols();
+
+		//#pragma omp parallel for
+		for (int32_t vertex_index = 0; vertex_index < V.rows(); vertex_index++)
+		{
+			const float x = V(vertex_index, 0);
+			const float y = V(vertex_index, 1);
+			const float z = entries_per_vertex == 2 ? 0 : V(vertex_index, 2);
+
+			const int base_index = 3 * vertex_index;
+			buffered_vertices_array[base_index] = x;
+			buffered_vertices_array[base_index + 1] = y;
+			buffered_vertices_array[base_index + 2] = z;
+		}
+
+		return buffered_vertices_array;
+	}
+
+	template <typename Derived>
 	Napi::Float32Array CreateBufferedUvsArray(Napi::Env env, const Eigen::MatrixBase<Derived>& V, const Eigen::MatrixXi& F)
 	{
-		uint32_t entries_per_face = 6;
+		const uint32_t entries_per_face = 6;
 		uint32_t entries_per_vertex = V.cols();
 		Napi::Float32Array buffered_uvs_array = Napi::Float32Array::New(env, entries_per_face * F.rows());
 
 		//#pragma omp parallel for
 		for (int32_t face_index = 0; face_index < F.rows(); face_index++)
 		{
-			int base_index = entries_per_face * face_index;
+			const int base_index = entries_per_face * face_index;
 			for (uint32_t i = 0; i < 3; i++)
 			{
 				uint32_t vertex_index = F(face_index, i);
 				float x = V(vertex_index, 0);
 				float y = V(vertex_index, 1);
 
-				int base_vertex_index = base_index + 2 * i;
+				const int base_vertex_index = base_index + 2 * i;
 				buffered_uvs_array[base_vertex_index] = x;
 				buffered_uvs_array[base_vertex_index + 1] = y;
 			}

@@ -276,11 +276,6 @@ export class MeshView extends LitElement {
             this._initializeGrid();
             this.requestUpdate('meshProvider', oldValue);
         }
-        // else {
-        //     if(!this._mesh.material.color.equals(this._meshProvider.meshColor)) {
-        //         this._mesh.material.color = this._meshProvider.meshColor;
-        //     }
-        // }
     }
 
     get meshProvider() {

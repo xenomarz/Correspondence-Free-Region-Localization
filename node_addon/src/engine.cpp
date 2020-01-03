@@ -31,14 +31,20 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("unconstrainFacePosition", &Engine::UnconstrainFacePosition),
 		InstanceMethod("getDomainFacesCount", &Engine::GetDomainFacesCount),
 		InstanceMethod("getImageFacesCount", &Engine::GetImageFacesCount),
+		InstanceMethod("getDomainEdgesCount", &Engine::GetDomainEdgesCount),
+		InstanceMethod("getImageEdgesCount", &Engine::GetImageEdgesCount),
 		InstanceMethod("getDomainVerticesCount", &Engine::GetDomainVerticesCount),
 		InstanceMethod("getImageVerticesCount", &Engine::GetImageVerticesCount),
 		InstanceMethod("getDomainFaces", &Engine::GetDomainFaces),
 		InstanceMethod("getImageFaces", &Engine::GetImageFaces),
+		InstanceMethod("getDomainEdges", &Engine::GetDomainEdges),
+		InstanceMethod("getImageEdges", &Engine::GetImageEdges),
 		InstanceMethod("getDomainVertices", &Engine::GetDomainVertices),
 		InstanceMethod("getImageVertices", &Engine::GetImageVertices),
 		InstanceMethod("getDomainBufferedFaces", &Engine::GetDomainBufferedFaces),
 		InstanceMethod("getImageBufferedFaces", &Engine::GetImageBufferedFaces),
+		InstanceMethod("getDomainBufferedEdges", &Engine::GetDomainBufferedEdges),
+		InstanceMethod("getImageBufferedEdges", &Engine::GetImageBufferedEdges),
 		InstanceMethod("getDomainBufferedVertices", &Engine::GetDomainBufferedVertices),
 		InstanceMethod("getImageBufferedVertices", &Engine::GetImageBufferedVertices),
 		InstanceMethod("getDomainBufferedUvs", &Engine::GetDomainBufferedUvs),
@@ -165,7 +171,27 @@ Napi::Value Engine::GetImageFacesCount(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	Napi::Number count = Napi::Number::New(env, mesh_wrapper_->GetImageVertices().rows());
+	Napi::Number count = Napi::Number::New(env, mesh_wrapper_->GetImageFaces().rows());
+
+	return count;
+}
+
+Napi::Value Engine::GetDomainEdgesCount(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	Napi::Number count = Napi::Number::New(env, mesh_wrapper_->GetDomainEdges().rows());
+
+	return count;
+}
+
+Napi::Value Engine::GetImageEdgesCount(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	Napi::Number count = Napi::Number::New(env, mesh_wrapper_->GetImageEdges().rows());
 
 	return count;
 }
@@ -184,6 +210,22 @@ Napi::Value Engine::GetImageFaces(const Napi::CallbackInfo& info)
 	Napi::HandleScope scope(env);
 
 	return CreateFaces(env, mesh_wrapper_->GetImageFaces());
+}
+
+Napi::Value Engine::GetDomainEdges(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	return CreateEdges(env, mesh_wrapper_->GetDomainEdges());
+}
+
+Napi::Value Engine::GetImageEdges(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	return CreateEdges(env, mesh_wrapper_->GetImageEdges());
 }
 
 Napi::Value Engine::GetDomainVertices(const Napi::CallbackInfo& info)
@@ -212,6 +254,16 @@ Napi::Value Engine::GetDomainBufferedFaces(const Napi::CallbackInfo& info)
 Napi::Value Engine::GetImageBufferedFaces(const Napi::CallbackInfo& info)
 {
 	return GetBufferedFaces(info, FacesSource::IMAGE_FACES);
+}
+
+Napi::Value Engine::GetDomainBufferedEdges(const Napi::CallbackInfo& info)
+{
+	return GetBufferedEdges(info, EdgesSource::DOMAIN_EDGES);
+}
+
+Napi::Value Engine::GetImageBufferedEdges(const Napi::CallbackInfo& info)
+{
+	return GetBufferedEdges(info, EdgesSource::IMAGE_EDGES);
 }
 
 Napi::Value Engine::GetDomainBufferedVertices(const Napi::CallbackInfo& info)
@@ -266,6 +318,26 @@ Napi::Int32Array Engine::GetBufferedFaces(const Napi::CallbackInfo& info, const 
 	return Napi::Int32Array::New(env, 0);
 }
 
+Napi::Int32Array Engine::GetBufferedEdges(const Napi::CallbackInfo& info, const EdgesSource edges_source) const
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Create buffered edges array
+	 */
+	switch (edges_source)
+	{
+	case EdgesSource::DOMAIN_EDGES:
+		return CreateBufferedEdgesArray(env, mesh_wrapper_->GetDomainEdges());
+	case EdgesSource::IMAGE_EDGES:
+		return CreateBufferedEdgesArray(env, mesh_wrapper_->GetImageEdges());
+	}
+
+	Napi::TypeError::New(env, "Unknown buffered primitive type").ThrowAsJavaScriptException();
+	return Napi::Int32Array::New(env, 0);
+}
+
 Napi::Float32Array Engine::GetBufferedVertices(const Napi::CallbackInfo& info, const VerticesSource vertices_source)
 {
 	Napi::Env env = info.Env();
@@ -296,16 +368,6 @@ Napi::Float32Array Engine::GetBufferedVertices(const Napi::CallbackInfo& info, c
 
 	switch (buffered_primitive_type)
 	{
-	case BufferedPrimitiveType::VERTEX:
-		switch (vertices_source)
-		{
-		case VerticesSource::DOMAIN_VERTICES:
-			return CreateBufferedVerticesArray(env, mesh_wrapper_->GetDomainVertices());
-		case VerticesSource::IMAGE_VERTICES:
-			return CreateBufferedVerticesArray(env, mesh_wrapper_->GetImageVertices());
-		}
-		break;
-
 	case BufferedPrimitiveType::TRIANGLE:
 		switch (vertices_source)
 		{
@@ -313,6 +375,26 @@ Napi::Float32Array Engine::GetBufferedVertices(const Napi::CallbackInfo& info, c
 			return CreateBufferedVerticesArray(env, mesh_wrapper_->GetDomainVertices(), mesh_wrapper_->GetDomainFaces());
 		case VerticesSource::IMAGE_VERTICES:
 			return CreateBufferedVerticesArray(env, mesh_wrapper_->GetImageVertices(), mesh_wrapper_->GetImageFaces());
+		}
+		break;
+
+	case BufferedPrimitiveType::EDGE:
+		switch (vertices_source)
+		{
+		case VerticesSource::DOMAIN_VERTICES:
+			return CreateBufferedVerticesArray(env, mesh_wrapper_->GetDomainVertices(), mesh_wrapper_->GetDomainEdges());
+		case VerticesSource::IMAGE_VERTICES:
+			return CreateBufferedVerticesArray(env, mesh_wrapper_->GetImageVertices(), mesh_wrapper_->GetImageEdges());
+		}
+		break;
+		
+	case BufferedPrimitiveType::VERTEX:
+		switch (vertices_source)
+		{
+		case VerticesSource::DOMAIN_VERTICES:
+			return CreateBufferedVerticesArray(env, mesh_wrapper_->GetDomainVertices());
+		case VerticesSource::IMAGE_VERTICES:
+			return CreateBufferedVerticesArray(env, mesh_wrapper_->GetImageVertices());
 		}
 		break;
 	}
@@ -470,6 +552,25 @@ Napi::Int32Array Engine::CreateBufferedFacesArray(Napi::Env env, const Eigen::Ma
 	return buffered_faces_array;
 }
 
+Napi::Int32Array Engine::CreateBufferedEdgesArray(Napi::Env env, const Eigen::MatrixXi& E) const
+{
+	const uint32_t entries_per_edge = 2;
+	auto buffered_edges_array = Napi::Int32Array::New(env, entries_per_edge * E.rows());
+
+	//#pragma omp parallel for
+	for (int32_t edge_index = 0; edge_index < E.rows(); edge_index++)
+	{
+		const int base_index = entries_per_edge * edge_index;
+		auto edge = E.row(edge_index);
+		for (uint32_t i = 0; i < entries_per_edge; i++)
+		{
+			buffered_edges_array[base_index + i] = edge.coeffRef(i);
+		}
+	}
+
+	return buffered_edges_array;
+}
+
 Napi::Value Engine::NativeToJS(Napi::Env env, const std::any& property_value)
 {
 	if (property_value.type() == typeid(double))
@@ -544,6 +645,23 @@ std::any Engine::JSToNative(Napi::Env env, const Napi::Value& value)
 
 	Napi::TypeError::New(env, "Type not supported").ThrowAsJavaScriptException();
 	return std::any();
+}
+
+Napi::Array Engine::CreateEdges(Napi::Env env, const Eigen::MatrixX2i& E)
+{
+	Napi::Array edges_array = Napi::Array::New(env, E.rows());
+	for (int edge_index = 0; edge_index < E.rows(); edge_index++)
+	{
+		Napi::Object edge_object = Napi::Object::New(env);
+		int e0 = E(edge_index, 0);
+		int e1 = E(edge_index, 1);
+
+		edge_object.Set("e0", e0);
+		edge_object.Set("e1", e1);
+		edges_array[edge_index] = edge_object;
+	}
+
+	return edges_array;
 }
 
 Napi::Array Engine::CreateFaces(Napi::Env env, const Eigen::MatrixX3i& F)
