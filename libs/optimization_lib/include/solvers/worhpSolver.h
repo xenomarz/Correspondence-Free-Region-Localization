@@ -16,8 +16,8 @@ public:
 		const VectorXd& initialPoint
 	);
 	int get_data(VectorXd& data);
-private:
 	bool IsDataReady;
+private:
 	VectorXd lastX;
 	LagrangianLscmStArea* functionF;
 	LagrangianLscmStArea* functionG;

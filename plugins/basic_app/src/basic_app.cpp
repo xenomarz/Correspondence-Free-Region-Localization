@@ -432,7 +432,7 @@ IGL_INLINE bool basic_app::pre_draw() {
 	ImGuiMenu::pre_draw();
 
 	for (auto& out : Outputs)
-		if (out.solver->progressed)
+		if (out.solver->progressed || out.worhpsolver->IsDataReady)
 			update_mesh();
 
 	//Update the model's faces colors in the two screens
@@ -1172,16 +1172,15 @@ void basic_app::update_mesh()
 	vector<VectorXd> X; X.resize(Outputs.size());
 	
 	for (int i = 0; i < Outputs.size(); i++){
-		//Outputs[i].solver->get_data(X[i]);
-		if (Outputs[i].worhpsolver->get_data(X[i])) {
-			V.push_back(MatrixXd::Zero(X[i].rows() / 2, 2));
-			V[i] = Map<MatrixXd>(X[i].data(), X[i].rows() / 2, 2);
+		if (Outputs[i].worhpsolver->IsDataReady) {
+			Outputs[i].worhpsolver->get_data(X[i]);
+			cout << "#####################################################" << endl;
 		}
 		else {
-			V[i] = OutputModel(i).V;
+			Outputs[i].solver->get_data(X[i]);
 		}
-		
-		
+		V.push_back(Map<MatrixXd>(X[i].data(), X[i].rows() / 2, 2));
+
 		if (IsTranslate && mouse_mode == app_utils::VERTEX_SELECT) {
 			V[i].row(Translate_Index) = OutputModel(i).V.row(Translate_Index).head(2);
 		}
@@ -1218,8 +1217,9 @@ void basic_app::start_solver_thread() {
 }
 
 void basic_app::start_worhp_solver_thread() {
+	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
-		VectorXd initialPoint = Map<const VectorXd>(
+		VectorXd initialPoint = Map<VectorXd>(
 			OutputModel(i).V.leftCols(2).data(),
 			OutputModel(i).V.leftCols(2).rows() * 2
 			);

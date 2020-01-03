@@ -26,7 +26,7 @@ solver::~solver() {
 	SearchDirInfo.close();
 	solverInfo.close();
 	hessianInfo.close();
-	cout << ">> csv files has been closed!" << endl;
+	cout << ">> csv " + std::to_string(solverID) + " files has been closed!" << endl;
 #endif
 }
 
@@ -61,7 +61,8 @@ int solver::run()
 		run_one_iteration(steps);
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
-	cout << ">> solver stopped" << endl;
+	
+	cout << ">> solver " + std::to_string(solverID) + " stopped" << endl;
 	return 0;
 }
 
@@ -208,7 +209,6 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 		y_augmentedValue[counter] = objective->AugmentedValue(false);
 		y_gradientNorm[counter] = grad.norm();
 	}
-	cout << "counter = " << counter << endl;
 	objective->updateX(X);
 
 	//show only once the objective's function data
