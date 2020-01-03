@@ -54,6 +54,11 @@
       "redux",
       "three",
       "three/examples/jsm/loaders/OBJLoader.js",
+      "three/examples/jsm/lines/LineGeometry.js",
+      "three/examples/jsm/lines/LineSegmentsGeometry.js",
+      "three/examples/jsm/lines/LineSegments2.js",
+      "three/examples/jsm/lines/Line2.js",
+      "three/examples/jsm/lines/LineMaterial.js",
       "three-orbit-controls",
       "xstate",
       "chroma-js"

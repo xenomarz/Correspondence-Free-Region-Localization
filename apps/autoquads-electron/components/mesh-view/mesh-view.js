@@ -4,6 +4,11 @@ import { Machine, interpret } from '../../web_modules/xstate.js';
 import { PubSub } from '../../web_modules/pubsub-js.js';
 import chroma from '../../web_modules/chroma-js.js';
 import * as THREE from '../../web_modules/three.js';
+import * as Line2 from '../../web_modules/three/examples/jsm/lines/Line2.js';
+import * as LineSegments2 from '../../web_modules/three/examples/jsm/lines/LineSegments2.js';
+import * as LineMaterial from '../../web_modules/three/examples/jsm/lines/LineMaterial.js';
+import * as LineGeometry from '../../web_modules/three/examples/jsm/lines/LineGeometry.js';
+import * as LineSegmentsGeometry from '../../web_modules/three/examples/jsm/lines/LineSegmentsGeometry.js';
 import OrbitControls from '../../web_modules/three-orbit-controls.js';
 
 // Components Imports
@@ -271,16 +276,12 @@ export class MeshView extends LitElement {
             this._initializeTextures();
             this._initializeLights();
             this._initializeMesh();
+            this._initializeMeshEdges();
             this._initializeMeshWireframe();
             this._initializePointcloud();
             this._initializeGrid();
             this.requestUpdate('meshProvider', oldValue);
         }
-        // else {
-        //     if(!this._mesh.material.color.equals(this._meshProvider.meshColor)) {
-        //         this._mesh.material.color = this._meshProvider.meshColor;
-        //     }
-        // }
     }
 
     get meshProvider() {
@@ -594,6 +595,23 @@ export class MeshView extends LitElement {
         this._mesh = new THREE.Mesh(geometry, material);
         this._scene.add(this._mesh);
     }
+
+    _initializeMeshEdges() {
+        let lineSegmentsGeometry = new LineSegmentsGeometry.LineSegmentsGeometry();
+
+        lineSegmentsGeometry.setPositions(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE));
+
+        let lineMaterial = new LineMaterial.LineMaterial({ 
+            color: 0x000000,
+            vertexColors: THREE.VertexColors, 
+            linewidth: 10 
+        });
+
+        lineMaterial.resolution.set( window.innerWidth, window.innerHeight );
+
+        this._meshEdges = new LineSegments2.LineSegments2(lineSegmentsGeometry, lineMaterial);
+        this._scene.add(this._meshEdges);
+    }    
 
     _initializeMeshWireframe() {
         let material = new THREE.MeshBasicMaterial({
@@ -1259,17 +1277,21 @@ export class MeshView extends LitElement {
         this._mesh.geometry.attributes.position.array = this.meshProvider.getBufferedVertices(BufferedPrimitiveType.TRIANGLE);
         this._mesh.geometry.attributes.uv.array = this.meshProvider.getBufferedUvs();
 
+        this._meshEdges.geometry.setPositions(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE));
+
         let bufferedColors = this.meshProvider.getBufferedColors();
         this._updateVertexColors();
         this._overrideAttributeArray(this._vertexColors, bufferedColors);
         this._mesh.geometry.attributes.color.array = bufferedColors;
 
         this._mesh.geometry.applyMatrix(this._mesh.matrix);
+        this._meshEdges.geometry.applyMatrix(this._mesh.matrix);
         this._pointcloud.geometry.applyMatrix(this._pointcloud.matrix);
 
         this._mesh.geometry.attributes.position.needsUpdate = true;
         this._mesh.geometry.attributes.uv.needsUpdate = true;
         this._mesh.geometry.attributes.color.needsUpdate = true;
+        this._meshEdges.geometry.attributes.position.needsUpdate = true;
         this._pointcloud.geometry.attributes.position.needsUpdate = true;
         
         if(this._additionalSceneObjects) {

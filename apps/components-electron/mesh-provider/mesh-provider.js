@@ -1,6 +1,7 @@
 export const BufferedPrimitiveType = {
     VERTEX: 0,
-    TRIANGLE: 1
+    EDGE: 1,
+    TRIANGLE: 2
 };
 
 export class MeshProvider {

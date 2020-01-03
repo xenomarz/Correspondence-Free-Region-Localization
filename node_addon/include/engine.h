@@ -49,8 +49,8 @@ private:
 	enum class BufferedPrimitiveType : uint32_t
 	{
 		VERTEX = 0,
-		TRIANGLE,
-		EDGE
+		EDGE,
+		TRIANGLE
 	};
 
 	enum class FacesSource
