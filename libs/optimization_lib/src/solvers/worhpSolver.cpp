@@ -338,6 +338,10 @@ VectorXd worhpSolver::run(
 		}
 	}
 
+	cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
+	IsDataReady = true;
+	lastX = Map<VectorXd>(opt.X, opt.n);
+
 	// Translate the WORHP status flag into a meaningful message.
 	StatusMsg(&opt, &wsp, &par, &cnt);
 	// Deallocate all data structures.
@@ -358,25 +362,26 @@ int worhpSolver::get_data(VectorXd& data) {
 void worhpSolver::UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
 	VectorXd X = Map<VectorXd>(opt->X, opt->n);
-	this->functionF->updateX(X);
+	LagrangianLscmStArea f = *this->functionF;
+	f.updateX(X);
 
-	VectorXd LSCM = (this->functionF->a - this->functionF->d).cwiseAbs2() +
-		(this->functionF->b + this->functionF->c).cwiseAbs2();
-	double obj_value = (this->functionF->Area.asDiagonal() * LSCM).sum();
+	VectorXd LSCM = (f.a - f.d).cwiseAbs2() + (f.b + f.c).cwiseAbs2();
+	//VectorXd AREA = f.detJ - VectorXd::Ones(opt->m);
 
-	opt->F = wsp->ScaleObj * (obj_value);
+	double obj_value = (f.Area.asDiagonal() * LSCM).sum();
+	opt->F = wsp->ScaleObj * obj_value;
 }
 
 void worhpSolver::UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
 	VectorXd X = Map<VectorXd>(opt->X, opt->n);
-	this->functionG->updateX(X);
-
-	VectorXd areaE = this->functionG->detJ - VectorXd::Ones(opt->m);
-	VectorXd constr = (this->functionG->Area.asDiagonal() * areaE);
+	LagrangianLscmStArea f = *this->functionG;
+	f.updateX(X);
+	
 	
 	for (int i = 0; i < opt->m; i++) {
-		opt->G[i] = constr(i);
+		double AREA = (f.detJ(i) - 1);
+		opt->G[i] = f.Area(i) * AREA;
 	}
 }
 
