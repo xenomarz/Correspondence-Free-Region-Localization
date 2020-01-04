@@ -20,17 +20,9 @@
 #include <igl/per_face_normals.h>
 #include <fstream>
 #include <direct.h>
+#include <windows.h>
 
-// for EXCEPTION_POINTERS
-//#include <Windows.h>
 
-using namespace std;
-using namespace Eigen;
-
-typedef Triplet<double> T;
-typedef SparseMatrix<double> SpMat;
-typedef Matrix<double, 6, 6> Matrix6d;
-typedef Matrix<double, 6, 1> Vector6d;
 
 
 
@@ -120,6 +112,13 @@ public:
 		V(1) = -s;
 		V(2) = s;
 		V(3) = c;
+	}
+
+	static std::string RDSPath() {
+		char buffer[MAX_PATH];
+		GetModuleFileName(NULL, buffer, MAX_PATH);
+		std::string::size_type pos = std::string(buffer).find("\\RDS\\");
+		return std::string(buffer).substr(0, pos + 5);
 	}
 
 	static int GetLowerTriangleSize(int MatrixSize) {

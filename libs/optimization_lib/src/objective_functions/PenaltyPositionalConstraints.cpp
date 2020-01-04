@@ -14,7 +14,7 @@ void PenaltyPositionalConstraints::init()
 	init_hessian();
 }
 
-void PenaltyPositionalConstraints::updateX(const VectorXd& X)
+void PenaltyPositionalConstraints::updateX(const Eigen::VectorXd& X)
 {
 	CurrConstrainedVerticesPos.resizeLike(ConstrainedVerticesPos);
 	for (int i = 0; i < ConstrainedVerticesInd.size(); i++)
@@ -40,7 +40,7 @@ double PenaltyPositionalConstraints::AugmentedValue(const bool update) {
 	return value(update);
 }
 
-void PenaltyPositionalConstraints::gradient(VectorXd& g, const bool update)
+void PenaltyPositionalConstraints::gradient(Eigen::VectorXd& g, const bool update)
 {
 	if (IsConstrObjFunc) {
 		g.conservativeResize(numV * 2 + numF);
@@ -52,7 +52,7 @@ void PenaltyPositionalConstraints::gradient(VectorXd& g, const bool update)
 	g.setZero();
 
 	if (CurrConstrainedVerticesPos.rows() == ConstrainedVerticesPos.rows()) {
-		MatrixXd diff = (CurrConstrainedVerticesPos - ConstrainedVerticesPos);
+		Eigen::MatrixXd diff = (CurrConstrainedVerticesPos - ConstrainedVerticesPos);
 		for (int i = 0; i < ConstrainedVerticesInd.size(); i++)
 		{
 			g(ConstrainedVerticesInd[i]) = 2 * diff(i, 0);
@@ -94,5 +94,5 @@ void PenaltyPositionalConstraints::init_hessian()
 		II[2 * numV] = 2 * numV + numF - 1;
 		JJ[2 * numV] = 2 * numV + numF - 1;
 	}
-	SS = vector<double>(II.size(), 0.);
+	SS = std::vector<double>(II.size(), 0.);
 }

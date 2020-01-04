@@ -8,7 +8,7 @@ AreaDistortion::AreaDistortion()
 double AreaDistortion::value(const bool update)
 {
 	// E = 0.5(det(J) - 1)^2
-	VectorXd E = (detJ - VectorXd::Ones(F.rows())).cwiseAbs2();
+	Eigen::VectorXd E = (detJ - Eigen::VectorXd::Ones(F.rows())).cwiseAbs2();
 	double Evalue = 0.5 * (Area.asDiagonal() * E).sum();
 	
 	if (update) {
@@ -19,14 +19,14 @@ double AreaDistortion::value(const bool update)
 	return Evalue;
 }
 
-void AreaDistortion::gradient(VectorXd& g, const bool update)
+void AreaDistortion::gradient(Eigen::VectorXd& g, const bool update)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
 
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		//prepare gradient
-		Vector4d dE_dJ(d(fi), -c(fi), -b(fi), a(fi));
+		Eigen::Vector4d dE_dJ(d(fi), -c(fi), -b(fi), a(fi));
 		dE_dJ *= (detJ(fi) - 1);
 		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
 		
@@ -52,7 +52,7 @@ void AreaDistortion::hessian()
 		double detj_1 = (a(i) * d(i) - b(i) * c(i)) - 1;
 
 		//prepare hessian
-		MatrixXd d2E_dJ2(4, 4);
+		Eigen::MatrixXd d2E_dJ2(4, 4);
 		d2E_dJ2 <<
 			d(i)*d(i)			, -c(i)*d(i)			, -b(i)*d(i)		, a(i)*d(i) + detj_1,
 			-c(i)*d(i)			, c(i)*c(i)				, b(i)*c(i) - detj_1, -c(i)*a(i),

@@ -30,11 +30,11 @@ void AreaDistortionOneRing::init()
 	dE_dJ.resize(V.rows());
 
 	for (int vi = 0; vi < V.rows(); vi++) {
-		vector<int> OneRingFaces = VF[vi];
+		std::vector<int> OneRingFaces = VF[vi];
 		OneRingVertices[vi] = get_one_ring_vertices(OneRingFaces);
 	}
 
-	MatrixX3d D1cols, D2cols;
+	Eigen::MatrixX3d D1cols, D2cols;
 	Utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
 	D1d = D1cols.transpose();
 	D2d = D2cols.transpose();
@@ -43,8 +43,8 @@ void AreaDistortionOneRing::init()
 	init_hessian();
 }
 
-vector<int> AreaDistortionOneRing::get_one_ring_vertices(const vector<int>& OneRingFaces) {
-	vector<int> vertices;
+std::vector<int> AreaDistortionOneRing::get_one_ring_vertices(const std::vector<int>& OneRingFaces) {
+	std::vector<int> vertices;
 	vertices.clear();
 	for (int i = 0; i < OneRingFaces.size(); i++) {
 		int fi = OneRingFaces[i];
@@ -66,7 +66,7 @@ vector<int> AreaDistortionOneRing::get_one_ring_vertices(const vector<int>& OneR
 	return vertices;
 }
 
-void AreaDistortionOneRing::updateX(const VectorXd& X)
+void AreaDistortionOneRing::updateX(const Eigen::VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
@@ -87,13 +87,13 @@ double AreaDistortionOneRing::value(const bool update)
 	return value;
 }
 
-void AreaDistortionOneRing::gradient(VectorXd& g, const bool update)
+void AreaDistortionOneRing::gradient(Eigen::VectorXd& g, const bool update)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
 
 	for (int vi = 0; vi < V.rows(); ++vi) {
-		vector<int> OneRingFaces = VF[vi];
+		std::vector<int> OneRingFaces = VF[vi];
 		int J_size = 4 * OneRingFaces.size();
 
 		dE_dJ[vi].resize(1, J_size);
@@ -103,7 +103,7 @@ void AreaDistortionOneRing::gradient(VectorXd& g, const bool update)
 		for (int i = 0; i < OneRingFaces.size(); i++) {
 			int fi = OneRingFaces[i];
 			int base_column = 4 * i;
-			dE_dJ[vi].block<1, 4>(0, base_column) = Area(fi)*Vector4d(d(fi), -c(fi), -b(fi), a(fi));
+			dE_dJ[vi].block<1, 4>(0, base_column) = Area(fi)*Eigen::Vector4d(d(fi), -c(fi), -b(fi), a(fi));
 		}
 		grad[vi] = OneRingSum(vi)*dE_dJ[vi] * dJ_dX[vi];
 
@@ -122,7 +122,7 @@ void AreaDistortionOneRing::hessian()
 #pragma omp parallel for num_threads(24)
 	int index2 = 0;
 	for (int vi = 0; vi < V.rows(); ++vi) {
-		vector<int> OneRingFaces = VF[vi];
+		std::vector<int> OneRingFaces = VF[vi];
 		int J_size = 4 * OneRingFaces.size();
 		int X_size = 2 * OneRingVertices[vi].size();
 
@@ -133,9 +133,9 @@ void AreaDistortionOneRing::hessian()
 		for (int i = 0; i < OneRingFaces.size(); i++) {
 			int fi = OneRingFaces[i];
 			int base_column = 4 * i;
-			dE_dJ[vi].block<1, 4>(0, base_column) = Area(fi)*Vector4d(d(fi), -c(fi), -b(fi), a(fi));
+			dE_dJ[vi].block<1, 4>(0, base_column) = Area(fi)*Eigen::Vector4d(d(fi), -c(fi), -b(fi), a(fi));
 		}
-		MatrixXd d2E_dJ2(J_size, J_size);
+		Eigen::MatrixXd d2E_dJ2(J_size, J_size);
 		d2E_dJ2.setZero();
 
 		//prepare hessian
@@ -168,17 +168,17 @@ void AreaDistortionOneRing::hessian()
 	}
 }
 
-bool AreaDistortionOneRing::update_variables(const VectorXd& X)
+bool AreaDistortionOneRing::update_variables(const Eigen::VectorXd& X)
 {
-	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
+	Eigen::Map<const Eigen::MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
 	for (int i = 0; i < F.rows(); i++)
 	{
-		Vector3d Xi, Yi;
+		Eigen::Vector3d Xi, Yi;
 		Xi << x(F(i, 0), 0), x(F(i, 1), 0), x(F(i, 2), 0);
 		Yi << x(F(i, 0), 1), x(F(i, 1), 1), x(F(i, 2), 1);
-		Vector3d Dx = D1d.col(i);
-		Vector3d Dy = D2d.col(i);
+		Eigen::Vector3d Dx = D1d.col(i);
+		Eigen::Vector3d Dy = D2d.col(i);
 		//prepare jacobian		
 		a(i) = Dx.transpose() * Xi;
 		b(i) = Dx.transpose() * Yi;
@@ -189,7 +189,7 @@ bool AreaDistortionOneRing::update_variables(const VectorXd& X)
 
 	OneRingSum.setZero();
 	for (int vi = 0; vi < VF.size(); vi++) {
-		vector<int> OneRing = VF[vi];
+		std::vector<int> OneRing = VF[vi];
 		for (int fi : OneRing) {
 			OneRingSum(vi) += Area(fi)*detJ(fi) - Area(fi);
 		}
@@ -201,7 +201,7 @@ void AreaDistortionOneRing::init_hessian()
 {
 	II.clear();
 	JJ.clear();
-	auto PushPair = [&](int i, int j) { if (i > j) swap(i, j); II.push_back(i); JJ.push_back(j); };
+	auto PushPair = [&](int i, int j) { if (i > j) std::swap(i, j); II.push_back(i); JJ.push_back(j); };
 	for (int vi = 0; vi < V.rows(); ++vi) {
 		int X_size = 2 * OneRingVertices[vi].size();
 		for (int a = 0; a < X_size; ++a)
@@ -226,13 +226,13 @@ void AreaDistortionOneRing::init_hessian()
 			}
 		}
 	}
-	SS = vector<double>(II.size(), 0.);
+	SS = std::vector<double>(II.size(), 0.);
 }
 
 void AreaDistortionOneRing::init_dJdX() {
 	//prepare dJ/dX
 	for (int vi = 0; vi < VF.size(); vi++) {
-		vector<int> OneRingFaces = VF[vi];
+		std::vector<int> OneRingFaces = VF[vi];
 
 		int J_size = 4 * OneRingFaces.size();
 		int X_size = 2 * OneRingVertices[vi].size();
@@ -242,8 +242,8 @@ void AreaDistortionOneRing::init_dJdX() {
 		for (int i = 0; i < OneRingFaces.size(); i++) {
 			int fi = OneRingFaces[i];
 			int base_row = 4 * i;
-			RowVectorXd Dx = D1d.col(fi).transpose();
-			RowVectorXd Dy = D2d.col(fi).transpose();
+			Eigen::RowVectorXd Dx = D1d.col(fi).transpose();
+			Eigen::RowVectorXd Dy = D2d.col(fi).transpose();
 
 			//Find the indexes of the face's vertices (p0,p1,p2) on the gradient vector
 			int x0 = distance(OneRingVertices[vi].begin(), find(OneRingVertices[vi].begin(), OneRingVertices[vi].end(), F(fi, 0)));

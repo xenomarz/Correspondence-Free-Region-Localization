@@ -25,7 +25,7 @@ double NewtonSolver::step()
 	pardiso->solve(rhs, p);
 #else
 	eigen_solver->factorize(objective->II, objective->JJ, objective->SS);
-	VectorXd rhs = -g;
+	Eigen::VectorXd rhs = -g;
 	p = eigen_solver->solve(rhs);
 #endif
 	return f;
@@ -51,7 +51,7 @@ void NewtonSolver::internal_init()
 
 	if (needs_init)
 	{
-		eigen_solver = make_unique<EigenSparseSolver<vector<int>, vector<double>>>();
+		eigen_solver = std::make_unique<EigenSparseSolver<std::vector<int>, std::vector<double>>>();
 	}
 #endif
 	objective->updateX(X);

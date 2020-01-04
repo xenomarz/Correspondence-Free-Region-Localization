@@ -1,8 +1,8 @@
 #include <objective_functions/ObjectiveFunction.h>
 
-void ObjectiveFunction::FDGradient(const VectorXd& X, VectorXd& g)
+void ObjectiveFunction::FDGradient(const Eigen::VectorXd& X, Eigen::VectorXd& g)
 {
-    VectorXd Xd = X;
+	Eigen::VectorXd Xd = X;
     updateX(Xd);
     double dX = 1e-7; //10e-6;
 
@@ -26,11 +26,11 @@ void ObjectiveFunction::FDGradient(const VectorXd& X, VectorXd& g)
     updateX(X);
 }
 
-void ObjectiveFunction::FDHessian(const VectorXd& X)
+void ObjectiveFunction::FDHessian(const Eigen::VectorXd& X)
 {
-    VectorXd Xd = X;
+	Eigen::VectorXd Xd = X;
     updateX(Xd);
-    VectorXd g(X.size()), gp(X.size()), gm(X.size()), Hi(X.size());
+	Eigen::VectorXd g(X.size()), gp(X.size()), gm(X.size()), Hi(X.size());
     double dX = 10e-6;
     II.clear(); JJ.clear(); SS.clear();
     for (int i = 0; i < X.size(); i++) {
@@ -59,19 +59,19 @@ void ObjectiveFunction::FDHessian(const VectorXd& X)
     }
 }
 
-bool ObjectiveFunction::checkGradient(const VectorXd& X)
+bool ObjectiveFunction::checkGradient(const Eigen::VectorXd& X)
 {
     double tol = 1e-4;
     double eps = 1e-10;
 
-    VectorXd FD_gradient(X.size());
-    VectorXd Analytic_gradient(X.size());
+	Eigen::VectorXd FD_gradient(X.size());
+	Eigen::VectorXd Analytic_gradient(X.size());
 
     updateX(X);
     gradient(Analytic_gradient,false);
     FDGradient(X, FD_gradient);
 
-    cout << name << ": g.norm() = " << Analytic_gradient.norm() << "(analytic) , " << FD_gradient.norm() << "(FD)" << endl;
+	std::cout << name << ": g.norm() = " << Analytic_gradient.norm() << "(analytic) , " << FD_gradient.norm() << "(FD)" << std::endl;
 	//cout << "analyt = " << endl << Analytic_gradient.transpose() << endl;
 	//cout << "FD = " << endl << FD_gradient.transpose() << endl;
 
@@ -87,13 +87,13 @@ bool ObjectiveFunction::checkGradient(const VectorXd& X)
     return true;
 }
 
-bool ObjectiveFunction::checkHessian(const VectorXd& X)
+bool ObjectiveFunction::checkHessian(const Eigen::VectorXd& X)
 {
 	double tol = 1e-4;
 	double eps = 1e-10;
 
-	SparseMatrix<double>  FDH(X.size(), X.size());
-	SparseMatrix<double> H(X.size(), X.size());
+	Eigen::SparseMatrix<double>  FDH(X.size(), X.size());
+	Eigen::SparseMatrix<double> H(X.size(), X.size());
 	std::vector<Eigen::Triplet<double>> Ht;
 
 	FDHessian(X);
@@ -130,8 +130,8 @@ bool ObjectiveFunction::checkHessian(const VectorXd& X)
 	return true;
 }
 
-void ObjectiveFunction::init_mesh(const MatrixXd& V, const MatrixX3i& F) {
-	MatrixX3d V3d(V.rows(), 3);
+void ObjectiveFunction::init_mesh(const Eigen::MatrixXd& V, const Eigen::MatrixX3i& F) {
+	Eigen::MatrixX3d V3d(V.rows(), 3);
 	if (V.cols() == 2) {
 		V3d.leftCols(2) = V;
 		V3d.col(2).setZero();

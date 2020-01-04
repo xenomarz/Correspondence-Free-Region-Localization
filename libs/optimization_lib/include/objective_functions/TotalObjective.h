@@ -11,13 +11,13 @@ private:
 public:
 	TotalObjective();
 	virtual void init() override;
-	virtual void updateX(const VectorXd& X) override;
+	virtual void updateX(const Eigen::VectorXd& X) override;
 	virtual double value(const bool update) override;
-	virtual void gradient(VectorXd& g, const bool update) override;
+	virtual void gradient(Eigen::VectorXd& g, const bool update) override;
 	virtual void hessian() override;
 	virtual double AugmentedValue(const bool update) override;
 
 	// sub objectives
 	float Shift_eigen_values = 0;
-	vector<shared_ptr<ObjectiveFunction>> objectiveList;
+	std::vector<std::shared_ptr<ObjectiveFunction>> objectiveList;
 };

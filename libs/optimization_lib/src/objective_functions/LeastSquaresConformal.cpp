@@ -10,7 +10,7 @@ void LeastSquaresConformal::init()
 	TriangleMeshObjectiveFunction::init();
 
 	//prepare hessian and dJ/dX
-	MatrixXd d2E_dJ2(4, 4);
+	Eigen::MatrixXd d2E_dJ2(4, 4);
 	d2E_dJ2 <<
 		2 , 0, 0, -2,
 		0 , 2, 2, 0 ,
@@ -23,7 +23,7 @@ void LeastSquaresConformal::init()
 
 double LeastSquaresConformal::value(const bool update)
 {
-	VectorXd E = (a-d).cwiseAbs2() + (b+c).cwiseAbs2();
+	Eigen::VectorXd E = (a-d).cwiseAbs2() + (b+c).cwiseAbs2();
 	double value = (Area.asDiagonal() * E).sum();
 	
 	if (update) {
@@ -34,14 +34,14 @@ double LeastSquaresConformal::value(const bool update)
 	return value;
 }
 
-void LeastSquaresConformal::gradient(VectorXd& g, const bool update)
+void LeastSquaresConformal::gradient(Eigen::VectorXd& g, const bool update)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
 
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		//prepare gradient
-		Vector4d dE_dJ(
+		Eigen::Vector4d dE_dJ(
 			a(fi) - d(fi), 
 			b(fi) + c(fi), 
 			b(fi) + c(fi), 

@@ -26,7 +26,7 @@ void SymmetricDirichletCompositeMajorization::init()
 	// Parameterization J mats resize
 	detJ.resize(F.rows());
 
-	MatrixX3d D1cols, D2cols;
+	Eigen::MatrixX3d D1cols, D2cols;
 	
 
 	// Compute init energy matrices
@@ -61,10 +61,10 @@ void SymmetricDirichletCompositeMajorization::init()
 double SymmetricDirichletCompositeMajorization::value(const bool update)
 {
 	// E = ||J||^2+||J^-1||^2 = ||J||^2+||J||^2/det(J)^2
-	VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
-	VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
+	Eigen::VectorXd dirichlet = a.cwiseAbs2() + b.cwiseAbs2() + c.cwiseAbs2() + d.cwiseAbs2();
+	Eigen::VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
 
-	VectorXd E = dirichlet + invDirichlet;
+	Eigen::VectorXd E = dirichlet + invDirichlet;
 	double value = 0.5 * (Area.asDiagonal() * E).sum();
 	if (update) {
 		Efi = E;
@@ -74,20 +74,20 @@ double SymmetricDirichletCompositeMajorization::value(const bool update)
 	return value;
 }
 
-void SymmetricDirichletCompositeMajorization::gradient(VectorXd& g, const bool update)
+void SymmetricDirichletCompositeMajorization::gradient(Eigen::VectorXd& g, const bool update)
 {
     // Energy is h(S(x),s(x)), then grad_x h = grad_(S,s) h * [grad(S); grad(s)]
-    MatrixX2d S(alpha);
+	Eigen::MatrixX2d S(alpha);
     S.col(0) = alpha.rowwise().norm() + beta.rowwise().norm();
     S.col(1) = alpha.rowwise().norm() - beta.rowwise().norm();
 	
-	MatrixX2d invs = s.cwiseInverse();
+	Eigen::MatrixX2d invs = s.cwiseInverse();
 
 	g.conservativeResize(V.rows() *2);
 	g.setZero();
 
 	for (int fi = 0; fi < F.rows(); ++fi) {
-        Vector2d dhdS(s(fi, 0) - pow(invs(fi, 0), 3), s(fi, 1) - pow(invs(fi, 1), 3));
+		Eigen::Vector2d dhdS(s(fi, 0) - pow(invs(fi, 0), 3), s(fi, 1) - pow(invs(fi, 1), 3));
         Vector6d dnormAlphadx = (a1d.col(fi)*alpha(fi, 0) + a2d.col(fi)*alpha(fi, 1))/alpha.row(fi).norm();
         Vector6d dnormBetadx = (b1d.col(fi)*beta(fi, 0) + b2d.col(fi)*beta(fi, 1))/(beta.row(fi).norm()+1e-6);
         Vector6d dSdx = dnormAlphadx + dnormBetadx;
@@ -114,18 +114,18 @@ void SymmetricDirichletCompositeMajorization::hessian()
 
 	auto lambda1 = [](double a) {return a - 1.0 / (a*a*a); };
 	//gradient of outer function in composition
-	VectorXd gradfS = s.col(0).unaryExpr(lambda1);
-	VectorXd gradfs = s.col(1).unaryExpr(lambda1);
+	Eigen::VectorXd gradfS = s.col(0).unaryExpr(lambda1);
+	Eigen::VectorXd gradfs = s.col(1).unaryExpr(lambda1);
 	auto lambda2 = [](double a) {return 1 + 3 / (a*a*a*a); };
 	//hessian of outer function in composition (diagonal)
-	VectorXd HS = s.col(0).unaryExpr(lambda2);
-	VectorXd Hs = s.col(1).unaryExpr(lambda2);
+	Eigen::VectorXd HS = s.col(0).unaryExpr(lambda2);
+	Eigen::VectorXd Hs = s.col(1).unaryExpr(lambda2);
 	//simliarity alpha
-	VectorXd aY = 0.5*(a + d);
-	VectorXd bY = 0.5*(c - b);
+	Eigen::VectorXd aY = 0.5*(a + d);
+	Eigen::VectorXd bY = 0.5*(c - b);
 	//anti similarity beta
-	VectorXd cY = 0.5*(a - d);
-	VectorXd dY = 0.5*(b + c);
+	Eigen::VectorXd cY = 0.5*(a - d);
+	Eigen::VectorXd dY = 0.5*(b + c);
 #pragma omp parallel for num_threads(24)
 	for (int i = 0; i < F.rows(); ++i) {
 		//vectors of size 6
@@ -137,7 +137,7 @@ void SymmetricDirichletCompositeMajorization::hessian()
 		Vector6d a2i = a2d.col(i);
 		Vector6d b1i = b1d.col(i);
 		Vector6d b2i = b2d.col(i);
-		Matrix<double, 6, 6> Hi = Area(i)*ComputeConvexConcaveFaceHessian(
+		Eigen::Matrix<double, 6, 6> Hi = Area(i)*ComputeConvexConcaveFaceHessian(
 			a1i, a2i, b1i, b2i,
 			aY(i), bY(i), cY(i), dY(i),
 			dSi, dsi,
@@ -155,13 +155,13 @@ void SymmetricDirichletCompositeMajorization::hessian()
 	}
 }
 
-bool SymmetricDirichletCompositeMajorization::update_variables(const VectorXd& X)
+bool SymmetricDirichletCompositeMajorization::update_variables(const Eigen::VectorXd& X)
 {
-	Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
+	Eigen::Map<const Eigen::MatrixX2d> x(X.data(), X.size() / 2, 2);
 	
 	for (int i = 0; i < F.rows(); i++)
 	{
-		Vector3d X1i, X2i;
+		Eigen::Vector3d X1i, X2i;
 		X1i << x(F(i, 0), 0), x(F(i, 1), 0), x(F(i, 2), 0);
 		X2i << x(F(i, 0), 1), x(F(i, 1), 1), x(F(i, 2), 1);
 		a(i) = D1d.col(i).transpose()*X1i;
@@ -181,8 +181,8 @@ void SymmetricDirichletCompositeMajorization::UpdateSSVDFunction()
 	#pragma omp parallel for num_threads(24)
 	for (int i = 0; i < a.size(); i++)
 	{
-		Matrix2d A;
-		Matrix2d U, S, V;
+		Eigen::Matrix2d A;
+		Eigen::Matrix2d U, S, V;
 		A << a[i], b[i], c[i], d[i];
 		Utils::SSVD2x2(A, U, S, V);
 		u.row(i) << U(0), U(1), U(2), U(3);
@@ -194,11 +194,11 @@ void SymmetricDirichletCompositeMajorization::UpdateSSVDFunction()
 void SymmetricDirichletCompositeMajorization::ComputeDenseSSVDDerivatives()
 {
 	// Different columns belong to diferent faces
-	MatrixXd B(D1d*v.col(0).asDiagonal() + D2d*v.col(1).asDiagonal());
-	MatrixXd C(D1d*v.col(2).asDiagonal() + D2d*v.col(3).asDiagonal());
+	Eigen::MatrixXd B(D1d*v.col(0).asDiagonal() + D2d*v.col(1).asDiagonal());
+	Eigen::MatrixXd C(D1d*v.col(2).asDiagonal() + D2d*v.col(3).asDiagonal());
 
-	MatrixXd t1 = B* u.col(0).asDiagonal();
-	MatrixXd t2 = B* u.col(1).asDiagonal();
+	Eigen::MatrixXd t1 = B* u.col(0).asDiagonal();
+	Eigen::MatrixXd t2 = B* u.col(1).asDiagonal();
 	Dsd[0].topRows(t1.rows()) = t1;
 	Dsd[0].bottomRows(t1.rows()) = t2;
 	t1 = C*u.col(2).asDiagonal();

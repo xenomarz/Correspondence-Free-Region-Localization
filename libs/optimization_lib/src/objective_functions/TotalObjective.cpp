@@ -14,7 +14,7 @@ void TotalObjective::init()
 	init_hessian();
 }
 
-void TotalObjective::updateX(const VectorXd& X)
+void TotalObjective::updateX(const Eigen::VectorXd& X)
 {
 	for (auto &objective : objectiveList)
 		objective->updateX(X);
@@ -27,7 +27,7 @@ double TotalObjective::value(const bool update)
 	double Cobjective_value = 0;
 	for (auto &obj : objectiveList) {
 		if (obj->w != 0) {
-			shared_ptr<ConstrainedObjectiveFunction> constr = dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
+			std::shared_ptr<ConstrainedObjectiveFunction> constr = std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
 			f += obj->w * obj->value(update);
 			
 			if (constr != NULL) {
@@ -57,9 +57,9 @@ double TotalObjective::AugmentedValue(const bool update) {
 	return f;
 }
 
-void TotalObjective::gradient(VectorXd& g, const bool update)
+void TotalObjective::gradient(Eigen::VectorXd& g, const bool update)
 {
-	VectorXd gi;
+	Eigen::VectorXd gi;
 	g.setZero();
 	for (auto &objective : objectiveList) {
 		if (objective->w != 0)
@@ -89,8 +89,8 @@ void TotalObjective::hessian()
 	for (auto const &objective : objectiveList)
 	{
         //if (objective->w != 0) //Just don't update the hessian, but we still must enter those elements into the big hessian to have the same sparsity pattern
-		    objective->hessian();
-        vector<double> SSi; SSi.resize(objective->SS.size());
+		objective->hessian();
+		std::vector<double> SSi; SSi.resize(objective->SS.size());
         for (int i = 0; i < objective->SS.size(); i++)
             SSi[i] = objective->w * objective->SS[i];
 
@@ -100,7 +100,7 @@ void TotalObjective::hessian()
 
 	// shift the diagonal of the hessian
 	int rows = *std::max_element(II.begin(), II.end()) + 1;
-	vector<double> SSi; SSi.resize(rows);
+	std::vector<double> SSi; SSi.resize(rows);
 	for (int i = 0; i < rows; i++) {
 		SSi[i] = 1e-6 + Shift_eigen_values;
 	}
@@ -122,9 +122,9 @@ void TotalObjective::init_hessian()
 
 	// shift the diagonal of the hessian
 	int rows = *std::max_element(II.begin(), II.end()) + 1;
-	vector<double> SSi; SSi.resize(rows);
-	vector<double> IIi; IIi.resize(rows);
-	vector<double> JJi; JJi.resize(rows);
+	std::vector<double> SSi; SSi.resize(rows);
+	std::vector<double> IIi; IIi.resize(rows);
+	std::vector<double> JJi; JJi.resize(rows);
 	for (int i = 0; i < rows; i++) {
 		IIi[i] = i;
 		JJi[i] = i;

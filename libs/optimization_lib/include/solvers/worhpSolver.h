@@ -10,15 +10,15 @@ class worhpSolver
 public:
 	worhpSolver();
 	~worhpSolver();
-	VectorXd run(
-		const MatrixXd& V,
-		const MatrixX3i& F,
-		const VectorXd& initialPoint
+	Eigen::VectorXd run(
+		const Eigen::MatrixXd& V,
+		const Eigen::MatrixX3i& F,
+		const Eigen::VectorXd& initialPoint
 	);
-	int get_data(VectorXd& data);
+	int get_data(Eigen::VectorXd& data);
 	bool IsDataReady;
 private:
-	VectorXd lastX;
+	Eigen::VectorXd lastX;
 	LagrangianLscmStArea* functionF;
 	LagrangianLscmStArea* functionG;
 	void update_data(OptVar* opt);

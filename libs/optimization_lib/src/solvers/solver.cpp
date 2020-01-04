@@ -4,15 +4,16 @@
 solver::solver(const bool isConstrObjFunc, const int solverID)
 	:
 	solverID(solverID),
-	parameters_mutex(make_unique<mutex>()),
-	data_mutex(make_unique<shared_timed_mutex>()),
-	param_cv(make_unique<condition_variable>()),
+	parameters_mutex(std::make_unique<std::mutex>()),
+	data_mutex(std::make_unique<std::shared_timed_mutex>()),
+	param_cv(std::make_unique<std::condition_variable>()),
 	num_steps(2147483647),
 	IsConstrObjFunc(isConstrObjFunc)
 {
 #ifdef SAVE_RESULTS_TO_CSV
 	//save data in csv files
-	string path = "C:\\Users\\user\\Desktop\\Solver" + std::to_string(solverID) + "\\";
+	std::string path = Utils::RDSPath() + "CSV_Output\\" + "Solver" + std::to_string(solverID) + "\\";
+	mkdir((Utils::RDSPath() + "CSV_Output\\").c_str());
 	mkdir(path.c_str());
 	SearchDirInfo.open(path + "SearchDirInfo.csv");
 	solverInfo.open(path + "solverInfo.csv");
@@ -26,17 +27,17 @@ solver::~solver() {
 	SearchDirInfo.close();
 	solverInfo.close();
 	hessianInfo.close();
-	cout << ">> csv " + std::to_string(solverID) + " files has been closed!" << endl;
+	std::cout << ">> csv " + std::to_string(solverID) + " files has been closed!" << std::endl;
 #endif
 }
 
-void solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
+void solver::init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0)
 {
 	this->objective = objective;
 	if (IsConstrObjFunc) { //for constraint objective function
 		X.resize(X0.rows() + F.rows());
 		X.head(X0.rows()) = X0;
-		X.tail(F.rows()) = VectorXd::Zero(F.rows());
+		X.tail(F.rows()) = Eigen::VectorXd::Zero(F.rows());
 		ext_x = X.head(X.rows() - F.rows());
 	}
 	else { //for unconstraint objective function
@@ -46,7 +47,7 @@ void solver::init(shared_ptr<ObjectiveFunction> objective, const VectorXd& X0)
 	internal_init();
 }
 
-void solver::setFlipAvoidingLineSearch(MatrixX3i & F)
+void solver::setFlipAvoidingLineSearch(Eigen::MatrixX3i & F)
 {
 	FlipAvoidingLineSearch = true;
 	this->F = F;
@@ -62,7 +63,7 @@ int solver::run()
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
 	
-	cout << ">> solver " + std::to_string(solverID) + " stopped" << endl;
+	std::cout << ">> solver " + std::to_string(solverID) + " stopped" << std::endl;
 	return 0;
 }
 
@@ -82,19 +83,19 @@ void solver::run_one_iteration(const int steps) {
 
 void solver::saveSolverInfo(int numIteration, std::ofstream& solverInfo) {
 	//show only once the objective's function data
-	shared_ptr<TotalObjective> totalObj = dynamic_pointer_cast<TotalObjective>(objective);
+	std::shared_ptr<TotalObjective> totalObj = std::dynamic_pointer_cast<TotalObjective>(objective);
 	if (!numIteration) {
 		if(IsConstrObjFunc)
-			solverInfo << "Obj name,weight,Augmented parameter," << endl;
+			solverInfo << "Obj name,weight,Augmented parameter," << std::endl;
 		else 
-			solverInfo << "Obj name,weight," << endl;
+			solverInfo << "Obj name,weight," << std::endl;
 		for (auto& obj : totalObj->objectiveList) {
 			solverInfo << obj->name << "," << obj->w << ",";
 			if(IsConstrObjFunc)
-				solverInfo << dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj)->augmented_value_parameter << "," ;
-			solverInfo << endl;
+				solverInfo << std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj)->augmented_value_parameter << "," ;
+			solverInfo << std::endl;
 		}
-		solverInfo << endl << endl;
+		solverInfo << std::endl << std::endl;
 
 		if (IsConstrObjFunc)
 			solverInfo << ",," << totalObj->name << ",,,,,,,";
@@ -106,7 +107,7 @@ void solver::saveSolverInfo(int numIteration, std::ofstream& solverInfo) {
 			else 
 				solverInfo << obj->name << ",,,";
 		}
-		solverInfo << endl;
+		solverInfo << std::endl;
 		if (IsConstrObjFunc)
 			solverInfo << "Round,,value,obj value,constr value,grad,obj grad,constr grad,";
 		else 
@@ -117,7 +118,7 @@ void solver::saveSolverInfo(int numIteration, std::ofstream& solverInfo) {
 			else
 				solverInfo << ",value,grad,";
 		}
-		solverInfo << endl;
+		solverInfo << std::endl;
 	}
 
 	if (IsConstrObjFunc)
@@ -136,7 +137,7 @@ void solver::saveSolverInfo(int numIteration, std::ofstream& solverInfo) {
 		totalObj->gradient_norm << ",,";
 
 	for (auto& obj : totalObj->objectiveList) {
-		shared_ptr<ConstrainedObjectiveFunction> constr = dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
+		std::shared_ptr<ConstrainedObjectiveFunction> constr = std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
 		if (IsConstrObjFunc)
 			solverInfo <<
 				constr->energy_value << "," <<
@@ -150,24 +151,24 @@ void solver::saveSolverInfo(int numIteration, std::ofstream& solverInfo) {
 				obj->energy_value << "," <<
 				obj->gradient_norm << ",,";
 	}
-	solverInfo << endl;
+	solverInfo << std::endl;
 }
 
 void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {
 	//show only once the objective's function data
 	if (!numIteration) {
-		shared_ptr<TotalObjective> t = dynamic_pointer_cast<TotalObjective>(objective);
+		std::shared_ptr<TotalObjective> t = std::dynamic_pointer_cast<TotalObjective>(objective);
 		hessianInfo << "Obj name,weight,";
 		if(IsConstrObjFunc)
 			hessianInfo << "Augmented parameter,";
-		hessianInfo << endl;
+		hessianInfo << std::endl;
 		for (auto& obj : t->objectiveList) {
 			hessianInfo << obj->name << "," << obj->w << ",";
 			if (IsConstrObjFunc)
-				hessianInfo << dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj)->augmented_value_parameter << ",";
-			hessianInfo << endl;
+				hessianInfo << std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj)->augmented_value_parameter << ",";
+			hessianInfo << std::endl;
 		}
-		hessianInfo << endl;
+		hessianInfo << std::endl;
 	}
 
 	
@@ -184,15 +185,15 @@ void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {
 	A.setFromTriplets(tripletList.begin(), tripletList.end());
 
 	//output the hessian
-	hessianInfo << ("Round " + std::to_string(numIteration)).c_str() << endl;
+	hessianInfo << ("Round " + std::to_string(numIteration)).c_str() << std::endl;
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
 			hessianInfo << A.coeff(i, j) << ",";
 		}
 		
-		hessianInfo << "," << g(i) << endl;
+		hessianInfo << "," << g(i) << std::endl;
 	}
-	hessianInfo << endl;
+	hessianInfo << std::endl;
 }
 
 void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
@@ -200,8 +201,8 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 	int counter;
 	double alpha = 0;
 	for ( alpha = -1, counter = 0; alpha <= 1; alpha += 0.005, counter++) {
-		MatrixXd curr_x = X + alpha * p;
-		VectorXd grad;
+		Eigen::MatrixXd curr_x = X + alpha * p;
+		Eigen::VectorXd grad;
 		objective->updateX(curr_x);
 		objective->gradient(grad,false);
 		alfa[counter] = alpha;
@@ -213,18 +214,18 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 
 	//show only once the objective's function data
 	if (!numIteration) {
-		shared_ptr<TotalObjective> t = dynamic_pointer_cast<TotalObjective>(objective);
+		std::shared_ptr<TotalObjective> t = std::dynamic_pointer_cast<TotalObjective>(objective);
 		SearchDirInfo << "Obj name,weight,";
 		if (IsConstrObjFunc)
 			SearchDirInfo << "Augmented parameter,";
-		SearchDirInfo << endl;
+		SearchDirInfo << std::endl;
 		for (auto& obj : t->objectiveList) {
 			SearchDirInfo << obj->name << "," << obj->w << ",";
 			if (IsConstrObjFunc)
-				SearchDirInfo << dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj)->augmented_value_parameter << ",";
-			SearchDirInfo << endl;
+				SearchDirInfo << std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj)->augmented_value_parameter << ",";
+			SearchDirInfo << std::endl;
 		}
-		SearchDirInfo << endl << "Round" << endl;
+		SearchDirInfo << std::endl << "Round" << std::endl;
 	}
 		
 	//add the alfa values as one row
@@ -233,14 +234,14 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 	for (int i = 0; i < counter; i++) {
 		SearchDirInfo << alfa[i] << ",";
 	}
-	SearchDirInfo << endl;
+	SearchDirInfo << std::endl;
 
 	//add the total objective's values as one row
 	SearchDirInfo << ",value,";
 	for (int i = 0; i < counter; i++) {
 		SearchDirInfo << y_value[i] << ",";
 	}
-	SearchDirInfo << endl;
+	SearchDirInfo << std::endl;
 
 	//add the total objective's augmented values as one row
 	if (IsConstrObjFunc) {
@@ -248,7 +249,7 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 		for (int i = 0; i < counter; i++) {
 			SearchDirInfo << y_augmentedValue[i] << ",";
 		}
-		SearchDirInfo << endl;
+		SearchDirInfo << std::endl;
 	}
 	//add the total objective's augmented values as one row
 	if (IsConstrObjFunc) {
@@ -256,7 +257,7 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 		for (int i = 0; i < counter; i++) {
 			SearchDirInfo << y_gradientNorm[i] << ",";
 		}
-		SearchDirInfo << endl;
+		SearchDirInfo << std::endl;
 	}
 }
 
@@ -267,16 +268,16 @@ void solver::value_linesearch(std::ofstream& SearchDirInfo)
 	{
 		double min_step_to_singularity;
 		if (IsConstrObjFunc) {
-			auto MatX = Map<MatrixX2d>(X.head(X.rows() - F.rows()).data(), X.head(X.rows() - F.rows()).rows() / 2, 2);
-			MatrixXd MatP = Map<const MatrixX2d>(p.head(X.rows() - F.rows()).data(), p.head(X.rows() - F.rows()).rows() / 2, 2);
+			auto MatX = Eigen::Map<Eigen::MatrixX2d>(X.head(X.rows() - F.rows()).data(), X.head(X.rows() - F.rows()).rows() / 2, 2);
+			Eigen::MatrixXd MatP = Eigen::Map<const Eigen::MatrixX2d>(p.head(X.rows() - F.rows()).data(), p.head(X.rows() - F.rows()).rows() / 2, 2);
 			min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(MatX, F, MatP);
 		}
 		else {
-			auto MatX = Map<MatrixX2d>(X.data(), X.rows() / 2, 2);
-			MatrixXd MatP = Map<const MatrixX2d>(p.data(), p.rows() / 2, 2);
+			auto MatX = Eigen::Map<Eigen::MatrixX2d>(X.data(), X.rows() / 2, 2);
+			Eigen::MatrixXd MatP = Eigen::Map<const Eigen::MatrixX2d>(p.data(), p.rows() / 2, 2);
 			min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(MatX, F, MatP);
 		}
-		step_size = min(1., min_step_to_singularity*0.8);
+		step_size = std::min(1., min_step_to_singularity*0.8);
 	}
 	else
 		step_size = 1;
@@ -287,7 +288,7 @@ void solver::value_linesearch(std::ofstream& SearchDirInfo)
 
 	while (cur_iter < MAX_STEP_SIZE_ITER)
 	{
-		MatrixXd curr_x = X + step_size * p;
+		Eigen::MatrixXd curr_x = X + step_size * p;
 
 		objective->updateX(curr_x);
 
@@ -313,7 +314,7 @@ void solver::value_linesearch(std::ofstream& SearchDirInfo)
 		step_size = -1;
 		while (cur_iter < MAX_STEP_SIZE_ITER)
 		{
-			MatrixXd curr_x = X + step_size * p;
+			Eigen::MatrixXd curr_x = X + step_size * p;
 
 			objective->updateX(curr_x);
 
@@ -338,18 +339,18 @@ void solver::value_linesearch(std::ofstream& SearchDirInfo)
 #ifdef SAVE_RESULTS_TO_CSV
 	//add the solver's choice of alfa
 	if (lineSearch_type == Utils::GradientNorm)
-		SearchDirInfo << ",line search type,Gradient norm," << endl;
+		SearchDirInfo << ",line search type,Gradient norm," << std::endl;
 	else
-		SearchDirInfo << ",line search type,Function value," << endl;
-	SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
-	SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
+		SearchDirInfo << ",line search type,Function value," << std::endl;
+	SearchDirInfo << ",Chosen alfa," << step_size << "," << std::endl;
+	SearchDirInfo << ",LineSearch iter," << cur_iter << "," << std::endl;
 #endif
 }
 
 void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
 {
 	double step_size = 1;
-	VectorXd grad;
+	Eigen::VectorXd grad;
 
 	objective->updateX(X);
 	objective->gradient(grad,false);
@@ -360,7 +361,7 @@ void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
 
 	while (cur_iter < MAX_STEP_SIZE_ITER)
 	{
-		MatrixXd curr_x = X + step_size * p;
+		Eigen::MatrixXd curr_x = X + step_size * p;
 
 		objective->updateX(curr_x);
 		objective->gradient(grad,false);
@@ -384,7 +385,7 @@ void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
 	
 		while (cur_iter < MAX_STEP_SIZE_ITER)
 		{
-			MatrixXd curr_x = X + step_size * p;
+			Eigen::MatrixXd curr_x = X + step_size * p;
 
 			objective->updateX(curr_x);
 			objective->gradient(grad, false);
@@ -407,11 +408,11 @@ void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
 #ifdef SAVE_RESULTS_TO_CSV
 	//add the solver's choice of alfa
 	if(lineSearch_type == Utils::GradientNorm)
-		SearchDirInfo << ",line search type,Gradient norm," << endl;
+		SearchDirInfo << ",line search type,Gradient norm," << std::endl;
 	else
-		SearchDirInfo << ",line search type,Function value," << endl;
-	SearchDirInfo << ",Chosen alfa," << step_size << "," << endl;
-	SearchDirInfo << ",LineSearch iter," << cur_iter << "," << endl;
+		SearchDirInfo << ",line search type,Function value," << std::endl;
+	SearchDirInfo << ",Chosen alfa," << step_size << "," << std::endl;
+	SearchDirInfo << ",LineSearch iter," << cur_iter << "," << std::endl;
 #endif
 }
 
@@ -425,7 +426,7 @@ void solver::stop()
 void solver::update_external_data()
 {
 	give_parameter_update_slot();
-	unique_lock<shared_timed_mutex> lock(*data_mutex);
+	std::unique_lock<std::shared_timed_mutex> lock(*data_mutex);
 	if(IsConstrObjFunc)
 		ext_x = X.head(X.rows() - F.rows());
 	else 
@@ -433,9 +434,9 @@ void solver::update_external_data()
 	progressed = true;
 }
 
-void solver::get_data(VectorXd& X)
+void solver::get_data(Eigen::VectorXd& X)
 {
-	unique_lock<shared_timed_mutex> lock(*data_mutex);
+	std::unique_lock<std::shared_timed_mutex> lock(*data_mutex);
 	X = ext_x;
 	progressed = false;
 }
@@ -443,7 +444,7 @@ void solver::get_data(VectorXd& X)
 void solver::give_parameter_update_slot()
 {
 	a_parameter_was_updated = false;
-	unique_lock<mutex> lock(*parameters_mutex);
+	std::unique_lock<std::mutex> lock(*parameters_mutex);
 	params_ready_to_update = true;
 	param_cv->notify_one();
 	while (wait_for_param_update)
@@ -456,10 +457,10 @@ void solver::give_parameter_update_slot()
 
 void solver::wait_for_parameter_update_slot()
 {
-	unique_lock<mutex> lock(*parameters_mutex);
+	std::unique_lock<std::mutex> lock(*parameters_mutex);
 	wait_for_param_update = true;
 	while (!params_ready_to_update && is_running)
-		param_cv->wait_for(lock, chrono::milliseconds(50));
+		param_cv->wait_for(lock, std::chrono::milliseconds(50));
 }
 
 void solver::release_parameter_update_slot()

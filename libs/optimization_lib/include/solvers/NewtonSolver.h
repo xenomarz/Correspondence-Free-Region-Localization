@@ -18,8 +18,8 @@ public:
 	virtual void internal_init() override;
 private:
 	#ifdef USE_PARDISO
-		unique_ptr<PardisoSolver<vector<int>, vector<double>>> pardiso = nullptr;
+		std::unique_ptr<PardisoSolver<std::vector<int>, std::vector<double>>> pardiso = nullptr;
 	#else
-		unique_ptr<EigenSparseSolver<vector<int>, vector<double>>> eigen_solver = nullptr;
+		std::unique_ptr<EigenSparseSolver<std::vector<int>, std::vector<double>>> eigen_solver = nullptr;
 	#endif
 };

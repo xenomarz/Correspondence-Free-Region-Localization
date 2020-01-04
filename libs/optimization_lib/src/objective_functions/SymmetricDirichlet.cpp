@@ -13,8 +13,8 @@ void SymmetricDirichlet::init()
 
 double SymmetricDirichlet::value(const bool update)
 {
-	VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
-	VectorXd E = dirichlet + invDirichlet;
+	Eigen::VectorXd invDirichlet = dirichlet.cwiseQuotient(detJ.cwiseAbs2());
+	Eigen::VectorXd E = dirichlet + invDirichlet;
 	double value = 0.5 * (Area.asDiagonal() * E).sum();
 	if (update) {
 		Efi = E;
@@ -24,14 +24,14 @@ double SymmetricDirichlet::value(const bool update)
 	return value;
 }
 
-void SymmetricDirichlet::gradient(VectorXd& g, const bool update)
+void SymmetricDirichlet::gradient(Eigen::VectorXd& g, const bool update)
 {
 	g.conservativeResize(V.rows() * 2);
 	g.setZero();
 
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		//prepare gradient
-		Vector4d dE_dJ;
+		Eigen::Vector4d dE_dJ;
 		dE_dJ <<
 			a(fi) + (a(fi) / pow(detJ(fi), 2)) - ((d(fi)*dirichlet(fi)) / pow(detJ(fi), 3)),
 			b(fi) + (b(fi) / pow(detJ(fi), 2)) + ((c(fi)*dirichlet(fi)) / pow(detJ(fi), 3)),
@@ -58,7 +58,7 @@ void SymmetricDirichlet::hessian()
 #pragma omp parallel for num_threads(24)
 	for (int i = 0; i < F.rows(); ++i) {
 		//prepare hessian
-		MatrixXd d2E_dJ2(4, 4);
+		Eigen::MatrixXd d2E_dJ2(4, 4);
 		double aa = 1
 			+ (1 / pow(detJ(i), 2))
 			- ((4 * a(i)*d(i)) / pow(detJ(i), 3))
@@ -122,7 +122,7 @@ void SymmetricDirichlet::hessian()
 	}
 }
 
-bool SymmetricDirichlet::update_variables(const VectorXd& X) {
+bool SymmetricDirichlet::update_variables(const Eigen::VectorXd& X) {
 	bool r = TriangleMeshObjectiveFunction::update_variables(X);
 	dirichlet = a.cwiseProduct(a) + b.cwiseProduct(b) + c.cwiseProduct(c) + d.cwiseProduct(d);
 	return r;

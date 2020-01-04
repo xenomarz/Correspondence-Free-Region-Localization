@@ -5,10 +5,10 @@
 class ConstrainedObjectiveFunction : public TriangleMeshObjectiveFunction
 {
 protected:
-	VectorXd lambda;
+	Eigen::VectorXd lambda;
 	//float augmented_value_parameter = 1;
 
-	virtual bool update_variables(const VectorXd& X) override;
+	virtual bool update_variables(const Eigen::VectorXd& X) override;
 	virtual void init_hessian() override;
 public:
 	ConstrainedObjectiveFunction() {}

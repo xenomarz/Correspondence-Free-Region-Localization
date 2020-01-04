@@ -5,15 +5,15 @@
 class TriangleMeshObjectiveFunction: public ObjectiveFunction
 {
 protected:
-	MatrixXd grad;
-	vector<Matrix<double, 6, 6>> Hessian;
-	vector<Matrix<double, 4, 6>> dJ_dX;
-	virtual bool update_variables(const VectorXd& X);
+	Eigen::MatrixXd grad;
+	std::vector<Eigen::Matrix<double, 6, 6>> Hessian;
+	std::vector<Eigen::Matrix<double, 4, 6>> dJ_dX;
+	virtual bool update_variables(const Eigen::VectorXd& X);
 	virtual void init_hessian();
 public:
 	TriangleMeshObjectiveFunction() {}
 	virtual ~TriangleMeshObjectiveFunction(){}
 	virtual void init() override;
-	virtual void updateX(const VectorXd& X) override;
+	virtual void updateX(const Eigen::VectorXd& X) override;
 	void AddElementToHessian(std::vector<int> ind);
 };

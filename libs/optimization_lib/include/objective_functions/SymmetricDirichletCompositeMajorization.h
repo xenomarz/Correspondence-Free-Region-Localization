@@ -1,24 +1,29 @@
 #pragma once
 #include <libs/optimization_lib/include/objective_functions/TriangleMeshObjectiveFunction.h>
 
+typedef Eigen::Triplet<double> T;
+typedef Eigen::SparseMatrix<double> SpMat;
+typedef Eigen::Matrix<double, 6, 6> Matrix6d;
+typedef Eigen::Matrix<double, 6, 1> Vector6d;
+
 class SymmetricDirichletCompositeMajorization : public TriangleMeshObjectiveFunction
 {
 private:
 	// cones alpha and beta
-	MatrixX2d alpha;
-	MatrixX2d beta;
+	Eigen::MatrixX2d alpha;
+	Eigen::MatrixX2d beta;
 
 	//singular values
-	MatrixX2d s; //Singular values s[0]>s[1]
-	MatrixX4d v; //Singular vectors 
-	MatrixX4d u; //Singular vectors 
-	MatrixXd Dsd[2]; //singular values dense derivatives s[0]>s[1]
+	Eigen::MatrixX2d s; //Singular values s[0]>s[1]
+	Eigen::MatrixX4d v; //Singular vectors 
+	Eigen::MatrixX4d u; //Singular vectors 
+	Eigen::MatrixXd Dsd[2]; //singular values dense derivatives s[0]>s[1]
 
-	SparseMatrix<double> a1, a1t, a2, a2t, b1, b1t, b2, b2t;     //constant matrices for cones calculation
-	MatrixXd a1d, a2d, b1d, b2d;					//dense constant matrices for cones calculation
+	Eigen::SparseMatrix<double> a1, a1t, a2, a2t, b1, b1t, b2, b2t;     //constant matrices for cones calculation
+	Eigen::MatrixXd a1d, a2d, b1d, b2d;					//dense constant matrices for cones calculation
 
 	//SVD methods
-	bool update_variables(const VectorXd& X);
+	bool update_variables(const Eigen::VectorXd& X);
 	void UpdateSSVDFunction();
 	void ComputeDenseSSVDDerivatives();
 
@@ -28,6 +33,6 @@ public:
 	SymmetricDirichletCompositeMajorization();
 	virtual void init() override;
 	virtual double value(const bool update) override;
-	virtual void gradient(VectorXd& g, const bool update) override;
+	virtual void gradient(Eigen::VectorXd& g, const bool update) override;
     virtual void hessian() override;	
 };

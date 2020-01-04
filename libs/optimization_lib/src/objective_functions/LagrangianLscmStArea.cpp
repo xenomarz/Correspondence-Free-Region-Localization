@@ -9,10 +9,10 @@ double LagrangianLscmStArea::value(const bool update)
 {
 	// L = LSCM + lambda * area
 	
-	VectorXd LSCM = (a - d).cwiseAbs2() + (b + c).cwiseAbs2();
-	VectorXd areaE = detJ - VectorXd::Ones(F.rows());
+	Eigen::VectorXd LSCM = (a - d).cwiseAbs2() + (b + c).cwiseAbs2();
+	Eigen::VectorXd areaE = detJ - Eigen::VectorXd::Ones(F.rows());
 	
-	VectorXd E = LSCM + lambda.cwiseProduct(areaE);
+	Eigen::VectorXd E = LSCM + lambda.cwiseProduct(areaE);
 	double value = (Area.asDiagonal() * E).sum();
 	
 	if (update) {
@@ -28,21 +28,21 @@ double LagrangianLscmStArea::value(const bool update)
 double LagrangianLscmStArea::AugmentedValue(const bool update)
 {
 	// Augmented_L = L + k * ||LSCM||^2
-	VectorXd areaE = detJ - VectorXd::Ones(F.rows());
+	Eigen::VectorXd areaE = detJ - Eigen::VectorXd::Ones(F.rows());
 	//I am not sure of multiplying areaE by Area!!!
 	double augmented_part = (Area.asDiagonal() * areaE.cwiseAbs2()).sum();
 	
 	return value(update) + augmented_value_parameter * augmented_part;
 }
 
-void LagrangianLscmStArea::gradient(VectorXd& g, const bool update)
+void LagrangianLscmStArea::gradient(Eigen::VectorXd& g, const bool update)
 {
 	g.conservativeResize(V.rows() * 2 + F.rows());
 	g.setZero();
 
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		//prepare gradient
-		Vector4d dE_dJ(
+		Eigen::Vector4d dE_dJ(
 			2 * a(fi) - 2 * d(fi) + lambda(fi) * d(fi),
 			2 * b(fi) + 2 * c(fi) - lambda(fi) * c(fi),
 			2 * b(fi) + 2 * c(fi) - lambda(fi) * b(fi),
@@ -75,7 +75,7 @@ void LagrangianLscmStArea::hessian()
 	int index2 = 0;
 	for (int i = 0; i < F.rows(); ++i) {
 		//prepare hessian
-		MatrixXd d2E_dJ2(4, 4);
+		Eigen::MatrixXd d2E_dJ2(4, 4);
 		d2E_dJ2 <<
 			2			, 0				, 0				, lambda(i)-2,
 			0			, 2				, 2-lambda(i)	, 0			,
@@ -95,13 +95,13 @@ void LagrangianLscmStArea::hessian()
 	
 	for (int i = 0; i < F.rows(); ++i) {
 		//prepare hessian
-		Vector4d dE_dJ(
+		Eigen::Vector4d dE_dJ(
 			d(i),
 			-c(i),
 			-b(i),
 			a(i)
 		);
-		VectorXd hess = Area(i)*(dE_dJ.transpose() * dJ_dX[i]).transpose();
+		Eigen::VectorXd hess = Area(i)*(dE_dJ.transpose() * dJ_dX[i]).transpose();
 		SS[index2++] = hess[0];
 		SS[index2++] = hess[1];
 		SS[index2++] = hess[2];

@@ -20,7 +20,7 @@ void TriangleMeshObjectiveFunction::init()
 	igl::doublearea(V, F, Area);
 	Area /= 2;
 
-	MatrixX3d D1cols, D2cols;
+	Eigen::MatrixX3d D1cols, D2cols;
 
 	Utils::computeSurfaceGradientPerFace(V, F, D1cols, D2cols);
 	D1d = D1cols.transpose();
@@ -28,9 +28,9 @@ void TriangleMeshObjectiveFunction::init()
 
 	//prepare dJ/dX
 	for (int i = 0; i < F.rows(); i++) {
-		MatrixXd Dx = D1d.col(i).transpose();
-		MatrixXd Dy = D2d.col(i).transpose();
-		MatrixXd zero = VectorXd::Zero(3).transpose();
+		Eigen::MatrixXd Dx = D1d.col(i).transpose();
+		Eigen::MatrixXd Dy = D2d.col(i).transpose();
+		Eigen::MatrixXd zero = Eigen::VectorXd::Zero(3).transpose();
 		dJ_dX[i] <<
 			Dx, zero,
 			zero, Dx,
@@ -41,16 +41,16 @@ void TriangleMeshObjectiveFunction::init()
 	init_hessian();
 }
 
-bool TriangleMeshObjectiveFunction::update_variables(const VectorXd& X)
+bool TriangleMeshObjectiveFunction::update_variables(const Eigen::VectorXd& X)
 {
-	Eigen::Map<const MatrixX2d> x(X.data(), X.size() / 2, 2);
+	Eigen::Map<const Eigen::MatrixX2d> x(X.data(), X.size() / 2, 2);
 	for (int i = 0; i < F.rows(); i++)
 	{
-		Vector3d Xi, Yi;
+		Eigen::Vector3d Xi, Yi;
 		Xi << x(F(i, 0), 0), x(F(i, 1), 0), x(F(i, 2), 0);
 		Yi << x(F(i, 0), 1), x(F(i, 1), 1), x(F(i, 2), 1);
-		Vector3d Dx = D1d.col(i);
-		Vector3d Dy = D2d.col(i);
+		Eigen::Vector3d Dx = D1d.col(i);
+		Eigen::Vector3d Dy = D2d.col(i);
 		//prepare jacobian		
 		a(i) = Dx.transpose() * Xi;
 		b(i) = Dx.transpose() * Yi;
@@ -70,14 +70,14 @@ void TriangleMeshObjectiveFunction::init_hessian()
 {
 	II.clear();
 	JJ.clear();
-	auto PushPair = [&](int i, int j) { if (i > j) swap(i, j); II.push_back(i); JJ.push_back(j); };
+	auto PushPair = [&](int i, int j) { if (i > j) std::swap(i, j); II.push_back(i); JJ.push_back(j); };
 	int n = V.rows();
 	for (int i = 0; i < F.rows(); ++i)
 		AddElementToHessian({ F(i, 0), F(i, 1), F(i, 2), F(i, 0) + n, F(i, 1) + n, F(i, 2) + n });
-	SS = vector<double>(II.size(), 0.);
+	SS = std::vector<double>(II.size(), 0.);
 }
 
-void TriangleMeshObjectiveFunction::updateX(const VectorXd& X)
+void TriangleMeshObjectiveFunction::updateX(const Eigen::VectorXd& X)
 {
 	bool inversions_exist = update_variables(X);
 	if (inversions_exist) {
@@ -87,7 +87,7 @@ void TriangleMeshObjectiveFunction::updateX(const VectorXd& X)
 
 void TriangleMeshObjectiveFunction::AddElementToHessian(std::vector<int> ind)
 {
-	auto PushPair = [&](int i, int j) { if (i > j) swap(i, j); II.push_back(i); JJ.push_back(j); };
+	auto PushPair = [&](int i, int j) { if (i > j) std::swap(i, j); II.push_back(i); JJ.push_back(j); };
 	for (int i = 0; i < ind.size(); i++)
 		for (int j = 0; j <= i; j++)
 			PushPair(ind[i], ind[j]);

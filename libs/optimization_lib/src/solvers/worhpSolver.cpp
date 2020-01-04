@@ -35,10 +35,10 @@ worhpSolver::~worhpSolver() {
 	delete this->functionG;
 }
 
-VectorXd worhpSolver::run(
-	const MatrixXd& V,
-	const MatrixX3i& F,
-	const VectorXd& initialPoint) 
+Eigen::VectorXd worhpSolver::run(
+	const Eigen::MatrixXd& V,
+	const Eigen::MatrixX3i& F,
+	const Eigen::VectorXd& initialPoint)
 {
 	IsDataReady = false;
 	this->functionF->init_mesh(V, F);
@@ -189,7 +189,7 @@ VectorXd worhpSolver::run(
 	 // Define DF as row vector, column index is ommited
 	if (wsp.DF.NeedStructure)
 	{
-		cout << "------------wsp.DF.NeedStructure" << endl;
+		std::cout << "------------wsp.DF.NeedStructure" << std::endl;
 
 		// only set the nonzero entries, so omit the 4th entry,
 		// which is a structural zero
@@ -201,7 +201,7 @@ VectorXd worhpSolver::run(
 	// Define DG as CS-matrix
 	if (wsp.DG.NeedStructure)
 	{
-		cout << "------------wsp.DG.NeedStructure" << endl;
+		std::cout << "------------wsp.DG.NeedStructure" << std::endl;
 
 		// only set the nonzero entries in column-major order
 		wsp.DG.row[0] = 1;
@@ -231,7 +231,7 @@ VectorXd worhpSolver::run(
 		 * followed by ALL diagonal entries, so even the entry at (4, 4)
 		 * even though it is a structural zero
 		 */
-		cout << "------------wsp.HM.NeedStructure" << endl;
+		std::cout << "------------wsp.HM.NeedStructure" << std::endl;
 		 // strict lower triangle
 		wsp.HM.row[0] = 3;
 		wsp.HM.col[0] = 1;
@@ -346,12 +346,12 @@ VectorXd worhpSolver::run(
 }
 
 void worhpSolver::update_data(OptVar* opt) {
-	cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
+	std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
 	IsDataReady = true;
-	lastX = Map<VectorXd>(opt->X, opt->n);
+	lastX = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
 }
 
-int worhpSolver::get_data(VectorXd& data) {
+int worhpSolver::get_data(Eigen::VectorXd& data) {
 	if (IsDataReady) {
 		IsDataReady = false;
 		data = lastX;
@@ -362,11 +362,11 @@ int worhpSolver::get_data(VectorXd& data) {
 
 void worhpSolver::UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	VectorXd X = Map<VectorXd>(opt->X, opt->n);
+	Eigen::VectorXd X = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
 	LagrangianLscmStArea f = *this->functionF;
 	f.updateX(X);
 
-	VectorXd LSCM = (f.a - f.d).cwiseAbs2() + (f.b + f.c).cwiseAbs2();
+	Eigen::VectorXd LSCM = (f.a - f.d).cwiseAbs2() + (f.b + f.c).cwiseAbs2();
 	//VectorXd AREA = f.detJ - VectorXd::Ones(opt->m);
 
 	double obj_value = (f.Area.asDiagonal() * LSCM).sum();
@@ -375,10 +375,9 @@ void worhpSolver::UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 
 void worhpSolver::UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	VectorXd X = Map<VectorXd>(opt->X, opt->n);
+	Eigen::VectorXd X = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
 	LagrangianLscmStArea f = *this->functionG;
 	f.updateX(X);
-	
 	
 	for (int i = 0; i < opt->m; i++) {
 		double AREA = (f.detJ(i) - 1);
@@ -388,7 +387,7 @@ void worhpSolver::UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 
 void worhpSolver::UserDF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	cout << "-------------UserDF" << endl;
+	std::cout << "-------------UserDF" << std::endl;
 	wsp->DF.val[0] = wsp->ScaleObj * 2.0 * opt->X[0];
 	wsp->DF.val[1] = wsp->ScaleObj * 4.0 * opt->X[1];
 	wsp->DF.val[2] = wsp->ScaleObj * -1.0;
@@ -396,7 +395,7 @@ void worhpSolver::UserDF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 
 void worhpSolver::UserDG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	cout << "-------------UserDG" << endl;
+	std::cout << "-------------UserDG" << std::endl;
 	wsp->DG.val[0] = 2.0 * opt->X[0] + opt->X[2];
 	wsp->DG.val[1] = 1.0;
 	wsp->DG.val[2] = opt->X[0] + 2.0 * opt->X[2];
@@ -407,7 +406,7 @@ void worhpSolver::UserDG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 
 void worhpSolver::UserHM(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	cout << "-------------UserHM" << endl;
+	std::cout << "-------------UserHM" << std::endl;
 	// Only scale the F part of HM
 	wsp->HM.val[0] = opt->Mu[0];
 	wsp->HM.val[1] = wsp->ScaleObj * 2.0 + 2.0 * opt->Mu[0];
