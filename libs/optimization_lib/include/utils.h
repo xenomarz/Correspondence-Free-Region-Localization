@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef UTILS_H
-#define UTILS_H
-
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 #include <Eigen/SparseCore>
@@ -21,10 +18,6 @@
 #include <fstream>
 #include <direct.h>
 #include <windows.h>
-
-
-
-
 
 
 class Utils
@@ -120,49 +113,4 @@ public:
 		std::string::size_type pos = std::string(buffer).find("\\RDS\\");
 		return std::string(buffer).substr(0, pos + 5);
 	}
-
-	static int GetLowerTriangleSize(int MatrixSize) {
-		if (MatrixSize <= 0)
-			return 0;
-		return MatrixSize + GetLowerTriangleSize(MatrixSize - 1);
-	}
-
-
-	template<typename Base, typename T>
-	static inline bool instanceof(const T*) {
-		return std::is_base_of<Base, T>::value;
-	}
-
-private:
-	static unsigned int nv, nf, ne, nvs, nfs, nes;
-	static Eigen::MatrixX2d E, Es;
-	static Eigen::MatrixX3d Vs3d_similar;
 };
-
-class Timer {
-	typedef std::chrono::high_resolution_clock high_resolution_clock;
-	typedef std::chrono::milliseconds milliseconds;
-	typedef std::chrono::microseconds microseconds;
-public:
-	explicit Timer(bool run = false)
-	{
-		if (run)
-			Reset();
-	}
-	void Reset()
-	{
-		_start = high_resolution_clock::now();
-	}
-	microseconds Elapsed() const
-	{
-		return std::chrono::duration_cast<microseconds>(high_resolution_clock::now() - _start);
-	}
-	template <typename T, typename Traits>
-	friend std::basic_ostream<T, Traits>& operator<<(std::basic_ostream<T, Traits>& out, const Timer& timer)
-	{
-		return out << timer.Elapsed().count();
-	}
-private:
-	high_resolution_clock::time_point _start;
-};
-#endif
