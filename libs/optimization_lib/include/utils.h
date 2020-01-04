@@ -1,22 +1,11 @@
 #pragma once
 
-#include <Eigen/Core>
-#include <Eigen/Sparse>
-#include <Eigen/SparseCore>
-#include <functional>
-#include <vector>
-#include <string>
-#include <utility>
+#include <direct.h>
 #include <iostream>
-#include <memory>
-#include <limits>
 #include <igl/doublearea.h>
-
 #include <igl/local_basis.h>
 #include <igl/boundary_loop.h>
 #include <igl/per_face_normals.h>
-#include <fstream>
-#include <direct.h>
 #include <windows.h>
 
 class Utils
@@ -104,6 +93,28 @@ public:
 		V(1) = -s;
 		V(2) = s;
 		V(3) = c;
+	}
+
+	// The directory path returned by native GetCurrentDirectory() no end backslash
+	static std::string getCurrentDirectoryOnWindows()
+	{
+		const unsigned long maxDir = 260;
+		char currentDir[maxDir];
+		GetCurrentDirectory(maxDir, currentDir);
+		return std::string(currentDir);
+	}
+
+	static std::string workingdir() {
+		char buf[256];
+		GetCurrentDirectoryA(256, buf);
+		return std::string(buf) + '\\';
+	}
+
+	static std::string ExePath() {
+		char buffer[MAX_PATH];
+		GetModuleFileName(NULL, buffer, MAX_PATH);
+		std::string::size_type pos = std::string(buffer).find_last_of("\\/");
+		return std::string(buffer).substr(0, pos);
 	}
 
 	static std::string RDSPath() {

@@ -421,11 +421,11 @@ IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 		solver_on ? stop_solver_thread() : start_solver_thread();
 	if (key == '1') {
 		isLoadNeeded = true;
-		modelPath = app_utils::RDSPath() + "\\models\\cube.off";
+		modelPath = Utils::RDSPath() + "\\models\\cube.off";
 	}
 	if (key == '2') {
 		isLoadNeeded = true;
-		modelPath = app_utils::RDSPath() + "\\models\\Triangle306090degree.obj";
+		modelPath = Utils::RDSPath() + "\\models\\Triangle306090degree.obj";
 	}
 	if (key == 'w' || key == 'W') {
 		start_worhp_solver_thread();

@@ -1,27 +1,11 @@
 #pragma once
 
 #include <igl/opengl/glfw/imgui/ImGuiMenu.h>
-#include <igl/igl_inline.h>
-#include <map>
-#include <igl/opengl/glfw/imgui/ImGuiHelpers.h>
 #include <igl/project.h>
-#include <imgui/imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#include <imgui_fonts_droid_sans.h>
-#include <GLFW/glfw3.h>
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/opengl/glfw/ViewerPlugin.h>
-#include <algorithm>
-#include <sstream>
-#include <string>
-#include <iostream>
-#include <thread>
-#include <mutex>
 #include <igl/unproject_in_mesh.h>
 #include <igl/Hit.h>
-#include <igl/rotate_by_quat.h>
-#include <memory>
 #include <igl/boundary_loop.h>
 #include <igl/readOFF.h>
 #include <igl/lscm.h>
@@ -32,6 +16,19 @@
 #include <igl/unproject.h>
 #include <igl/edge_lengths.h>
 #include <igl/slice.h>
+#include <igl/rotate_by_quat.h>
+
+#include <map>
+
+
+#include <sstream>
+
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <memory>
+#include <atomic>
+
 #include "../../libs/optimization_lib/include/solvers/NewtonSolver.h"
 #include "../../libs/optimization_lib/include/solvers/GradientDescentSolver.h"
 #include "../../libs/optimization_lib/include/solvers/worhpSolver.h"
@@ -43,7 +40,7 @@
 #include "../../libs/optimization_lib/include/objective_functions/PenaltyPositionalConstraints.h"
 #include "../../libs/optimization_lib/include/objective_functions/LagrangianLscmStArea.h"
 #include "../../libs/optimization_lib/include/objective_functions/LagrangianAreaStLscm.h"
-#include <atomic>
+
 
 #define RED_COLOR Eigen::Vector3f(1, 0, 0)
 #define BLUE_COLOR Eigen::Vector3f(0, 0, 1)
@@ -53,11 +50,7 @@
 #define WHITE_COLOR Eigen::Vector3f(1, 1, 1)
 #define BLACK_COLOR Eigen::Vector3f(0, 0, 0)
 
-
-using namespace igl::opengl::glfw;
-using namespace imgui;
-
-class app_utils : public ImGuiMenu
+class app_utils : public igl::opengl::glfw::imgui::ImGuiMenu
 {
 public:
 	// Expose an enumeration type
@@ -92,35 +85,6 @@ public:
 		GRADIENT_DESCENT
 	};
 
-	// The directory path returned by native GetCurrentDirectory() no end backslash
-	static std::string getCurrentDirectoryOnWindows()
-	{
-		const unsigned long maxDir = 260;
-		char currentDir[maxDir];
-		GetCurrentDirectory(maxDir, currentDir);
-		return std::string(currentDir);
-	}
-
-	static std::string workingdir() {
-		char buf[256];
-		GetCurrentDirectoryA(256, buf);
-		return std::string(buf) + '\\';
-	}
-
-	static std::string ExePath() {
-		char buffer[MAX_PATH];
-		GetModuleFileName(NULL, buffer, MAX_PATH);
-		std::string::size_type pos = std::string(buffer).find_last_of("\\/");
-		return std::string(buffer).substr(0, pos);
-	}
-	
-	static std::string RDSPath() {
-		char buffer[MAX_PATH];
-		GetModuleFileName(NULL, buffer, MAX_PATH);
-		std::string::size_type pos = std::string(buffer).find("\\RDS\\");
-		return std::string(buffer).substr(0, pos+5);
-	}
-	
 	static Eigen::Vector3f computeTranslation(
 		const int mouse_x, 
 		const int from_x, 

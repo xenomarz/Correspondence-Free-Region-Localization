@@ -6,7 +6,7 @@
 #include "app_utils.h"
 #include "core.h"
 
-class basic_app : public ImGuiMenu
+class basic_app : public igl::opengl::glfw::imgui::ImGuiMenu
 {
 private:
 	bool isLoadNeeded;
@@ -55,7 +55,7 @@ public:
 
 	// callbacks
 	IGL_INLINE virtual void draw_viewer_menu() override;
-	IGL_INLINE virtual void init(Viewer *_viewer) override;
+	IGL_INLINE virtual void init(igl::opengl::glfw::Viewer *_viewer) override;
 	IGL_INLINE virtual void post_resize(int w, int h) override;
 	IGL_INLINE virtual bool mouse_move(int mouse_x, int mouse_y) override;
 	IGL_INLINE virtual bool mouse_down(int button, int modifier) override;
