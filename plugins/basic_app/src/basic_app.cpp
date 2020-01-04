@@ -9,6 +9,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 
 	if (_viewer)
 	{
+		isLoadNeeded = false;
 		IsMouseDraggingAnyWindow = IsMouseHoveringAnyWindow = solver_settings =
 			worhp_on = solver_on = Outputs_Settings = Highlighted_face = IsTranslate = model_loaded = false;
 		show_text = true;
@@ -75,7 +76,7 @@ void basic_app::load_new_model(const string modelpath) {
 
 		if (model_loaded) {
 			//add new data
-			add_output(false);
+			add_output(true);
 		}
 
 		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
@@ -93,7 +94,11 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	{
 		//Load new model that has two copies
 		modelPath = file_dialog_open();
+		isLoadNeeded = true;
+	}
+	if (isLoadNeeded) {
 		load_new_model(modelPath);
+		isLoadNeeded = false;
 	}
 	ImGui::SameLine(0, p);
 	if (ImGui::Button("Save##Mesh", ImVec2((w - p) / 2.f, 0)))
@@ -129,6 +134,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		selected_faces.clear();
 		selected_vertices.clear();
 		UpdateHandles();
+		mouse_mode = app_utils::VERTEX_SELECT;
 	}
 	
 
@@ -413,10 +419,18 @@ IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 		mouse_mode = app_utils::CLEAR;
 	if (key == ' ')
 		solver_on ? stop_solver_thread() : start_solver_thread();
-	if (key == '1')
-		load_new_model(app_utils::RDSPath() + "\\models\\cube.off");
-	if (key == '2')
-		load_new_model(app_utils::RDSPath() + "\\models\\Triangle306090degree.obj");
+	if (key == '1') {
+		isLoadNeeded = true;
+		modelPath = app_utils::RDSPath() + "\\models\\cube.off";
+	}
+	if (key == '2') {
+		isLoadNeeded = true;
+		modelPath = app_utils::RDSPath() + "\\models\\Triangle306090degree.obj";
+	}
+	if (key == 'w' || key == 'W') {
+		start_worhp_solver_thread();
+	}
+		
 	
 	return ImGuiMenu::key_pressed(key, modifiers);
 }
@@ -1218,6 +1232,7 @@ void basic_app::start_solver_thread() {
 
 void basic_app::start_worhp_solver_thread() {
 	stop_solver_thread();
+	worhp_on = true;
 	for (int i = 0; i < Outputs.size(); i++) {
 		VectorXd initialPoint = Map<VectorXd>(
 			OutputModel(i).V.leftCols(2).data(),
@@ -1233,6 +1248,7 @@ void basic_app::start_worhp_solver_thread() {
 		);
 		solver_thread.detach();
 	}
+	worhp_on = false;
 }
 
 void basic_app::initializeSolver(const int index)

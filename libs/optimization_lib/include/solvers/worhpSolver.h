@@ -21,6 +21,7 @@ private:
 	VectorXd lastX;
 	LagrangianLscmStArea* functionF;
 	LagrangianLscmStArea* functionG;
+	void update_data(OptVar* opt);
 	// Objective function
 	void UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt);
 	// Function of constraints

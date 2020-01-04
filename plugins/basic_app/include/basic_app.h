@@ -9,6 +9,7 @@
 class basic_app : public ImGuiMenu
 {
 private:
+	bool isLoadNeeded;
 	bool model_loaded;
 	float Max_Distortion;
 	bool worhp_on, solver_on, solver_settings, IsMouseHoveringAnyWindow, IsMouseDraggingAnyWindow;

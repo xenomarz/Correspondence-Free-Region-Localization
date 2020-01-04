@@ -27,6 +27,7 @@
 worhpSolver::worhpSolver() {
 	this->functionF = new LagrangianLscmStArea();
 	this->functionG = new LagrangianLscmStArea();
+	IsDataReady = false;
 }
 
 worhpSolver::~worhpSolver() {
@@ -269,9 +270,7 @@ VectorXd worhpSolver::run(
 		 */
 		if (GetUserAction(&cnt, iterOutput))
 		{
-			cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
-			IsDataReady = true;
-			lastX = Map<VectorXd>(opt.X, opt.n);
+			update_data(&opt);
 
 			IterationOutput(&opt, &wsp, &par, &cnt);
 			DoneUserAction(&cnt, iterOutput);
@@ -338,16 +337,18 @@ VectorXd worhpSolver::run(
 		}
 	}
 
-	cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
-	IsDataReady = true;
-	lastX = Map<VectorXd>(opt.X, opt.n);
-
 	// Translate the WORHP status flag into a meaningful message.
 	StatusMsg(&opt, &wsp, &par, &cnt);
 	// Deallocate all data structures.
 	// Data structures must not be accessed after this call.
 	WorhpFree(&opt, &wsp, &par, &cnt);
 	return lastX;
+}
+
+void worhpSolver::update_data(OptVar* opt) {
+	cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
+	IsDataReady = true;
+	lastX = Map<VectorXd>(opt->X, opt->n);
 }
 
 int worhpSolver::get_data(VectorXd& data) {
