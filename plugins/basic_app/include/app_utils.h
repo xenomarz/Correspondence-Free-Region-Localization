@@ -1,46 +1,25 @@
 #pragma once
 
+#include <iostream>
 #include <igl/opengl/glfw/imgui/ImGuiMenu.h>
-#include <igl/project.h>
-#include <igl/opengl/glfw/Viewer.h>
-#include <igl/opengl/glfw/ViewerPlugin.h>
 #include <igl/unproject_in_mesh.h>
-#include <igl/Hit.h>
-#include <igl/boundary_loop.h>
-#include <igl/readOFF.h>
 #include <igl/lscm.h>
 #include <igl/harmonic.h>
-#include <igl/map_vertices_to_circle.h>
 #include <igl/arap.h>
-#include <igl/file_dialog_open.h>
-#include <igl/unproject.h>
-#include <igl/edge_lengths.h>
-#include <igl/slice.h>
-#include <igl/rotate_by_quat.h>
+#include <igl/map_vertices_to_circle.h>
 
-#include <map>
+#include <libs/optimization_lib/include/solvers/NewtonSolver.h>
+#include <libs/optimization_lib/include/solvers/GradientDescentSolver.h>
+#include <libs/optimization_lib/include/solvers/worhpSolver.h>
 
-
-#include <sstream>
-
-#include <iostream>
-#include <thread>
-#include <mutex>
-#include <memory>
-#include <atomic>
-
-#include "../../libs/optimization_lib/include/solvers/NewtonSolver.h"
-#include "../../libs/optimization_lib/include/solvers/GradientDescentSolver.h"
-#include "../../libs/optimization_lib/include/solvers/worhpSolver.h"
-#include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichlet.h"
-#include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichletCompositeMajorization.h"
-#include "../../libs/optimization_lib/include/objective_functions/AreaDistortion.h"
-#include "../../libs/optimization_lib/include/objective_functions/AreaDistortionOneRing.h"
-#include "../../libs/optimization_lib/include/objective_functions/LeastSquaresConformal.h"
-#include "../../libs/optimization_lib/include/objective_functions/PenaltyPositionalConstraints.h"
-#include "../../libs/optimization_lib/include/objective_functions/LagrangianLscmStArea.h"
-#include "../../libs/optimization_lib/include/objective_functions/LagrangianAreaStLscm.h"
-
+#include <libs/optimization_lib/include/objective_functions/SymmetricDirichlet.h>
+#include <libs/optimization_lib/include/objective_functions/SymmetricDirichletCompositeMajorization.h>
+#include <libs/optimization_lib/include/objective_functions/AreaDistortion.h>
+#include <libs/optimization_lib/include/objective_functions/AreaDistortionOneRing.h>
+#include <libs/optimization_lib/include/objective_functions/LeastSquaresConformal.h>
+#include <libs/optimization_lib/include/objective_functions/PenaltyPositionalConstraints.h>
+#include <libs/optimization_lib/include/objective_functions/LagrangianLscmStArea.h>
+#include <libs/optimization_lib/include/objective_functions/LagrangianAreaStLscm.h>
 
 #define RED_COLOR Eigen::Vector3f(1, 0, 0)
 #define BLUE_COLOR Eigen::Vector3f(0, 0, 1)

@@ -9,10 +9,18 @@ set(SOURCES
 add_library(${PROJECT_NAME} ${SOURCES})
 add_library(rds::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
+message("-----------------")
+message(${PROJECT_NAME})
+message(${CMAKE_SOURCE_DIR})
+message(${PROJECT_SOURCE_DIR})
+message("-----------------")
+
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
 		${CMAKE_SOURCE_DIR}
-		${PROJECT_SOURCE_DIR})
+		${PROJECT_SOURCE_DIR}
+		${CMAKE_SOURCE_DIR}/libs/
+		)
 
 target_link_libraries(${PROJECT_NAME}
 	PRIVATE
