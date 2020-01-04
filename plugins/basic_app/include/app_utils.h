@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef MENU_UTILS_H
-#define MENU_UTILS_H
-
 #include <igl/opengl/glfw/imgui/ImGuiMenu.h>
 #include <igl/igl_inline.h>
 #include <map>
@@ -48,19 +45,16 @@
 #include "../../libs/optimization_lib/include/objective_functions/LagrangianAreaStLscm.h"
 #include <atomic>
 
-#define RED_COLOR Vector3f(1, 0, 0)
-#define BLUE_COLOR Vector3f(0, 0, 1)
-#define GREEN_COLOR Vector3f(0, 1, 0)
-#define GOLD_COLOR Vector3f(1, 215.0f / 255.0f, 0)
-#define GREY_COLOR Vector3f(0.75, 0.75, 0.75)
-#define WHITE_COLOR Vector3f(1, 1, 1)
-#define BLACK_COLOR Vector3f(0, 0, 0)
+#define RED_COLOR Eigen::Vector3f(1, 0, 0)
+#define BLUE_COLOR Eigen::Vector3f(0, 0, 1)
+#define GREEN_COLOR Eigen::Vector3f(0, 1, 0)
+#define GOLD_COLOR Eigen::Vector3f(1, 215.0f / 255.0f, 0)
+#define GREY_COLOR Eigen::Vector3f(0.75, 0.75, 0.75)
+#define WHITE_COLOR Eigen::Vector3f(1, 1, 1)
+#define BLACK_COLOR Eigen::Vector3f(0, 0, 0)
 
-using namespace std;
-using namespace Eigen;
-using namespace igl;
-using namespace opengl;
-using namespace glfw;
+
+using namespace igl::opengl::glfw;
 using namespace imgui;
 
 class app_utils : public ImGuiMenu
@@ -99,56 +93,56 @@ public:
 	};
 
 	// The directory path returned by native GetCurrentDirectory() no end backslash
-	static string getCurrentDirectoryOnWindows()
+	static std::string getCurrentDirectoryOnWindows()
 	{
 		const unsigned long maxDir = 260;
 		char currentDir[maxDir];
 		GetCurrentDirectory(maxDir, currentDir);
-		return string(currentDir);
+		return std::string(currentDir);
 	}
 
-	static string workingdir() {
+	static std::string workingdir() {
 		char buf[256];
 		GetCurrentDirectoryA(256, buf);
 		return std::string(buf) + '\\';
 	}
 
-	static string ExePath() {
+	static std::string ExePath() {
 		char buffer[MAX_PATH];
 		GetModuleFileName(NULL, buffer, MAX_PATH);
-		string::size_type pos = string(buffer).find_last_of("\\/");
-		return string(buffer).substr(0, pos);
+		std::string::size_type pos = std::string(buffer).find_last_of("\\/");
+		return std::string(buffer).substr(0, pos);
 	}
 	
-	static string RDSPath() {
+	static std::string RDSPath() {
 		char buffer[MAX_PATH];
 		GetModuleFileName(NULL, buffer, MAX_PATH);
-		string::size_type pos = string(buffer).find("\\RDS\\");
-		return string(buffer).substr(0, pos+5);
+		std::string::size_type pos = std::string(buffer).find("\\RDS\\");
+		return std::string(buffer).substr(0, pos+5);
 	}
 	
-	static Vector3f computeTranslation(
+	static Eigen::Vector3f computeTranslation(
 		const int mouse_x, 
 		const int from_x, 
 		const int mouse_y, 
 		const int from_y, 
-		const RowVector3d pt3D, 
-		ViewerCore& core) {
-		Matrix4f modelview = core.view;
+		const Eigen::RowVector3d pt3D,
+		igl::opengl::ViewerCore& core) {
+		Eigen::Matrix4f modelview = core.view;
 		//project the given point (typically the handle centroid) to get a screen space depth
-		Vector3f proj = project(pt3D.transpose().cast<float>().eval(),
+		Eigen::Vector3f proj = igl::project(pt3D.transpose().cast<float>().eval(),
 			modelview,
 			core.proj,
 			core.viewport);
 		float depth = proj[2];
 
 		double x, y;
-		Vector3f pos1, pos0;
+		Eigen::Vector3f pos1, pos0;
 
 		//unproject from- and to- points
 		x = mouse_x;
 		y = core.viewport(3) - mouse_y;
-		pos1 = unproject(Vector3f(x, y, depth),
+		pos1 = igl::unproject(Eigen::Vector3f(x, y, depth),
 			modelview,
 			core.proj,
 			core.viewport);
@@ -156,19 +150,19 @@ public:
 
 		x = from_x;
 		y = core.viewport(3) - from_y;
-		pos0 = unproject(Vector3f(x, y, depth),
+		pos0 = igl::unproject(Eigen::Vector3f(x, y, depth),
 			modelview,
 			core.proj,
 			core.viewport);
 
 		//translation is the vector connecting the two
-		Vector3f translation;
+		Eigen::Vector3f translation;
 		translation = pos1 - pos0;
 
 		return translation;
 	}
 	
-	static string ExtractModelName(const string& str)
+	static std::string ExtractModelName(const std::string& str)
 	{
 		size_t head, tail;
 		head = str.find_last_of("/\\");
@@ -176,7 +170,7 @@ public:
 		return (str.substr((head + 1), (tail - head - 1)));
 	}
 
-	static bool IsMesh2D(const MatrixXd& V) {
+	static bool IsMesh2D(const Eigen::MatrixXd& V) {
 		return (V.col(2).array() == 0).all();
 	}
 
@@ -210,52 +204,52 @@ public:
 	}
 
 	//Parametrizations
-	static void lscm_param(const MatrixXd& V, const MatrixXi& F, MatrixXd& initialguess)
+	static void lscm_param(const Eigen::MatrixXd& V, const Eigen::MatrixXi& F, Eigen::MatrixXd& initialguess)
 	{
 		// Fix two points on the boundary
-		VectorXi bnd, b(2, 1);
-		boundary_loop(F, bnd);
+		Eigen::VectorXi bnd, b(2, 1);
+		igl::boundary_loop(F, bnd);
 		b(0) = bnd(0);
 		b(1) = bnd(round(bnd.size() / 2));
-		MatrixXd bc(2, 2);
+		Eigen::MatrixXd bc(2, 2);
 		bc << 0, 0, 1, 0;
 
-		lscm(V, F, b, bc, initialguess);
+		igl::lscm(V, F, b, bc, initialguess);
 	}
 
-	static void harmonic_param(const MatrixXd& V, const MatrixXi& F, MatrixXd& initialguess) {
+	static void harmonic_param(const Eigen::MatrixXd& V, const Eigen::MatrixXi& F, Eigen::MatrixXd& initialguess) {
 		// Find the open boundary
-		VectorXi bnd;
-		boundary_loop(F, bnd);
+		Eigen::VectorXi bnd;
+		igl::boundary_loop(F, bnd);
 
 		// Map the boundary to a circle, preserving edge proportions
-		MatrixXd bnd_uv;
-		map_vertices_to_circle(V, bnd, bnd_uv);
+		Eigen::MatrixXd bnd_uv;
+		igl::map_vertices_to_circle(V, bnd, bnd_uv);
 
-		harmonic(V, F, bnd, bnd_uv, 1, initialguess);
+		igl::harmonic(V, F, bnd, bnd_uv, 1, initialguess);
 	}
 
-	static void ARAP_param(const MatrixXd& V, const MatrixXi& F, MatrixXd& initialguess) {
+	static void ARAP_param(const Eigen::MatrixXd& V, const Eigen::MatrixXi& F, Eigen::MatrixXd& initialguess) {
 		// Compute the initial solution for ARAP (harmonic parametrization)
-		VectorXi bnd;
-		MatrixXd init;
+		Eigen::VectorXi bnd;
+		Eigen::MatrixXd init;
 
-		boundary_loop(F, bnd);
-		MatrixXd bnd_uv;
-		map_vertices_to_circle(V, bnd, bnd_uv);
+		igl::boundary_loop(F, bnd);
+		Eigen::MatrixXd bnd_uv;
+		igl::map_vertices_to_circle(V, bnd, bnd_uv);
 
-		harmonic(V, F, bnd, bnd_uv, 1, init);
+		igl::harmonic(V, F, bnd, bnd_uv, 1, init);
 
 		// Add dynamic regularization to avoid to specify boundary conditions
-		ARAPData arap_data;
+		igl::ARAPData arap_data;
 		arap_data.with_dynamics = true;
-		VectorXi b = VectorXi::Zero(0);
-		MatrixXd bc = MatrixXd::Zero(0, 0);
+		Eigen::VectorXi b = Eigen::VectorXi::Zero(0);
+		Eigen::MatrixXd bc = Eigen::MatrixXd::Zero(0, 0);
 
 		// Initialize ARAP
 		arap_data.max_iter = 100;
 		// 2 means that we're going to *solve* in 2d
-		arap_precomputation(V, F, 2, b, arap_data);
+		igl::arap_precomputation(V, F, 2, b, arap_data);
 
 		// Solve arap using the harmonic map as initial guess
 		initialguess = init;
@@ -263,22 +257,22 @@ public:
 		arap_solve(bc, arap_data, initialguess);
 	}
 
-	static void random_param(const MatrixXd& V, MatrixXd& initialguess) {
+	static void random_param(const Eigen::MatrixXd& V, Eigen::MatrixXd& initialguess) {
 		int nvs = V.rows();
-		initialguess = MatrixX2d::Random(nvs, 2) * 2.0;
+		initialguess = Eigen::MatrixX2d::Random(nvs, 2) * 2.0;
 		//MenuUtils::FixFlippedFaces(viewer->data(InputModelID()).F, V_uv);
 	}
 
-	static void FixFlippedFaces(MatrixXi& Fs, MatrixXd& Vs) {
-		Matrix<double, 3, 2> face_vertices;
-		for (MatrixXi::Index i = 0; i < Fs.rows(); ++i)
+	static void FixFlippedFaces(Eigen::MatrixXi& Fs, Eigen::MatrixXd& Vs) {
+		Eigen::Matrix<double, 3, 2> face_vertices;
+		for (Eigen::MatrixXi::Index i = 0; i < Fs.rows(); ++i)
 		{
-			slice(Vs, Fs.row(i), 1, face_vertices);
-			Vector2d v1_2d = face_vertices.row(1) - face_vertices.row(0);
-			Vector2d v2_2d = face_vertices.row(2) - face_vertices.row(0);
-			Vector3d v1_3d = Vector3d(v1_2d.x(), v1_2d.y(), 0);
-			Vector3d v2_3d = Vector3d(v2_2d.x(), v2_2d.y(), 0);
-			Vector3d face_normal = v1_3d.cross(v2_3d);
+			igl::slice(Vs, Fs.row(i), 1, face_vertices);
+			Eigen::Vector2d v1_2d = face_vertices.row(1) - face_vertices.row(0);
+			Eigen::Vector2d v2_2d = face_vertices.row(2) - face_vertices.row(0);
+			Eigen::Vector3d v1_3d = Eigen::Vector3d(v1_2d.x(), v1_2d.y(), 0);
+			Eigen::Vector3d v2_3d = Eigen::Vector3d(v2_2d.x(), v2_2d.y(), 0);
+			Eigen::Vector3d face_normal = v1_3d.cross(v2_3d);
 
 			// If face is flipped (that is, cross-product do not obey the right-hand rule)
 			if (face_normal(2) < 0)
@@ -288,11 +282,11 @@ public:
 		}
 	}
 	
-	static void angle_degree(MatrixXd& V, MatrixXi& F, MatrixXd& angle) {
+	static void angle_degree(Eigen::MatrixXd& V, Eigen::MatrixXi& F, Eigen::MatrixXd& angle) {
 		int numF = F.rows();
-		VectorXd Area;
-		MatrixXd Length, alfa, sum;
-		ArrayXXd sin_alfa(numF, 3);
+		Eigen::VectorXd Area;
+		Eigen::MatrixXd Length, alfa, sum;
+		Eigen::ArrayXXd sin_alfa(numF, 3);
 
 		igl::doublearea(V, F, Area);
 		igl::edge_lengths(V, F, Length);
@@ -304,7 +298,7 @@ public:
 		sin_alfa.col(2) = Length.col(0).cwiseInverse().cwiseProduct(Length.col(1).cwiseInverse().cwiseProduct(Area));
 
 		// alfa = arcsin ((double_area / a) / b)
-		alfa = ((sin_alfa - ArrayXXd::Constant(numF, 3, 1e-10)).asin())*(180 / M_PI);
+		alfa = ((sin_alfa - Eigen::ArrayXXd::Constant(numF, 3, 1e-10)).asin())*(180 / M_PI);
 
 
 		//here we deal with errors with sin function
@@ -357,18 +351,18 @@ public:
 class Output
 {
 public:
-	vector<int> *HandlesInd; //pointer to indices in constraitPositional
-	MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
-	MatrixXd color_per_face, Vertices_output;
+	std::vector<int> *HandlesInd; //pointer to indices in constraitPositional
+	Eigen::MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
+	Eigen::MatrixXd color_per_face, Vertices_output;
 	int ModelID, CoreID;
 	ImVec2 window_position, window_size, text_position;
 
 	// Solver thread
-	shared_ptr<NewtonSolver> newton;
-	shared_ptr<GradientDescentSolver> gradient_descent;
-	shared_ptr<solver> solver;
-	shared_ptr<TotalObjective> totalObjective;
-	shared_ptr<worhpSolver> worhpsolver;
+	std::shared_ptr<NewtonSolver> newton;
+	std::shared_ptr<GradientDescentSolver> gradient_descent;
+	std::shared_ptr<solver> solver;
+	std::shared_ptr<TotalObjective> totalObjective;
+	std::shared_ptr<worhpSolver> worhpsolver;
 
 	//Constructor & initialization
 	Output(
@@ -378,28 +372,26 @@ public:
 		const Utils::LineSearch linesearchType) 
 	{
 		//update viewer
-		CoreID = viewer->append_core(Vector4f::Zero());
-		viewer->core(CoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
+		CoreID = viewer->append_core(Eigen::Vector4f::Zero());
+		viewer->core(CoreID).background_color = Eigen::Vector4f(0.9, 0.9, 0.9, 0);
 		viewer->core(CoreID).is_animating = true;
 		viewer->core(CoreID).lighting_factor = 0;
 		//set rotation type to 2D mode
-		viewer->core(CoreID).trackball_angle = Quaternionf::Identity();
+		viewer->core(CoreID).trackball_angle = Eigen::Quaternionf::Identity();
 		viewer->core(CoreID).orthographic = true;
-		viewer->core(CoreID).set_rotation_type(ViewerCore::RotationType(2));
+		viewer->core(CoreID).set_rotation_type(igl::opengl::ViewerCore::RotationType(2));
 		
 		// Initialize solver thread
-		cout << "CoreID = " << CoreID << endl;
-		worhpsolver = make_shared<worhpSolver>();
-		newton = make_shared<NewtonSolver>(isConstrObjFunc, CoreID);
-		gradient_descent = make_shared<GradientDescentSolver>(isConstrObjFunc, CoreID);
+		std::cout << "CoreID = " << CoreID << std::endl;
+		worhpsolver = std::make_shared<worhpSolver>();
+		newton = std::make_shared<NewtonSolver>(isConstrObjFunc, CoreID);
+		gradient_descent = std::make_shared<GradientDescentSolver>(isConstrObjFunc, CoreID);
 		if (solver_type == app_utils::NEWTON) 
 			solver = newton;
 		else 
 			solver = gradient_descent;
 		solver->lineSearch_type = linesearchType;
-		totalObjective = make_shared<TotalObjective>();
+		totalObjective = std::make_shared<TotalObjective>();
 	}
 	~Output() {}
 };
-
-#endif

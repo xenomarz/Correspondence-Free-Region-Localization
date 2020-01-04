@@ -1,9 +1,9 @@
 #include <basic_app/include/basic_app.h>
 
 basic_app::basic_app() :
-	opengl::glfw::imgui::ImGuiMenu(){}
+	igl::opengl::glfw::imgui::ImGuiMenu(){}
 
-IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
+IGL_INLINE void basic_app::init(igl::opengl::glfw::Viewer *_viewer)
 {
 	ImGuiMenu::init(_viewer);
 
@@ -32,7 +32,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 		
 		//update input viewer
 		inputCoreID = viewer->core_list[0].id;
-		viewer->core(inputCoreID).background_color = Vector4f(0.9, 0.9, 0.9, 0);
+		viewer->core(inputCoreID).background_color = Eigen::Vector4f(0.9, 0.9, 0.9, 0);
 		viewer->core(inputCoreID).is_animating = true;
 		viewer->core(inputCoreID).lighting_factor = 0.2;
 
@@ -45,7 +45,7 @@ IGL_INLINE void basic_app::init(opengl::glfw::Viewer *_viewer)
 	}
 }
 
-void basic_app::load_new_model(const string modelpath) {
+void basic_app::load_new_model(const std::string modelpath) {
 	modelPath = modelpath;
 	if (modelPath.length() != 0)
 	{
@@ -93,7 +93,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	if (ImGui::Button("Load##Mesh", ImVec2((w - p) / 2.f, 0)))
 	{
 		//Load new model that has two copies
-		modelPath = file_dialog_open();
+		modelPath = igl::file_dialog_open();
 		isLoadNeeded = true;
 	}
 	if (isLoadNeeded) {
@@ -114,8 +114,8 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 			Outputs_Settings = !show_text;
 	ImGui::Checkbox("Highlight faces", &Highlighted_face);
 
-	if ((view == Horizontal) || (view == Vertical)) {
-		if(ImGui::SliderFloat("Core Size", &core_size, 0, 1.0/ Outputs.size(), to_string(core_size).c_str(), 1)){
+	if ((view == app_utils::Horizontal) || (view == app_utils::Vertical)) {
+		if(ImGui::SliderFloat("Core Size", &core_size, 0, 1.0/ Outputs.size(), std::to_string(core_size).c_str(), 1)){
 			int frameBufferWidth, frameBufferHeight;
 			glfwGetFramebufferSize(viewer->window, &frameBufferWidth, &frameBufferHeight);
 			post_resize(frameBufferWidth, frameBufferHeight);
@@ -201,7 +201,7 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 	if (viewer)
 	{
 		if (view == app_utils::Horizontal) {
-			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w - w * Outputs.size() * core_size, h);
+			viewer->core(inputCoreID).viewport = Eigen::Vector4f(0, 0, w - w * Outputs.size() * core_size, h);
 			for (int i = 0; i < Outputs.size(); i++) {
 				Outputs[i].window_position = ImVec2(w - w * (Outputs.size() - i) * core_size, 0);
 				Outputs[i].window_size = ImVec2(w * core_size, h);
@@ -209,7 +209,7 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 			}
 		}
 		if (view == app_utils::Vertical) {
-			viewer->core(inputCoreID).viewport = Vector4f(0, Outputs.size() * h * core_size, w, h - Outputs.size() * h * core_size);
+			viewer->core(inputCoreID).viewport = Eigen::Vector4f(0, Outputs.size() * h * core_size, w, h - Outputs.size() * h * core_size);
 			for (int i = 0; i < Outputs.size(); i++) {
 				Outputs[i].window_position = ImVec2(0, (Outputs.size() - i - 1) * h * core_size);
 				Outputs[i].window_size = ImVec2(w, h * core_size);
@@ -217,7 +217,7 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 			}
 		}
 		if (view == app_utils::InputOnly) { 
-			viewer->core(inputCoreID).viewport = Vector4f(0, 0, w, h);
+			viewer->core(inputCoreID).viewport = Eigen::Vector4f(0, 0, w, h);
 			for (auto&o : Outputs) {
 				o.window_position = ImVec2(w, h);
 				o.window_size = ImVec2(0, 0);
@@ -225,7 +225,7 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 			}
 		}
 		if (view >= app_utils::OutputOnly0) {
-			viewer->core(inputCoreID).viewport = Vector4f(0, 0, 0, 0);
+			viewer->core(inputCoreID).viewport = Eigen::Vector4f(0, 0, 0, 0);
 			for (auto&o : Outputs) {
 				o.window_position = ImVec2(w, h);
 				o.window_size = ImVec2(0, 0);
@@ -236,7 +236,7 @@ IGL_INLINE void basic_app::post_resize(int w, int h)
 			Outputs[view - app_utils::OutputOnly0].text_position = ImVec2(w*0.8, 0);
 		}		
 		for (auto& o : Outputs)
-			viewer->core(o.CoreID).viewport = Vector4f(o.window_position[0], o.window_position[1], o.window_size[0]+1, o.window_size[1]+1);
+			viewer->core(o.CoreID).viewport = Eigen::Vector4f(o.window_position[0], o.window_position[1], o.window_size[0]+1, o.window_size[1]+1);
 	}
 }
 
@@ -252,9 +252,9 @@ IGL_INLINE bool basic_app::mouse_move(int mouse_x, int mouse_y)
 	{
 		if (!selected_faces.empty())
 		{
-			RowVector3d face_avg_pt = get_face_avg();
-			RowVector3i face = viewer->data(Model_Translate_ID).F.row(Translate_Index);
-			Vector3f translation = app_utils::computeTranslation(mouse_x, down_mouse_x, mouse_y, down_mouse_y, face_avg_pt, viewer->core(Core_Translate_ID));
+			Eigen::RowVector3d face_avg_pt = get_face_avg();
+			Eigen::RowVector3i face = viewer->data(Model_Translate_ID).F.row(Translate_Index);
+			Eigen::Vector3f translation = app_utils::computeTranslation(mouse_x, down_mouse_x, mouse_y, down_mouse_y, face_avg_pt, viewer->core(Core_Translate_ID));
 			if (Core_Translate_ID == inputCoreID) {
 				viewer->data(Model_Translate_ID).V.row(face[0]) += translation.cast<double>();
 				viewer->data(Model_Translate_ID).V.row(face[1]) += translation.cast<double>();
@@ -279,8 +279,8 @@ IGL_INLINE bool basic_app::mouse_move(int mouse_x, int mouse_y)
 	{
 		if (!selected_vertices.empty())
 		{
-			RowVector3d vertex_pos = viewer->data(Model_Translate_ID).V.row(Translate_Index);
-			Vector3f translation = app_utils::computeTranslation(mouse_x, down_mouse_x, mouse_y, down_mouse_y, vertex_pos, viewer->core(Core_Translate_ID));
+			Eigen::RowVector3d vertex_pos = viewer->data(Model_Translate_ID).V.row(Translate_Index);
+			Eigen::Vector3f translation = app_utils::computeTranslation(mouse_x, down_mouse_x, mouse_y, down_mouse_y, vertex_pos, viewer->core(Core_Translate_ID));
 			if (Core_Translate_ID == inputCoreID) {
 				viewer->data(Model_Translate_ID).V.row(Translate_Index) += translation.cast<double>();
 				viewer->data(Model_Translate_ID).set_mesh(viewer->data(Model_Translate_ID).V, viewer->data(Model_Translate_ID).F);
@@ -502,9 +502,9 @@ void basic_app::Draw_menu_for_Solver() {
 				else {
 					Outputs[i].solver = Outputs[i].gradient_descent;
 				}
-				MatrixX3i F = OutputModel(i).F;
+				Eigen::MatrixX3i F = OutputModel(i).F;
 				Outputs[i].solver->setFlipAvoidingLineSearch(F);
-				VectorXd initialguessXX = Map<const VectorXd>(OutputModel(i).V.leftCols(2).data(), OutputModel(i).V.leftCols(2).rows() * 2);
+				Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(OutputModel(i).V.leftCols(2).data(), OutputModel(i).V.leftCols(2).rows() * 2);
 				Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
 			}
 			start_solver_thread();
@@ -521,8 +521,8 @@ void basic_app::Draw_menu_for_Solver() {
 		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) 
 		{
 			stop_solver_thread();
-			MatrixXd initialguess;
-			vector<MatrixX3i> F;
+			Eigen::MatrixXd initialguess;
+			std::vector<Eigen::MatrixX3i> F;
 			for (int i=0;i<Outputs.size();i++)
 				F.push_back(OutputModel(i).F);
 			
@@ -538,7 +538,7 @@ void basic_app::Draw_menu_for_Solver() {
 					for (int i=0;i < Outputs.size();i++)
 						update_texture(initialguess,i);
 					Update_view();
-					VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
+					Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(initialguess.data(), initialguess.rows() * 2);
 					for (int i = 0; i < Outputs.size(); i++)
 					{
 						Outputs[i].solver->setFlipAvoidingLineSearch(F[i]);
@@ -565,7 +565,7 @@ void basic_app::Draw_menu_for_Solver() {
 				for (int i = 0; i < Outputs.size(); i++)
 					update_texture(initialguess, i);
 				Update_view();
-				VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
+				Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(initialguess.data(), initialguess.rows() * 2);
 				for (int i = 0; i < Outputs.size(); i++)
 				{
 					Outputs[i].solver->setFlipAvoidingLineSearch(F[i]);
@@ -587,13 +587,13 @@ void basic_app::Draw_menu_for_Solver() {
 	}
 }
 
-void basic_app::Draw_menu_for_cores(ViewerCore& core) {
+void basic_app::Draw_menu_for_cores(igl::opengl::ViewerCore& core) {
 	if (!Outputs_Settings)
 		return;
 
 	ImGui::PushID(core.id);
-	stringstream ss;
-	string name = (core.id == inputCoreID) ? "Input Core" : "Output Core " + std::to_string(core.id);
+	std::stringstream ss;
+	std::string name = (core.id == inputCoreID) ? "Input Core" : "Output Core " + std::to_string(core.id);
 	ss << name;
 	if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 	{
@@ -623,11 +623,11 @@ void basic_app::Draw_menu_for_cores(ViewerCore& core) {
 
 		// Select rotation type
 		int rotation_type = static_cast<int>(core.rotation_type);
-		static Quaternionf trackball_angle = Quaternionf::Identity();
+		static Eigen::Quaternionf trackball_angle = Eigen::Quaternionf::Identity();
 		static bool orthographic = true;
 		if (ImGui::Combo("Camera Type", &rotation_type, "Trackball\0Two Axes\0002D Mode\0\0"))
 		{
-			using RT = ViewerCore::RotationType;
+			using RT = igl::opengl::ViewerCore::RotationType;
 			auto new_type = static_cast<RT>(rotation_type);
 			if (new_type != core.rotation_type)
 			{
@@ -635,7 +635,7 @@ void basic_app::Draw_menu_for_cores(ViewerCore& core) {
 				{
 					trackball_angle = core.trackball_angle;
 					orthographic = core.orthographic;
-					core.trackball_angle = Quaternionf::Identity();
+					core.trackball_angle = Eigen::Quaternionf::Identity();
 					core.orthographic = true;
 				}
 				else if (core.rotation_type == RT::ROTATION_TYPE_NO_ROTATION)
@@ -655,7 +655,7 @@ void basic_app::Draw_menu_for_cores(ViewerCore& core) {
 	ImGui::PopID();
 }
 
-void basic_app::Draw_menu_for_models(ViewerData& data) {
+void basic_app::Draw_menu_for_models(igl::opengl::ViewerData& data) {
 	if (!Outputs_Settings)
 		return;
 
@@ -669,7 +669,7 @@ void basic_app::Draw_menu_for_models(ViewerData& data) {
 	};
 
 	ImGui::PushID(data.id);
-	stringstream ss;
+	std::stringstream ss;
 	if (data.id == inputModelID) {
 		ss << modelName;
 	}
@@ -683,22 +683,22 @@ void basic_app::Draw_menu_for_models(ViewerData& data) {
 		float p = ImGui::GetStyle().FramePadding.x;
 
 		if (data.id == inputModelID) {
-			ImGui::SliderFloat("texture", &texture_scaling_input, 0.01, 100, to_string(texture_scaling_input).c_str(), 1);
+			ImGui::SliderFloat("texture", &texture_scaling_input, 0.01, 100, std::to_string(texture_scaling_input).c_str(), 1);
 		}
 		else {
-			ImGui::SliderFloat("texture", &texture_scaling_output, 0.01, 100, to_string(texture_scaling_output).c_str(), 1);
+			ImGui::SliderFloat("texture", &texture_scaling_output, 0.01, 100, std::to_string(texture_scaling_output).c_str(), 1);
 		}
 			
 
 		if (ImGui::Checkbox("Face-based", &(data.face_based)))
 		{
-			data.dirty = MeshGL::DIRTY_ALL;
+			data.dirty = igl::opengl::MeshGL::DIRTY_ALL;
 		}
 
 		make_checkbox("Show texture", data.show_texture);
 		if (ImGui::Checkbox("Invert normals", &(data.invert_normals)))
 		{
-			data.dirty |= MeshGL::DIRTY_NORMAL;
+			data.dirty |= igl::opengl::MeshGL::DIRTY_NORMAL;
 		}
 		make_checkbox("Show overlay", data.show_overlay);
 		make_checkbox("Show overlay depth", data.show_overlay_depth);
@@ -808,7 +808,7 @@ void basic_app::Draw_menu_for_solver_settings() {
 				ImGui::Text(("Output " + std::to_string(Outputs[i].CoreID)).c_str());
 				ImGui::NextColumn();
 				for (auto& obj : Outputs[i].totalObjective->objectiveList) {
-					shared_ptr<ConstrainedObjectiveFunction> constr = dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
+					std::shared_ptr<ConstrainedObjectiveFunction> constr = std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
 					ImGui::PushID(id++);
 					ImGui::DragFloat("w", &(constr->w), 0.05f, 0.0f, 100000.0f);
 					ImGui::DragFloat("augmented param.", &(constr)->augmented_value_parameter, 0.05f, 0.0f, 100000.0f);
@@ -902,13 +902,13 @@ void basic_app::Draw_menu_for_text_results() {
 					
 				ImGui::TextColored(c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
 				if (out.solver->IsConstrObjFunc) {
-					shared_ptr<ConstrainedObjectiveFunction> constr = dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
+					std::shared_ptr<ConstrainedObjectiveFunction> constr = std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
 					ImGui::TextColored(c, (std::string(constr->name) + std::string(" objective_value ") + std::to_string(constr->objective_value)).c_str());
 					ImGui::TextColored(c, (std::string(constr->name) + std::string(" constraint_value ") + std::to_string(constr->constraint_value)).c_str());
 				}
 				ImGui::TextColored(c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
 				if (out.solver->IsConstrObjFunc) {
-					shared_ptr<ConstrainedObjectiveFunction> constr = dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
+					std::shared_ptr<ConstrainedObjectiveFunction> constr = std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
 					ImGui::TextColored(c, (std::string(constr->name) + std::string(" objective_gradient ") + std::to_string(constr->objective_gradient_norm)).c_str());
 					ImGui::TextColored(c, (std::string(constr->name) + std::string(" constraint_gradient ") + std::to_string(constr->constraint_gradient_norm)).c_str());
 				}
@@ -920,8 +920,8 @@ void basic_app::Draw_menu_for_text_results() {
 }
 
 void basic_app::UpdateHandles() {
-	vector<int> CurrHandlesInd;
-	vector<MatrixX2d> CurrHandlesPosDeformed;
+	std::vector<int> CurrHandlesInd;
+	std::vector<Eigen::MatrixX2d> CurrHandlesPosDeformed;
 	CurrHandlesInd.clear();
 
 	//First, we push each vertices index to the handles
@@ -945,7 +945,7 @@ void basic_app::UpdateHandles() {
 	}	
 	//Here we update the positions for each handle
 	for (auto& out :Outputs)
-		CurrHandlesPosDeformed.push_back(MatrixX2d::Zero(CurrHandlesInd.size(),2));
+		CurrHandlesPosDeformed.push_back(Eigen::MatrixX2d::Zero(CurrHandlesInd.size(),2));
 	
 	for (int i = 0; i < Outputs.size(); i++){
 		int idx = 0;
@@ -1026,17 +1026,17 @@ void basic_app::follow_and_mark_selected_faces() {
 	}
 }
 	
-ViewerData& basic_app::InputModel() {
+igl::opengl::ViewerData& basic_app::InputModel() {
 	return viewer->data(inputModelID);
 }
 
-ViewerData& basic_app::OutputModel(const int index) {
+igl::opengl::ViewerData& basic_app::OutputModel(const int index) {
 	return viewer->data(Outputs[index].ModelID);
 }
 
-RowVector3d basic_app::get_face_avg() {
-	RowVector3d avg; avg << 0, 0, 0;
-	RowVector3i face = viewer->data(Model_Translate_ID).F.row(Translate_Index);
+Eigen::RowVector3d basic_app::get_face_avg() {
+	Eigen::RowVector3d avg; avg << 0, 0, 0;
+	Eigen::RowVector3i face = viewer->data(Model_Translate_ID).F.row(Translate_Index);
 
 	avg += viewer->data(Model_Translate_ID).V.row(face[0]);
 	avg += viewer->data(Model_Translate_ID).V.row(face[1]);
@@ -1077,7 +1077,7 @@ int basic_app::pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, int CoreIndex) 
 	return fi;
 }
 
-int basic_app::pick_vertex(MatrixXd& V, MatrixXi& F, int CoreIndex) {
+int basic_app::pick_vertex(Eigen::MatrixXd& V, Eigen::MatrixXi& F, int CoreIndex) {
 	// Cast a ray in the view direction starting from the mouse position
 	int CoreID;
 	if (CoreIndex == app_utils::InputOnly)
@@ -1092,19 +1092,19 @@ int basic_app::pick_vertex(MatrixXd& V, MatrixXi& F, int CoreIndex) {
 		y = (viewer->core(inputCoreID).viewport(3) / core_size) - viewer->current_mouse_y;
 	}
 
-	RowVector3d pt;
+	Eigen::RowVector3d pt;
 
-	Matrix4f modelview = viewer->core(CoreID).view;
+	Eigen::Matrix4f modelview = viewer->core(CoreID).view;
 	int vi = -1;
 
-	vector<Hit> hits;
+	std::vector<igl::Hit> hits;
 			
-	unproject_in_mesh(Vector2f(x, y), viewer->core(CoreID).view,
+	unproject_in_mesh(Eigen::Vector2f(x, y), viewer->core(CoreID).view,
 		viewer->core(CoreID).proj, viewer->core(CoreID).viewport, V, F, pt, hits);
 
 	if (hits.size() > 0) {
 		int fi = hits[0].id;
-		RowVector3d bc;
+		Eigen::RowVector3d bc;
 		bc << 1.0 - hits[0].u - hits[0].v, hits[0].u, hits[0].v;
 		bc.maxCoeff(&vi);
 		vi = F(fi, vi);
@@ -1112,9 +1112,9 @@ int basic_app::pick_vertex(MatrixXd& V, MatrixXi& F, int CoreIndex) {
 	return vi;
 }
 
-void basic_app::update_texture(MatrixXd& V_uv, const int index) {
-	MatrixXd V_uv_2D(V_uv.rows(),2);
-	MatrixXd V_uv_3D(V_uv.rows(),3);
+void basic_app::update_texture(Eigen::MatrixXd& V_uv, const int index) {
+	Eigen::MatrixXd V_uv_2D(V_uv.rows(),2);
+	Eigen::MatrixXd V_uv_3D(V_uv.rows(),3);
 	if (V_uv.cols() == 2) {
 		V_uv_2D = V_uv;
 		V_uv_3D.leftCols(2) = V_uv.leftCols(2);
@@ -1137,15 +1137,15 @@ void basic_app::checkGradients()
 {
 	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
-		cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << endl;
+		std::cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << std::endl;
 		if (!model_loaded) {
 			solver_on = false;
 			return;
 		}
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
 			if (Outputs[i].solver->IsConstrObjFunc) {
-				VectorXd x;
-				x = VectorXd::Ones(2 * InputModel().V.rows() + InputModel().F.rows());
+				Eigen::VectorXd x;
+				x = Eigen::VectorXd::Ones(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
 				objective->checkGradient(x);
 			}
@@ -1161,15 +1161,15 @@ void basic_app::checkHessians()
 {
 	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
-		cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << endl;
+		std::cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << std::endl;
 		if (!model_loaded) {
 			solver_on = false;
 			return;
 		}
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
 			if (Outputs[i].solver->IsConstrObjFunc) {
-				VectorXd x;
-				x = VectorXd::Ones(2 * InputModel().V.rows() + InputModel().F.rows());
+				Eigen::VectorXd x;
+				x = Eigen::VectorXd::Ones(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
 				objective->checkHessian(x);
 			}
@@ -1182,24 +1182,24 @@ void basic_app::checkHessians()
 
 void basic_app::update_mesh()
 {
-	vector<MatrixXd> V;
-	vector<VectorXd> X; X.resize(Outputs.size());
+	std::vector<Eigen::MatrixXd> V;
+	std::vector<Eigen::VectorXd> X; X.resize(Outputs.size());
 	
 	for (int i = 0; i < Outputs.size(); i++){
 		if (Outputs[i].worhpsolver->IsDataReady) {
 			Outputs[i].worhpsolver->get_data(X[i]);
-			cout << "#####################################################" << endl;
+			std::cout << "#####################################################" << std::endl;
 		}
 		else {
 			Outputs[i].solver->get_data(X[i]);
 		}
-		V.push_back(Map<MatrixXd>(X[i].data(), X[i].rows() / 2, 2));
+		V.push_back(Eigen::Map<Eigen::MatrixXd>(X[i].data(), X[i].rows() / 2, 2));
 
 		if (IsTranslate && mouse_mode == app_utils::VERTEX_SELECT) {
 			V[i].row(Translate_Index) = OutputModel(i).V.row(Translate_Index).head(2);
 		}
 		else if(IsTranslate && mouse_mode == app_utils::FACE_SELECT) {
-			Vector3i F = OutputModel(i).F.row(Translate_Index);
+			Eigen::Vector3i F = OutputModel(i).F.row(Translate_Index);
 			for (int vi = 0; vi < 3; vi++)
 				V[i].row(F[vi]) = OutputModel(i).V.row(F[vi]).head(2);
 		}
@@ -1223,9 +1223,9 @@ void basic_app::start_solver_thread() {
 		return;
 	}
 	for (auto&o : Outputs) {
-		cout << ">> start new solver" << endl;
+		std::cout << ">> start new solver" << std::endl;
 		solver_on = true;
-		solver_thread = thread(&solver::run/*run*//*run_one_iteration*/, o.solver.get());
+		solver_thread = std::thread(&solver::run/*run*//*run_one_iteration*/, o.solver.get());
 		solver_thread.detach();
 	}
 }
@@ -1234,12 +1234,12 @@ void basic_app::start_worhp_solver_thread() {
 	stop_solver_thread();
 	worhp_on = true;
 	for (int i = 0; i < Outputs.size(); i++) {
-		VectorXd initialPoint = Map<VectorXd>(
+		Eigen::VectorXd initialPoint = Eigen::Map<Eigen::VectorXd>(
 			OutputModel(i).V.leftCols(2).data(),
 			OutputModel(i).V.leftCols(2).rows() * 2
 			);
 
-		solver_thread = thread(
+		solver_thread = std::thread(
 			&worhpSolver::run,
 			Outputs[i].worhpsolver.get(),
 			OutputModel(i).V,
@@ -1253,8 +1253,8 @@ void basic_app::start_worhp_solver_thread() {
 
 void basic_app::initializeSolver(const int index)
 {
-	MatrixXd V = OutputModel(index).V;
-	MatrixX3i F = OutputModel(index).F;
+	Eigen::MatrixXd V = OutputModel(index).V;
+	Eigen::MatrixX3i F = OutputModel(index).F;
 	
 	stop_solver_thread();
 
@@ -1262,25 +1262,25 @@ void basic_app::initializeSolver(const int index)
 		return;
 
 	// initialize the energy
-	auto areapreservingOneRing = make_unique<AreaDistortionOneRing>();
+	auto areapreservingOneRing = std::make_unique<AreaDistortionOneRing>();
 	areapreservingOneRing->init_mesh(V, F);
 	areapreservingOneRing->init();
-	auto lagrangianLscmStArea = make_unique<LagrangianLscmStArea>();
+	auto lagrangianLscmStArea = std::make_unique<LagrangianLscmStArea>();
 	lagrangianLscmStArea->init_mesh(V, F);
 	lagrangianLscmStArea->init();
-	auto lagrangianAreaStLscm = make_unique<LagrangianAreaStLscm>();
+	auto lagrangianAreaStLscm = std::make_unique<LagrangianAreaStLscm>();
 	lagrangianAreaStLscm->init_mesh(V, F);
 	lagrangianAreaStLscm->init();
-	auto symDirichlet = make_unique<SymmetricDirichlet>();
+	auto symDirichlet = std::make_unique<SymmetricDirichlet>();
 	symDirichlet->init_mesh(V, F);
 	symDirichlet->init();
-	auto areaPreserving = make_unique<AreaDistortion>();
+	auto areaPreserving = std::make_unique<AreaDistortion>();
 	areaPreserving->init_mesh(V, F);
 	areaPreserving->init();
-	auto anglePreserving = make_unique<LeastSquaresConformal>();
+	auto anglePreserving = std::make_unique<LeastSquaresConformal>();
 	anglePreserving->init_mesh(V, F);
 	anglePreserving->init();
-	auto constraintsPositional = make_shared<PenaltyPositionalConstraints>(Outputs[index].solver->IsConstrObjFunc);
+	auto constraintsPositional = std::make_shared<PenaltyPositionalConstraints>(Outputs[index].solver->IsConstrObjFunc);
 	constraintsPositional->numV = V.rows();
 	constraintsPositional->numF = F.rows();
 	constraintsPositional->init();
@@ -1306,7 +1306,7 @@ void basic_app::initializeSolver(const int index)
 	Outputs[index].totalObjective->init();
 
 	// initialize the solver
-	MatrixXd initialguess;
+	Eigen::MatrixXd initialguess;
 	if (app_utils::IsMesh2D(InputModel().V)) {
 		//the mesh is 2D
 		initialguess = V;
@@ -1318,22 +1318,22 @@ void basic_app::initializeSolver(const int index)
 		update_texture(initialguess, index);
 		Update_view();
 	}
-	VectorXd initialguessXX = Map<const VectorXd>(initialguess.data(), initialguess.rows() * 2);
+	Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(initialguess.data(), initialguess.rows() * 2);
 	Outputs[index].newton->setFlipAvoidingLineSearch(F);
 	Outputs[index].newton->init(Outputs[index].totalObjective, initialguessXX);
 	Outputs[index].gradient_descent->setFlipAvoidingLineSearch(F);
 	Outputs[index].gradient_descent->init(Outputs[index].totalObjective, initialguessXX);
 	
-	cout << "Solver is initialized!" << endl;
+	std::cout << "Solver is initialized!" << std::endl;
 }
 
 void basic_app::UpdateEnergyColors(const int index) {
 	int numF = OutputModel(index).F.rows();
-	VectorXd DistortionPerFace(numF);
+	Eigen::VectorXd DistortionPerFace(numF);
 	DistortionPerFace.setZero();
 	
 	if (distortion_type == app_utils::ANGLE_DISTORTION) {	//distortion according to area preserving
-		MatrixXd angle_input, angle_output, angle_ratio;
+		Eigen::MatrixXd angle_input, angle_output, angle_ratio;
 		app_utils::angle_degree(OutputModel(index).V, OutputModel(index).F, angle_output);
 		app_utils::angle_degree(InputModel().V, InputModel().F, angle_input);
 
@@ -1343,10 +1343,10 @@ void basic_app::UpdateEnergyColors(const int index) {
 		DistortionPerFace = angle_ratio.rowwise().sum() / 3;
 		DistortionPerFace = DistortionPerFace.cwiseAbs2().cwiseAbs2();
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
-		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
+		DistortionPerFace = DistortionPerFace - Eigen::VectorXd::Ones(numF);
 	}
 	else if (distortion_type == app_utils::LENGTH_DISTORTION) {	//distortion according to area preserving
-		MatrixXd Length_output, Length_input, Length_ratio;
+		Eigen::MatrixXd Length_output, Length_input, Length_ratio;
 		igl::edge_lengths(OutputModel(index).V, OutputModel(index).F, Length_output);
 		igl::edge_lengths(InputModel().V, InputModel().F, Length_input);
 		// DistortionPerFace = Length_output / Length_input
@@ -1354,17 +1354,17 @@ void basic_app::UpdateEnergyColors(const int index) {
 		//average over the vertices on each face
 		DistortionPerFace = Length_ratio.rowwise().sum() / 3;
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
-		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
+		DistortionPerFace = DistortionPerFace - Eigen::VectorXd::Ones(numF);
 	}
 	else if (distortion_type == app_utils::AREA_DISTORTION) {
 		//distortion according to area preserving
-		VectorXd Area_output, Area_input;
+		Eigen::VectorXd Area_output, Area_input;
 		igl::doublearea(OutputModel(index).V, OutputModel(index).F, Area_output);
 		igl::doublearea(InputModel().V, InputModel().F, Area_input);
 		// DistortionPerFace = Area_output / Area_input
 		DistortionPerFace = Area_input.cwiseInverse().cwiseProduct(Area_output);
 		// Because we want  DistortionPerFace to be as close as possible to zero instead of one!
-		DistortionPerFace = DistortionPerFace - VectorXd::Ones(numF);
+		DistortionPerFace = DistortionPerFace - Eigen::VectorXd::Ones(numF);
 	}
 	else if (distortion_type == app_utils::TOTAL_DISTORTION) {
 		// calculate the distortion over all the energies
@@ -1373,16 +1373,16 @@ void basic_app::UpdateEnergyColors(const int index) {
 				DistortionPerFace += obj->Efi * obj->w;
 	}
 
-	VectorXd alpha_vec = DistortionPerFace / (Max_Distortion+1e-8);
-	VectorXd beta_vec = VectorXd::Ones(numF) - alpha_vec;
-	MatrixXd alpha(numF, 3), beta(numF, 3);
+	Eigen::VectorXd alpha_vec = DistortionPerFace / (Max_Distortion+1e-8);
+	Eigen::VectorXd beta_vec = Eigen::VectorXd::Ones(numF) - alpha_vec;
+	Eigen::MatrixXd alpha(numF, 3), beta(numF, 3);
 	alpha = alpha_vec.replicate(1, 3);
 	beta = beta_vec.replicate(1, 3);
 
 	//calculate low distortion color matrix
-	MatrixXd LowDistCol = model_color.cast <double>().replicate(1, numF).transpose();
+	Eigen::MatrixXd LowDistCol = model_color.cast <double>().replicate(1, numF).transpose();
 	//calculate high distortion color matrix
-	MatrixXd HighDistCol = Vertex_Energy_color.cast <double>().replicate(1, numF).transpose();
+	Eigen::MatrixXd HighDistCol = Vertex_Energy_color.cast <double>().replicate(1, numF).transpose();
 	
 	Outputs[index].color_per_face = beta.cwiseProduct(LowDistCol) + alpha.cwiseProduct(HighDistCol);
 }

@@ -11,14 +11,13 @@
 #include <memory>
 #include <limits>
 #include <igl/doublearea.h>
-#include <chrono>
+
 #include <igl/local_basis.h>
 #include <igl/boundary_loop.h>
 #include <igl/per_face_normals.h>
 #include <fstream>
 #include <direct.h>
 #include <windows.h>
-
 
 class Utils
 {

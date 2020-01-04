@@ -16,8 +16,8 @@ private:
 	app_utils::Distortion distortion_type;
 	app_utils::SolverType solver_type;
 	Utils::LineSearch linesearch_type;
-	MatrixXd Vertices_Input, color_per_vertex;
-	Vector3f
+	Eigen::MatrixXd Vertices_Input, color_per_vertex;
+	Eigen::Vector3f
 		Highlighted_face_color,
 		Fixed_face_color,
 		Fixed_vertex_color,
@@ -31,10 +31,10 @@ private:
 	float texture_scaling_output;
 	bool Highlighted_face, Outputs_Settings;
 	app_utils::Parametrization param_type;
-	set<int> selected_faces, selected_vertices;
-	vector<Output> Outputs;
+	std::set<int> selected_faces, selected_vertices;
+	std::vector<Output> Outputs;
 	//Basic (necessary) parameteres
-	string modelName, modelPath;
+	std::string modelName, modelPath;
 	int inputCoreID, inputModelID;
 	int view;
 	app_utils::MouseMode mouse_mode;
@@ -46,7 +46,7 @@ private:
 	ImGuiMenu menu;
 
 	// Solver thread
-	thread solver_thread;
+	std::thread solver_thread;
 
 public:
 	//Constructor & initialization
@@ -65,8 +65,8 @@ public:
 	IGL_INLINE virtual bool key_pressed(unsigned int key, int modifiers) override;
 			
 	//Draw menu methods
-	void Draw_menu_for_cores(ViewerCore& core);
-	void Draw_menu_for_models(ViewerData& data);
+	void Draw_menu_for_cores(igl::opengl::ViewerCore& core);
+	void Draw_menu_for_models(igl::opengl::ViewerData& data);
 	void Draw_menu_for_Solver();
 	void Draw_menu_for_solver_settings();
 	void Draw_menu_for_output_settings();
@@ -74,21 +74,21 @@ public:
 	void Draw_menu_for_text_results();
 
 	//Pick faces & vertices and highlight them
-	int pick_face(MatrixXd& V, MatrixXi& F, int LR);
-	int pick_vertex(MatrixXd& V, MatrixXi& F, int LR);
+	int pick_face(Eigen::MatrixXd& V, Eigen::MatrixXi& F, int LR);
+	int pick_vertex(Eigen::MatrixXd& V, Eigen::MatrixXi& F, int LR);
 	void follow_and_mark_selected_faces();
-	RowVector3d get_face_avg();
+	Eigen::RowVector3d get_face_avg();
 	void UpdateHandles();
 	void UpdateEnergyColors(const int index);
 
 	//Basic Methods
-	ViewerData& InputModel();
-	ViewerData& OutputModel(const int index);
+	igl::opengl::ViewerData& InputModel();
+	igl::opengl::ViewerData& OutputModel(const int index);
 
-	void load_new_model(const string modelpath);
+	void load_new_model(const std::string modelpath);
 	void Update_view();
 	void update_mesh();
-	void update_texture(MatrixXd& V_uv, const int index);
+	void update_texture(Eigen::MatrixXd& V_uv, const int index);
 
 	//Start/Stop the solver Thread
 	void initializeSolver(const int index);
