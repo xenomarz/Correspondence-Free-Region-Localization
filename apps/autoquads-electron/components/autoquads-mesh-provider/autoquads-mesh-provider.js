@@ -84,7 +84,7 @@ export class AutoquadsMeshProvider extends MeshProvider {
         for(let objectiveFunctionProperty of this._objectiveFunctionsProperties) {
             if(HelpersExports.isVisible(objectiveFunctionProperty.visibility) && 
                 (objectiveFunctionProperty.propertyEffectType === propertyEffectType) &&
-                (objectiveFunctionProperty.associatedView & associatedView !== 0)) {
+                ((objectiveFunctionProperty.associatedView & associatedView) !== 0)) {
                 let vector = this._engine.getObjectiveFunctionProperty(objectiveFunctionProperty.objectiveFunctionId, objectiveFunctionProperty.propertyId);
                 let color = new THREE.Color(objectiveFunctionProperty.color);
                 let colorArray = color.toArray();
