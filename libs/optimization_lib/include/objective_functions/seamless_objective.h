@@ -16,7 +16,6 @@
 #include "../data_providers/empty_data_provider.h"
 #include "../data_providers/edge_pair_data_provider.h"
 #include "./summation_objective.h"
-#include "./edge_pair/edge_pair_objective.h"
 #include "./edge_pair/edge_pair_angle_objective.h"
 #include "./edge_pair/edge_pair_length_objective.h"
 #include "../objective_functions/periodic_objective.h"
@@ -30,7 +29,13 @@ public:
 	 */
 	enum class Properties : int32_t
 	{
-		Zeta = SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::Properties::Count_
+		Zeta = SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::Properties::Count_,
+		DomainAngleValuePerEdge,
+		DomainLengthValuePerEdge,
+		DomainValuePerEdge,
+		ImageAngleValuePerEdge,
+		ImageLengthValuePerEdge,
+		ImageValuePerEdge
 	};
 	
 	/**
@@ -62,7 +67,6 @@ public:
 		for(auto& periodic_edge_pair_angle_objective : periodic_edge_pair_angle_objectives)
 		{
 			periodic_edge_pair_angle_objective->SetWeight(1.0 - zeta);
-			//edge_pair_angle_objective->SetWeight(1.0 - zeta);
 		}
 
 		for (auto& edge_pair_length_objective : edge_pair_length_objectives)
@@ -98,7 +102,37 @@ public:
 	{
 		return zeta_;
 	}
+	
+	const Eigen::VectorXd& SeamlessObjective::GetImageValuePerEdge() const
+	{
+		return image_value_per_edge_;
+	}
 
+	const Eigen::VectorXd& SeamlessObjective::GetImageAngleValuePerEdge() const
+	{
+		return image_angle_value_per_edge_;
+	}
+
+	const Eigen::VectorXd& SeamlessObjective::GetImageLengthValuePerEdge() const
+	{
+		return image_length_value_per_edge_;
+	}
+
+	const Eigen::VectorXd& SeamlessObjective::GetDomainValuePerEdge() const
+	{
+		return domain_value_per_edge_;
+	}
+
+	const Eigen::VectorXd& SeamlessObjective::GetDomainAngleValuePerEdge() const
+	{
+		return domain_angle_value_per_edge_;
+	}
+
+	const Eigen::VectorXd& SeamlessObjective::GetDomainLengthValuePerEdge() const
+	{
+		return domain_length_value_per_edge_;
+	}
+	
 	bool GetProperty(const int32_t property_id, std::any& property_value) override
 	{
 		if (SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::GetProperty(property_id, property_value))
@@ -112,6 +146,24 @@ public:
 		case Properties::Zeta:
 			property_value = GetZeta();
 			return true;
+		case Properties::DomainAngleValuePerEdge:
+			property_value = GetDomainAngleValuePerEdge();
+			return true;
+		case Properties::DomainLengthValuePerEdge:
+			property_value = GetDomainLengthValuePerEdge();
+			return true;
+		case Properties::DomainValuePerEdge:
+			property_value = GetDomainValuePerEdge();
+			return true;
+		case Properties::ImageAngleValuePerEdge:
+			property_value = GetImageAngleValuePerEdge();
+			return true;
+		case Properties::ImageLengthValuePerEdge:
+			property_value = GetImageLengthValuePerEdge();
+			return true;
+		case Properties::ImageValuePerEdge:
+			property_value = GetImageValuePerEdge();
+			return true;
 		}
 
 		return false;
@@ -119,7 +171,7 @@ public:
 
 	/**
 	 * Public methods
-	 */
+	 */	
 	void AddEdgePairObjectives(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider)
 	{	
 		std::shared_ptr<EdgePairAngleObjective<StorageOrder_>> edge_pair_angle_objective = std::make_shared<EdgePairAngleObjective<StorageOrder_>>(this->GetMeshDataProvider(), edge_pair_data_provider, false);
@@ -137,13 +189,87 @@ public:
 		edge_pair_angle_objectives.push_back(edge_pair_angle_objective);
 	}
 
+protected:
 	/**
-	 * Fields
+	 * Protected overrides
+	 */
+	void PostInitialize() override
+	{
+		SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::PostInitialize();
+		image_value_per_edge_.resize(this->mesh_data_provider_->GetImageEdgesCount());
+		image_angle_value_per_edge_.resize(this->mesh_data_provider_->GetImageEdgesCount());
+		image_length_value_per_edge_.resize(this->mesh_data_provider_->GetImageEdgesCount());
+		domain_value_per_edge_.resize(this->mesh_data_provider_->GetDomainEdgesCount());
+		domain_angle_value_per_edge_.resize(this->mesh_data_provider_->GetDomainEdgesCount());
+		domain_length_value_per_edge_.resize(this->mesh_data_provider_->GetDomainEdgesCount());
+	}
+
+	void PostUpdate(const Eigen::VectorXd& x) override
+	{
+		CalculateAngleValuePerEdge(domain_angle_value_per_edge_, image_angle_value_per_edge_);
+		CalculateLengthValuePerEdge(domain_length_value_per_edge_, image_length_value_per_edge_);
+		CalculateValuePerEdge(domain_value_per_edge_, image_value_per_edge_);
+	}
+	
+private:
+	/**
+	 * Private methods
+	 */
+	void CalculateValuePerEdge(Eigen::VectorXd& domain_value_per_edge, Eigen::VectorXd& image_value_per_edge)
+	{
+		domain_value_per_edge = domain_angle_value_per_edge_ + domain_length_value_per_edge_;
+		image_value_per_edge = image_angle_value_per_edge_ + image_length_value_per_edge_;
+	}
+
+	void CalculateAngleValuePerEdge(Eigen::VectorXd& domain_angle_value_per_edge, Eigen::VectorXd& image_angle_value_per_edge)
+	{
+		domain_angle_value_per_edge.setZero();
+		image_angle_value_per_edge.setZero();
+		for(const auto& periodic_edge_pair_angle_objective : periodic_edge_pair_angle_objectives)
+		{
+			auto edge_pair_angle_objective = std::dynamic_pointer_cast<EdgePairAngleObjective<StorageOrder_>>(periodic_edge_pair_angle_objective->GetInnerObjective());
+			const RDS::EdgeIndex domain_edge_index = edge_pair_angle_objective->GetEdgePairDataProvider().GetDomainEdgeIndex();
+			const RDS::EdgeIndex image_edge_1_index = edge_pair_angle_objective->GetEdgePairDataProvider().GetImageEdge1Index();
+			const RDS::EdgeIndex image_edge_2_index = edge_pair_angle_objective->GetEdgePairDataProvider().GetImageEdge2Index();
+
+			const double value = periodic_edge_pair_angle_objective->GetValue();
+			domain_angle_value_per_edge.coeffRef(domain_edge_index) += value;
+			image_angle_value_per_edge.coeffRef(image_edge_1_index) += value;
+			image_angle_value_per_edge.coeffRef(image_edge_2_index) += value;
+		}
+	}
+
+	void CalculateLengthValuePerEdge(Eigen::VectorXd& domain_length_value_per_edge, Eigen::VectorXd& image_length_value_per_edge)
+	{
+		domain_length_value_per_edge.setZero();
+		image_length_value_per_edge.setZero();
+		for (const auto& edge_pair_length_objective : edge_pair_length_objectives)
+		{
+			const RDS::EdgeIndex domain_edge_index = edge_pair_length_objective->GetEdgePairDataProvider().GetDomainEdgeIndex();
+			const RDS::EdgeIndex image_edge_1_index = edge_pair_length_objective->GetEdgePairDataProvider().GetImageEdge1Index();
+			const RDS::EdgeIndex image_edge_2_index = edge_pair_length_objective->GetEdgePairDataProvider().GetImageEdge2Index();
+
+			const double value = edge_pair_length_objective->GetValue();
+			domain_length_value_per_edge.coeffRef(domain_edge_index) += value;
+			image_length_value_per_edge.coeffRef(image_edge_1_index) += value;
+			image_length_value_per_edge.coeffRef(image_edge_2_index) += value;
+		}
+	}
+	
+	/**
+	 * Private fields
 	 */
 	double zeta_;
 	std::vector<std::shared_ptr<EdgePairLengthObjective<StorageOrder_>>> edge_pair_length_objectives;
 	std::vector<std::shared_ptr<EdgePairAngleObjective<StorageOrder_>>> edge_pair_angle_objectives;
 	std::vector<std::shared_ptr<PeriodicObjective<StorageOrder_>>> periodic_edge_pair_angle_objectives;
+
+	Eigen::VectorXd image_value_per_edge_;
+	Eigen::VectorXd image_angle_value_per_edge_;
+	Eigen::VectorXd image_length_value_per_edge_;
+	Eigen::VectorXd domain_value_per_edge_;
+	Eigen::VectorXd domain_angle_value_per_edge_;
+	Eigen::VectorXd domain_length_value_per_edge_;
 };
 
 #endif

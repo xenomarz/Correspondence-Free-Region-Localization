@@ -33,7 +33,11 @@ export class MeshProvider {
         return new Float32Array();
     }
 
-    getBufferedColors() {
+    getBufferedVertexColors() {
+        return new Float32Array();
+    }
+
+    getBufferedEdgeColors() {
         return new Float32Array();
     }
 

@@ -571,7 +571,7 @@ export class MeshView extends LitElement {
 
         geometry.addAttribute('position', new THREE.BufferAttribute(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.TRIANGLE), 3));
         geometry.addAttribute('uv', new THREE.BufferAttribute(this.meshProvider.getBufferedUvs(), 2));
-        geometry.addAttribute('color', new THREE.BufferAttribute(this.meshProvider.getBufferedColors(), 3, true));
+        geometry.addAttribute('color', new THREE.BufferAttribute(this.meshProvider.getBufferedVertexColors(), 3, true));
 
         let material;
         if (this.useLights) {
@@ -599,15 +599,19 @@ export class MeshView extends LitElement {
     _initializeMeshEdges() {
         let lineSegmentsGeometry = new LineSegmentsGeometry.LineSegmentsGeometry();
 
+        // let bla1 = this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE);
+        // let bla2 = this.meshProvider.getBufferedEdgeColors();
+
         lineSegmentsGeometry.setPositions(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE));
+        lineSegmentsGeometry.setColors(this.meshProvider.getBufferedEdgeColors());
 
         let lineMaterial = new LineMaterial.LineMaterial({ 
-            color: 0x000000,
+            color: 0xffffff,
             vertexColors: THREE.VertexColors, 
             linewidth: 10 
         });
 
-        lineMaterial.resolution.set( window.innerWidth, window.innerHeight );
+        lineMaterial.resolution.set(window.innerWidth, window.innerHeight);
 
         this._meshEdges = new LineSegments2.LineSegments2(lineSegmentsGeometry, lineMaterial);
         this._scene.add(this._meshEdges);
@@ -1278,8 +1282,9 @@ export class MeshView extends LitElement {
         this._mesh.geometry.attributes.uv.array = this.meshProvider.getBufferedUvs();
 
         this._meshEdges.geometry.setPositions(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE));
+        this._meshEdges.geometry.setColors(this.meshProvider.getBufferedEdgeColors());
 
-        let bufferedColors = this.meshProvider.getBufferedColors();
+        let bufferedColors = this.meshProvider.getBufferedVertexColors();
         this._updateVertexColors();
         this._overrideAttributeArray(this._vertexColors, bufferedColors);
         this._mesh.geometry.attributes.color.array = bufferedColors;
@@ -1291,7 +1296,11 @@ export class MeshView extends LitElement {
         this._mesh.geometry.attributes.position.needsUpdate = true;
         this._mesh.geometry.attributes.uv.needsUpdate = true;
         this._mesh.geometry.attributes.color.needsUpdate = true;
+
         this._meshEdges.geometry.attributes.position.needsUpdate = true;
+        this._meshEdges.geometry.attributes.instanceColorStart.needsUpdate = true;
+        this._meshEdges.geometry.attributes.instanceColorEnd.needsUpdate = true;
+
         this._pointcloud.geometry.attributes.position.needsUpdate = true;
         
         if(this._additionalSceneObjects) {

@@ -477,6 +477,16 @@ int64_t MeshWrapper::GetDomainVerticesCount() const
 	return v_dom_.rows();
 }
 
+int64_t MeshWrapper::GetImageEdgesCount() const
+{
+	return e_im_.rows();
+}
+
+int64_t MeshWrapper::GetDomainEdgesCount() const
+{
+	return e_dom_.rows();
+}
+
 Eigen::VectorXi MeshWrapper::GetImageFaceVerticesIndices(int64_t face_index)
 {
 	return f_im_.row(face_index);
@@ -547,4 +557,40 @@ const RDS::FaceFans& MeshWrapper::GetFaceFans() const
 RDS::VertexIndex MeshWrapper::GetDomainVertexIndex(RDS::VertexIndex image_vertex_index) const
 {
 	return v_im_2_v_dom_.at(image_vertex_index);
+}
+
+RDS::SparseVariableIndex MeshWrapper::GetXVariableIndex(RDS::VertexIndex vertex_index) const
+{
+	return vertex_index;
+}
+
+RDS::SparseVariableIndex MeshWrapper::GetYVariableIndex(RDS::VertexIndex vertex_index) const
+{
+	return vertex_index + GetImageVerticesCount();
+}
+
+RDS::VertexIndex MeshWrapper::GetVertexIndex(RDS::SparseVariableIndex variable_index) const
+{
+	const auto image_variables_count = GetImageVerticesCount();
+	if (variable_index < image_variables_count)
+	{
+		return variable_index;
+	}
+
+	return variable_index - image_variables_count;
+}
+
+int64_t MeshWrapper::GetVariablesCount() const
+{
+	return 	2 * GetImageVerticesCount();
+}
+
+RDS::EdgeIndex MeshWrapper::GetDomainEdgeIndex(RDS::EdgeDescriptor image_edge_descriptor) const
+{
+	return e_im_2_e_dom_.at(ed_im_2_ei_im_.at(image_edge_descriptor));
+}
+
+RDS::EdgeIndex MeshWrapper::GetImageEdgeIndex(RDS::EdgeDescriptor image_edge_descriptor) const
+{
+	return ed_im_2_ei_im_.at(image_edge_descriptor);
 }

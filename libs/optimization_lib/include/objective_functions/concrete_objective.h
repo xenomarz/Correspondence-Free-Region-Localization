@@ -166,7 +166,7 @@ private:
 	// Value, gradient and hessian calculation functions
 	virtual void CalculateValuePerVertex(VectorType_& f_per_vertex)
 	{
-		const double value = this->GetValueInternal();
+		const double value = this->GetValue();
 		f_per_vertex.setZero();
 		const auto sparse_variables_indices_count = sparse_variable_indices_.size();
 		for (std::size_t i = 0; i < sparse_variables_indices_count; i++)

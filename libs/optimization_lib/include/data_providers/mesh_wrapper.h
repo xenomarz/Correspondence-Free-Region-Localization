@@ -75,10 +75,18 @@ public:
 	const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const override;
 	int64_t GetImageVerticesCount() const override;
 	int64_t GetDomainVerticesCount() const override;
+	int64_t GetImageEdgesCount() const override;
+	int64_t GetDomainEdgesCount() const override;
 	const RDS::EdgePairDescriptors& GetEdgePairDescriptors() const;
-	const RDS::FaceFans& GetFaceFans() const;
+	const RDS::FaceFans& GetFaceFans() const override;
+	RDS::SparseVariableIndex GetXVariableIndex(RDS::VertexIndex vertex_index) const override;
+	RDS::SparseVariableIndex GetYVariableIndex(RDS::VertexIndex vertex_index) const override;
+	RDS::VertexIndex GetVertexIndex(RDS::SparseVariableIndex variable_index) const override;
 	RDS::VertexIndex GetDomainVertexIndex(RDS::VertexIndex image_vertex_index) const override;
-
+	int64_t GetVariablesCount() const override;
+	RDS::EdgeIndex GetDomainEdgeIndex(RDS::EdgeDescriptor image_edge_descriptor) const override;
+	RDS::EdgeIndex GetImageEdgeIndex(RDS::EdgeDescriptor image_edge_descriptor) const override;
+	
 	/**
 	 * Public methods
 	 */

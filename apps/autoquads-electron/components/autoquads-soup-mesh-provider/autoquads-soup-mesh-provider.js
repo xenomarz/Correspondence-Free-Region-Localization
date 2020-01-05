@@ -1,7 +1,10 @@
+// Components Imports
 import { AutoquadsMeshProvider } from '../autoquads-mesh-provider/autoquads-mesh-provider.js';
+import * as EnumsExports from '../../redux/enums.js';
+
 export class AutoquadsSoupMeshProvider extends AutoquadsMeshProvider {
     constructor(engine, meshColor, objectiveFunctionsProperties) {
-        super(engine, meshColor, objectiveFunctionsProperties);
+        super(engine, meshColor, objectiveFunctionsProperties, EnumsExports.View.SOUP);
     }
 
     getFaces() {

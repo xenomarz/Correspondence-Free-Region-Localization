@@ -9,7 +9,7 @@ import * as HelpersExports from '../../redux/helpers.js';
 
 export class AutoquadsModelMeshProvider extends AutoquadsMeshProvider {
     constructor(engine, meshColor, objectiveFunctionsProperties) {
-        super(engine, meshColor, objectiveFunctionsProperties);
+        super(engine, meshColor, objectiveFunctionsProperties, EnumsExports.View.MODEL);
         var objLoader = new OBJLoaders.OBJLoader();
         objLoader.load(
             // model path

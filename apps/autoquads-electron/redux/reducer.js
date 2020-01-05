@@ -80,56 +80,122 @@ const INITIAL_STATE = {
         {
             objectiveFunctionId: 'Separation',
             propertyId: 'value_per_vertex',
-            propertyEffectType: 'vertex_color',
+            propertyEffectType: EnumsExports.PropertyEffectType.VERTEX_COLOR,
             objectiveFunctionName: 'Separation',
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
-            visibility: EnumsExports.Visibility.HIDDEN
+            visibility: EnumsExports.Visibility.HIDDEN,
+            associatedView: EnumsExports.View.ALL
         },
         {
             objectiveFunctionId: 'Symmetric Dirichlet',
             propertyId: 'value_per_vertex',
-            propertyEffectType: 'vertex_color',
+            propertyEffectType: EnumsExports.PropertyEffectType.VERTEX_COLOR,
             objectiveFunctionName: 'Symmetric Dirichlet',
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
-            visibility: EnumsExports.Visibility.HIDDEN            
+            visibility: EnumsExports.Visibility.HIDDEN,
+            associatedView: EnumsExports.View.ALL        
         },
         {
             objectiveFunctionId: 'Seamless',
             propertyId: 'value_per_vertex',
-            propertyEffectType: 'vertex_color',
+            propertyEffectType: EnumsExports.PropertyEffectType.VERTEX_COLOR,
             objectiveFunctionName: 'Seamless',
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
-            visibility: EnumsExports.Visibility.HIDDEN            
+            visibility: EnumsExports.Visibility.HIDDEN,
+            associatedView: EnumsExports.View.ALL 
+        },
+        {
+            objectiveFunctionId: 'Seamless',
+            propertyId: 'domain_value_per_edge',
+            propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
+            objectiveFunctionName: 'Seamless',
+            propertyName: 'Value Per Edge (Domain)',
+            color: 'rgb(255,0,0)',
+            visibility: EnumsExports.Visibility.HIDDEN,
+            associatedView: EnumsExports.View.MODEL
+        },
+        {
+            objectiveFunctionId: 'Seamless',
+            propertyId: 'domain_angle_value_per_edge',
+            propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
+            objectiveFunctionName: 'Seamless',
+            propertyName: 'Angle Value Per Edge (Domain)',
+            color: 'rgb(255,0,0)',
+            visibility: EnumsExports.Visibility.HIDDEN,
+            associatedView: EnumsExports.View.MODEL
+        },
+        {
+            objectiveFunctionId: 'Seamless',
+            propertyId: 'domain_length_value_per_edge',
+            propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
+            objectiveFunctionName: 'Seamless',
+            propertyName: 'Length Value Per Edge (Domain)',
+            color: 'rgb(255,0,0)',
+            visibility: EnumsExports.Visibility.HIDDEN,
+            associatedView: EnumsExports.View.MODEL
+        },
+        {
+            objectiveFunctionId: 'Seamless',
+            propertyId: 'image_value_per_edge',
+            propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
+            objectiveFunctionName: 'Seamless',
+            propertyName: 'Value Per Edge (Image)',
+            color: 'rgb(255,0,0)',
+            visibility: EnumsExports.Visibility.HIDDEN,
+            associatedView: EnumsExports.View.SOUP
+        },
+        {
+            objectiveFunctionId: 'Seamless',
+            propertyId: 'image_angle_value_per_edge',
+            propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
+            objectiveFunctionName: 'Seamless',
+            propertyName: 'Angle Value Per Edge (Image)',
+            color: 'rgb(255,0,0)',
+            visibility: EnumsExports.Visibility.HIDDEN,
+            associatedView: EnumsExports.View.SOUP
+        },
+        {
+            objectiveFunctionId: 'Seamless',
+            propertyId: 'image_length_value_per_edge',
+            propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
+            objectiveFunctionName: 'Seamless',
+            propertyName: 'Length Value Per Edge (Image)',
+            color: 'rgb(255,0,0)',
+            visibility: EnumsExports.Visibility.HIDDEN,
+            associatedView: EnumsExports.View.SOUP
         },
         {
             objectiveFunctionId: 'Singular Points',
             propertyId: 'singularity_weight_per_vertex',
-            propertyEffectType: 'vertex_color',
+            propertyEffectType: EnumsExports.PropertyEffectType.VERTEX_COLOR,
             objectiveFunctionName: 'Singular Points',
             propertyName: 'Singularity Weight Per Vertex',
             color: 'rgb(255,0,0)',
-            visibility: EnumsExports.Visibility.HIDDEN            
+            visibility: EnumsExports.Visibility.HIDDEN,
+            associatedView: EnumsExports.View.ALL
         },
         {
             objectiveFunctionId: 'Singular Points',
             propertyId: 'positive_angular_defect_singularities_indices',
-            propertyEffectType: 'scene_objects',
+            propertyEffectType: EnumsExports.PropertyEffectType.SCENE_OBJECTS,
             objectiveFunctionName: 'Singular Points',
             propertyName: 'Positive Angular Defect',
             color: 'rgb(0,0,255)',
-            visibility: EnumsExports.Visibility.HIDDEN            
+            visibility: EnumsExports.Visibility.HIDDEN,
+            associatedView: EnumsExports.View.ALL
         },
         {
             objectiveFunctionId: 'Singular Points',
             propertyId: 'negative_angular_defect_singularities_indices',
-            propertyEffectType: 'scene_objects',
+            propertyEffectType: EnumsExports.PropertyEffectType.SCENE_OBJECTS,
             objectiveFunctionName: 'Singular Points',
             propertyName: 'Negative Angular Defect',
             color: 'rgb(255,0,0)',
-            visibility: EnumsExports.Visibility.HIDDEN            
+            visibility: EnumsExports.Visibility.HIDDEN,
+            associatedView: EnumsExports.View.ALL
         }             
     ]
 };

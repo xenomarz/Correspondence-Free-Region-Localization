@@ -14,6 +14,10 @@ EdgePairDataProvider::EdgePairDataProvider(const std::shared_ptr<MeshDataProvide
 	edge2_v1_y_index_ = mesh_data_provider->GetYVariableIndex(edge_pair_descriptor.second.first);
 	edge2_v2_x_index_ = mesh_data_provider->GetXVariableIndex(edge_pair_descriptor.second.second);
 	edge2_v2_y_index_ = mesh_data_provider->GetYVariableIndex(edge_pair_descriptor.second.second);
+
+	image_edge_1_index_ = mesh_data_provider->GetImageEdgeIndex(edge_pair_descriptor.first);
+	image_edge_2_index_ = mesh_data_provider->GetImageEdgeIndex(edge_pair_descriptor.second);
+	domain_edge_index_ = mesh_data_provider->GetDomainEdgeIndex(edge_pair_descriptor.first);
 }
 
 EdgePairDataProvider::~EdgePairDataProvider()

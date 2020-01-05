@@ -34,6 +34,14 @@ public:
 
 	}
 
+	/**
+	 * Public getters
+	 */
+	std::shared_ptr<SparseObjectiveFunction<StorageOrder_>> GetInnerObjective() const
+	{
+		return inner_objective_;
+	}
+
 protected:
 	/**
 	 * Protected overrides

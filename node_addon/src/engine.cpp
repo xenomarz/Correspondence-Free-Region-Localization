@@ -78,6 +78,12 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "name", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Name) });
 	properties_map_.insert({ "delta", static_cast<uint32_t>(Separation<Eigen::StorageOptions::RowMajor>::Properties::Delta) });
 	properties_map_.insert({ "zeta", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::Zeta) });
+	properties_map_.insert({ "domain_angle_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::DomainAngleValuePerEdge) });
+	properties_map_.insert({ "domain_length_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::DomainLengthValuePerEdge) });
+	properties_map_.insert({ "domain_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::DomainValuePerEdge) });
+	properties_map_.insert({ "image_angle_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::ImageAngleValuePerEdge) });
+	properties_map_.insert({ "image_length_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::ImageLengthValuePerEdge) });
+	properties_map_.insert({ "image_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::ImageValuePerEdge) });
 	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
 	properties_map_.insert({ "singularity_weight_per_vertex", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::SingularityWeightPerVertex) });
 	properties_map_.insert({ "negative_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::NegativeAngularDefectSingularitiesIndices) });

@@ -18,37 +18,19 @@ public:
 	virtual const Eigen::MatrixX3i& GetImageFaces() const = 0;
 	virtual int64_t GetImageVerticesCount() const = 0;
 	virtual int64_t GetDomainVerticesCount() const = 0;
+	virtual int64_t GetImageEdgesCount() const = 0;
+	virtual int64_t GetDomainEdgesCount() const = 0;
 	virtual const Eigen::MatrixX3d& GetD1() const = 0;
 	virtual const Eigen::MatrixX3d& GetD2() const = 0;
-
-	RDS::SparseVariableIndex GetXVariableIndex(RDS::VertexIndex vertex_index) const
-	{
-		return vertex_index;
-	}
-
-	RDS::SparseVariableIndex GetYVariableIndex(RDS::VertexIndex vertex_index) const
-	{
-		return vertex_index + GetImageVerticesCount();
-	}
-
-	RDS::VertexIndex GetVertexIndex(RDS::SparseVariableIndex variable_index) const
-	{
-		const auto image_variables_count = GetImageVerticesCount();
-		if(variable_index < image_variables_count)
-		{
-			return variable_index;
-		}
-
-		return variable_index - image_variables_count;
-	}
-
+	virtual RDS::SparseVariableIndex GetXVariableIndex(RDS::VertexIndex vertex_index) const = 0;
+	virtual RDS::SparseVariableIndex GetYVariableIndex(RDS::VertexIndex vertex_index) const = 0;
+	virtual RDS::VertexIndex GetVertexIndex(RDS::SparseVariableIndex variable_index) const = 0;
 	virtual RDS::VertexIndex GetDomainVertexIndex(RDS::VertexIndex image_vertex_index) const = 0;
-
-	int64_t GetVariablesCount() const
-	{
-		return 	2 * GetImageVerticesCount();
-	}
-
+	virtual int64_t GetVariablesCount() const = 0;
+	virtual const RDS::FaceFans& GetFaceFans() const = 0;
+	virtual RDS::EdgeIndex GetDomainEdgeIndex(RDS::EdgeDescriptor image_edge_descriptor) const = 0;
+	virtual RDS::EdgeIndex GetImageEdgeIndex(RDS::EdgeDescriptor image_edge_descriptor) const = 0;
+	
 	// Relevant for objective functions that operate on triangle soups
 	virtual const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const = 0;
 	virtual const Eigen::VectorXd& GetCorrespondingVertexPairsEdgeLength() const = 0;

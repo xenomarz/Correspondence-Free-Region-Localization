@@ -20,3 +20,15 @@ export const LoadState = {
     RELOADING: 'Reloading',    
     LOADED: 'Loaded'
 };
+
+export const View = {
+    MODEL: 1,
+    SOUP: 2,
+    ALL: 3
+};
+
+export const PropertyEffectType = {
+    VERTEX_COLOR: "VertexColor",
+    EDGE_COLOR: "EdgeColor",
+    SCENE_OBJECTS: "SceneObjects"
+};
