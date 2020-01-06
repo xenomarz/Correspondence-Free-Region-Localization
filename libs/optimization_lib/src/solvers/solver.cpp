@@ -1,4 +1,6 @@
 #include <solvers/solver.h>
+#include <igl/matlab_format.h>
+//#include <igl/matlab/MatlabWorkspace.h>
 #define SAVE_RESULTS_TO_CSV
 
 solver::solver(const bool isConstrObjFunc, const int solverID)
@@ -70,6 +72,7 @@ int solver::run()
 void solver::run_one_iteration(const int steps) {
 	currentEnergy = step();
 #ifdef SAVE_RESULTS_TO_CSV
+	prepareData();
 	saveSolverInfo(steps, solverInfo);
 	saveHessianInfo(steps, hessianInfo);
 	saveSearchDirInfo(steps, SearchDirInfo);
@@ -154,6 +157,34 @@ void solver::saveSolverInfo(int numIteration, std::ofstream& solverInfo) {
 	solverInfo << std::endl;
 }
 
+void solver::prepareData() {
+	//prepare the hessian matrix
+	std::vector<Eigen::Triplet<double>> tripletList;
+	tripletList.reserve((objective->II).size());
+	int rows = *std::max_element((objective->II).begin(), (objective->II).end()) + 1;
+	int cols = *std::max_element((objective->JJ).begin(), (objective->JJ).end()) + 1;
+	assert(rows == cols && "Rows == Cols at solver's saveHessianInfo() method");
+	for (int i = 0; i < (objective->II).size(); i++)
+		tripletList.push_back(Eigen::Triplet<double>((objective->II)[i], (objective->JJ)[i], (objective->SS)[i]));
+	CurrHessian.resize(rows, cols);
+	CurrHessian.setFromTriplets(tripletList.begin(), tripletList.end());
+
+	//calculate values in the search direction vector
+	int counter;
+	double alpha = 0;
+	for (alpha = -1, counter = 0; alpha <= 1; alpha += 0.005, counter++) {
+		Eigen::MatrixXd curr_x = X + alpha * p;
+		Eigen::VectorXd grad;
+		objective->updateX(curr_x);
+		objective->gradient(grad, false);
+		alfa[counter] = alpha;
+		y_value[counter] = objective->value(false);
+		y_augmentedValue[counter] = objective->AugmentedValue(false);
+		y_gradientNorm[counter] = grad.norm();
+	}
+	objective->updateX(X);
+}
+
 void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {
 	//show only once the objective's function data
 	if (!numIteration) {
@@ -170,25 +201,12 @@ void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {
 		}
 		hessianInfo << std::endl;
 	}
-
 	
-	//prepare the hessian matrix
-	Eigen::SparseMatrix<double> A;
-	std::vector<Eigen::Triplet<double>> tripletList;
-	tripletList.reserve((objective->II).size());
-	int rows = *std::max_element((objective->II).begin(), (objective->II).end()) + 1;
-	int cols = *std::max_element((objective->JJ).begin(), (objective->JJ).end()) + 1;
-	assert(rows == cols && "Rows == Cols at solver's saveHessianInfo() method");
-	for (int i = 0; i < (objective->II).size(); i++)
-		tripletList.push_back(Eigen::Triplet<double>((objective->II)[i], (objective->JJ)[i], (objective->SS)[i]));
-	A.resize(rows, cols);
-	A.setFromTriplets(tripletList.begin(), tripletList.end());
-
 	//output the hessian
 	hessianInfo << ("Round " + std::to_string(numIteration)).c_str() << std::endl;
-	for (int i = 0; i < rows; i++) {
-		for (int j = 0; j < cols; j++) {
-			hessianInfo << A.coeff(i, j) << ",";
+	for (int i = 0; i < CurrHessian.rows(); i++) {
+		for (int j = 0; j < CurrHessian.cols(); j++) {
+			hessianInfo << CurrHessian.coeff(i, j) << ",";
 		}
 		
 		hessianInfo << "," << g(i) << std::endl;
@@ -197,21 +215,6 @@ void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {
 }
 
 void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
-	//calculate values in the search direction vector
-	int counter;
-	double alpha = 0;
-	for ( alpha = -1, counter = 0; alpha <= 1; alpha += 0.005, counter++) {
-		Eigen::MatrixXd curr_x = X + alpha * p;
-		Eigen::VectorXd grad;
-		objective->updateX(curr_x);
-		objective->gradient(grad,false);
-		alfa[counter] = alpha;
-		y_value[counter] = objective->value(false);
-		y_augmentedValue[counter] = objective->AugmentedValue(false);
-		y_gradientNorm[counter] = grad.norm();
-	}
-	objective->updateX(X);
-
 	//show only once the objective's function data
 	if (!numIteration) {
 		std::shared_ptr<TotalObjective> t = std::dynamic_pointer_cast<TotalObjective>(objective);
@@ -229,34 +232,29 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 	}
 		
 	//add the alfa values as one row
-	SearchDirInfo << numIteration << ",";
-	SearchDirInfo << "alfa,";
-	for (int i = 0; i < counter; i++) {
+	SearchDirInfo << numIteration << ",alfa,";
+	for (int i = 0; i < SIZE; i++)
 		SearchDirInfo << alfa[i] << ",";
-	}
 	SearchDirInfo << std::endl;
 
 	//add the total objective's values as one row
 	SearchDirInfo << ",value,";
-	for (int i = 0; i < counter; i++) {
+	for (int i = 0; i < SIZE; i++)
 		SearchDirInfo << y_value[i] << ",";
-	}
 	SearchDirInfo << std::endl;
 
 	//add the total objective's augmented values as one row
 	if (IsConstrObjFunc) {
 		SearchDirInfo << ",augmentedValue,";
-		for (int i = 0; i < counter; i++) {
+		for (int i = 0; i < SIZE; i++)
 			SearchDirInfo << y_augmentedValue[i] << ",";
-		}
 		SearchDirInfo << std::endl;
 	}
 	//add the total objective's augmented values as one row
 	if (IsConstrObjFunc) {
 		SearchDirInfo << ",grad norm,";
-		for (int i = 0; i < counter; i++) {
+		for (int i = 0; i < SIZE; i++)
 			SearchDirInfo << y_gradientNorm[i] << ",";
-		}
 		SearchDirInfo << std::endl;
 	}
 }

@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
+# set the project name
 project(plugins_tests)
 
 # Add your project files

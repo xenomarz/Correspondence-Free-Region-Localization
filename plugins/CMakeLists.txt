@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
+# set the project name
 project(plugins)
 
+# set variable value
 set(SOURCES
 	basic_app/src/basic_app.cpp
 	basic_app/include/basic_app.h
@@ -8,12 +10,6 @@ set(SOURCES
 
 add_library(${PROJECT_NAME} ${SOURCES})
 add_library(rds::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-
-message("-----------------")
-message(${PROJECT_NAME})
-message(${CMAKE_SOURCE_DIR})
-message(${PROJECT_SOURCE_DIR})
-message("-----------------")
 
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
@@ -28,4 +24,6 @@ target_link_libraries(${PROJECT_NAME}
 		igl::opengl
 		igl::opengl_glfw
 		igl::opengl_glfw_imgui
+		# igl::matlab
 		rds::optimization_lib)		
+		  

@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
+# set the project name
 project(basic_app)
 
 # Add your project files

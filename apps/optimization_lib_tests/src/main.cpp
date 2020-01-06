@@ -1,6 +1,7 @@
 #include "../../../libs/optimization_lib/include/utils.h"
 #include <iostream>
 #include <fstream>
+using namespace std;
 int main(int argc, char * argv[])
 {
 	std::ofstream myfile;

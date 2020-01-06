@@ -2,11 +2,12 @@
 
 #include <libs/optimization_lib/include/objective_functions/TotalObjective.h>
 #include <libs/optimization_lib/include/objective_functions/ConstrainedObjectiveFunction.h>
-//#include <plugins/basic_app/include/app_utils.h>
 #include <atomic>
 #include <shared_mutex>
 #include <igl/flip_avoiding_line_search.h>
 #include <Eigen/SparseCholesky>
+
+#define SIZE 400
 
 class solver
 {
@@ -72,13 +73,15 @@ private:
 	virtual void gradNorm_linesearch(std::ofstream& SearchDirInfo);
 	virtual bool test_progress() = 0;
 	virtual void internal_init() = 0;
+	void prepareData();
 	void saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo);
 	void saveSolverInfo(int numIteration, std::ofstream& solverInfo);
 	void saveHessianInfo(int numIteration, std::ofstream& hessianInfo);
-	double alfa[400] = { 0 };
-	double y_value[400] = { 0 };
-	double y_augmentedValue[400] = { 0 };
-	double y_gradientNorm[400] = { 0 };
+	Eigen::SparseMatrix<double> CurrHessian;
+	double alfa[SIZE] = { 0 };
+	double y_value[SIZE] = { 0 };
+	double y_augmentedValue[SIZE] = { 0 };
+	double y_gradientNorm[SIZE] = { 0 };
 	std::ofstream SearchDirInfo, solverInfo, hessianInfo;
 
 	// Mutex stuff
