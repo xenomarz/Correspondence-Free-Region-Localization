@@ -178,8 +178,10 @@ export class AutoquadsSideBar extends SideBar {
                 </side-bar-parameter-input>
             </side-bar-collapsable-section>
             <side-bar-collapsable-section
-                caption="Visual Properties">
-                ${this.objectiveFunctionsProperties.map(item => html`
+                caption="Vertex Visual Properties">
+                ${this.objectiveFunctionsProperties.filter(item => { 
+                    return item.propertyEffectType === EnumsExports.PropertyEffectType.VERTEX_COLOR; 
+                }).map(item => html`
                     <autoquads-side-bar-objective-function-visual-property
                         objective-function-id=${item.objectiveFunctionId}
                         property-id=${item.propertyId}
@@ -192,6 +194,45 @@ export class AutoquadsSideBar extends SideBar {
                     </autoquads-side-bar-objective-function-visual-property>
                 `)}
             </side-bar-collapsable-section>
+
+            <side-bar-collapsable-section
+                caption="Edge Visual Properties (Model)">
+                ${this.objectiveFunctionsProperties.filter(item => { 
+                    return item.propertyEffectType === EnumsExports.PropertyEffectType.EDGE_COLOR &&
+                            item.associatedView === EnumsExports.View.MODEL; 
+                }).map(item => html`
+                    <autoquads-side-bar-objective-function-visual-property
+                        objective-function-id=${item.objectiveFunctionId}
+                        property-id=${item.propertyId}
+                        objective-function-name=${item.objectiveFunctionName}
+                        property-name=${item.propertyName}
+                        color=${item.color}
+                        ?selected=${item.selected}
+                        @color-changed="${this._objectiveFunctionVisualPropertyColorInputChanged}"
+                        @selected-changed="${this._objectiveFunctionVisualPropertyVisibilityInputChanged}">
+                    </autoquads-side-bar-objective-function-visual-property>
+                `)}
+            </side-bar-collapsable-section>
+
+            <side-bar-collapsable-section
+                caption="Edge Visual Properties (Soup)">
+                ${this.objectiveFunctionsProperties.filter(item => { 
+                    return item.propertyEffectType === EnumsExports.PropertyEffectType.EDGE_COLOR &&
+                            item.associatedView === EnumsExports.View.SOUP; 
+                }).map(item => html`
+                    <autoquads-side-bar-objective-function-visual-property
+                        objective-function-id=${item.objectiveFunctionId}
+                        property-id=${item.propertyId}
+                        objective-function-name=${item.objectiveFunctionName}
+                        property-name=${item.propertyName}
+                        color=${item.color}
+                        ?selected=${item.selected}
+                        @color-changed="${this._objectiveFunctionVisualPropertyColorInputChanged}"
+                        @selected-changed="${this._objectiveFunctionVisualPropertyVisibilityInputChanged}">
+                    </autoquads-side-bar-objective-function-visual-property>
+                `)}
+            </side-bar-collapsable-section>            
+
             <side-bar-collapsable-section
                 caption="Solver">
                 <paper-toggle-button
