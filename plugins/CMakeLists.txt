@@ -24,6 +24,6 @@ target_link_libraries(${PROJECT_NAME}
 		igl::opengl
 		igl::opengl_glfw
 		igl::opengl_glfw_imgui
-		# igl::matlab
+		igl::matlab
 		rds::optimization_lib)		
 		  

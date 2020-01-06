@@ -27,4 +27,6 @@ set_property(TARGET worhp PROPERTY IMPORTED_IMPLIB ${CMAKE_SOURCE_DIR}/ext/worhp
 target_link_libraries(${PROJECT_NAME}
 	PRIVATE
 		igl::core
-		worhp)
+		worhp
+		igl::matlab
+		)

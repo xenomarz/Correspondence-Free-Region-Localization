@@ -12,6 +12,7 @@
 #include <libs/optimization_lib/include/solvers/GradientDescentSolver.h>
 #include <libs/optimization_lib/include/solvers/worhpSolver.h>
 
+//#include <optimization_lib/include/objective_functions/AreaDistortion.h>
 #include <libs/optimization_lib/include/objective_functions/SymmetricDirichlet.h>
 #include <libs/optimization_lib/include/objective_functions/SymmetricDirichletCompositeMajorization.h>
 #include <libs/optimization_lib/include/objective_functions/AreaDistortion.h>
