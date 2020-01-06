@@ -30,21 +30,24 @@ worhpSolver::worhpSolver() {
 	IsDataReady = false;
 }
 
+void worhpSolver::init(const Eigen::MatrixXd& V, const Eigen::MatrixX3i& F) {
+	this->V = V;
+	this->F = F;
+	this->functionF->init_mesh(V, F);
+	this->functionG->init_mesh(V, F);
+	this->functionF->init();
+	this->functionG->init();
+	IsDataReady = false;
+}
+
 worhpSolver::~worhpSolver() {
 	delete this->functionF;
 	delete this->functionG;
 }
 
-Eigen::VectorXd worhpSolver::run(
-	const Eigen::MatrixXd& V,
-	const Eigen::MatrixX3i& F,
-	const Eigen::VectorXd& initialPoint)
+void worhpSolver::run(const Eigen::VectorXd& initialPoint)
 {
 	IsDataReady = false;
-	this->functionF->init_mesh(V, F);
-	this->functionG->init_mesh(V, F);
-	this->functionF->init();
-	this->functionG->init();
 	/*
 	 * WORHP data structures
 	 *
@@ -342,7 +345,7 @@ Eigen::VectorXd worhpSolver::run(
 	// Deallocate all data structures.
 	// Data structures must not be accessed after this call.
 	WorhpFree(&opt, &wsp, &par, &cnt);
-	return lastX;
+	return;
 }
 
 void worhpSolver::update_data(OptVar* opt) {

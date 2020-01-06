@@ -1242,8 +1242,6 @@ void basic_app::start_worhp_solver_thread() {
 		solver_thread = std::thread(
 			&worhpSolver::run,
 			Outputs[i].worhpsolver.get(),
-			OutputModel(i).V,
-			OutputModel(i).F,
 			initialPoint
 		);
 		solver_thread.detach();
@@ -1323,6 +1321,9 @@ void basic_app::initializeSolver(const int index)
 	Outputs[index].newton->init(Outputs[index].totalObjective, initialguessXX);
 	Outputs[index].gradient_descent->setFlipAvoidingLineSearch(F);
 	Outputs[index].gradient_descent->init(Outputs[index].totalObjective, initialguessXX);
+
+	//update worhp solver
+	Outputs[index].worhpsolver->init(V, F);
 	
 	std::cout << "Solver is initialized!" << std::endl;
 }
