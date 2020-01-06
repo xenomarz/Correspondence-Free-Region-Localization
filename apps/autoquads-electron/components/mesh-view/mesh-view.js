@@ -599,16 +599,13 @@ export class MeshView extends LitElement {
     _initializeMeshEdges() {
         let lineSegmentsGeometry = new LineSegmentsGeometry.LineSegmentsGeometry();
 
-        // let bla1 = this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE);
-        // let bla2 = this.meshProvider.getBufferedEdgeColors();
-
         lineSegmentsGeometry.setPositions(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE));
         lineSegmentsGeometry.setColors(this.meshProvider.getBufferedEdgeColors());
 
         let lineMaterial = new LineMaterial.LineMaterial({ 
             color: 0xffffff,
             vertexColors: THREE.VertexColors, 
-            linewidth: 10 
+            linewidth: 10
         });
 
         lineMaterial.resolution.set(window.innerWidth, window.innerHeight);

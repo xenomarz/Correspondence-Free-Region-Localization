@@ -7,6 +7,7 @@ import '../../web_modules/@polymer/paper-toggle-button.js';
 import '../../web_modules/@vaadin/vaadin-button.js';
 import '../../web_modules/@vaadin/vaadin-combo-box.js';
 import '../../web_modules/@vaadin/vaadin-checkbox.js';
+import '../../web_modules/@vaadin/vaadin-radio-button.js';
 import '../../web_modules/@vaadin/vaadin-text-field/vaadin-number-field.js';
 import '../../web_modules/@vaadin/vaadin-select.js';
 

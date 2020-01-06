@@ -85,7 +85,8 @@ const INITIAL_STATE = {
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.ALL
+            associatedView: EnumsExports.View.ALL,
+            weight: 100
         },
         {
             objectiveFunctionId: 'Symmetric Dirichlet',
@@ -95,7 +96,8 @@ const INITIAL_STATE = {
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.ALL        
+            associatedView: EnumsExports.View.ALL,
+            weight: 100
         },
         {
             objectiveFunctionId: 'Seamless',
@@ -105,7 +107,8 @@ const INITIAL_STATE = {
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.ALL 
+            associatedView: EnumsExports.View.ALL,
+            weight: 100
         },
         {
             objectiveFunctionId: 'Seamless',
@@ -115,7 +118,8 @@ const INITIAL_STATE = {
             propertyName: 'Value Per Edge (Domain)',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.MODEL
+            associatedView: EnumsExports.View.MODEL,
+            weight: 100
         },
         {
             objectiveFunctionId: 'Seamless',
@@ -125,7 +129,8 @@ const INITIAL_STATE = {
             propertyName: 'Angle Value Per Edge (Domain)',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.MODEL
+            associatedView: EnumsExports.View.MODEL,
+            weight: 100
         },
         {
             objectiveFunctionId: 'Seamless',
@@ -135,7 +140,8 @@ const INITIAL_STATE = {
             propertyName: 'Length Value Per Edge (Domain)',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.MODEL
+            associatedView: EnumsExports.View.MODEL,
+            weight: 1000
         },
         {
             objectiveFunctionId: 'Seamless',
@@ -145,7 +151,8 @@ const INITIAL_STATE = {
             propertyName: 'Value Per Edge (Image)',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.SOUP
+            associatedView: EnumsExports.View.SOUP,
+            weight: 100
         },
         {
             objectiveFunctionId: 'Seamless',
@@ -155,7 +162,8 @@ const INITIAL_STATE = {
             propertyName: 'Angle Value Per Edge (Image)',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.SOUP
+            associatedView: EnumsExports.View.SOUP,
+            weight: 100
         },
         {
             objectiveFunctionId: 'Seamless',
@@ -165,7 +173,8 @@ const INITIAL_STATE = {
             propertyName: 'Length Value Per Edge (Image)',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.SOUP
+            associatedView: EnumsExports.View.SOUP,
+            weight: 1000
         },
         {
             objectiveFunctionId: 'Singular Points',
@@ -175,7 +184,8 @@ const INITIAL_STATE = {
             propertyName: 'Singularity Weight Per Vertex',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.ALL
+            associatedView: EnumsExports.View.ALL,
+            weight: 100
         },
         {
             objectiveFunctionId: 'Singular Points',
@@ -185,7 +195,8 @@ const INITIAL_STATE = {
             propertyName: 'Positive Angular Defect',
             color: 'rgb(0,0,255)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.ALL
+            associatedView: EnumsExports.View.ALL,
+            weight: 100
         },
         {
             objectiveFunctionId: 'Singular Points',
@@ -195,7 +206,8 @@ const INITIAL_STATE = {
             propertyName: 'Negative Angular Defect',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.ALL
+            associatedView: EnumsExports.View.ALL,
+            weight: 100
         }             
     ]
 };

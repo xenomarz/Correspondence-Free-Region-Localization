@@ -36,48 +36,18 @@ export class AutoquadsMeshProvider extends MeshProvider {
         this.objectiveFunctionsProperties = objectiveFunctionsProperties;
     }
 
-    getBufferedColors2(elementCount, propertyEffectType, associatedView) {
-        let componenetsCount = 6 * elementCount;
+    getBufferedColors(elementCount, colorsPerElement, propertyEffectType, associatedView, defaultColor) {
+        let componentsPerColor = 3;
+        let componentsPerElement = componentsPerColor * colorsPerElement;
+        let componenetsCount = componentsPerElement * elementCount;
         let bufferedColors = new Float32Array(componenetsCount);
 
         for (let i = 0; i < elementCount; i++) {
-            let baseIndex = 6 * i;
-            bufferedColors[baseIndex + 0] = 1;
-            bufferedColors[baseIndex + 1] = 0;
-            bufferedColors[baseIndex + 2] = 0;
-            bufferedColors[baseIndex + 3] = 1;
-            bufferedColors[baseIndex + 4] = 0;
-            bufferedColors[baseIndex + 5] = 0;
-        }
-
-        // for(let objectiveFunctionProperty of this._objectiveFunctionsProperties) {
-        //     if(HelpersExports.isVisible(objectiveFunctionProperty.visibility) && 
-        //         (objectiveFunctionProperty.propertyEffectType === propertyEffectType) &&
-        //         (objectiveFunctionProperty.associatedView & associatedView !== 0)) {
-        //         let vector = this._engine.getObjectiveFunctionProperty(objectiveFunctionProperty.objectiveFunctionId, objectiveFunctionProperty.propertyId);
-        //         let color = new THREE.Color(objectiveFunctionProperty.color);
-        //         let colorArray = color.toArray();
-        //         for (let i = 0; i < elementCount; i++) {
-        //             let baseIndex = 3 * i;
-        //             let factor = Math.min(vector[i] * 100, 1);
-        //             for(let j = 0; j < 3; j++) { 
-        //                 bufferedColors[baseIndex + j] = 1 * (1 - factor) + colorArray[j] * (factor);
-        //             }
-        //         }
-        //     }
-        // }
-        
-        return bufferedColors;
-    }
-
-    getBufferedColors(elementCount, colorComponenetsPerElement, propertyEffectType, associatedView) {
-        let componenetsCount = colorComponenetsPerElement * elementCount;
-        let bufferedColors = new Float32Array(componenetsCount);
-
-        for (let i = 0; i < elementCount; i++) {
-            let baseIndex = colorComponenetsPerElement * i;
-            for(let j = 0; j < colorComponenetsPerElement; j++) {
-                bufferedColors[baseIndex + j] = 1;
+            let baseIndex = componentsPerElement * i;
+            for(let j = 0; j < colorsPerElement; j++) {
+                bufferedColors[baseIndex + componentsPerColor * j + 0] = defaultColor.r;
+                bufferedColors[baseIndex + componentsPerColor * j + 1] = defaultColor.g;
+                bufferedColors[baseIndex + componentsPerColor * j + 2] = defaultColor.b;
             }
         }
 
@@ -88,11 +58,12 @@ export class AutoquadsMeshProvider extends MeshProvider {
                 let vector = this._engine.getObjectiveFunctionProperty(objectiveFunctionProperty.objectiveFunctionId, objectiveFunctionProperty.propertyId);
                 let color = new THREE.Color(objectiveFunctionProperty.color);
                 let colorArray = color.toArray();
+                let defaultColorArray = defaultColor.toArray();
                 for (let i = 0; i < elementCount; i++) {
-                    let baseIndex = colorComponenetsPerElement * i;
-                    let factor = Math.min(vector[i] * 100, 1);
-                    for(let j = 0; j < colorComponenetsPerElement; j++) { 
-                        bufferedColors[baseIndex + j] = 1 * (1 - factor) + colorArray[j % 3] * (factor);
+                    let baseIndex = componentsPerElement * i;
+                    let factor = Math.min(vector[i] * objectiveFunctionProperty.weight, 1);
+                    for(let j = 0; j < componentsPerElement; j++) { 
+                        bufferedColors[baseIndex + j] = defaultColorArray[j % 3] * (1 - factor) + colorArray[j % 3] * (factor);
                     }
                 }
             }
@@ -102,11 +73,11 @@ export class AutoquadsMeshProvider extends MeshProvider {
     }
 
     getBufferedVertexColors() {
-        return this.getBufferedColors(this._bufferedFacesCount, 3, EnumsExports.PropertyEffectType.VERTEX_COLOR, this._associatedView);
+        return this.getBufferedColors(this._bufferedFacesCount, 1, EnumsExports.PropertyEffectType.VERTEX_COLOR, this._associatedView, new THREE.Color(1, 1, 1));
     }
 
     getBufferedEdgeColors() {
-        return this.getBufferedColors(this._edgeCount, 6, EnumsExports.PropertyEffectType.EDGE_COLOR, this._associatedView);
+        return this.getBufferedColors(this._edgeCount, 2, EnumsExports.PropertyEffectType.EDGE_COLOR, this._associatedView, new THREE.Color(0.5, 0.5, 0.5));
     }
 
     getBufferedUvs() {

@@ -42,6 +42,7 @@
       "@vaadin/vaadin-button",
       "@vaadin/vaadin-checkbox",
       "@vaadin/vaadin-combo-box",
+      "@vaadin/vaadin-radio-button",
       "@vaadin/vaadin-split-layout",
       "@vaadin/vaadin-text-field/vaadin-text-field.js",
       "@vaadin/vaadin-text-field/vaadin-number-field.js",
