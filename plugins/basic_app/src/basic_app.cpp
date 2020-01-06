@@ -410,24 +410,26 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 }
 
 IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
+	std::cout << "key = " << key << std::endl;
+	std::cout << "modifiers = " << modifiers << std::endl;
 
-	if (key == 'F' || key == 'f')
+	if ((key == 'F' || key == 'f') && modifiers == 1)
 		mouse_mode = app_utils::FACE_SELECT;
-	if (key == 'V' || key == 'v')
+	if ((key == 'V' || key == 'v') && modifiers == 1)
 		mouse_mode = app_utils::VERTEX_SELECT;
-	if (key == 'C' || key == 'c')
+	if ((key == 'C' || key == 'c') && modifiers == 1)
 		mouse_mode = app_utils::CLEAR;
-	if (key == ' ')
+	if ((key == ' ') && modifiers == 1)
 		solver_on ? stop_solver_thread() : start_solver_thread();
-	if (key == '1') {
+	if ((key == '!') && modifiers == 1) {
 		isLoadNeeded = true;
 		modelPath = Utils::RDSPath() + "\\models\\cube.off";
 	}
-	if (key == '2') {
+	if ((key == '@') && modifiers == 1) {
 		isLoadNeeded = true;
 		modelPath = Utils::RDSPath() + "\\models\\Triangle306090degree.obj";
 	}
-	if (key == 'w' || key == 'W') {
+	if ((key == 'w' || key == 'W') && modifiers == 1) {
 		start_worhp_solver_thread();
 	}
 		

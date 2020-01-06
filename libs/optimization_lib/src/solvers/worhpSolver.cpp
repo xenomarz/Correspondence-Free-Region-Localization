@@ -131,10 +131,10 @@ void worhpSolver::run(const Eigen::VectorXd& initialPoint)
 	 * Set function types (optional). Possible values are:
 	 * WORHP_CONSTANT, WORHP_LINEAR, WORHP_QUADRATIC, WORHP_NONLINEAR
 	 */
-	/*opt.FType = WORHP_QUADRATIC;
-	opt.GType[0] = WORHP_QUADRATIC;
-	opt.GType[1] = WORHP_LINEAR;
-	opt.GType[2] = WORHP_LINEAR;*/
+	opt.FType = WORHP_QUADRATIC;
+	for (int i = 0; i < opt.m; i++) {
+		opt.GType[i] = WORHP_QUADRATIC;
+	}
 
 	/*
 	 * These pointers give access to the essential user data:
