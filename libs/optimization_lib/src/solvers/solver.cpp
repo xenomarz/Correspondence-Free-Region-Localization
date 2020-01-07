@@ -211,7 +211,18 @@ void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {
 	igl::matlab::mlsetmatrix(&engine, "Hess", CurrHessian);
 	igl::matlab::mleval(&engine, "Hess = full(Hess);");
 	igl::matlab::mleval(&engine, "Hess = Hess + Hess'-diag(diag((Hess)));");
-	igl::matlab::mleval(&engine, "[U,S,V] = svd(Hess)");
+	igl::matlab::mleval(&engine, "InvHess = inv(Hess);");
+	igl::matlab::mleval(&engine, "EigHess = eig(Hess)");
+	Eigen::MatrixXd Mgrad(g.rows(),1);
+	Mgrad = g;
+	igl::matlab::mlsetmatrix(&engine, "grad", Mgrad);
+	Eigen::MatrixXd Mp(p.rows(), 1);
+	Mp = p;
+	igl::matlab::mlsetmatrix(&engine, "p", Mp);
+	Eigen::MatrixXd Mx(X.rows(), 1);
+	Mx = X;
+	igl::matlab::mlsetmatrix(&engine, "X_before", Mx);
+
 
 
 	//output the hessian
@@ -347,6 +358,12 @@ void solver::value_linesearch(std::ofstream& SearchDirInfo)
 	}
 
 #ifdef SAVE_RESULTS_TO_CSV
+	Eigen::MatrixXd Mx(X.rows(), 1);
+	Mx = X;
+	igl::matlab::mlsetmatrix(&engine, "X_After", Mx);
+	igl::matlab::mlsetscalar(&engine, "alfa", step_size);
+	igl::matlab::mlsetscalar(&engine, "line_search_iter", cur_iter);
+
 	//add the solver's choice of alfa
 	if (lineSearch_type == Utils::GradientNorm)
 		SearchDirInfo << ",line search type,Gradient norm," << std::endl;
@@ -416,6 +433,12 @@ void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
 	}
 
 #ifdef SAVE_RESULTS_TO_CSV
+	Eigen::MatrixXd Mx(X.rows(), 1);
+	Mx = X;
+	igl::matlab::mlsetmatrix(&engine, "X_After", Mx);
+	igl::matlab::mlsetscalar(&engine, "Galfa", step_size);
+	igl::matlab::mlsetscalar(&engine, "line_search_iter", cur_iter);
+
 	//add the solver's choice of alfa
 	if(lineSearch_type == Utils::GradientNorm)
 		SearchDirInfo << ",line search type,Gradient norm," << std::endl;
