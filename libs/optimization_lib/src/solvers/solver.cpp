@@ -1,7 +1,4 @@
 #include <solvers/solver.h>
-#include <igl/matlab_format.h>
-#include <igl/matlab/MatlabWorkspace.h>
-#include <igl/matlab/matlabinterface.h>
 #define SAVE_RESULTS_TO_CSV
 
 solver::solver(const bool isConstrObjFunc, const int solverID)
@@ -14,6 +11,10 @@ solver::solver(const bool isConstrObjFunc, const int solverID)
 	IsConstrObjFunc(isConstrObjFunc)
 {
 #ifdef SAVE_RESULTS_TO_CSV
+	// Launch MATLAB
+	igl::matlab::mlinit(&engine);
+	igl::matlab::mleval(&engine, "desktop");
+
 	//save data in csv files
 	std::string path = Utils::RDSPath() + "CSV_Output\\" + "Solver" + std::to_string(solverID) + "\\";
 	mkdir((Utils::RDSPath() + "CSV_Output\\").c_str());
@@ -203,36 +204,14 @@ void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {
 		hessianInfo << std::endl;
 	}
 	
-	/////////////////////////////////////////
-	// Matlab instance
-	Engine* engine;
-	
-	// Eigenvectors of the laplacian
-	Eigen::MatrixXd EV;
-
 	// Launch MATLAB
 	igl::matlab::mlinit(&engine);
-
-	// Send Laplacian matrix to matlab
-	igl::matlab::mlsetmatrix(&engine, "L", CurrHessian);
-
-	// Plot the laplacian matrix using matlab spy
-	igl::matlab::mleval(&engine, "spy(L)");
-
-	// Extract the first 10 eigenvectors
-	igl::matlab::mleval(&engine, "[EV,~] = eigs(-L,10,'sm')");
-
-	// Plot the size of EV (only for demonstration purposes)
-	std::cerr << igl::matlab::mleval(&engine, "size(EV)") << std::endl;
-
-	// Retrieve the result
-	igl::matlab::mlgetmatrix(&engine, "EV", EV);
-	/////////////////////////////////////////
-	
-
-
-
-
+	igl::matlab::mleval(&engine, "desktop");
+	// Send matrix to matlab
+	igl::matlab::mlsetmatrix(&engine, "Hess", CurrHessian);
+	igl::matlab::mleval(&engine, "Hess = full(Hess);");
+	igl::matlab::mleval(&engine, "Hess = Hess + Hess'-diag(diag((Hess)));");
+	igl::matlab::mleval(&engine, "[U,S,V] = svd(Hess)");
 
 
 	//output the hessian

@@ -17,7 +17,8 @@ target_link_libraries(${PROJECT_NAME}
         igl::opengl_glfw
         igl::opengl_glfw_imgui
         rds::optimization_lib
-        rds::plugins)
+        rds::plugins
+		igl::matlab)
 
 set_target_properties(${PROJECT_NAME} 
     PROPERTIES

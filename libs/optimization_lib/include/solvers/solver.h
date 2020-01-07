@@ -6,6 +6,9 @@
 #include <shared_mutex>
 #include <igl/flip_avoiding_line_search.h>
 #include <Eigen/SparseCholesky>
+#include <igl/matlab_format.h>
+#include <igl/matlab/MatlabWorkspace.h>
+#include <igl/matlab/matlabinterface.h>
 
 #define SIZE 400
 
@@ -65,6 +68,9 @@ protected:
 	//vector<double> SS;
 
 private:
+	// Matlab instance
+	Engine *engine;
+
 	int solverID;
 	// energy output from the last step
 	double currentEnergy;
@@ -77,6 +83,7 @@ private:
 	void saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo);
 	void saveSolverInfo(int numIteration, std::ofstream& solverInfo);
 	void saveHessianInfo(int numIteration, std::ofstream& hessianInfo);
+	//CSV output
 	Eigen::SparseMatrix<double> CurrHessian;
 	double alfa[SIZE] = { 0 };
 	double y_value[SIZE] = { 0 };
