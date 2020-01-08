@@ -83,12 +83,14 @@ private:
 	void saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo);
 	void saveSolverInfo(int numIteration, std::ofstream& solverInfo);
 	void saveHessianInfo(int numIteration, std::ofstream& hessianInfo);
+	void sendDataToMatlab();
 	//CSV output
 	Eigen::SparseMatrix<double> CurrHessian;
-	double alfa[SIZE] = { 0 };
-	double y_value[SIZE] = { 0 };
-	double y_augmentedValue[SIZE] = { 0 };
-	double y_gradientNorm[SIZE] = { 0 };
+	Eigen::MatrixXd 
+		lineSearch_alfa,
+		lineSearch_value, 
+		lineSearch_augmentedValue, 
+		lineSearch_gradientNorm;
 	std::ofstream SearchDirInfo, solverInfo, hessianInfo;
 
 	// Mutex stuff
