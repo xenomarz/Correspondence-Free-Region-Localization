@@ -26,9 +26,11 @@ export class AutoquadsMeshProvider extends MeshProvider {
         switch(this._associatedView) {
             case EnumsExports.View.MODEL:
                 this._edgeCount = this._engine.getDomainEdgesCount();
+                this._propertyModifier = 'domain';
                 break;
             case EnumsExports.View.SOUP:
                 this._edgeCount = this._engine.getImageEdgesCount();
+                this._propertyModifier = 'image';
                 break;                
         }
 

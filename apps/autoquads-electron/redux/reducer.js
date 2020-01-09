@@ -85,7 +85,6 @@ const INITIAL_STATE = {
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.ALL,
             weight: 100
         },
         {
@@ -96,7 +95,6 @@ const INITIAL_STATE = {
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.ALL,
             weight: 100
         },
         {
@@ -107,73 +105,36 @@ const INITIAL_STATE = {
             propertyName: 'Value Per Vertex',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.ALL,
             weight: 100
         },
         {
             objectiveFunctionId: 'Seamless',
-            propertyId: 'domain_value_per_edge',
+            propertyId: 'value_per_edge',
             propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
             objectiveFunctionName: 'Seamless',
             propertyName: 'Value Per Edge (Domain)',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.MODEL,
             weight: 100
         },
         {
             objectiveFunctionId: 'Seamless',
-            propertyId: 'domain_angle_value_per_edge',
+            propertyId: 'angle_value_per_edge',
             propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
             objectiveFunctionName: 'Seamless',
             propertyName: 'Angle Value Per Edge (Domain)',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.MODEL,
             weight: 100
         },
         {
             objectiveFunctionId: 'Seamless',
-            propertyId: 'domain_length_value_per_edge',
+            propertyId: 'length_value_per_edge',
             propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
             objectiveFunctionName: 'Seamless',
             propertyName: 'Length Value Per Edge (Domain)',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.MODEL,
-            weight: 1000
-        },
-        {
-            objectiveFunctionId: 'Seamless',
-            propertyId: 'image_value_per_edge',
-            propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
-            objectiveFunctionName: 'Seamless',
-            propertyName: 'Value Per Edge (Image)',
-            color: 'rgb(255,0,0)',
-            visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.SOUP,
-            weight: 100
-        },
-        {
-            objectiveFunctionId: 'Seamless',
-            propertyId: 'image_angle_value_per_edge',
-            propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
-            objectiveFunctionName: 'Seamless',
-            propertyName: 'Angle Value Per Edge (Image)',
-            color: 'rgb(255,0,0)',
-            visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.SOUP,
-            weight: 100
-        },
-        {
-            objectiveFunctionId: 'Seamless',
-            propertyId: 'image_length_value_per_edge',
-            propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
-            objectiveFunctionName: 'Seamless',
-            propertyName: 'Length Value Per Edge (Image)',
-            color: 'rgb(255,0,0)',
-            visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.SOUP,
             weight: 1000
         },
         {
@@ -184,7 +145,6 @@ const INITIAL_STATE = {
             propertyName: 'Singularity Weight Per Vertex',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.ALL,
             weight: 100
         },
         {
@@ -195,7 +155,6 @@ const INITIAL_STATE = {
             propertyName: 'Positive Angular Defect',
             color: 'rgb(0,0,255)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.ALL,
             weight: 100
         },
         {
@@ -206,7 +165,6 @@ const INITIAL_STATE = {
             propertyName: 'Negative Angular Defect',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            associatedView: EnumsExports.View.ALL,
             weight: 100
         }             
     ]

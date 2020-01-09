@@ -30,12 +30,9 @@ public:
 	enum class Properties : int32_t
 	{
 		Zeta = SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::Properties::Count_,
-		DomainAngleValuePerEdge,
-		DomainLengthValuePerEdge,
-		DomainValuePerEdge,
-		ImageAngleValuePerEdge,
-		ImageLengthValuePerEdge,
-		ImageValuePerEdge
+		AngleValuePerEdge,
+		LengthValuePerEdge,
+		ValuePerEdge
 	};
 	
 	/**
@@ -102,7 +99,40 @@ public:
 	{
 		return zeta_;
 	}
-	
+
+	const Eigen::VectorXd& SeamlessObjective::GetValuePerEdge(const ObjectiveFunctionBase::PropertyModifiers property_modifiers) const
+	{
+		switch(property_modifiers)
+		{
+		case ObjectiveFunctionBase::PropertyModifiers::Domain:
+			return GetDomainValuePerEdge();
+		case ObjectiveFunctionBase::PropertyModifiers::Image:
+			return GetImageValuePerEdge();
+		}
+	}
+
+	const Eigen::VectorXd& SeamlessObjective::GetAngleValuePerEdge(const ObjectiveFunctionBase::PropertyModifiers property_modifiers) const
+	{
+		switch (property_modifiers)
+		{
+		case ObjectiveFunctionBase::PropertyModifiers::Domain:
+			return GetDomainAngleValuePerEdge();
+		case ObjectiveFunctionBase::PropertyModifiers::Image:
+			return GetImageAngleValuePerEdge();
+		}
+	}
+
+	const Eigen::VectorXd& SeamlessObjective::GetLengthValuePerEdge(const ObjectiveFunctionBase::PropertyModifiers property_modifiers) const
+	{
+		switch (property_modifiers)
+		{
+		case ObjectiveFunctionBase::PropertyModifiers::Domain:
+			return GetDomainLengthValuePerEdge();
+		case ObjectiveFunctionBase::PropertyModifiers::Image:
+			return GetImageLengthValuePerEdge();
+		}
+	}
+
 	const Eigen::VectorXd& SeamlessObjective::GetImageValuePerEdge() const
 	{
 		return image_value_per_edge_;
@@ -140,29 +170,21 @@ public:
 			return true;
 		}
 
+		const ObjectiveFunctionBase::PropertyModifiers property_modifiers = static_cast<ObjectiveFunctionBase::PropertyModifiers>(property_modifier_id);
 		const Properties properties = static_cast<Properties>(property_id);
 		switch (properties)
 		{
 		case Properties::Zeta:
 			property_value = GetZeta();
 			return true;
-		case Properties::DomainAngleValuePerEdge:
-			property_value = GetDomainAngleValuePerEdge();
+		case Properties::AngleValuePerEdge:
+			property_value = GetAngleValuePerEdge(property_modifiers);
 			return true;
-		case Properties::DomainLengthValuePerEdge:
-			property_value = GetDomainLengthValuePerEdge();
+		case Properties::LengthValuePerEdge:
+			property_value = GetLengthValuePerEdge(property_modifiers);
 			return true;
-		case Properties::DomainValuePerEdge:
-			property_value = GetDomainValuePerEdge();
-			return true;
-		case Properties::ImageAngleValuePerEdge:
-			property_value = GetImageAngleValuePerEdge();
-			return true;
-		case Properties::ImageLengthValuePerEdge:
-			property_value = GetImageLengthValuePerEdge();
-			return true;
-		case Properties::ImageValuePerEdge:
-			property_value = GetImageValuePerEdge();
+		case Properties::ValuePerEdge:
+			property_value = GetValuePerEdge(property_modifiers);
 			return true;
 		}
 
