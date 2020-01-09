@@ -68,28 +68,3 @@ int UpdatableObject::BuildDependencyLayers(const std::shared_ptr<UpdatableObject
 	dependency_layers[layer_index].push_back(updatable_object);
 	return layer_index;
 }
-
-
-UpdatableObject::UpdateOptions operator | (const UpdatableObject::UpdateOptions lhs, const UpdatableObject::UpdateOptions rhs)
-{
-	using T = std::underlying_type_t<UpdatableObject::UpdateOptions>;
-	return static_cast<UpdatableObject::UpdateOptions>(static_cast<T>(lhs) | static_cast<T>(rhs));
-}
-
-UpdatableObject::UpdateOptions& operator |= (UpdatableObject::UpdateOptions& lhs, const UpdatableObject::UpdateOptions rhs)
-{
-	lhs = lhs | rhs;
-	return lhs;
-}
-
-UpdatableObject::UpdateOptions operator & (const UpdatableObject::UpdateOptions lhs, const UpdatableObject::UpdateOptions rhs)
-{
-	using T = std::underlying_type_t<UpdatableObject::UpdateOptions>;
-	return static_cast<UpdatableObject::UpdateOptions>(static_cast<T>(lhs)& static_cast<T>(rhs));
-}
-
-UpdatableObject::UpdateOptions& operator &= (UpdatableObject::UpdateOptions& lhs, const UpdatableObject::UpdateOptions rhs)
-{
-	lhs = lhs & rhs;
-	return lhs;
-}

@@ -297,6 +297,7 @@ private:
 	std::vector<Eigen::DenseIndex> constrained_faces_indices;
 	Eigen::MatrixX2d image_vertices_;
 	std::unordered_map<std::string, uint32_t> properties_map_;
+	std::unordered_map<std::string, uint32_t> property_modifiers_map_;
 };
 
 #endif

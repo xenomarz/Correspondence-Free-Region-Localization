@@ -89,6 +89,9 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "negative_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::NegativeAngularDefectSingularitiesIndices) });
 	properties_map_.insert({ "positive_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::PositiveAngularDefectSingularitiesIndices) });
 
+	property_modifiers_map_.insert({ "domain", static_cast<uint32_t>(ObjectiveFunction::PropertyModifiers::None) });
+	property_modifiers_map_.insert({ "image", static_cast<uint32_t>(ObjectiveFunction::PropertyModifiers::Domain) });
+	
 	empty_data_provider_ = std::make_shared<EmptyDataProvider>(mesh_wrapper_);
 	plain_data_provider_ = std::make_shared<PlainDataProvider>(mesh_wrapper_);
 	
@@ -428,6 +431,12 @@ Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 		if (!info[1].IsString())
 		{
 			Napi::TypeError::New(env, "Second argument is expected to be a String").ThrowAsJavaScriptException();
+			return Napi::Value();
+		}
+
+		if (!info[2].IsString())
+		{
+			Napi::TypeError::New(env, "Third argument is expected to be a String").ThrowAsJavaScriptException();
 			return Napi::Value();
 		}
 	}

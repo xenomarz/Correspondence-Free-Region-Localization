@@ -17,10 +17,11 @@
 // Optimization Lib Includes
 #include "../core/core.h"
 #include "../core/updatable_object.h"
+#include "./objective_function_base.h"
 #include "../data_providers/data_provider.h"
 
 template<Eigen::StorageOptions StorageOrder_, typename VectorType_>
-class ObjectiveFunction : public UpdatableObject
+class ObjectiveFunction : public ObjectiveFunctionBase
 {
 public:
 	/**
@@ -31,23 +32,11 @@ public:
 		StorageOrder = StorageOrder_
 	};
 
-	enum class Properties : int32_t
-	{
-		Value,
-		ValuePerVertex,
-		Gradient,
-		GradientNorm,
-		Hessian,
-		Weight,
-		Name,
-		Count_
-	};
-
 	/**
 	 * Constructor and destructor
 	 */
 	ObjectiveFunction(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<DataProvider>& data_provider, const std::string& name) :
-		UpdatableObject(mesh_data_provider),
+		ObjectiveFunctionBase(mesh_data_provider),
 		f_(0),
 		w_(1),
 		name_(name),
@@ -109,7 +98,7 @@ public:
 	}
 
 	// Generic property getter
-	virtual bool GetProperty(const int32_t property_id, std::any& property_value)
+	virtual bool GetProperty(const int32_t property_id, const int32_t property_modifier, std::any& property_value)
 	{
 		const Properties properties = static_cast<Properties>(property_id);
 		switch (properties)
