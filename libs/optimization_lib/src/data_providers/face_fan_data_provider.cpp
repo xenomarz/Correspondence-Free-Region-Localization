@@ -51,7 +51,7 @@ void FaceFanDataProvider::Update(const Eigen::VectorXd& x)
 	angle_ = accumulated_angle;
 }
 
-void FaceFanDataProvider::Update(const Eigen::VectorXd& x, const UpdateOptions update_options)
+void FaceFanDataProvider::Update(const Eigen::VectorXd& x, int32_t update_modifiers)
 {
 	Update(x);
 }

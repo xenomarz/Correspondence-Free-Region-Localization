@@ -69,13 +69,13 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	Napi::ObjectWrap<Engine>(info),
 	mesh_wrapper_(std::make_shared<MeshWrapper>())
 {
-	properties_map_.insert({ "value", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Value) });
-	properties_map_.insert({ "value_per_vertex", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::ValuePerVertex) });
-	properties_map_.insert({ "gradient", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Gradient) });
-	properties_map_.insert({ "gradient_norm", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::GradientNorm) });
-	properties_map_.insert({ "hessian", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Hessian) });
-	properties_map_.insert({ "weight", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Weight) });
-	properties_map_.insert({ "name", static_cast<uint32_t>(ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>::Properties::Name) });
+	properties_map_.insert({ "value", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Value) });
+	properties_map_.insert({ "value_per_vertex", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::ValuePerVertex) });
+	properties_map_.insert({ "gradient", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Gradient) });
+	properties_map_.insert({ "gradient_norm", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::GradientNorm) });
+	properties_map_.insert({ "hessian", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Hessian) });
+	properties_map_.insert({ "weight", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Weight) });
+	properties_map_.insert({ "name", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Name) });
 	properties_map_.insert({ "delta", static_cast<uint32_t>(Separation<Eigen::StorageOptions::RowMajor>::Properties::Delta) });
 	properties_map_.insert({ "zeta", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::Zeta) });
 	properties_map_.insert({ "domain_angle_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::DomainAngleValuePerEdge) });
@@ -89,8 +89,9 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "negative_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::NegativeAngularDefectSingularitiesIndices) });
 	properties_map_.insert({ "positive_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::PositiveAngularDefectSingularitiesIndices) });
 
-	property_modifiers_map_.insert({ "domain", static_cast<uint32_t>(ObjectiveFunction::PropertyModifiers::None) });
-	property_modifiers_map_.insert({ "image", static_cast<uint32_t>(ObjectiveFunction::PropertyModifiers::Domain) });
+	property_modifiers_map_.insert({ "none", static_cast<uint32_t>(ObjectiveFunctionBase::PropertyModifiers::None) });
+	property_modifiers_map_.insert({ "domain", static_cast<uint32_t>(ObjectiveFunctionBase::PropertyModifiers::Domain) });
+	property_modifiers_map_.insert({ "image", static_cast<uint32_t>(ObjectiveFunctionBase::PropertyModifiers::Image) });
 	
 	empty_data_provider_ = std::make_shared<EmptyDataProvider>(mesh_wrapper_);
 	plain_data_provider_ = std::make_shared<PlainDataProvider>(mesh_wrapper_);
@@ -420,7 +421,7 @@ Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	/**
 	 * Validate input arguments
 	 */
-	if (info.Length() >= 2)
+	if (info.Length() >= 3)
 	{
 		if (!info[0].IsString())
 		{
@@ -461,11 +462,13 @@ Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	 * Get property
 	 */
 	const std::string property_name = info[1].ToString();
+	const std::string property_modifier_name = info[2].ToString();
 	if(properties_map_.contains(property_name))
 	{
 		const uint32_t property_id = properties_map_.at(property_name);
+		const uint32_t property_modifier_id = property_modifiers_map_.at(property_modifier_name);
 		std::any any_value;
-		if (objective_function->GetProperty(property_id, any_value))
+		if (objective_function->GetProperty(property_id, property_modifier_id, any_value))
 		{
 			return NativeToJS(env, any_value);
 		}
@@ -489,7 +492,7 @@ Napi::Value Engine::SetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	/**
 	 * Validate input arguments
 	 */
-	if (info.Length() >= 3)
+	if (info.Length() >= 2)
 	{
 		if (!info[0].IsString())
 		{
@@ -500,12 +503,6 @@ Napi::Value Engine::SetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 		if (!info[1].IsString())
 		{
 			Napi::TypeError::New(env, "Second argument is expected to be a String").ThrowAsJavaScriptException();
-			return Napi::Value();
-		}
-
-		if (info[2].IsEmpty())
-		{
-			Napi::TypeError::New(env, "Third argument is expected to be defined").ThrowAsJavaScriptException();
 			return Napi::Value();
 		}
 	}

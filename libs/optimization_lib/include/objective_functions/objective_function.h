@@ -98,7 +98,7 @@ public:
 	}
 
 	// Generic property getter
-	virtual bool GetProperty(const int32_t property_id, const int32_t property_modifier, std::any& property_value)
+	virtual bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, std::any& property_value) override
 	{
 		const Properties properties = static_cast<Properties>(property_id);
 		switch (properties)
@@ -138,7 +138,7 @@ public:
 	}
 
 	// Generic property setter
-	virtual bool SetProperty(const int32_t property_id, const std::any& property_value)
+	virtual bool SetProperty(const int32_t property_id, const std::any& property_value) override
 	{
 		const Properties properties = static_cast<Properties>(property_id);
 		switch (properties)
@@ -171,29 +171,31 @@ public:
 	// Update value, gradient and hessian for a given x
 	void Update(const Eigen::VectorXd& x) override
 	{
-		Update(x, UpdateOptions::ALL);
+		Update(x, static_cast<int32_t>(UpdateOptions::All));
 	}
 	
-	void Update(const Eigen::VectorXd& x, const UpdateOptions update_options)
+	void Update(const Eigen::VectorXd& x, const int32_t update_modifiers) override
 	{
 		PreUpdate(x);
 
-		if ((update_options & UpdateOptions::VALUE) != UpdateOptions::NONE)
+		const UpdateOptions update_options = static_cast<UpdateOptions>(update_modifiers);
+
+		if ((update_options & UpdateOptions::Value) != UpdateOptions::None)
 		{
 			CalculateValue(f_);
 		}
 
-		if ((update_options & UpdateOptions::VALUE_PER_VERTEX) != UpdateOptions::NONE)
+		if ((update_options & UpdateOptions::ValuePerVertex) != UpdateOptions::None)
 		{
 			CalculateValuePerVertex(f_per_vertex_);
 		}
 
-		if ((update_options & UpdateOptions::GRADIENT) != UpdateOptions::NONE)
+		if ((update_options & UpdateOptions::Gradient) != UpdateOptions::None)
 		{
 			CalculateGradient(g_);
 		}
 
-		if ((update_options & UpdateOptions::HESSIAN) != UpdateOptions::NONE)
+		if ((update_options & UpdateOptions::Hessian) != UpdateOptions::None)
 		{
 			CalculateTriplets(triplets_);
 		}
@@ -203,11 +205,12 @@ public:
 
 	void UpdateLayers(const Eigen::VectorXd& x)
 	{
-		UpdateLayers(x, UpdateOptions::ALL);
+		UpdateLayers(x, UpdateOptions::All);
 	}
 
 	void UpdateLayers(const Eigen::VectorXd& x, const UpdateOptions update_options)
 	{
+		int32_t update_modifiers = static_cast<int32_t>(update_options);
 		const auto layers_count = dependency_layers_.size();
 		for(std::size_t current_layer_index = 0; current_layer_index < layers_count; current_layer_index++)
 		{
@@ -221,17 +224,17 @@ public:
 				#pragma omp parallel for
 				for (long i = 2; i < objects_count; i++)
 				{
-					current_layer[i]->Update(x, update_options);
+					current_layer[i]->Update(x, update_modifiers);
 				}
 
 				if (objects_count > 0)
 				{
-					current_layer[0]->Update(x, update_options);
+					current_layer[0]->Update(x, update_modifiers);
 				}
 
 				if (objects_count > 1)
 				{
-					current_layer[1]->Update(x, update_options);
+					current_layer[1]->Update(x, update_modifiers);
 				}
 			}
 			else
@@ -239,12 +242,12 @@ public:
 				#pragma omp parallel for
 				for (long i = 0; i < objects_count; i++)
 				{
-					current_layer[i]->Update(x, update_options);
+					current_layer[i]->Update(x, update_modifiers);
 				}
 			}
 		}
 
-		Update(x, update_options);
+		Update(x, update_modifiers);
 	}
 
 	template<typename ValueVectorType_>

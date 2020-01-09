@@ -2,13 +2,14 @@
 #ifndef OPTIMIZATION_LIB_OBJECTIVE_FUNCTION_BASE_H
 #define OPTIMIZATION_LIB_OBJECTIVE_FUNCTION_BASE_H
 
+// STL includes
+#include <any>
+
 // Eigen Includes
 #include <Eigen/Core>
 
 // Optimization lib includes
 #include "../data_providers/mesh_data_provider.h"
-
-//#include <unordered_set>
 
 class ObjectiveFunctionBase : public UpdatableObject
 {
@@ -18,12 +19,12 @@ public:
 	 */
 	enum class UpdateOptions : int32_t
 	{
-		NONE = 0,
-		VALUE = 1,
-		VALUE_PER_VERTEX = 2,
-		GRADIENT = 4,
-		HESSIAN = 8,
-		ALL = 15
+		None = 0,
+		Value = 1,
+		ValuePerVertex = 2,
+		Gradient = 4,
+		Hessian = 8,
+		All = 15
 	};
 
 	enum class Properties : int32_t
@@ -53,9 +54,14 @@ public:
 	virtual ~ObjectiveFunctionBase();
 
 	/**
-	 * Public methods
+	 * Getters
 	 */
-	virtual void Update(const Eigen::VectorXd& x, const UpdateOptions update_options) = 0;
+	virtual bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, std::any& property_value) = 0;
+
+	/**
+	 * Setters
+	 */
+	virtual bool SetProperty(const int32_t property_id, const std::any& property_value) = 0;
 };
 
 // http://blog.bitwigglers.org/using-enum-classes-as-type-safe-bitmasks/
@@ -63,5 +69,4 @@ ObjectiveFunctionBase::UpdateOptions operator | (const ObjectiveFunctionBase::Up
 ObjectiveFunctionBase::UpdateOptions& operator |= (ObjectiveFunctionBase::UpdateOptions& lhs, const ObjectiveFunctionBase::UpdateOptions rhs);
 ObjectiveFunctionBase::UpdateOptions operator & (const ObjectiveFunctionBase::UpdateOptions lhs, const ObjectiveFunctionBase::UpdateOptions rhs);
 ObjectiveFunctionBase::UpdateOptions& operator &= (ObjectiveFunctionBase::UpdateOptions& lhs, const ObjectiveFunctionBase::UpdateOptions rhs);
-
 #endif

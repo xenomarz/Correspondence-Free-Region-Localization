@@ -3,9 +3,7 @@
 #define OPTIMIZATION_LIB_ITERATIVE_METHOD_H
 
 // STL includes
-#include <vector>
 #include <memory>
-#include <atomic>
 #include <thread>
 
 // Eigen includes
@@ -15,13 +13,8 @@
 // LIBIGL includes
 #include <igl/flip_avoiding_line_search.h>
 
-// Intel TBB includes
-//#include <tbb/concurrent_queue.h>
-//#include <tbb/concurrent_vector.h>
-
 // Optimization lib includes
 #include "../objective_functions/dense_objective_function.h"
-#include "../data_providers/data_provider.h"
 
 // https://en.wikipedia.org/wiki/Iterative_method
 template <Eigen::StorageOptions StorageOrder_>
@@ -32,7 +25,7 @@ public:
 		objective_function_(objective_function),
 		x_(x0),
 		p_(Eigen::VectorXd::Zero(x0.size())),
-		thread_state_(ThreadState::TERMINATED),
+		thread_state_(ThreadState::Terminated),
 		max_backtracking_iterations_(12),
 		flip_avoiding_line_search_enabled_(false),
 		approximation_invalidated_(false)
@@ -55,22 +48,22 @@ public:
 		std::lock_guard<std::mutex> lock(thread_state_mutex_);
 		switch (thread_state_)
 		{
-		case ThreadState::TERMINATED:
-			thread_state_ = ThreadState::RUNNING;
+		case ThreadState::Terminated:
+			thread_state_ = ThreadState::Running;
 			thread_ = std::thread([&]() {
 				while (true)
 				{
 					std::unique_lock<std::mutex> lock(thread_state_mutex_);
-					cv_.wait(lock, [&] { return thread_state_ != ThreadState::PAUSED; });
+					cv_.wait(lock, [&] { return thread_state_ != ThreadState::Paused; });
 
-					if (thread_state_ == ThreadState::TERMINATING)
+					if (thread_state_ == ThreadState::Terminating)
 					{
-						thread_state_ = ThreadState::TERMINATED;
+						thread_state_ = ThreadState::Terminated;
 						break;
 					}
 					lock.unlock();
 
-					objective_function_->UpdateLayers(x_, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::GRADIENT | DenseObjectiveFunction<StorageOrder_>::UpdateOptions::HESSIAN);
+					objective_function_->UpdateLayers(x_, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::Gradient | DenseObjectiveFunction<StorageOrder_>::UpdateOptions::Hessian);
 					ComputeDescentDirection(p_);
 					LineSearch(p_);
 				}
@@ -84,8 +77,8 @@ public:
 		std::lock_guard<std::mutex> lock(thread_state_mutex_);
 		switch (thread_state_)
 		{
-		case ThreadState::RUNNING:
-			thread_state_ = ThreadState::PAUSED;
+		case ThreadState::Running:
+			thread_state_ = ThreadState::Paused;
 			break;
 		}
 	}
@@ -95,11 +88,11 @@ public:
 		std::unique_lock<std::mutex> lock(thread_state_mutex_);
 		switch (thread_state_)
 		{
-		case ThreadState::PAUSED:
-			thread_state_ = ThreadState::RUNNING;
+		case ThreadState::Paused:
+			thread_state_ = ThreadState::Running;
 			cv_.notify_one();
 			break;
-		case ThreadState::TERMINATED:
+		case ThreadState::Terminated:
 			lock.unlock();
 			Start();
 			break;
@@ -111,8 +104,8 @@ public:
 		std::unique_lock<std::mutex> lock(thread_state_mutex_);
 		switch (thread_state_)
 		{
-		case ThreadState::RUNNING:
-			thread_state_ = ThreadState::TERMINATING;
+		case ThreadState::Running:
+			thread_state_ = ThreadState::Terminating;
 			lock.unlock();
 			thread_.join();
 			break;
@@ -147,10 +140,10 @@ private:
 	 * Private data type definitions
 	 */
 	enum class ThreadState {
-		TERMINATED,
-		TERMINATING,
-		RUNNING,
-		PAUSED
+		Terminated,
+		Terminating,
+		Running,
+		Paused
 	};
 
 	/**
@@ -188,7 +181,7 @@ private:
 		while (current_iteration < max_backtracking_iterations_)
 		{
 			current_x = x_ + step_size * p;
-			objective_function_->UpdateLayers(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::VALUE);
+			objective_function_->UpdateLayers(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::Value);
 			updated_value = objective_function_->GetValue();
 
 			if (updated_value >= current_value)
@@ -203,7 +196,7 @@ private:
 			current_iteration++;
 		}
 
-		objective_function_->UpdateLayers(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::VALUE_PER_VERTEX);
+		objective_function_->UpdateLayers(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::ValuePerVertex);
 
 		std::lock_guard<std::mutex> x_lock(x_mutex_);
 		x_ = std::move(current_x);

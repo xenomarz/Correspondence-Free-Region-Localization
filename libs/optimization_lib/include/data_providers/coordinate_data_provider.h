@@ -33,7 +33,7 @@ public:
 	 * Public methods
 	 */
 	void Update(const Eigen::VectorXd& x) override;
-	void Update(const Eigen::VectorXd& x, const UpdateOptions update_options) override;
+	void Update(const Eigen::VectorXd& x, const int32_t update_modifiers) override;
 	double GetCoordinateValue() const;
 	RDS::SparseVariableIndex GetSparseVariableIndex() const;
 	

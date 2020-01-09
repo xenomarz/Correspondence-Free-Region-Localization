@@ -106,9 +106,9 @@ public:
 		return std::static_pointer_cast<FaceFanDataProvider>(this->data_provider_);
 	}
 
-	bool GetProperty(const int32_t property_id, std::any& property_value) override
+	bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, std::any& property_value) override
 	{
-		if (SummationObjective<PeriodicObjective<StorageOrder_>, Eigen::SparseVector<double>>::GetProperty(property_id, property_value))
+		if (SummationObjective<PeriodicObjective<StorageOrder_>, Eigen::SparseVector<double>>::GetProperty(property_id, property_modifier_id, property_value))
 		{
 			return true;
 		}

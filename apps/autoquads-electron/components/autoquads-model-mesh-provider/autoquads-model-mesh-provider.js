@@ -60,7 +60,7 @@ export class AutoquadsModelMeshProvider extends AutoquadsMeshProvider {
             if((objectiveFunctionProperty.objectiveFunctionId === 'Singular Points') && 
             HelpersExports.isVisible(objectiveFunctionProperty.visibility) &&
             ((objectiveFunctionProperty.propertyId === 'positive_angular_defect_singularities_indices') || (objectiveFunctionProperty.propertyId === 'negative_angular_defect_singularities_indices'))) {
-                let vector = this._engine.getObjectiveFunctionProperty(objectiveFunctionProperty.objectiveFunctionId, objectiveFunctionProperty.propertyId);
+                let vector = this._engine.getObjectiveFunctionProperty(objectiveFunctionProperty.objectiveFunctionId, objectiveFunctionProperty.propertyId, 'none');
                 for(let i = 0; i < vector.length; i++) {
                     let currentDomainVertex = domainVertices[vector[i]];
                     let isoSphereClone = this._isoSphere.clone();

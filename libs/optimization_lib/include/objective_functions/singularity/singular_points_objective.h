@@ -103,9 +103,9 @@ public:
 		return negative_angular_defect_singularity_indices_;
 	}
 
-	bool GetProperty(const int32_t property_id, std::any& property_value) override
+	bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, std::any& property_value) override
 	{
-		if (SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::GetProperty(property_id, property_value))
+		if (SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::GetProperty(property_id, property_modifier_id, property_value))
 		{
 			return true;
 		}

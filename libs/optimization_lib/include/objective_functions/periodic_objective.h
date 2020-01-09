@@ -118,9 +118,9 @@ public:
 		return polynomial_coeffs_;
 	}
 
-	bool GetProperty(const int32_t property_id, std::any& property_value) override
+	bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, std::any& property_value) override
 	{
-		if (SparseObjectiveFunction<StorageOrder_>::GetProperty(property_id, property_value))
+		if (SparseObjectiveFunction<StorageOrder_>::GetProperty(property_id, property_modifier_id, property_value))
 		{
 			return true;
 		}

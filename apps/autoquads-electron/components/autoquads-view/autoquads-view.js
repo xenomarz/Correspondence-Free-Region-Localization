@@ -414,7 +414,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
     get delta() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Separation', 'delta');
+            return this._engine.getObjectiveFunctionProperty('Separation', 'delta', 'none');
         }
     }
 
@@ -430,7 +430,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
     get lambda() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Separation', 'weight');
+            return this._engine.getObjectiveFunctionProperty('Separation', 'weight', 'none');
         }
     }
 
@@ -445,7 +445,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
     get zeta() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Seamless', 'zeta');
+            return this._engine.getObjectiveFunctionProperty('Seamless', 'zeta', 'none');
         }
     }    
 
@@ -460,7 +460,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
     get seamlessWeight() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Seamless', 'weight');
+            return this._engine.getObjectiveFunctionProperty('Seamless', 'weight', 'none');
         }
     }
 
@@ -475,7 +475,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
     get singularityWeight() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Singular Points', 'weight');
+            return this._engine.getObjectiveFunctionProperty('Singular Points', 'weight', 'none');
         }
     }
 
@@ -490,7 +490,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
     get singularityInterval() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Singular Points', 'interval');
+            return this._engine.getObjectiveFunctionProperty('Singular Points', 'interval', 'none');
         }
     }
 
