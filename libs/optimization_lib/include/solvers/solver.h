@@ -10,8 +10,6 @@
 #include <igl/matlab/MatlabWorkspace.h>
 #include <igl/matlab/matlabinterface.h>
 
-#define SIZE 400
-
 class solver
 {
 public:
@@ -91,6 +89,9 @@ private:
 		lineSearch_value, 
 		lineSearch_augmentedValue, 
 		lineSearch_gradientNorm;
+	double step_size;
+	int cur_iter;
+	Eigen::VectorXd X_before;
 	std::ofstream SearchDirInfo, solverInfo, hessianInfo;
 
 	// Mutex stuff

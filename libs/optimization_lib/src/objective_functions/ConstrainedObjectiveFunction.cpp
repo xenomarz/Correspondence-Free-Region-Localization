@@ -33,7 +33,8 @@ void ConstrainedObjectiveFunction::init_hessian()
 bool ConstrainedObjectiveFunction::update_variables(const Eigen::VectorXd& X)
 {
 	lambda = X.tail(F.rows());
-	//cout << "X = " << X << endl;
-	//cout << "lambda = " << lambda << endl;
+	/*std::cout << "X = " << X << std::endl;
+	std::cout << "lambda = " << lambda << std::endl;
+	std::cout << "X.head(2 * V.rows()) = " << X.head(2 * V.rows()) << std::endl;*/
 	return TriangleMeshObjectiveFunction::update_variables(X.head(2 * V.rows()));
 }

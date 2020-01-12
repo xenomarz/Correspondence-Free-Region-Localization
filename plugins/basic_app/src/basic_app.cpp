@@ -1224,10 +1224,15 @@ void basic_app::start_solver_thread() {
 		solver_on = false;
 		return;
 	}
-	for (auto&o : Outputs) {
+	for (int i = 0; i < Outputs.size();i++) {
 		std::cout << ">> start new solver" << std::endl;
 		solver_on = true;
-		solver_thread = std::thread(&solver::run/*run*//*run_one_iteration*/, o.solver.get());
+		//update solver
+		Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(OutputModel(i).V.leftCols(2).data(), OutputModel(i).V.rows() * 2);
+		Outputs[i].newton->init(Outputs[i].totalObjective, initialguessXX);
+		Outputs[i].gradient_descent->init(Outputs[i].totalObjective, initialguessXX);
+		//start solver
+		solver_thread = std::thread(&solver::run/*run*//*run_one_iteration*/, Outputs[i].solver.get());
 		solver_thread.detach();
 	}
 }
