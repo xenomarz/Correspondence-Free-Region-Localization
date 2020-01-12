@@ -7,8 +7,6 @@
 #define JUMP 0.01f
 #define ARRAY_OUTPUT_SIZE (int)((HIGH - LOW) / JUMP) + 1
 
-
-
 solver::solver(const bool isConstrObjFunc, const int solverID)
 	:
 	solverID(solverID),
@@ -76,7 +74,9 @@ int solver::run()
 	halt = false;
 	int steps = 0;
 	do {
+		while (step_by_step && !another_step);
 		run_one_iteration(steps);
+		another_step = false;
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
 	

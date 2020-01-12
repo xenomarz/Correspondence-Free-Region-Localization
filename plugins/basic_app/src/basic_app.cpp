@@ -10,9 +10,10 @@ IGL_INLINE void basic_app::init(igl::opengl::glfw::Viewer *_viewer)
 	if (_viewer)
 	{
 		isLoadNeeded = false;
-		IsMouseDraggingAnyWindow = IsMouseHoveringAnyWindow = solver_settings =
+		step_by_step = false;
+		IsMouseDraggingAnyWindow = IsMouseHoveringAnyWindow = 
 			worhp_on = solver_on = Outputs_Settings = Highlighted_face = IsTranslate = model_loaded = false;
-		show_text = true;
+		solver_settings = show_text = true;
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
 		linesearch_type = Utils::FunctionValue;
@@ -144,7 +145,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	Draw_menu_for_models(viewer->data(inputModelID));
 	Draw_menu_for_output_settings();
 	Draw_menu_for_text_results();
-	if (solver_settings)
+	if (model_loaded && solver_settings)
 		Draw_menu_for_solver_settings();
 
 	follow_and_mark_selected_faces();
@@ -387,22 +388,22 @@ IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 	if (!selected_vertices.empty())
 	{
 		//check if there faces which is selected on the left screen
-		int v = pick_vertex(InputModel().V, InputModel().F, app_utils::InputOnly);
-		Model_Translate_ID = inputModelID;
-		Core_Translate_ID = inputCoreID;
-		for (int i = 0; i < Outputs.size(); i++) {
-			if (v == -1) {
-				v = pick_vertex(OutputModel(i).V, OutputModel(i).F, app_utils::OutputOnly0+i);
-				Model_Translate_ID = Outputs[i].ModelID;
-				Core_Translate_ID = Outputs[i].CoreID;
-			}
-		}
-		
-		if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
-		{
-			IsTranslate = true;
-			Translate_Index = v;
-		}
+int v = pick_vertex(InputModel().V, InputModel().F, app_utils::InputOnly);
+Model_Translate_ID = inputModelID;
+Core_Translate_ID = inputCoreID;
+for (int i = 0; i < Outputs.size(); i++) {
+	if (v == -1) {
+		v = pick_vertex(OutputModel(i).V, OutputModel(i).F, app_utils::OutputOnly0 + i);
+		Model_Translate_ID = Outputs[i].ModelID;
+		Core_Translate_ID = Outputs[i].CoreID;
+	}
+}
+
+if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vertices.end())
+{
+	IsTranslate = true;
+	Translate_Index = v;
+}
 	}
 	}
 
@@ -432,8 +433,8 @@ IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 	if ((key == 'w' || key == 'W') && modifiers == 1) {
 		start_worhp_solver_thread();
 	}
-		
-	
+
+
 	return ImGuiMenu::key_pressed(key, modifiers);
 }
 
@@ -458,7 +459,7 @@ IGL_INLINE bool basic_app::pre_draw() {
 			OutputModel(i).set_colors(Outputs[i].color_per_face);
 		}
 	}
-	
+
 	//Update the model's vertex colors in the two screens
 	InputModel().point_size = 10;
 	InputModel().set_points(Vertices_Input, color_per_vertex);
@@ -486,6 +487,16 @@ void basic_app::Draw_menu_for_colors() {
 void basic_app::Draw_menu_for_Solver() {
 	if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
 	{
+
+		if (ImGui::Checkbox("step_by_step", &step_by_step)) {
+			for (auto& o : Outputs)
+				o.solver->step_by_step = this->step_by_step;
+		}
+		if (solver_on && step_by_step && ImGui::Button("Another Step")) {
+			for (auto& o : Outputs)
+				o.solver->another_step = true;
+		}
+
 		if (ImGui::Checkbox(solver_on ? "On" : "Off", &solver_on)) {
 			solver_on ? start_solver_thread() : stop_solver_thread();
 		}
@@ -744,7 +755,7 @@ void basic_app::Draw_menu_for_solver_settings() {
 
 	if (firstUnconstrIndex != -1) {
 		// prepare the first column
-		ImGui::Columns(Outputs[firstUnconstrIndex].totalObjective->objectiveList.size() + 3, "Unconstrained weights table", true);
+		ImGui::Columns(Outputs[firstUnconstrIndex].totalObjective->objectiveList.size() + 4, "Unconstrained weights table", true);
 		ImGui::Separator();
 		ImGui::NextColumn();
 		for (auto & obj : Outputs[firstUnconstrIndex].totalObjective->objectiveList) {
@@ -753,6 +764,9 @@ void basic_app::Draw_menu_for_solver_settings() {
 		}
 		ImGui::Text("shift eigen values");
 		ImGui::NextColumn();
+		ImGui::Text("Remove output");
+		ImGui::NextColumn();
+		ImGui::Text("copy/paste mesh");
 		ImGui::NextColumn();
 		ImGui::Separator();
 
@@ -778,6 +792,16 @@ void basic_app::Draw_menu_for_solver_settings() {
 						stop = true;
 					}
 					ImGui::PopStyleColor();
+					ImGui::NextColumn();
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
+					if (!copy_vertices.size() && ImGui::Button("Copy")) {
+						copy_vertices = OutputModel(i).V;
+					}
+					if (copy_vertices.size() && ImGui::Button("Paste")) {
+						OutputModel(i).set_vertices(copy_vertices);
+						copy_vertices.resize(0,0);
+					}
+					ImGui::PopStyleColor();
 				}
 					
 				ImGui::NextColumn();
@@ -792,7 +816,7 @@ void basic_app::Draw_menu_for_solver_settings() {
 
 	if ((!stop) && (firstConstrIndex != -1)) {
 		// prepare the first column
-		ImGui::Columns(Outputs[firstConstrIndex].totalObjective->objectiveList.size() + 3, "Constrained weights table", true);
+		ImGui::Columns(Outputs[firstConstrIndex].totalObjective->objectiveList.size() + 4, "Constrained weights table", true);
 		ImGui::Separator();
 		ImGui::NextColumn();
 		for (auto & obj : Outputs[firstConstrIndex].totalObjective->objectiveList) {
@@ -801,6 +825,9 @@ void basic_app::Draw_menu_for_solver_settings() {
 		}
 		ImGui::Text("shift eigen values");
 		ImGui::NextColumn();
+		ImGui::Text("Remove output");
+		ImGui::NextColumn();
+		ImGui::Text("copy/paste mesh");
 		ImGui::NextColumn();
 		ImGui::Separator();
 
@@ -824,6 +851,16 @@ void basic_app::Draw_menu_for_solver_settings() {
 					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
 					if (ImGui::Button("Remove"))
 						remove_output(i);
+					ImGui::PopStyleColor();
+					ImGui::NextColumn();
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
+					if (!copy_vertices.size() && ImGui::Button("Copy")) {
+						copy_vertices = OutputModel(i).V;
+					}
+					if (copy_vertices.size() && ImGui::Button("Paste")) {
+						OutputModel(i).set_vertices(copy_vertices);
+						copy_vertices.resize(0,0);
+					}
 					ImGui::PopStyleColor();
 				}
 

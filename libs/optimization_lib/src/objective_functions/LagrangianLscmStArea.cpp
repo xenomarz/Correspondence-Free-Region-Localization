@@ -3,6 +3,7 @@
 LagrangianLscmStArea::LagrangianLscmStArea()
 {
 	name = "LagrangianLscmStArea";
+	w = 1.0f;
 }
 
 double LagrangianLscmStArea::value(const bool update)
