@@ -1,6 +1,6 @@
 #pragma once
 
-#include <libs/optimization_lib/include/objective_functions/TriangleMeshObjectiveFunction.h>
+#include "libs/optimization_lib/include/objective_functions/TriangleMeshObjectiveFunction.h"
 
 class ConstrainedObjectiveFunction : public TriangleMeshObjectiveFunction
 {

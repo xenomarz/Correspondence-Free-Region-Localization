@@ -1,6 +1,6 @@
 #pragma once
 
-#include <libs/optimization_lib/include/solvers/solver.h>
+#include "libs/optimization_lib/include/solvers/solver.h"
 
 class GradientDescentSolver : public solver
 {

@@ -1,4 +1,4 @@
-#include <basic_app/include/basic_app.h>
+#include "basic_app/include/basic_app.h"
 
 basic_app::basic_app() :
 	igl::opengl::glfw::imgui::ImGuiMenu(){}
@@ -10,7 +10,6 @@ IGL_INLINE void basic_app::init(igl::opengl::glfw::Viewer *_viewer)
 	if (_viewer)
 	{
 		isLoadNeeded = false;
-		step_by_step = false;
 		IsMouseDraggingAnyWindow = IsMouseHoveringAnyWindow = 
 			worhp_on = solver_on = Outputs_Settings = Highlighted_face = IsTranslate = model_loaded = false;
 		solver_settings = show_text = true;
@@ -309,6 +308,20 @@ IGL_INLINE bool basic_app::mouse_up(int button, int modifier) {
 	return false;
 }
 
+IGL_INLINE bool basic_app::mouse_scroll(float delta_y) {
+	std::cout << "before: ";
+	for (auto& c : viewer->core_list)
+		std::cout << c.camera_zoom << " ";
+	std::cout << std::endl;
+
+	bool r = ImGuiMenu::mouse_scroll(delta_y);
+	std::cout << "After: ";
+	for (auto& c : viewer->core_list)
+		std::cout << c.camera_zoom << " ";
+	std::cout << std::endl;
+	return r;
+}
+
 IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 	if (IsMouseHoveringAnyWindow)
 		IsMouseDraggingAnyWindow = true;
@@ -488,13 +501,9 @@ void basic_app::Draw_menu_for_Solver() {
 	if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 
-		if (ImGui::Checkbox("step_by_step", &step_by_step)) {
-			for (auto& o : Outputs)
-				o.solver->step_by_step = this->step_by_step;
-		}
-		if (solver_on && step_by_step && ImGui::Button("Another Step")) {
-			for (auto& o : Outputs)
-				o.solver->another_step = true;
+		ImGui::Checkbox("step_by_step", &solver::step_by_step);
+		if (solver_on && solver::step_by_step && ImGui::Button("Another Step")) {
+			
 		}
 
 		if (ImGui::Checkbox(solver_on ? "On" : "Off", &solver_on)) {

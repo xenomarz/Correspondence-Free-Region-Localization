@@ -7,20 +7,20 @@
 #include <igl/harmonic.h>
 #include <igl/arap.h>
 #include <igl/map_vertices_to_circle.h>
+#include "../../libs/optimization_lib/include/solvers/solver.h"
+#include "../../libs/optimization_lib/include/solvers/NewtonSolver.h"
+#include "../../libs/optimization_lib/include/solvers/GradientDescentSolver.h"
+#include "../../libs/optimization_lib/include/solvers/worhpSolver.h"
 
-#include <libs/optimization_lib/include/solvers/NewtonSolver.h>
-#include <libs/optimization_lib/include/solvers/GradientDescentSolver.h>
-#include <libs/optimization_lib/include/solvers/worhpSolver.h>
 
-//#include <optimization_lib/include/objective_functions/AreaDistortion.h>
-#include <libs/optimization_lib/include/objective_functions/SymmetricDirichlet.h>
-#include <libs/optimization_lib/include/objective_functions/SymmetricDirichletCompositeMajorization.h>
-#include <libs/optimization_lib/include/objective_functions/AreaDistortion.h>
-#include <libs/optimization_lib/include/objective_functions/AreaDistortionOneRing.h>
-#include <libs/optimization_lib/include/objective_functions/LeastSquaresConformal.h>
-#include <libs/optimization_lib/include/objective_functions/PenaltyPositionalConstraints.h>
-#include <libs/optimization_lib/include/objective_functions/LagrangianLscmStArea.h>
-#include <libs/optimization_lib/include/objective_functions/LagrangianAreaStLscm.h>
+#include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichlet.h"
+#include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichletCompositeMajorization.h"
+#include "../../libs/optimization_lib/include/objective_functions/AreaDistortion.h"
+#include "../../libs/optimization_lib/include/objective_functions/AreaDistortionOneRing.h"
+#include "../../libs/optimization_lib/include/objective_functions/LeastSquaresConformal.h"
+#include "../../libs/optimization_lib/include/objective_functions/PenaltyPositionalConstraints.h"
+#include "../../libs/optimization_lib/include/objective_functions/LagrangianLscmStArea.h"
+#include "../../libs/optimization_lib/include/objective_functions/LagrangianAreaStLscm.h"
 
 #define RED_COLOR Eigen::Vector3f(1, 0, 0)
 #define BLUE_COLOR Eigen::Vector3f(0, 0, 1)

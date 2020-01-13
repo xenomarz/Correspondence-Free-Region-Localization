@@ -1,4 +1,4 @@
-#include <objective_functions/PenaltyPositionalConstraints.h>
+#include "objective_functions/PenaltyPositionalConstraints.h"
 
 PenaltyPositionalConstraints::PenaltyPositionalConstraints(bool isConstrObjFunc)
 {

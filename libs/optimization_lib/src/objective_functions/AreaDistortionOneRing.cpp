@@ -1,4 +1,4 @@
-#include <objective_functions/AreaDistortionOneRing.h>
+#include "objective_functions/AreaDistortionOneRing.h"
 #include <igl/vertex_triangle_adjacency.h>
 AreaDistortionOneRing::AreaDistortionOneRing()
 {

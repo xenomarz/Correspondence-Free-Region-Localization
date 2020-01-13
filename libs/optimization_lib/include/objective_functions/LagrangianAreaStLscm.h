@@ -1,5 +1,5 @@
 #pragma once
-#include <libs/optimization_lib/include/objective_functions/ConstrainedObjectiveFunction.h>
+#include "libs/optimization_lib/include/objective_functions/ConstrainedObjectiveFunction.h"
 
 class LagrangianAreaStLscm : public ConstrainedObjectiveFunction
 {	

@@ -1,4 +1,4 @@
-#include <objective_functions/LagrangianLscmStArea.h>
+#include "objective_functions/LagrangianLscmStArea.h"
 
 LagrangianLscmStArea::LagrangianLscmStArea()
 {

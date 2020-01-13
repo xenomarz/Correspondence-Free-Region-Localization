@@ -1,12 +1,12 @@
 #pragma once
 //#define USE_PARDISO
 
-#include <libs/optimization_lib/include/solvers/solver.h>
+#include "libs/optimization_lib/include/solvers/solver.h"
 
 #ifdef USE_PARDISO
-	#include <libs/optimization_lib/include/solvers/PardisoSolver.h>
+	#include "libs/optimization_lib/include/solvers/PardisoSolver.h"
 #else
-	#include <libs/optimization_lib/include/solvers/EigenSparseSolver.h>
+	#include "libs/optimization_lib/include/solvers/EigenSparseSolver.h"
 #endif
 
 class NewtonSolver : public solver

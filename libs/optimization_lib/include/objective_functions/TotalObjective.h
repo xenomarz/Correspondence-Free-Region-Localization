@@ -1,8 +1,8 @@
 #pragma once
 
-#include <libs/optimization_lib/include/objective_functions/ConstrainedObjectiveFunction.h>
-#include <libs/optimization_lib/include/objective_functions/LagrangianAreaStLscm.h>
-#include <libs/optimization_lib/include/objective_functions/LagrangianLscmStArea.h>
+#include "libs/optimization_lib/include/objective_functions/ConstrainedObjectiveFunction.h"
+#include "libs/optimization_lib/include/objective_functions/LagrangianAreaStLscm.h"
+#include "libs/optimization_lib/include/objective_functions/LagrangianLscmStArea.h"
 
 class TotalObjective : public ConstrainedObjectiveFunction
 {

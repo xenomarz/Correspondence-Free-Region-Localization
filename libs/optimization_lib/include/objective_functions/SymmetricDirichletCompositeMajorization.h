@@ -1,5 +1,5 @@
 #pragma once
-#include <libs/optimization_lib/include/objective_functions/TriangleMeshObjectiveFunction.h>
+#include "libs/optimization_lib/include/objective_functions/TriangleMeshObjectiveFunction.h"
 
 typedef Eigen::Triplet<double> T;
 typedef Eigen::SparseMatrix<double> SpMat;

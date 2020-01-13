@@ -1,4 +1,4 @@
-#include <objective_functions/LeastSquaresConformal.h>
+#include "objective_functions/LeastSquaresConformal.h"
 
 LeastSquaresConformal::LeastSquaresConformal()
 {

@@ -1,4 +1,4 @@
-#include <objective_functions/TriangleMeshObjectiveFunction.h>
+#include "objective_functions/TriangleMeshObjectiveFunction.h"
 
 void TriangleMeshObjectiveFunction::init()
 {

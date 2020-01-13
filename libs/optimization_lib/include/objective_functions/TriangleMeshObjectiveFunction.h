@@ -1,6 +1,7 @@
 #pragma once
 
-#include <libs/optimization_lib/include/objective_functions/ObjectiveFunction.h>
+#include "libs/optimization_lib/include/objective_functions/ObjectiveFunction.h"
+
 
 class TriangleMeshObjectiveFunction: public ObjectiveFunction
 {

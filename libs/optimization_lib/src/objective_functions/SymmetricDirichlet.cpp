@@ -1,4 +1,4 @@
-#include <objective_functions/SymmetricDirichlet.h>
+#include "objective_functions/SymmetricDirichlet.h"
 
 SymmetricDirichlet::SymmetricDirichlet()
 {

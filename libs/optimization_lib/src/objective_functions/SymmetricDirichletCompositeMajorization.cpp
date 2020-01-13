@@ -1,4 +1,4 @@
-#include <objective_functions/SymmetricDirichletCompositeMajorization.h>
+#include "objective_functions/SymmetricDirichletCompositeMajorization.h"
 
 SymmetricDirichletCompositeMajorization::SymmetricDirichletCompositeMajorization()
 {
