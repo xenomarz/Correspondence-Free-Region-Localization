@@ -12,7 +12,7 @@ IGL_INLINE void basic_app::init(igl::opengl::glfw::Viewer *_viewer)
 		isLoadNeeded = false;
 		IsMouseDraggingAnyWindow = IsMouseHoveringAnyWindow = 
 			worhp_on = solver_on = Outputs_Settings = Highlighted_face = IsTranslate = model_loaded = false;
-		solver_settings = show_text = true;
+		step_by_step = solver_settings = show_text = true;
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
 		linesearch_type = Utils::FunctionValue;
@@ -308,20 +308,6 @@ IGL_INLINE bool basic_app::mouse_up(int button, int modifier) {
 	return false;
 }
 
-IGL_INLINE bool basic_app::mouse_scroll(float delta_y) {
-	std::cout << "before: ";
-	for (auto& c : viewer->core_list)
-		std::cout << c.camera_zoom << " ";
-	std::cout << std::endl;
-
-	bool r = ImGuiMenu::mouse_scroll(delta_y);
-	std::cout << "After: ";
-	for (auto& c : viewer->core_list)
-		std::cout << c.camera_zoom << " ";
-	std::cout << std::endl;
-	return r;
-}
-
 IGL_INLINE bool basic_app::mouse_down(int button, int modifier) {
 	if (IsMouseHoveringAnyWindow)
 		IsMouseDraggingAnyWindow = true;
@@ -501,11 +487,9 @@ void basic_app::Draw_menu_for_Solver() {
 	if (ImGui::CollapsingHeader("Solver", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 
-		ImGui::Checkbox("step_by_step", &solver::step_by_step);
-		if (solver_on && solver::step_by_step && ImGui::Button("Another Step")) {
-			
+		if (ImGui::Checkbox("step_by_step", &step_by_step) && solver_on) {
+			start_solver_thread();
 		}
-
 		if (ImGui::Checkbox(solver_on ? "On" : "Off", &solver_on)) {
 			solver_on ? start_solver_thread() : stop_solver_thread();
 		}
@@ -631,7 +615,8 @@ void basic_app::Draw_menu_for_cores(igl::opengl::ViewerCore& core) {
 
 		if (ImGui::Button("Center object", ImVec2(-1, 0)))
 		{
-			core.align_camera_center(viewer->data(data_id).V, viewer->data(data_id).F);
+			std::cout << "data_id = " << data_id << std::endl;
+			core.align_camera_center(viewer->data_list[data_id].V, viewer->data_list[data_id].F);
 		}
 		if (ImGui::Button("Snap canonical view", ImVec2(-1, 0)))
 		{
@@ -1270,6 +1255,7 @@ void basic_app::start_solver_thread() {
 		solver_on = false;
 		return;
 	}
+	stop_solver_thread();
 	for (int i = 0; i < Outputs.size();i++) {
 		std::cout << ">> start new solver" << std::endl;
 		solver_on = true;
@@ -1278,7 +1264,12 @@ void basic_app::start_solver_thread() {
 		Outputs[i].newton->init(Outputs[i].totalObjective, initialguessXX);
 		Outputs[i].gradient_descent->init(Outputs[i].totalObjective, initialguessXX);
 		//start solver
-		solver_thread = std::thread(&solver::run/*run*//*run_one_iteration*/, Outputs[i].solver.get());
+		if (step_by_step) {
+			static int step_counter = 0;
+			solver_thread = std::thread(&solver::run_one_iteration, Outputs[i].solver.get(), step_counter++);
+		}
+		else
+			solver_thread = std::thread(&solver::run, Outputs[i].solver.get());
 		solver_thread.detach();
 	}
 }

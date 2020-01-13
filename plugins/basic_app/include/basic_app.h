@@ -9,6 +9,7 @@
 class basic_app : public igl::opengl::glfw::imgui::ImGuiMenu
 {
 private:
+	bool step_by_step;
 	bool isLoadNeeded;
 	bool model_loaded;
 	float Max_Distortion;
@@ -34,7 +35,6 @@ private:
 	std::set<int> selected_faces, selected_vertices;
 	std::vector<Output> Outputs;
 	Eigen::MatrixXd copy_vertices;
-	bool step_by_step, another_step;
 	//Basic (necessary) parameteres
 	std::string modelName, modelPath;
 	int inputCoreID, inputModelID;

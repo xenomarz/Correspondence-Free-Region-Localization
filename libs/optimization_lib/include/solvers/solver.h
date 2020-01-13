@@ -34,7 +34,6 @@ public:
 	void release_parameter_update_slot();
 
 	// External (interface) and internal working mesh
-	bool step_by_step;
 	Eigen::VectorXd ext_x;
 	Eigen::VectorXd X;
 	Eigen::MatrixX3i F;

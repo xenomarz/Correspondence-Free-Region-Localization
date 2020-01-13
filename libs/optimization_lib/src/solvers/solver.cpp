@@ -1,5 +1,5 @@
-#include <solvers/solver.h>
-#define SAVE_DATA_IN_CSV
+#include "solvers/solver.h"
+//#define SAVE_DATA_IN_CSV
 #define SAVE_DATA_IN_MATLAB
 
 #define HIGH 3
@@ -74,9 +74,7 @@ int solver::run()
 	halt = false;
 	int steps = 0;
 	do {
-		while (step_by_step && !another_step);
 		run_one_iteration(steps);
-		another_step = false;
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
 	
@@ -223,29 +221,35 @@ void solver::prepareData() {
 }
 
 void solver::sendDataToMatlab() {
+	auto N = [&](std::string name) { return name + std::to_string(solverID); };
+
 	// Launch MATLAB
 	igl::matlab::mlinit(&engine);
 	igl::matlab::mleval(&engine, "desktop");
-
-	// Send matrix to matlab
-	igl::matlab::mlsetmatrix(&engine, "Hess", CurrHessian);
-	igl::matlab::mlsetmatrix(&engine, "grad", Eigen::MatrixXd(g));
-	igl::matlab::mleval(&engine, "Hess = full(Hess)");
-	igl::matlab::mleval(&engine, "Hess = Hess + Hess'-diag(diag((Hess)))");
-	igl::matlab::mlsetmatrix(&engine, "p", Eigen::MatrixXd(p));
 	
-	igl::matlab::mlsetmatrix(&engine, "X_before", Eigen::MatrixXd(X_before));
-	igl::matlab::mlsetmatrix(&engine, "X_After", Eigen::MatrixXd(X));
-	igl::matlab::mlsetmatrix(&engine, "lineSearch_alfa", Eigen::MatrixXd(lineSearch_alfa));
-	igl::matlab::mlsetmatrix(&engine, "lineSearch_value", Eigen::MatrixXd(lineSearch_value));
-	igl::matlab::mlsetmatrix(&engine, "lineSearch_augmentedValue", Eigen::MatrixXd(lineSearch_augmentedValue));
-	igl::matlab::mlsetmatrix(&engine, "lineSearch_gradientNorm", Eigen::MatrixXd(lineSearch_gradientNorm));
-	igl::matlab::mlsetscalar(&engine, "chosen_alfa", step_size);
-	igl::matlab::mlsetscalar(&engine, "line_search_iter", cur_iter);
+	// Send matrix to matlab
+	igl::matlab::mlsetmatrix(&engine, N("Hess"), CurrHessian);
+	igl::matlab::mlsetmatrix(&engine, N("grad"), Eigen::MatrixXd(g));
+	igl::matlab::mleval(&engine, N("TriangularHess") + N(" = full(Hess") + ")");
+	igl::matlab::mleval(&engine, N("Hess")+N(" = TriangularHess")+N(" + TriangularHess")+N("'-diag(diag((TriangularHess") + ")))");
+	igl::matlab::mlsetmatrix(&engine, N("p"), Eigen::MatrixXd(p));
+	
+	igl::matlab::mleval(&engine, N("MSE") + " = sum((" + N("Hess") + "*" + N("p") + " + " + N("grad") + ") .^ 2)");
+	igl::matlab::mleval(&engine, N("Matlab_MSE")+ " = sum(("+N("Hess")+" * (" + N("Hess") + "\\(-" + N("grad") + ")) + " + N("grad") + ").^2)");
+	
+	
+	igl::matlab::mlsetmatrix(&engine, N("X_before"), Eigen::MatrixXd(X_before));
+	igl::matlab::mlsetmatrix(&engine, N("X_After"), Eigen::MatrixXd(X));
+	igl::matlab::mlsetmatrix(&engine, N("lineSearch_alfa"), Eigen::MatrixXd(lineSearch_alfa));
+	igl::matlab::mlsetmatrix(&engine, N("lineSearch_value"), Eigen::MatrixXd(lineSearch_value));
+	igl::matlab::mlsetmatrix(&engine, N("lineSearch_augmentedValue"), Eigen::MatrixXd(lineSearch_augmentedValue));
+	igl::matlab::mlsetmatrix(&engine, N("lineSearch_gradientNorm"), Eigen::MatrixXd(lineSearch_gradientNorm));
+	igl::matlab::mlsetscalar(&engine, N("chosen_alfa"), step_size);
+	igl::matlab::mlsetscalar(&engine, N("line_search_iter"), cur_iter);
 
 	//open figure & set position
-	igl::matlab::mleval(&engine, "f = figure");
-	igl::matlab::mleval(&engine, "f.Position = get(groot, 'Screensize')");
+	igl::matlab::mleval(&engine, N("f") + " = figure");
+	igl::matlab::mleval(&engine, N("f") + ".Position = get(groot, 'Screensize')");
 
 	std::string linesearch_Name = (lineSearch_type == Utils::GradientNorm) ?
 		"Gradient Norm: " :
@@ -253,83 +257,86 @@ void solver::sendDataToMatlab() {
 
 	//plot first graph
 	igl::matlab::mleval(&engine, "subplot(2, 2, 1)");
-	igl::matlab::mleval(&engine, "ln = plot(lineSearch_alfa,lineSearch_value)");
-	igl::matlab::mleval(&engine, "ax = gca");
-	igl::matlab::mleval(&engine, "ax.XAxisLocation = 'origin'");
-	igl::matlab::mleval(&engine, "ax.YAxisLocation = 'origin';");
-	igl::matlab::mleval(&engine, "ln.LineWidth = 2");
-	igl::matlab::mleval(&engine, "ln.Color = [0.0 0.0 1.0]");
-	igl::matlab::mleval(&engine, "ln.MarkerEdgeColor = 'b'");
+	igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_value") + ")");
+	igl::matlab::mleval(&engine, N("ax") + " = gca");
+	igl::matlab::mleval(&engine, N("ax") + ".XAxisLocation = 'origin'");
+	igl::matlab::mleval(&engine, N("ax") + ".YAxisLocation = 'origin';");
+	igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
+	igl::matlab::mleval(&engine, N("ln") + ".Color = [0.0 0.0 1.0]");
+	igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'b'");
 	igl::matlab::mleval(&engine, "xlabel('alfa')");
 	igl::matlab::mleval(&engine, "ylabel('function values')");
-	std::cout << igl::matlab::mleval(&engine,
+	igl::matlab::mleval(&engine,
 		"title(['" +
 		linesearch_Name +
-		"\\alpha = ',num2str(chosen_alfa) , '  ,  iteration = ',num2str(line_search_iter)])");
+		"\\alpha = ',num2str(" + N("chosen_alfa") + ") , '  ,  iteration = ',num2str(" + N("line_search_iter") + ")])");
 
 	//plot second graph
-	igl::matlab::mleval(&engine, "subplot(2, 2, 2)"); igl::matlab::mleval(&engine, "ln = plot(lineSearch_alfa,lineSearch_augmentedValue)");
-	igl::matlab::mleval(&engine, "ax = gca");
-	igl::matlab::mleval(&engine, "ax.XAxisLocation = 'origin'");
-	igl::matlab::mleval(&engine, "ax.YAxisLocation = 'origin';");
-	igl::matlab::mleval(&engine, "ln.LineWidth = 2");
-	igl::matlab::mleval(&engine, "ln.Color = [0.0 1.0 0.0]");
-	igl::matlab::mleval(&engine, "ln.MarkerEdgeColor = 'g'");
+	igl::matlab::mleval(&engine, "subplot(2, 2, 2)"); 
+	igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa")+"," + N("lineSearch_augmentedValue") + ")");
+	igl::matlab::mleval(&engine, N("ax") + " = gca");
+	igl::matlab::mleval(&engine, N("ax") + ".XAxisLocation = 'origin'");
+	igl::matlab::mleval(&engine, N("ax") + ".YAxisLocation = 'origin';");
+	igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
+	igl::matlab::mleval(&engine, N("ln") + ".Color = [0.0 1.0 0.0]");
+	igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'g'");
 	igl::matlab::mleval(&engine, "xlabel('alfa')");
 	igl::matlab::mleval(&engine, "ylabel('augmented function values')");
 	igl::matlab::mleval(&engine,
 		"title(['" +
 		linesearch_Name +
-		"\\alpha = ',num2str(chosen_alfa) , '  ,  iteration = ',num2str(line_search_iter)])");
+		"\\alpha = ',num2str(" + N("chosen_alfa") + ") , '  ,  iteration = ',num2str("+N("line_search_iter")+")])");
 
 
 	//plot third graph
-	igl::matlab::mleval(&engine, "subplot(2, 2, 3)"); igl::matlab::mleval(&engine, "ln = plot(lineSearch_alfa,lineSearch_gradientNorm)");
-	igl::matlab::mleval(&engine, "ax = gca");
-	igl::matlab::mleval(&engine, "ax.XAxisLocation = 'origin'");
-	igl::matlab::mleval(&engine, "ax.YAxisLocation = 'origin';");
-	igl::matlab::mleval(&engine, "ln.LineWidth = 2");
-	igl::matlab::mleval(&engine, "ln.Color = [1.0 0.0 0.0]");
-	igl::matlab::mleval(&engine, "ln.MarkerEdgeColor = 'r'");
+	igl::matlab::mleval(&engine, "subplot(2, 2, 3)"); 
+	igl::matlab::mleval(&engine, N("ln") + " = plot("+N("lineSearch_alfa") + "," + N("lineSearch_gradientNorm") + ")");
+	igl::matlab::mleval(&engine, N("ax") + " = gca");
+	igl::matlab::mleval(&engine, N("ax") + ".XAxisLocation = 'origin'");
+	igl::matlab::mleval(&engine, N("ax") + ".YAxisLocation = 'origin';");
+	igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
+	igl::matlab::mleval(&engine, N("ln") + ".Color = [1.0 0.0 0.0]");
+	igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'r'");
 	igl::matlab::mleval(&engine, "xlabel('alfa')");
 	igl::matlab::mleval(&engine, "ylabel('Gradient norm values')");
 	igl::matlab::mleval(&engine,
 		"title(['" +
 		linesearch_Name +
-		"\\alpha = ',num2str(chosen_alfa) , '  ,  iteration = ',num2str(line_search_iter)])");
+		"\\alpha = ',num2str(" + N("chosen_alfa") + ") , '  ,  iteration = ',num2str(" + N("line_search_iter") + ")])");
 
 
 	//plot fourth graph
-	igl::matlab::mleval(&engine, "subplot(2, 2, 4)"); igl::matlab::mleval(&engine, "ln = plot(lineSearch_alfa,lineSearch_value)");
-	igl::matlab::mleval(&engine, "ax = gca");
-	igl::matlab::mleval(&engine, "ax.XAxisLocation = 'origin'");
-	igl::matlab::mleval(&engine, "ax.YAxisLocation = 'origin';");
-	igl::matlab::mleval(&engine, "ln.LineWidth = 2");
-	igl::matlab::mleval(&engine, "ln.Color = [0.0 0.0 1.0]");
-	igl::matlab::mleval(&engine, "ln.MarkerEdgeColor = 'b'");
+	igl::matlab::mleval(&engine, "subplot(2, 2, 4)"); 
+	igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_value") + ")");
+	igl::matlab::mleval(&engine, N("ax") + " = gca");
+	igl::matlab::mleval(&engine, N("ax") + ".XAxisLocation = 'origin'");
+	igl::matlab::mleval(&engine, N("ax") + ".YAxisLocation = 'origin';");
+	igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
+	igl::matlab::mleval(&engine, N("ln") + ".Color = [0.0 0.0 1.0]");
+	igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'b'");
 	igl::matlab::mleval(&engine, "hold on");
-	igl::matlab::mleval(&engine, "ln = plot(lineSearch_alfa,lineSearch_augmentedValue)");
-	igl::matlab::mleval(&engine, "ln.LineWidth = 2");
-	igl::matlab::mleval(&engine, "ln.Color = [0.0 1.0 0.0]");
-	igl::matlab::mleval(&engine, "ln.MarkerEdgeColor = 'g'");
-	igl::matlab::mleval(&engine, "ln = plot(lineSearch_alfa,lineSearch_gradientNorm)");
-	igl::matlab::mleval(&engine, "ln.LineWidth = 2");
-	igl::matlab::mleval(&engine, "ln.Color = [1.0 0.0 0.0]");
-	igl::matlab::mleval(&engine, "ln.MarkerEdgeColor = 'r'");
+	igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_augmentedValue") + ")");
+	igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
+	igl::matlab::mleval(&engine, N("ln") + ".Color = [0.0 1.0 0.0]");
+	igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'g'");
+	igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_gradientNorm") + ")");
+	igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
+	igl::matlab::mleval(&engine, N("ln") + ".Color = [1.0 0.0 0.0]");
+	igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'r'");
 	igl::matlab::mleval(&engine, "hold off");
 	igl::matlab::mleval(&engine, "xlabel('alfa')");
 	igl::matlab::mleval(&engine, "ylabel('values')");
 	igl::matlab::mleval(&engine,
 		"title(['" +
 		linesearch_Name +
-		"\\alpha = ',num2str(chosen_alfa) , '  ,  iteration = ',num2str(line_search_iter)])");
+		"\\alpha = ',num2str(" + N("chosen_alfa") + ") , '  ,  iteration = ',num2str(" + N("line_search_iter") + ")])");
 
 	
 	//clear unused variables
-	igl::matlab::mleval(&engine, "clear f ln ax");
-	igl::matlab::mleval(&engine, "clear lineSearch_alfa lineSearch_value");
-	igl::matlab::mleval(&engine, "clear lineSearch_augmentedValue lineSearch_gradientNorm");
-	igl::matlab::mleval(&engine, "clear chosen_alfa line_search_iter");
+	igl::matlab::mleval(&engine, "clear " + N("f") + " " + N("ln") + " " + N("ax"));
+	igl::matlab::mleval(&engine, "clear " + N("lineSearch_alfa") + " " + N("lineSearch_value"));
+	igl::matlab::mleval(&engine, "clear " + N("lineSearch_augmentedValue") + " " + N("lineSearch_gradientNorm"));
+	igl::matlab::mleval(&engine, "clear " + N("chosen_alfa")+" " + N("line_search_iter"));
 }
 
 void solver::saveHessianInfo(int numIteration, std::ofstream& hessianInfo) {

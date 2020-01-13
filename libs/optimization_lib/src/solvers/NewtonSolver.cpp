@@ -27,6 +27,7 @@ double NewtonSolver::step()
 	eigen_solver->factorize(objective->II, objective->JJ, objective->SS);
 	Eigen::VectorXd rhs = -g;
 	p = eigen_solver->solve(rhs);
+
 #endif
 	return f;
 }
