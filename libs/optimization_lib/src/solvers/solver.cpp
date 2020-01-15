@@ -1,6 +1,6 @@
 #include "solvers/solver.h"
 //#define SAVE_DATA_IN_CSV
-#define SAVE_DATA_IN_MATLAB
+//#define SAVE_DATA_IN_MATLAB
 
 #define HIGH 3
 #define LOW -3
@@ -228,14 +228,14 @@ void solver::sendDataToMatlab() {
 	igl::matlab::mleval(&engine, "desktop");
 	
 	// Send matrix to matlab
-	igl::matlab::mlsetmatrix(&engine, N("Hess"), CurrHessian);
-	igl::matlab::mlsetmatrix(&engine, N("grad"), Eigen::MatrixXd(g));
-	igl::matlab::mleval(&engine, N("TriangularHess") + N(" = full(Hess") + ")");
-	igl::matlab::mleval(&engine, N("Hess")+N(" = TriangularHess")+N(" + TriangularHess")+N("'-diag(diag((TriangularHess") + ")))");
+	igl::matlab::mlsetmatrix(&engine, N("H"), CurrHessian);
+	igl::matlab::mlsetmatrix(&engine, N("g"), Eigen::MatrixXd(g));
+	igl::matlab::mleval(&engine, N("TrianH") + N(" = full(H") + ")");
+	igl::matlab::mleval(&engine, N("H")+N(" = TrianH")+N(" + TrianH")+N("'-diag(diag((TrianH") + ")))");
 	igl::matlab::mlsetmatrix(&engine, N("p"), Eigen::MatrixXd(p));
 	
-	igl::matlab::mleval(&engine, N("MSE") + " = sum((" + N("Hess") + "*" + N("p") + " + " + N("grad") + ") .^ 2)");
-	igl::matlab::mleval(&engine, N("Matlab_MSE")+ " = sum(("+N("Hess")+" * (" + N("Hess") + "\\(-" + N("grad") + ")) + " + N("grad") + ").^2)");
+	igl::matlab::mleval(&engine, N("MSE") + " = sum((" + N("H") + "*" + N("p") + " + " + N("g") + ") .^ 2)");
+	igl::matlab::mleval(&engine, N("Matlab_MSE")+ " = sum(("+N("H")+" * (" + N("H") + "\\(-" + N("g") + ")) + " + N("g") + ").^2)");
 	
 	
 	igl::matlab::mlsetmatrix(&engine, N("X_before"), Eigen::MatrixXd(X_before));
