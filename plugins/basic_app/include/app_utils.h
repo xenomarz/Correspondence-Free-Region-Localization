@@ -295,6 +295,7 @@ public:
 class Output
 {
 public:
+	float prev_camera_zoom;
 	std::vector<int> *HandlesInd; //pointer to indices in constraitPositional
 	Eigen::MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
 	Eigen::MatrixXd color_per_face, Vertices_output;

@@ -12,7 +12,7 @@ IGL_INLINE void basic_app::init(igl::opengl::glfw::Viewer *_viewer)
 		isLoadNeeded = false;
 		IsMouseDraggingAnyWindow = IsMouseHoveringAnyWindow = 
 			worhp_on = solver_on = Outputs_Settings = Highlighted_face = IsTranslate = model_loaded = false;
-		step_by_step = solver_settings = show_text = true;
+		ZoomAll = step_by_step = solver_settings = show_text = true;
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
 		linesearch_type = Utils::FunctionValue;
@@ -136,7 +136,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		UpdateHandles();
 		mouse_mode = app_utils::VERTEX_SELECT;
 	}
-	
+	ImGui::Checkbox("Zoom All", &ZoomAll);
 
 	if(model_loaded)
 		Draw_menu_for_Solver();
@@ -150,6 +150,9 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 	follow_and_mark_selected_faces();
 	Update_view();
 
+	if (ZoomAll)
+		update_zoom_parameter_for_all_cores();
+
 	IsMouseHoveringAnyWindow = false;
 	if (ImGui::IsAnyWindowHovered() |
 		ImGui::IsRootWindowOrAnyChildHovered() |
@@ -157,6 +160,35 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		ImGui::IsMouseHoveringAnyWindow() |
 		ImGui::IsMouseHoveringWindow())
 		IsMouseHoveringAnyWindow = true;
+}
+
+void basic_app::update_zoom_parameter_for_all_cores() {
+	for (auto& core : viewer->core_list) {
+		int output_index = -1;
+		for (int i = 0; i < Outputs.size(); i++) {
+			if (core.id == Outputs[i].CoreID) {
+				output_index = i;
+			}
+		}
+		if (output_index == -1) {
+			if (this->prev_camera_zoom != core.camera_zoom) {
+				for (auto& c : viewer->core_list)
+					c.camera_zoom = core.camera_zoom;
+				this->prev_camera_zoom = core.camera_zoom;
+				for (auto&o : Outputs)
+					o.prev_camera_zoom = core.camera_zoom;
+			}
+		}
+		else {
+			if (Outputs[output_index].prev_camera_zoom != core.camera_zoom) {
+				for (auto& c : viewer->core_list)
+					c.camera_zoom = core.camera_zoom;
+				this->prev_camera_zoom = core.camera_zoom;
+				for (auto&o : Outputs)
+					o.prev_camera_zoom = core.camera_zoom;
+			}
+		}
+	}
 }
 
 void basic_app::remove_output(const int output_index) {
@@ -410,9 +442,6 @@ if (find(selected_vertices.begin(), selected_vertices.end(), v) != selected_vert
 }
 
 IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
-	std::cout << "key = " << key << std::endl;
-	std::cout << "modifiers = " << modifiers << std::endl;
-
 	if ((key == 'F' || key == 'f') && modifiers == 1)
 		mouse_mode = app_utils::FACE_SELECT;
 	if ((key == 'V' || key == 'v') && modifiers == 1)
@@ -423,17 +452,29 @@ IGL_INLINE bool basic_app::key_pressed(unsigned int key, int modifiers) {
 		solver_on ? stop_solver_thread() : start_solver_thread();
 	if ((key == '!') && modifiers == 1) {
 		isLoadNeeded = true;
-		modelPath = Utils::RDSPath() + "\\models\\cube.off";
+		modelPath = Utils::RDSPath() + "\\models\\Face_1\\Triangle306090degree.obj";
 	}
 	if ((key == '@') && modifiers == 1) {
 		isLoadNeeded = true;
-		modelPath = Utils::RDSPath() + "\\models\\Triangle306090degree.obj";
+		modelPath = Utils::RDSPath() + "\\models\\Face_2\\Triangle2.obj";
 	}
+	if ((key == '#') && modifiers == 1) {
+		isLoadNeeded = true;
+		modelPath = Utils::RDSPath() + "\\models\\Face_3\\Triangle3.obj";
+	}
+	if ((key == '$') && modifiers == 1) {
+		isLoadNeeded = true;
+		modelPath = Utils::RDSPath() + "\\models\\Face_4\\Triangle4.obj";
+	}
+	if ((key == ')') && modifiers == 1) {
+		isLoadNeeded = true;
+		modelPath = Utils::RDSPath() + "\\models\\cube.off";
+	}
+
 	if ((key == 'w' || key == 'W') && modifiers == 1) {
 		start_worhp_solver_thread();
 	}
-
-
+	
 	return ImGuiMenu::key_pressed(key, modifiers);
 }
 
@@ -470,6 +511,7 @@ IGL_INLINE bool basic_app::pre_draw() {
 }
 
 void basic_app::Draw_menu_for_colors() {
+	ImVec2 screen_pos = ImGui::GetCursorScreenPos();
 	if (!ImGui::CollapsingHeader("colors", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::ColorEdit3("Highlighted face color", Highlighted_face_color.data(), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_PickerHueWheel);
@@ -604,18 +646,14 @@ void basic_app::Draw_menu_for_cores(igl::opengl::ViewerCore& core) {
 	if (!ImGui::CollapsingHeader(ss.str().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		int data_id;
-		for (auto& out : Outputs) {
-			if (core.id == out.CoreID) {
-				data_id = out.ModelID;
-			}
-		}
-		if (core.id == inputCoreID) {
+		for (int i = 0; i < Outputs.size(); i++)
+			if (core.id == Outputs[i].CoreID)
+				data_id = Outputs[i].ModelID;
+		if (core.id == inputCoreID)
 			data_id = inputModelID;
-		}
 
 		if (ImGui::Button("Center object", ImVec2(-1, 0)))
 		{
-			std::cout << "data_id = " << data_id << std::endl;
 			core.align_camera_center(viewer->data_list[data_id].V, viewer->data_list[data_id].F);
 		}
 		if (ImGui::Button("Snap canonical view", ImVec2(-1, 0)))
@@ -927,12 +965,6 @@ void basic_app::Draw_menu_for_text_results() {
 			ImGui::TextColored(c, (std::string(out.totalObjective->name) + std::string(" energy ") + std::to_string(out.totalObjective->energy_value)).c_str());
 			ImGui::TextColored(c, (std::string(out.totalObjective->name) + std::string(" gradient ") + std::to_string(out.totalObjective->gradient_norm)).c_str());
 			for (auto& obj : out.totalObjective->objectiveList) {
-				/*if (typeid(TriangleMeshObjectiveFunction) == typeid(*obj)) {
-					cout << obj->name;
-					Utils::instanceof<TriangleMeshObjectiveFunction>(*obj);
-					static_cast<AreaDistortion>(*obj);
-				}*/
-					
 				ImGui::TextColored(c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
 				if (out.solver->IsConstrObjFunc) {
 					std::shared_ptr<ConstrainedObjectiveFunction> constr = std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
@@ -1170,7 +1202,6 @@ void basic_app::checkGradients()
 {
 	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
-		std::cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << std::endl;
 		if (!model_loaded) {
 			solver_on = false;
 			return;
@@ -1194,7 +1225,6 @@ void basic_app::checkHessians()
 {
 	stop_solver_thread();
 	for (int i = 0; i < Outputs.size(); i++) {
-		std::cout << "Core " + std::to_string(Outputs[i].CoreID) + ":" << std::endl;
 		if (!model_loaded) {
 			solver_on = false;
 			return;
@@ -1221,7 +1251,7 @@ void basic_app::update_mesh()
 	for (int i = 0; i < Outputs.size(); i++){
 		if (Outputs[i].worhpsolver->IsDataReady) {
 			Outputs[i].worhpsolver->get_data(X[i]);
-			std::cout << "#####################################################" << std::endl;
+			std::cout << ">> Reiceved data from worhp successfully!" << std::endl;
 		}
 		else {
 			Outputs[i].solver->get_data(X[i]);
@@ -1257,7 +1287,7 @@ void basic_app::start_solver_thread() {
 	}
 	stop_solver_thread();
 	for (int i = 0; i < Outputs.size();i++) {
-		std::cout << ">> start new solver" << std::endl;
+		std::cout << ">> A new solver has been started" << std::endl;
 		solver_on = true;
 		//update solver
 		Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(OutputModel(i).V.leftCols(2).data(), OutputModel(i).V.rows() * 2);
@@ -1369,7 +1399,7 @@ void basic_app::initializeSolver(const int index)
 	//update worhp solver
 	Outputs[index].worhpsolver->init(V, F);
 	
-	std::cout << "Solver is initialized!" << std::endl;
+	std::cout << ">> Solver is initialized!" << std::endl;
 }
 
 void basic_app::UpdateEnergyColors(const int index) {

@@ -13,6 +13,7 @@ private:
 	bool isLoadNeeded;
 	bool model_loaded;
 	float Max_Distortion;
+	bool ZoomAll;
 	bool worhp_on, solver_on, solver_settings, IsMouseHoveringAnyWindow, IsMouseDraggingAnyWindow;
 	app_utils::Distortion distortion_type;
 	app_utils::SolverType solver_type;
@@ -36,6 +37,7 @@ private:
 	std::vector<Output> Outputs;
 	Eigen::MatrixXd copy_vertices;
 	//Basic (necessary) parameteres
+	float prev_camera_zoom;
 	std::string modelName, modelPath;
 	int inputCoreID, inputModelID;
 	int view;
@@ -82,6 +84,7 @@ public:
 	Eigen::RowVector3d get_face_avg();
 	void UpdateHandles();
 	void UpdateEnergyColors(const int index);
+	void update_zoom_parameter_for_all_cores();
 
 	//Basic Methods
 	igl::opengl::ViewerData& InputModel();
