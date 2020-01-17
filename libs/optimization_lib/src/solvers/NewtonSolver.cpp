@@ -27,9 +27,18 @@ double NewtonSolver::step()
 	eigen_solver->factorize(objective->II, objective->JJ, objective->SS);
 	Eigen::VectorXd rhs = -g;
 	p = eigen_solver->solve(rhs);
-
 #endif
 	return f;
+}
+
+Eigen::SparseMatrix<double> NewtonSolver::get_Hessian()
+{
+	return eigen_solver->A;
+}
+
+double NewtonSolver::get_MSE()
+{
+	return eigen_solver->MSE;
 }
 
 bool NewtonSolver::test_progress()

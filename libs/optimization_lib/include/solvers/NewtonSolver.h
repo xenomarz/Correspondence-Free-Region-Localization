@@ -16,6 +16,8 @@ public:
 	virtual double step() override;
 	virtual bool test_progress() override;
 	virtual void internal_init() override;
+	Eigen::SparseMatrix<double> get_Hessian();
+	double get_MSE();
 private:
 	#ifdef USE_PARDISO
 		std::unique_ptr<PardisoSolver<std::vector<int>, std::vector<double>>> pardiso = nullptr;

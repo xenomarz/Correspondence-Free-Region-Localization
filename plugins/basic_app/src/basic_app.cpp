@@ -15,7 +15,7 @@ IGL_INLINE void basic_app::init(igl::opengl::glfw::Viewer *_viewer)
 		ZoomAll = step_by_step = solver_settings = show_text = true;
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
-		linesearch_type = Utils::FunctionValue;
+		linesearch_type = Utils::GradientNorm;
 		param_type = app_utils::None;
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
@@ -110,7 +110,6 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		isLoadNeeded = true;
 	}
 	if (isLoadNeeded) {
-		std::cout << "gdgrgdgd" << std::endl;
 		load_new_model(modelPath);
 		isLoadNeeded = false;
 	}

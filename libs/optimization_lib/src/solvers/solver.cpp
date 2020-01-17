@@ -1,6 +1,7 @@
 #include "solvers/solver.h"
+#include "solvers/NewtonSolver.h"
 //#define SAVE_DATA_IN_CSV
-//#define SAVE_DATA_IN_MATLAB
+#define SAVE_DATA_IN_MATLAB
 
 #define HIGH 3
 #define LOW -3
@@ -177,32 +178,9 @@ void solver::saveSolverInfo(int numIteration, std::ofstream& solverInfo) {
 }
 
 void solver::prepareData() {
-	//prepare the hessian matrix
-	std::vector<Eigen::Triplet<double>> tripletList;
-	tripletList.reserve((objective->II).size());
-	int rows = *std::max_element((objective->II).begin(), (objective->II).end()) + 1;
-	int cols = *std::max_element((objective->JJ).begin(), (objective->JJ).end()) + 1;
-	assert(rows == cols && "Rows == Cols at solver's saveHessianInfo() method");
-	for (int i = 0; i < (objective->II).size(); i++)
-		tripletList.push_back(Eigen::Triplet<double>((objective->II)[i], (objective->JJ)[i], (objective->SS)[i]));
-	CurrHessian.resize(rows, cols);
-	CurrHessian.setFromTriplets(tripletList.begin(), tripletList.end());
-
-	/*// Launch MATLAB
-	igl::matlab::mlinit(&engine);
-	igl::matlab::mleval(&engine, "desktop");
-
-	igl::matlab::mlsetmatrix(&engine, "Hess", CurrHessian);
-	igl::matlab::mlsetmatrix(&engine, "grad", Eigen::MatrixXd(g));
-	igl::matlab::mleval(&engine, "Hess = full(Hess)");
-	igl::matlab::mleval(&engine, "Hess = Hess + Hess'-diag(diag((Hess)))");
-	igl::matlab::mlsetmatrix(&engine, "solvers_p", Eigen::MatrixXd(p));
-
-	igl::matlab::mleval(&engine, "p = Hess \\ (-grad)");
-	Eigen::MatrixXd ppp;
-	igl::matlab::mlgetmatrix(&engine, "p", ppp);
-	p = ppp;*/
-
+	NewtonSolver* newtonSolver = dynamic_cast<NewtonSolver*>(this);
+	CurrHessian = newtonSolver->get_Hessian();
+	
 	X_before = X;
 	//calculate values in the search direction vector
 	int counter;
@@ -223,19 +201,20 @@ void solver::prepareData() {
 void solver::sendDataToMatlab() {
 	auto N = [&](std::string name) { return name + std::to_string(solverID); };
 
+	NewtonSolver* newtonSolver = dynamic_cast<NewtonSolver*>(this);
+
 	// Launch MATLAB
 	igl::matlab::mlinit(&engine);
 	igl::matlab::mleval(&engine, "desktop");
 	
 	// Send matrix to matlab
 	igl::matlab::mlsetmatrix(&engine, N("H"), CurrHessian);
+	igl::matlab::mleval(&engine, N("H") + N(" = full(H") + ")");
 	igl::matlab::mlsetmatrix(&engine, N("g"), Eigen::MatrixXd(g));
-	igl::matlab::mleval(&engine, N("TrianH") + N(" = full(H") + ")");
-	igl::matlab::mleval(&engine, N("H")+N(" = TrianH")+N(" + TrianH")+N("'-diag(diag((TrianH") + ")))");
 	igl::matlab::mlsetmatrix(&engine, N("p"), Eigen::MatrixXd(p));
 	
-	igl::matlab::mleval(&engine, N("MSE") + " = sum((" + N("H") + "*" + N("p") + " + " + N("g") + ") .^ 2)");
-	igl::matlab::mleval(&engine, N("Matlab_MSE")+ " = sum(("+N("H")+" * (" + N("H") + "\\(-" + N("g") + ")) + " + N("g") + ").^2)");
+	igl::matlab::mlsetscalar(&engine, N("MSE"), newtonSolver->get_MSE());
+	igl::matlab::mleval(&engine, N("Matlab_MSE")+ N(" = sum((H")+ N(" * (H") + N("\\(-g") + N(")) + g") + ").^2)");
 	
 	
 	igl::matlab::mlsetmatrix(&engine, N("X_before"), Eigen::MatrixXd(X_before));
