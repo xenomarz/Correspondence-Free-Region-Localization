@@ -33,7 +33,7 @@ double NewtonSolver::step()
 
 Eigen::SparseMatrix<double> NewtonSolver::get_Hessian()
 {
-	return eigen_solver->A;
+	return eigen_solver->full_A;
 }
 
 double NewtonSolver::get_MSE()

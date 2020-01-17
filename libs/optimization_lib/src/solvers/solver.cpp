@@ -1,7 +1,7 @@
 #include "solvers/solver.h"
 #include "solvers/NewtonSolver.h"
 //#define SAVE_DATA_IN_CSV
-#define SAVE_DATA_IN_MATLAB
+//#define SAVE_DATA_IN_MATLAB
 
 #define HIGH 3
 #define LOW -3

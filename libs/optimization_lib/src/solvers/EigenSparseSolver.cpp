@@ -22,23 +22,34 @@ void EigenSparseSolver<vectorTypeI, vectorTypeS>::set_pattern(const vectorTypeI 
 template <typename vectorTypeI, typename vectorTypeS>
 void EigenSparseSolver<vectorTypeI, vectorTypeS>::analyze_pattern()
 {
-	solver.analyzePattern(A);
+	solver.analyzePattern(UpperTriangular_A);
+	assert(solver.info() == Eigen::Success && "analyzePattern failed!");
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
 bool EigenSparseSolver<vectorTypeI, vectorTypeS>::factorize(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS)
 {
 	BuildMatrix(II,JJ,SS);
-	solver.factorize(A);
-    return solver.info() == 0;
+	solver.factorize(UpperTriangular_A);
+	assert(solver.info() == Eigen::Success && "factorization failed!");
+	return solver.info() == 0;
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
 Eigen::VectorXd EigenSparseSolver<vectorTypeI, vectorTypeS>::solve(Eigen::VectorXd &rhs)
 {
 	Eigen::VectorXd x = solver.solve(rhs);
-	MSE = (A * x - rhs).cwiseAbs2().sum();
-	cout << "MSE = " << MSE << endl;
+	/*cout << "x = " << endl << x << endl;
+	cout << "full_A = " << endl << full_A.toDense() << endl;
+	cout << "UpperTriangular_A = " << endl << UpperTriangular_A.toDense() << endl;
+	cout << "rhs = " << endl << rhs << endl;*/
+
+
+	//cout <<"upper = " << (UpperTriangular_A * x - rhs).cwiseAbs2().sum();
+	//cout <<" , full = " << (full_A * x - rhs).cwiseAbs2().sum() << endl;
+
+	//MSE = (full_A * x - rhs).cwiseAbs2().sum();
+	//cout << "MSE = " << MSE << endl;
 	return x;
 }
 
@@ -48,6 +59,7 @@ void EigenSparseSolver<vectorTypeI, vectorTypeS>::BuildMatrix(const vectorTypeI 
 	// Hessian sparse reprensentation
 	std::vector<int> fullII, fullJJ;
 	std::vector<double> fullSS;
+
 	assert(II.size() == JJ.size() && II.size() == SS.size() && "II == JJ at Newton internal init");
 	for (int i = 0; i < II.size(); i++) {
 		fullII.push_back(II[i]);
@@ -55,39 +67,37 @@ void EigenSparseSolver<vectorTypeI, vectorTypeS>::BuildMatrix(const vectorTypeI 
 		fullSS.push_back(SS[i]);
 
 		//add the lower triangular values
-		if (II[i] != JJ[i]) {
+		if (II[i] < JJ[i]) {
 			fullII.push_back(JJ[i]);
 			fullJJ.push_back(II[i]);
 			fullSS.push_back(SS[i]);
 		}
+		assert(II[i] <= JJ[i] && "Error!");
 	}
 	assert(fullII.size() == fullJJ.size() && fullII.size() == fullSS.size() && "fullII == fullJJ at Newton internal init");
-
 	
-	std::vector<Eigen::Triplet<double>> tripletList;
-	tripletList.reserve(fullII.size());
-	int rows = *std::max_element(fullII.begin(), fullII.end()) + 1;
-	int cols = *std::max_element(fullJJ.begin(), fullJJ.end()) + 1;
-	assert(rows == cols && "Rows == Cols at Newton internal init");
+
+	std::vector<Eigen::Triplet<double>> tripletList1;
+	tripletList1.reserve(fullII.size());
+	int rows1 = *std::max_element(fullII.begin(), fullII.end()) + 1;
+	int cols1 = *std::max_element(fullJJ.begin(), fullJJ.end()) + 1;
+	assert(rows1 == cols1 && "Rows == Cols at Newton internal init");
 	for (int i = 0; i < fullII.size(); i++)
-		tripletList.push_back(Eigen::Triplet<double>(fullII[i], fullJJ[i], fullSS[i]));
-	A.resize(rows, cols);
-	A.setFromTriplets(tripletList.begin(), tripletList.end());
+		tripletList1.push_back(Eigen::Triplet<double>(fullII[i], fullJJ[i], fullSS[i]));
+	full_A.resize(rows1, cols1);
+	full_A.setFromTriplets(tripletList1.begin(), tripletList1.end());
 
-	///////////////////////////////
-	//// Send matrix to matlab
-	//// Launch MATLAB
-	//igl::matlab::mlinit(&engine);
-	//igl::matlab::mleval(&engine, "desktop");
-
-	//igl::matlab::mlsetmatrix(&engine, "A", A);
-	//igl::matlab::mleval(&engine, "A = full(A)");
-	//igl::matlab::mleval(&engine, "A = A + A' - diag(diag(A))");
-
-	//Eigen::MatrixXd sparse;
-	//igl::matlab::mlgetmatrix(&engine, "A", sparse);
-	//A = sparse.sparseView();
-	///////////////////////////////
+	//////////////////////////////////
+	std::vector<Eigen::Triplet<double>> tripletList2;
+	tripletList2.reserve(II.size());
+	int rows2 = *std::max_element(II.begin(), II.end()) + 1;
+	int cols2 = *std::max_element(JJ.begin(), JJ.end()) + 1;
+	assert(rows2 == cols2 && "Rows == Cols at Newton internal init");
+	for (int i = 0; i < II.size(); i++)
+		tripletList2.push_back(Eigen::Triplet<double>(II[i], JJ[i], SS[i]));
+	UpperTriangular_A.resize(rows2, cols2);
+	UpperTriangular_A.setFromTriplets(tripletList2.begin(), tripletList2.end());
+	//////////////////////////////////
 }
 
 template class EigenSparseSolver<std::vector<int, std::allocator<int> >, std::vector<double, std::allocator<double> > >;
