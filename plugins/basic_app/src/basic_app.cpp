@@ -52,7 +52,7 @@ void basic_app::load_new_model(const std::string modelpath) {
 		modelName = app_utils::ExtractModelName(modelPath);
 
 		stop_solver_thread();
-
+		
 		if (model_loaded) {
 			//remove previous data
 			while (Outputs.size() > 0)
@@ -83,6 +83,19 @@ void basic_app::load_new_model(const std::string modelpath) {
 		for (int i = 0; i < Outputs.size(); i++)
 			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
 		model_loaded = true;
+
+		if (app_utils::IsMesh2D(InputModel().V)) {
+			//set rotation type to 2D mode
+			viewer->core(inputCoreID).trackball_angle = Eigen::Quaternionf::Identity();
+			viewer->core(inputCoreID).orthographic = true;
+			viewer->core(inputCoreID).set_rotation_type(igl::opengl::ViewerCore::RotationType(2));
+		}
+		else {
+			//set rotation type to 3D mode
+			viewer->core(inputCoreID).trackball_angle = Eigen::Quaternionf::Identity();
+			viewer->core(inputCoreID).orthographic = false;
+			viewer->core(inputCoreID).set_rotation_type(igl::opengl::ViewerCore::RotationType(1));
+		}
 	}
 }
 
@@ -97,6 +110,7 @@ IGL_INLINE void basic_app::draw_viewer_menu()
 		isLoadNeeded = true;
 	}
 	if (isLoadNeeded) {
+		std::cout << "gdgrgdgd" << std::endl;
 		load_new_model(modelPath);
 		isLoadNeeded = false;
 	}
@@ -677,7 +691,7 @@ void basic_app::Draw_menu_for_cores(igl::opengl::ViewerCore& core) {
 			if (new_type != core.rotation_type)
 			{
 				if (new_type == RT::ROTATION_TYPE_NO_ROTATION)
-				{
+				{	
 					trackball_angle = core.trackball_angle;
 					orthographic = core.orthographic;
 					core.trackball_angle = Eigen::Quaternionf::Identity();
@@ -1411,14 +1425,12 @@ void basic_app::UpdateEnergyColors(const int index) {
 		Eigen::MatrixXd angle_input, angle_output, angle_ratio;
 		app_utils::angle_degree(OutputModel(index).V, OutputModel(index).F, angle_output);
 		app_utils::angle_degree(InputModel().V, InputModel().F, angle_input);
-
 		// DistortionPerFace = angle_output / angle_input
 		angle_ratio = angle_input.cwiseInverse().cwiseProduct(angle_output);
-		//average over the vertices on each face
-		DistortionPerFace = angle_ratio.rowwise().sum() / 3;
-		DistortionPerFace = DistortionPerFace.cwiseAbs2().cwiseAbs2();
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
-		DistortionPerFace = DistortionPerFace - Eigen::VectorXd::Ones(numF);
+		angle_ratio = (angle_ratio - Eigen::MatrixXd::Ones(numF, 3)).cwiseAbs2();
+		//sum over the vertices on each face
+		DistortionPerFace = angle_ratio.rowwise().sum();
 	}
 	else if (distortion_type == app_utils::LENGTH_DISTORTION) {	//distortion according to area preserving
 		Eigen::MatrixXd Length_output, Length_input, Length_ratio;
@@ -1426,10 +1438,10 @@ void basic_app::UpdateEnergyColors(const int index) {
 		igl::edge_lengths(InputModel().V, InputModel().F, Length_input);
 		// DistortionPerFace = Length_output / Length_input
 		Length_ratio = Length_input.cwiseInverse().cwiseProduct(Length_output);
-		//average over the vertices on each face
-		DistortionPerFace = Length_ratio.rowwise().sum() / 3;
 		// Becuase we want  DistortionPerFace to be as colse as possible to zero instead of one!
-		DistortionPerFace = DistortionPerFace - Eigen::VectorXd::Ones(numF);
+		Length_ratio = (Length_ratio - Eigen::MatrixXd::Ones(numF,3)).cwiseAbs2();
+		//sum over the vertices on each face
+		DistortionPerFace = Length_ratio.rowwise().sum();
 	}
 	else if (distortion_type == app_utils::AREA_DISTORTION) {
 		//distortion according to area preserving
@@ -1439,7 +1451,7 @@ void basic_app::UpdateEnergyColors(const int index) {
 		// DistortionPerFace = Area_output / Area_input
 		DistortionPerFace = Area_input.cwiseInverse().cwiseProduct(Area_output);
 		// Because we want  DistortionPerFace to be as close as possible to zero instead of one!
-		DistortionPerFace = DistortionPerFace - Eigen::VectorXd::Ones(numF);
+		DistortionPerFace = (DistortionPerFace - Eigen::VectorXd::Ones(numF)).cwiseAbs2();
 	}
 	else if (distortion_type == app_utils::TOTAL_DISTORTION) {
 		// calculate the distortion over all the energies
