@@ -13,7 +13,8 @@ class Utils
 public:
 	static enum LineSearch {
 		GradientNorm = 0,
-		FunctionValue = 1
+		FunctionValue = 1,
+		ConstantStep = 2
 	};
 
 	static void computeSurfaceGradientPerFace(const Eigen::MatrixX3d &V, const Eigen::MatrixX3i &F, Eigen::MatrixX3d &D1, Eigen::MatrixX3d &D2)

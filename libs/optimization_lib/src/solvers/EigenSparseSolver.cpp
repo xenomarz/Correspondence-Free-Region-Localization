@@ -22,15 +22,15 @@ void EigenSparseSolver<vectorTypeI, vectorTypeS>::set_pattern(const vectorTypeI 
 template <typename vectorTypeI, typename vectorTypeS>
 void EigenSparseSolver<vectorTypeI, vectorTypeS>::analyze_pattern()
 {
-	solver.analyzePattern(UpperTriangular_A);
-	assert(solver.info() == Eigen::Success && "analyzePattern failed!");
+	solver.analyzePattern(full_A/*UpperTriangular_A*/);
+	//assert(solver.info() == Eigen::Success && "analyzePattern failed!");
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
 bool EigenSparseSolver<vectorTypeI, vectorTypeS>::factorize(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS)
 {
 	BuildMatrix(II,JJ,SS);
-	solver.factorize(UpperTriangular_A);
+	solver.factorize(full_A/*UpperTriangular_A*/);
 	assert(solver.info() == Eigen::Success && "factorization failed!");
 	return solver.info() == 0;
 }
@@ -48,7 +48,7 @@ Eigen::VectorXd EigenSparseSolver<vectorTypeI, vectorTypeS>::solve(Eigen::Vector
 	//cout <<"upper = " << (UpperTriangular_A * x - rhs).cwiseAbs2().sum();
 	//cout <<" , full = " << (full_A * x - rhs).cwiseAbs2().sum() << endl;
 
-	//MSE = (full_A * x - rhs).cwiseAbs2().sum();
+	MSE = (full_A * x - rhs).cwiseAbs2().sum();
 	//cout << "MSE = " << MSE << endl;
 	return x;
 }

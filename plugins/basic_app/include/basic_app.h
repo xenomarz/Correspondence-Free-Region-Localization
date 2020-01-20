@@ -18,6 +18,7 @@ private:
 	app_utils::Distortion distortion_type;
 	app_utils::SolverType solver_type;
 	Utils::LineSearch linesearch_type;
+	float constant_step;
 	Eigen::MatrixXd Vertices_Input, color_per_vertex;
 	Eigen::Vector3f
 		Highlighted_face_color,

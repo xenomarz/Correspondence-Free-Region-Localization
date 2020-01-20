@@ -1,7 +1,7 @@
 #include "solvers/solver.h"
 #include "solvers/NewtonSolver.h"
 //#define SAVE_DATA_IN_CSV
-//#define SAVE_DATA_IN_MATLAB
+#define SAVE_DATA_IN_MATLAB
 
 #define HIGH 3
 #define LOW -3
@@ -49,7 +49,10 @@ solver::~solver() {
 
 void solver::init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0)
 {
+	constant_step = 0.01;
 	this->objective = objective;
+	std::cout << "F.rows() = " << F.rows() << std::endl;
+	std::cout << "V.rows() = " << X.rows() - F.rows() << std::endl;
 	if (IsConstrObjFunc) { //for constraint objective function
 		X.resize(X0.rows() + F.rows());
 		X.head(X0.rows()) = X0;
@@ -75,7 +78,7 @@ int solver::run()
 	halt = false;
 	int steps = 0;
 	do {
-		run_one_iteration(steps);
+		run_one_iteration(steps,false);
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
 	
@@ -83,19 +86,21 @@ int solver::run()
 	return 0;
 }
 
-void solver::run_one_iteration(const int steps) {
+void solver::run_one_iteration(const int steps,const bool showGraph) {
 	currentEnergy = step();
 #if defined SAVE_DATA_IN_CSV || defined SAVE_DATA_IN_MATLAB
 	prepareData();
 #endif
 	if (lineSearch_type == Utils::GradientNorm)
-		gradNorm_linesearch(SearchDirInfo);
-	else
-		value_linesearch(SearchDirInfo);
+		gradNorm_linesearch();
+	else if (lineSearch_type == Utils::FunctionValue)
+		value_linesearch();
+	else if (lineSearch_type == Utils::ConstantStep)
+		constant_linesearch();
 	update_external_data();
 
 #ifdef SAVE_DATA_IN_MATLAB
-	sendDataToMatlab();
+	sendDataToMatlab(showGraph);
 #endif 
 #ifdef SAVE_DATA_IN_CSV
 	saveSolverInfo(steps, solverInfo);
@@ -198,7 +203,7 @@ void solver::prepareData() {
 	objective->updateX(X);
 }
 
-void solver::sendDataToMatlab() {
+void solver::sendDataToMatlab(const bool show_graph) {
 	auto N = [&](std::string name) { return name + std::to_string(solverID); };
 
 	NewtonSolver* newtonSolver = dynamic_cast<NewtonSolver*>(this);
@@ -226,93 +231,98 @@ void solver::sendDataToMatlab() {
 	igl::matlab::mlsetscalar(&engine, N("chosen_alfa"), step_size);
 	igl::matlab::mlsetscalar(&engine, N("line_search_iter"), cur_iter);
 
-	//open figure & set position
-	igl::matlab::mleval(&engine, N("f") + " = figure");
-	igl::matlab::mleval(&engine, N("f") + ".Position = get(groot, 'Screensize')");
+	if (show_graph) {
+		//open figure & set position
+		igl::matlab::mleval(&engine, N("f") + " = figure");
+		igl::matlab::mleval(&engine, N("f") + ".Position = get(groot, 'Screensize')");
 
-	std::string linesearch_Name = (lineSearch_type == Utils::GradientNorm) ?
-		"Gradient Norm: " :
-		"Function value: ";
+		std::string linesearch_Name = (lineSearch_type == Utils::GradientNorm) ?
+			"Gradient Norm: " :
+			"Function value: ";
 
-	//plot first graph
-	igl::matlab::mleval(&engine, "subplot(2, 2, 1)");
-	igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_value") + ")");
-	igl::matlab::mleval(&engine, N("ax") + " = gca");
-	igl::matlab::mleval(&engine, N("ax") + ".XAxisLocation = 'origin'");
-	igl::matlab::mleval(&engine, N("ax") + ".YAxisLocation = 'origin';");
-	igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
-	igl::matlab::mleval(&engine, N("ln") + ".Color = [0.0 0.0 1.0]");
-	igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'b'");
-	igl::matlab::mleval(&engine, "xlabel('alfa')");
-	igl::matlab::mleval(&engine, "ylabel('function values')");
-	igl::matlab::mleval(&engine,
-		"title(['" +
-		linesearch_Name +
-		"\\alpha = ',num2str(" + N("chosen_alfa") + ") , '  ,  iteration = ',num2str(" + N("line_search_iter") + ")])");
+		//plot first graph
+		igl::matlab::mleval(&engine, "subplot(2, 2, 1)");
+		igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_value") + ")");
+		igl::matlab::mleval(&engine, N("ax") + " = gca");
+		igl::matlab::mleval(&engine, N("ax") + ".XAxisLocation = 'origin'");
+		igl::matlab::mleval(&engine, N("ax") + ".YAxisLocation = 'origin';");
+		igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
+		igl::matlab::mleval(&engine, N("ln") + ".Color = [0.0 0.0 1.0]");
+		igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'b'");
+		igl::matlab::mleval(&engine, "xlabel('alfa')");
+		igl::matlab::mleval(&engine, "ylabel('function values')");
+		igl::matlab::mleval(&engine,
+			"title(['" +
+			linesearch_Name +
+			"\\alpha = ',num2str(" + N("chosen_alfa") + ") , '  ,  iteration = ',num2str(" + N("line_search_iter") + ")])");
 
-	//plot second graph
-	igl::matlab::mleval(&engine, "subplot(2, 2, 2)"); 
-	igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa")+"," + N("lineSearch_augmentedValue") + ")");
-	igl::matlab::mleval(&engine, N("ax") + " = gca");
-	igl::matlab::mleval(&engine, N("ax") + ".XAxisLocation = 'origin'");
-	igl::matlab::mleval(&engine, N("ax") + ".YAxisLocation = 'origin';");
-	igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
-	igl::matlab::mleval(&engine, N("ln") + ".Color = [0.0 1.0 0.0]");
-	igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'g'");
-	igl::matlab::mleval(&engine, "xlabel('alfa')");
-	igl::matlab::mleval(&engine, "ylabel('augmented function values')");
-	igl::matlab::mleval(&engine,
-		"title(['" +
-		linesearch_Name +
-		"\\alpha = ',num2str(" + N("chosen_alfa") + ") , '  ,  iteration = ',num2str("+N("line_search_iter")+")])");
-
-
-	//plot third graph
-	igl::matlab::mleval(&engine, "subplot(2, 2, 3)"); 
-	igl::matlab::mleval(&engine, N("ln") + " = plot("+N("lineSearch_alfa") + "," + N("lineSearch_gradientNorm") + ")");
-	igl::matlab::mleval(&engine, N("ax") + " = gca");
-	igl::matlab::mleval(&engine, N("ax") + ".XAxisLocation = 'origin'");
-	igl::matlab::mleval(&engine, N("ax") + ".YAxisLocation = 'origin';");
-	igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
-	igl::matlab::mleval(&engine, N("ln") + ".Color = [1.0 0.0 0.0]");
-	igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'r'");
-	igl::matlab::mleval(&engine, "xlabel('alfa')");
-	igl::matlab::mleval(&engine, "ylabel('Gradient norm values')");
-	igl::matlab::mleval(&engine,
-		"title(['" +
-		linesearch_Name +
-		"\\alpha = ',num2str(" + N("chosen_alfa") + ") , '  ,  iteration = ',num2str(" + N("line_search_iter") + ")])");
+		//plot second graph
+		igl::matlab::mleval(&engine, "subplot(2, 2, 2)");
+		igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_augmentedValue") + ")");
+		igl::matlab::mleval(&engine, N("ax") + " = gca");
+		igl::matlab::mleval(&engine, N("ax") + ".XAxisLocation = 'origin'");
+		igl::matlab::mleval(&engine, N("ax") + ".YAxisLocation = 'origin';");
+		igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
+		igl::matlab::mleval(&engine, N("ln") + ".Color = [0.0 1.0 0.0]");
+		igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'g'");
+		igl::matlab::mleval(&engine, "xlabel('alfa')");
+		igl::matlab::mleval(&engine, "ylabel('augmented function values')");
+		igl::matlab::mleval(&engine,
+			"title(['" +
+			linesearch_Name +
+			"\\alpha = ',num2str(" + N("chosen_alfa") + ") , '  ,  iteration = ',num2str(" + N("line_search_iter") + ")])");
 
 
-	//plot fourth graph
-	igl::matlab::mleval(&engine, "subplot(2, 2, 4)"); 
-	igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_value") + ")");
-	igl::matlab::mleval(&engine, N("ax") + " = gca");
-	igl::matlab::mleval(&engine, N("ax") + ".XAxisLocation = 'origin'");
-	igl::matlab::mleval(&engine, N("ax") + ".YAxisLocation = 'origin';");
-	igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
-	igl::matlab::mleval(&engine, N("ln") + ".Color = [0.0 0.0 1.0]");
-	igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'b'");
-	igl::matlab::mleval(&engine, "hold on");
-	igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_augmentedValue") + ")");
-	igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
-	igl::matlab::mleval(&engine, N("ln") + ".Color = [0.0 1.0 0.0]");
-	igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'g'");
-	igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_gradientNorm") + ")");
-	igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
-	igl::matlab::mleval(&engine, N("ln") + ".Color = [1.0 0.0 0.0]");
-	igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'r'");
-	igl::matlab::mleval(&engine, "hold off");
-	igl::matlab::mleval(&engine, "xlabel('alfa')");
-	igl::matlab::mleval(&engine, "ylabel('values')");
-	igl::matlab::mleval(&engine,
-		"title(['" +
-		linesearch_Name +
-		"\\alpha = ',num2str(" + N("chosen_alfa") + ") , '  ,  iteration = ',num2str(" + N("line_search_iter") + ")])");
+		//plot third graph
+		igl::matlab::mleval(&engine, "subplot(2, 2, 3)");
+		igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_gradientNorm") + ")");
+		igl::matlab::mleval(&engine, N("ax") + " = gca");
+		igl::matlab::mleval(&engine, N("ax") + ".XAxisLocation = 'origin'");
+		igl::matlab::mleval(&engine, N("ax") + ".YAxisLocation = 'origin';");
+		igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
+		igl::matlab::mleval(&engine, N("ln") + ".Color = [1.0 0.0 0.0]");
+		igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'r'");
+		igl::matlab::mleval(&engine, "xlabel('alfa')");
+		igl::matlab::mleval(&engine, "ylabel('Gradient norm values')");
+		igl::matlab::mleval(&engine,
+			"title(['" +
+			linesearch_Name +
+			"\\alpha = ',num2str(" + N("chosen_alfa") + ") , '  ,  iteration = ',num2str(" + N("line_search_iter") + ")])");
 
+
+		//plot fourth graph
+		igl::matlab::mleval(&engine, "subplot(2, 2, 4)");
+		igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_value") + ")");
+		igl::matlab::mleval(&engine, N("ax") + " = gca");
+		igl::matlab::mleval(&engine, N("ax") + ".XAxisLocation = 'origin'");
+		igl::matlab::mleval(&engine, N("ax") + ".YAxisLocation = 'origin';");
+		igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
+		igl::matlab::mleval(&engine, N("ln") + ".Color = [0.0 0.0 1.0]");
+		igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'b'");
+		igl::matlab::mleval(&engine, "hold on");
+		igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_augmentedValue") + ")");
+		igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
+		igl::matlab::mleval(&engine, N("ln") + ".Color = [0.0 1.0 0.0]");
+		igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'g'");
+		igl::matlab::mleval(&engine, N("ln") + " = plot(" + N("lineSearch_alfa") + "," + N("lineSearch_gradientNorm") + ")");
+		igl::matlab::mleval(&engine, N("ln") + ".LineWidth = 2");
+		igl::matlab::mleval(&engine, N("ln") + ".Color = [1.0 0.0 0.0]");
+		igl::matlab::mleval(&engine, N("ln") + ".MarkerEdgeColor = 'r'");
+		igl::matlab::mleval(&engine, "hold off");
+		igl::matlab::mleval(&engine, "xlabel('alfa')");
+		igl::matlab::mleval(&engine, "ylabel('values')");
+		igl::matlab::mleval(&engine,
+			"title(['" +
+			linesearch_Name +
+			"\\alpha = ',num2str(" + N("chosen_alfa") + ") , '  ,  iteration = ',num2str(" + N("line_search_iter") + ")])");
+
+
+		//clear unused variables
+		igl::matlab::mleval(&engine, "clear " + N("f") + " " + N("ln") + " " + N("ax"));
+	}
 	
+
 	//clear unused variables
-	igl::matlab::mleval(&engine, "clear " + N("f") + " " + N("ln") + " " + N("ax"));
 	igl::matlab::mleval(&engine, "clear " + N("lineSearch_alfa") + " " + N("lineSearch_value"));
 	igl::matlab::mleval(&engine, "clear " + N("lineSearch_augmentedValue") + " " + N("lineSearch_gradientNorm"));
 	igl::matlab::mleval(&engine, "clear " + N("chosen_alfa")+" " + N("line_search_iter"));
@@ -400,7 +410,7 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 	SearchDirInfo << ",LineSearch iter," << cur_iter << "," << std::endl;
 }
 
-void solver::value_linesearch(std::ofstream& SearchDirInfo)
+void solver::value_linesearch()
 {
 	if (/*FlipAvoidingLineSearch*/false)
 	{
@@ -475,7 +485,14 @@ void solver::value_linesearch(std::ofstream& SearchDirInfo)
 	}
 }
 
-void solver::gradNorm_linesearch(std::ofstream& SearchDirInfo)
+void solver::constant_linesearch()
+{
+	step_size = constant_step;
+	cur_iter = 0;
+	X = X + step_size * p;
+}
+
+void solver::gradNorm_linesearch()
 {
 	step_size = 1;
 	Eigen::VectorXd grad;

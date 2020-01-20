@@ -571,9 +571,13 @@ void basic_app::Draw_menu_for_Solver() {
 			start_solver_thread();
 		}
 
-		if (ImGui::Combo("line search", (int *)(&linesearch_type), "GradientNorm\0FunctionValue\0\0")) {
+		if (ImGui::Combo("line search", (int *)(&linesearch_type), "GradientNorm\0FunctionValue\0ConstantStep\0\0")) {
 			for (auto& o:Outputs)
 				o.solver->lineSearch_type = linesearch_type;
+		}
+		if (linesearch_type == Utils::ConstantStep && ImGui::DragFloat("Step value", &constant_step, 0.0001f, 0.0f, 1.0f)) {
+			for (auto& o : Outputs)
+				o.solver->constant_step = constant_step;
 		}
 
 		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");
@@ -1309,7 +1313,7 @@ void basic_app::start_solver_thread() {
 		//start solver
 		if (step_by_step) {
 			static int step_counter = 0;
-			solver_thread = std::thread(&solver::run_one_iteration, Outputs[i].solver.get(), step_counter++);
+			solver_thread = std::thread(&solver::run_one_iteration, Outputs[i].solver.get(), step_counter++,true);
 		}
 		else
 			solver_thread = std::thread(&solver::run, Outputs[i].solver.get());

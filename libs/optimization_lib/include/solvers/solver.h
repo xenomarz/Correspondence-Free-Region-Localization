@@ -16,7 +16,7 @@ public:
 	solver(const bool IsConstrObjFunc, const int solverID);
 	~solver();
 	int run();
-	void run_one_iteration(const int steps);
+	void run_one_iteration(const int steps, const bool showGraph);
 	void stop();
 	void get_data(Eigen::VectorXd& X);
 	void init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0);
@@ -40,6 +40,7 @@ public:
 	int num_steps;
 	bool IsConstrObjFunc;
 	Utils::LineSearch lineSearch_type;
+	double constant_step;
 protected:
 	// Give the wrapper a chance to intersect gracefully
 	void give_parameter_update_slot();
@@ -73,15 +74,16 @@ private:
 	// energy output from the last step
 	double currentEnergy;
 	virtual double step() = 0;
-	virtual void value_linesearch(std::ofstream& SearchDirInfo);
-	virtual void gradNorm_linesearch(std::ofstream& SearchDirInfo);
+	void value_linesearch();
+	void gradNorm_linesearch();
+	void constant_linesearch();
 	virtual bool test_progress() = 0;
 	virtual void internal_init() = 0;
 	void prepareData();
 	void saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo);
 	void saveSolverInfo(int numIteration, std::ofstream& solverInfo);
 	void saveHessianInfo(int numIteration, std::ofstream& hessianInfo);
-	void sendDataToMatlab();
+	void sendDataToMatlab(const bool show_graph);
 	//CSV output
 	Eigen::SparseMatrix<double> CurrHessian;
 	Eigen::MatrixXd 
