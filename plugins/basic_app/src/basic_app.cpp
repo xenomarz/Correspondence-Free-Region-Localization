@@ -1226,7 +1226,7 @@ void basic_app::checkGradients()
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
 			if (Outputs[i].solver->IsConstrObjFunc) {
 				Eigen::VectorXd x;
-				x = Eigen::VectorXd::Ones(2 * InputModel().V.rows() + InputModel().F.rows());
+				x = Eigen::VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
 				objective->checkGradient(x);
 			}
@@ -1249,7 +1249,7 @@ void basic_app::checkHessians()
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
 			if (Outputs[i].solver->IsConstrObjFunc) {
 				Eigen::VectorXd x;
-				x = Eigen::VectorXd::Ones(2 * InputModel().V.rows() + InputModel().F.rows());
+				x = Eigen::VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
 				objective->checkHessian(x);
 			}
@@ -1357,9 +1357,9 @@ void basic_app::initializeSolver(const int index)
 	auto lagrangianLscmStArea = std::make_unique<LagrangianLscmStArea>();
 	lagrangianLscmStArea->init_mesh(V, F);
 	lagrangianLscmStArea->init();
-	auto lagrangianAreaStLscm = std::make_unique<LagrangianAreaStLscm>();
+	/*auto lagrangianAreaStLscm = std::make_unique<LagrangianAreaStLscm>();
 	lagrangianAreaStLscm->init_mesh(V, F);
-	lagrangianAreaStLscm->init();
+	lagrangianAreaStLscm->init();*/
 	auto symDirichlet = std::make_unique<SymmetricDirichlet>();
 	symDirichlet->init_mesh(V, F);
 	symDirichlet->init();
@@ -1382,7 +1382,7 @@ void basic_app::initializeSolver(const int index)
 
 	if (Outputs[index].solver->IsConstrObjFunc) {
 		Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianLscmStArea));
-		Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianAreaStLscm));
+		//Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianAreaStLscm));
 		Outputs[index].totalObjective->objectiveList.push_back(move(constraintsPositional));
 	}
 	else {
