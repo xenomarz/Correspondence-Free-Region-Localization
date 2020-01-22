@@ -1,4 +1,5 @@
 #include "objective_functions/ObjectiveFunction.h"
+#include "objective_functions/LagrangianLscmStArea.h"
 
 void ObjectiveFunction::FDGradient(const Eigen::VectorXd& X, Eigen::VectorXd& g)
 {
@@ -61,7 +62,11 @@ void ObjectiveFunction::FDHessian(const Eigen::VectorXd& X)
 
 bool ObjectiveFunction::checkGradient(const Eigen::VectorXd& X)
 {
-    double tol = 1e-4;
+	//////////////////////////////////////////
+	checkAugGradient(X);
+	//////////////////////////////////////////
+    
+	double tol = 1e-4;
     double eps = 1e-10;
 
 	Eigen::VectorXd FD_gradient(X.size());
@@ -141,4 +146,73 @@ void ObjectiveFunction::init_mesh(const Eigen::MatrixXd& V, const Eigen::MatrixX
 	}
 	this->V = V3d;
 	this->F = F;
+}
+
+bool ObjectiveFunction::checkAugGradient(const Eigen::VectorXd& X)
+{
+	LagrangianLscmStArea* constrained_function = dynamic_cast<LagrangianLscmStArea*>(this);
+	if (constrained_function == NULL) {
+		std::cout << name << " is not a contrained function" << std::endl;
+		return false;
+	}
+
+	double tol = 1e-4;
+	double eps = 1e-10;
+
+	Eigen::VectorXd FD_gradient(2 * V.rows());
+	Eigen::VectorXd Analytic_gradient(2 * V.rows());
+
+	updateX(X);
+	constrained_function->AuglagrangGradWRTX(Analytic_gradient, false);
+	FDAugGradient(X, FD_gradient);
+
+	std::cout << name << "(AugmentedGradCheck): g.norm() = " << Analytic_gradient.norm() << "(analytic) , " << FD_gradient.norm() << "(FD)" << std::endl;
+	//cout << "analyt = " << endl << Analytic_gradient.transpose() << endl;
+	//cout << "FD = " << endl << FD_gradient.transpose() << endl;
+
+	for (int i = 0; i < Analytic_gradient.size(); i++) {
+		double absErr = abs(FD_gradient[i] - Analytic_gradient[i]);
+		double relError = 2 * absErr / (eps + Analytic_gradient[i] + FD_gradient[i]);
+		if (relError > tol && absErr > 1e-6) {
+			printf("Mismatch element %d: Analytic val: %lf, FD val: %lf. Error: %lf(%lf%%)\n", i, Analytic_gradient(i), FD_gradient(i), absErr, relError * 100);
+			//return false;
+		}
+	}
+
+	return true;
+}
+
+void ObjectiveFunction::FDAugGradient(const Eigen::VectorXd& X, Eigen::VectorXd& g)
+{
+	LagrangianLscmStArea* constrained_function = dynamic_cast<LagrangianLscmStArea*>(this);
+	if (constrained_function == NULL) {
+		std::cout << name << " is not a contrained function" << std::endl;
+		return;
+	}
+
+	g.resize(2 * V.rows());
+	g.setZero();
+
+	Eigen::VectorXd Xd = X;
+	updateX(Xd);
+	double dX = 1e-7; //10e-6;
+
+	double f_P, f_M;
+	//this is a very slow method that evaluates the gradient of the objective function through FD...
+	for (int i = 0; i < (2 * V.rows()); i++) {
+		double tmpVal = X(i);
+		Xd(i) = tmpVal + dX;
+		updateX(Xd);
+		f_P = AugmentedValue(false);
+
+		Xd(i) = tmpVal - dX;
+		updateX(Xd);
+		f_M = AugmentedValue(false);
+
+		//now reset the ith param value
+		Xd(i) = tmpVal;
+		g(i) = (f_P - f_M) / (2 * dX);
+	}
+	//now restore the parameter set and make sure to tidy up a bit...
+	updateX(X);
 }

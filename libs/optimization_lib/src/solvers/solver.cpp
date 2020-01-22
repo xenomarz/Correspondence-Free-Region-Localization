@@ -1,7 +1,7 @@
 #include "solvers/solver.h"
 #include "solvers/NewtonSolver.h"
 //#define SAVE_DATA_IN_CSV
-#define SAVE_DATA_IN_MATLAB
+//#define SAVE_DATA_IN_MATLAB
 
 #define HIGH 3
 #define LOW -3
@@ -184,6 +184,7 @@ void solver::saveSolverInfo(int numIteration, std::ofstream& solverInfo) {
 
 void solver::prepareData() {
 	NewtonSolver* newtonSolver = dynamic_cast<NewtonSolver*>(this);
+	assert(newtonSolver != NULL && "could not calculate matrix with gradient descent mode");
 	CurrHessian = newtonSolver->get_Hessian();
 	
 	X_before = X;

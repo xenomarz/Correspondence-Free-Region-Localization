@@ -13,4 +13,8 @@ public:
 	double objectiveValue(const bool update);
 	double lagrangianValue(const bool update);
 	Eigen::VectorXd constrainedValue(const bool update);
+
+	void lagrangianGradient(Eigen::VectorXd& g, const bool update);
+	void AuglagrangGradWRTX(Eigen::VectorXd& g, const bool update);
+	void objectiveGradient(Eigen::VectorXd& g, const bool update);
 };

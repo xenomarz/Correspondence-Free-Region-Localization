@@ -50,8 +50,39 @@ double LagrangianLscmStArea::AugmentedValue(const bool update)
 	return augmented;
 }
 
-void LagrangianLscmStArea::gradient(Eigen::VectorXd& g, const bool update)
-{
+void LagrangianLscmStArea::objectiveGradient(Eigen::VectorXd& g, const bool update) {
+	g.conservativeResize(V.rows() * 2);
+	g.setZero();
+
+	Eigen::VectorXd constr = constrainedValue(false);
+
+	for (int fi = 0; fi < F.rows(); ++fi) {
+		//prepare gradient
+		Eigen::Vector4d dE_dJ(
+			2 * a(fi) - 2 * d(fi),
+			2 * b(fi) + 2 * c(fi),
+			2 * b(fi) + 2 * c(fi),
+			2 * d(fi) - 2 * a(fi)
+		);
+		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
+
+		//Update the gradient of the x-axis
+		g(F(fi, 0)) += grad(fi, 0);
+		g(F(fi, 1)) += grad(fi, 1);
+		g(F(fi, 2)) += grad(fi, 2);
+		//Update the gradient of the y-axis
+		g(F(fi, 0) + V.rows()) += grad(fi, 3);
+		g(F(fi, 1) + V.rows()) += grad(fi, 4);
+		g(F(fi, 2) + V.rows()) += grad(fi, 5);
+	}
+	if (update) {
+		//gradient_norm = g.norm();
+		objective_gradient_norm = g.norm();
+		//constraint_gradient_norm = g.tail(F.rows()).norm();
+	}
+}
+
+void LagrangianLscmStArea::lagrangianGradient(Eigen::VectorXd& g, const bool update) {
 	g.conservativeResize(V.rows() * 2 + F.rows());
 	g.setZero();
 
@@ -64,7 +95,6 @@ void LagrangianLscmStArea::gradient(Eigen::VectorXd& g, const bool update)
 			2 * d(fi) - 2 * a(fi) - lambda(fi) * a(fi)
 		);
 		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
-
 
 		//Update the gradient of the x-axis
 		g(F(fi, 0)) += grad(fi, 0);
@@ -82,6 +112,43 @@ void LagrangianLscmStArea::gradient(Eigen::VectorXd& g, const bool update)
 		objective_gradient_norm = g.head(2 * V.rows()).norm();
 		constraint_gradient_norm = g.tail(F.rows()).norm();
 	}
+}
+
+void LagrangianLscmStArea::AuglagrangGradWRTX(Eigen::VectorXd& g, const bool update) {
+	g.conservativeResize(V.rows() * 2);
+	g.setZero();
+
+	Eigen::VectorXd constr = constrainedValue(false);
+
+	for (int fi = 0; fi < F.rows(); ++fi) {
+		//prepare gradient
+		Eigen::Vector4d dE_dJ(
+			2 * a(fi) - 2 * d(fi) + ((augmented_value_parameter*constr(fi)) - lambda(fi)) * d(fi),
+			2 * b(fi) + 2 * c(fi) - ((augmented_value_parameter*constr(fi)) - lambda(fi)) * c(fi),
+			2 * b(fi) + 2 * c(fi) - ((augmented_value_parameter*constr(fi)) - lambda(fi)) * b(fi),
+			2 * d(fi) - 2 * a(fi) + ((augmented_value_parameter*constr(fi)) - lambda(fi)) * a(fi)
+		);
+		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
+
+		//Update the gradient of the x-axis
+		g(F(fi, 0)) += grad(fi, 0);
+		g(F(fi, 1)) += grad(fi, 1);
+		g(F(fi, 2)) += grad(fi, 2);
+		//Update the gradient of the y-axis
+		g(F(fi, 0) + V.rows()) += grad(fi, 3);
+		g(F(fi, 1) + V.rows()) += grad(fi, 4);
+		g(F(fi, 2) + V.rows()) += grad(fi, 5);
+	}
+	if (update) {
+		gradient_norm = g.norm();
+		objective_gradient_norm = g.head(2 * V.rows()).norm();
+		constraint_gradient_norm = g.tail(F.rows()).norm();
+	}
+}
+
+void LagrangianLscmStArea::gradient(Eigen::VectorXd& g, const bool update)
+{
+	lagrangianGradient(g,update);
 }
 
 void LagrangianLscmStArea::hessian()

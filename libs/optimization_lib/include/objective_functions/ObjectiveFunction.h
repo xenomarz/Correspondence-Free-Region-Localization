@@ -37,6 +37,8 @@ public:
     void FDHessian(const Eigen::VectorXd& X);
     bool checkGradient(const Eigen::VectorXd& X);
     bool checkHessian(const Eigen::VectorXd& X);
+	bool checkAugGradient(const Eigen::VectorXd& X);
+	void FDAugGradient(const Eigen::VectorXd& X, Eigen::VectorXd& g);
 	
 	// Hessian sparse reprensentation
 	std::vector<int> II, JJ;
