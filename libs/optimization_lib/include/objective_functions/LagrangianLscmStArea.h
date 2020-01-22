@@ -9,4 +9,8 @@ public:
 	virtual void gradient(Eigen::VectorXd& g, const bool update) override;
 	virtual void hessian() override;
 	virtual double AugmentedValue(const bool update) override;
+
+	double objectiveValue(const bool update);
+	double lagrangianValue(const bool update);
+	Eigen::VectorXd constrainedValue(const bool update);
 };

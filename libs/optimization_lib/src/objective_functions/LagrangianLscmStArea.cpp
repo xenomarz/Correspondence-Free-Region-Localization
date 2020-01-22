@@ -6,34 +6,48 @@ LagrangianLscmStArea::LagrangianLscmStArea()
 	w = 1.0f;
 }
 
-double LagrangianLscmStArea::value(const bool update)
-{
-	// L = LSCM + lambda * area
-	
+double LagrangianLscmStArea::objectiveValue(const bool update) {
 	Eigen::VectorXd LSCM = (a - d).cwiseAbs2() + (b + c).cwiseAbs2();
-	Eigen::VectorXd areaE = detJ - Eigen::VectorXd::Ones(F.rows());
-	
-	Eigen::VectorXd E = LSCM - lambda.cwiseProduct(areaE);
-	double value = (Area.asDiagonal() * E).sum();
-	
+	double objVal = (Area.asDiagonal() * LSCM).sum();
 	if (update) {
-		Efi = E;
-		energy_value = value;
-		objective_value = (Area.asDiagonal() * LSCM).sum();
-		constraint_value = (Area.asDiagonal() * areaE).sum();
+		objective_value = objVal;
 	}
-	
-	return value;
+	return objVal;
+}
+
+Eigen::VectorXd LagrangianLscmStArea::constrainedValue(const bool update) {
+	Eigen::VectorXd areaE = detJ - Eigen::VectorXd::Ones(F.rows());
+	areaE = Area.asDiagonal() * areaE;
+	if (update) {
+		Efi = areaE.cwiseAbs2();
+		constraint_value = areaE.sum();
+	}
+	return areaE;
+}
+
+double LagrangianLscmStArea::lagrangianValue(const bool update)
+{
+	// f(x) - objective function value 
+	// c(x) - constraint function vector 
+	// lambda - lagrange multipliers 
+	// Lagrangian = f(x) - lambda * c(x)
+	double lagrangian = objectiveValue(update) - lambda.cwiseProduct(constrainedValue(update)).sum();
+	if (update) {
+		energy_value = lagrangian;
+	}
+	return lagrangian;
+}
+
+double LagrangianLscmStArea::value(const bool update) {
+	return lagrangianValue(update);
 }
 
 double LagrangianLscmStArea::AugmentedValue(const bool update)
 {
-	// Augmented_L = L + k * ||LSCM||^2
-	Eigen::VectorXd areaE = detJ - Eigen::VectorXd::Ones(F.rows());
-	//I am not sure of multiplying areaE by Area!!!
-	double augmented_part = (Area.asDiagonal() * areaE.cwiseAbs2()).sum();
-	
-	return value(update) + augmented_value_parameter * augmented_part;
+	double augmented = lagrangianValue(update) + 
+		(augmented_value_parameter / 2) * constrainedValue(update).cwiseAbs2().sum();
+
+	return augmented;
 }
 
 void LagrangianLscmStArea::gradient(Eigen::VectorXd& g, const bool update)
