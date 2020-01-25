@@ -94,6 +94,10 @@ bool ObjectiveFunction::checkGradient(const Eigen::VectorXd& X)
 
 bool ObjectiveFunction::checkHessian(const Eigen::VectorXd& X)
 {
+	/////////////////////////////////////////////////////
+	checkAugHessian(X);
+	/////////////////////////////////////////////////////
+
 	double tol = 1e-4;
 	double eps = 1e-10;
 
@@ -215,4 +219,92 @@ void ObjectiveFunction::FDAugGradient(const Eigen::VectorXd& X, Eigen::VectorXd&
 	}
 	//now restore the parameter set and make sure to tidy up a bit...
 	updateX(X);
+}
+
+void ObjectiveFunction::FDAugHessian(const Eigen::VectorXd& X)
+{
+	LagrangianLscmStArea* c = dynamic_cast<LagrangianLscmStArea*>(this);
+	if (c == NULL) {
+		std::cout << name << " is not a contrained function" << std::endl;
+		return;
+	}
+
+	Eigen::VectorXd Xd = X;
+	updateX(Xd);
+	Eigen::VectorXd g(2 * V.rows()), gp(2 * V.rows()), gm(2 * V.rows()), Hi(2 * V.rows());
+	double dX = 10e-6;
+	c->II_aug.clear(); c->JJ_aug.clear(); c->SS_aug.clear();
+	for (int i = 0; i < (2 * V.rows()); i++) {
+		double tmpVal = X(i);
+		Xd(i) = tmpVal + dX;
+		updateX(Xd);
+		c->AuglagrangGradWRTX(gp, false);
+
+		Xd(i) = tmpVal - dX;
+		updateX(Xd);
+		c->AuglagrangGradWRTX(gm, false);
+		//now reset the ith param value
+		Xd(i) = tmpVal;
+		//and compute the row of the hessian
+		Hi = (gp - gm) / (2 * dX);
+		//each vector is a column vector of the hessian, so copy it in place...
+		for (int j = i; j < (2 * V.rows()); j++)
+		{
+			if (abs(Hi[j]) > 1e-8)
+			{
+				c->II_aug.push_back(i);
+				c->JJ_aug.push_back(j);
+				c->SS_aug.push_back(Hi[j]);
+			}
+		}
+	}
+}
+
+bool ObjectiveFunction::checkAugHessian(const Eigen::VectorXd& X)
+{
+	LagrangianLscmStArea* c = dynamic_cast<LagrangianLscmStArea*>(this);
+	if (c == NULL) {
+		std::cout << name << " is not a contrained function" << std::endl;
+		return false;
+	}
+
+	double tol = 1e-4;
+	double eps = 1e-10;
+
+	Eigen::SparseMatrix<double>  FDH(2 * V.rows(), 2 * V.rows());
+	Eigen::SparseMatrix<double> H(2 * V.rows(), 2 * V.rows());
+	std::vector<Eigen::Triplet<double>> Ht;
+
+	FDAugHessian(X);
+	for (int i = 0; i < c->II_aug.size(); i++)
+		Ht.push_back(Eigen::Triplet<double>(c->II_aug[i], c->JJ_aug[i], c->SS_aug[i]));
+	FDH.setFromTriplets(Ht.begin(), Ht.end());
+
+	Ht.clear();
+	init();
+	updateX(X);
+
+	c->aughessian();
+
+	for (int i = 0; i < c->II_aug.size(); i++)
+		Ht.push_back(Eigen::Triplet<double>(c->II_aug[i], c->JJ_aug[i], c->SS_aug[i]));
+	H.setFromTriplets(Ht.begin(), Ht.end());
+
+	//std::cout << "FDH.selfadjointView<Upper>()" << endl;
+	//std::cout << FDH.selfadjointView<Upper>() << endl;
+	//std::cout << "H.selfadjointView<Upper>()" << endl;
+	//std::cout << H.selfadjointView<Upper>() << endl;
+
+	std::cout << name << ": testing hessians (augmented)...\n";
+	for (int i = 0; i < (2 * V.rows()); i++) {
+		for (int j = 0; j < (2 * V.rows()); j++) {
+			double absErr = std::abs(FDH.coeff(i, j) - H.coeff(i, j));
+			double relError = 2 * absErr / (eps + FDH.coeff(i, j) + H.coeff(i, j));
+			if (relError > tol && absErr > 1e-6) {
+				printf("Mismatch element %d,%d: Analytic val: %lf, FD val: %lf. Error: %lf(%lf%%)\n", i, j, H.coeff(i, j), FDH.coeff(i, j), absErr, relError * 100);
+				return false;
+			}
+		}
+	}
+	return true;
 }

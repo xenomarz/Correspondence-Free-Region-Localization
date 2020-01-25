@@ -4,6 +4,29 @@ void ConstrainedObjectiveFunction::init()
 {
 	lambda.resize(F.rows());
 	TriangleMeshObjectiveFunction::init();
+	init_aug_hessian();
+}
+
+void ConstrainedObjectiveFunction::AddElementToAugHessian(std::vector<int> ind)
+{
+	auto PushPair = [&](int i, int j) { if (i > j) std::swap(i, j); II_aug.push_back(i); JJ_aug.push_back(j); };
+	for (int i = 0; i < ind.size(); i++)
+		for (int j = 0; j <= i; j++)
+			PushPair(ind[i], ind[j]);
+}
+
+void ConstrainedObjectiveFunction::init_aug_hessian() {
+	II_aug.clear();
+	JJ_aug.clear();
+	auto PushPair = [&](int i, int j) { if (i > j) std::swap(i, j); II_aug.push_back(i); JJ_aug.push_back(j); };
+	int n = V.rows();
+	for (int i = 0; i < F.rows(); ++i)
+		AddElementToAugHessian({ F(i, 0), F(i, 1), F(i, 2), F(i, 0) + n, F(i, 1) + n, F(i, 2) + n });
+
+	//we add the indexes of the last element in order to tell the solver the size of the matrix
+	PushPair(2 * n - 1, 2 * n - 1);
+
+	SS_aug = std::vector<double>(II_aug.size(), 0.);
 }
 
 void ConstrainedObjectiveFunction::init_hessian()

@@ -16,5 +16,5 @@ public:
 
 	void lagrangianGradient(Eigen::VectorXd& g, const bool update);
 	void AuglagrangGradWRTX(Eigen::VectorXd& g, const bool update);
-	void objectiveGradient(Eigen::VectorXd& g, const bool update);
+	void aughessian();
 };

@@ -50,38 +50,6 @@ double LagrangianLscmStArea::AugmentedValue(const bool update)
 	return augmented;
 }
 
-void LagrangianLscmStArea::objectiveGradient(Eigen::VectorXd& g, const bool update) {
-	g.conservativeResize(V.rows() * 2);
-	g.setZero();
-
-	Eigen::VectorXd constr = constrainedValue(false);
-
-	for (int fi = 0; fi < F.rows(); ++fi) {
-		//prepare gradient
-		Eigen::Vector4d dE_dJ(
-			2 * a(fi) - 2 * d(fi),
-			2 * b(fi) + 2 * c(fi),
-			2 * b(fi) + 2 * c(fi),
-			2 * d(fi) - 2 * a(fi)
-		);
-		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
-
-		//Update the gradient of the x-axis
-		g(F(fi, 0)) += grad(fi, 0);
-		g(F(fi, 1)) += grad(fi, 1);
-		g(F(fi, 2)) += grad(fi, 2);
-		//Update the gradient of the y-axis
-		g(F(fi, 0) + V.rows()) += grad(fi, 3);
-		g(F(fi, 1) + V.rows()) += grad(fi, 4);
-		g(F(fi, 2) + V.rows()) += grad(fi, 5);
-	}
-	if (update) {
-		//gradient_norm = g.norm();
-		objective_gradient_norm = g.norm();
-		//constraint_gradient_norm = g.tail(F.rows()).norm();
-	}
-}
-
 void LagrangianLscmStArea::lagrangianGradient(Eigen::VectorXd& g, const bool update) {
 	g.conservativeResize(V.rows() * 2 + F.rows());
 	g.setZero();
@@ -190,5 +158,32 @@ void LagrangianLscmStArea::hessian()
 		SS[index2++] = hess[3];
 		SS[index2++] = hess[4];
 		SS[index2++] = hess[5];	
+	}
+}
+
+void LagrangianLscmStArea::aughessian()
+{
+#pragma omp parallel for num_threads(24)
+	int index2 = 0;
+	
+	for (int i = 0; i < F.rows(); ++i) {
+		//prepare hessian
+		float u = Area(i) * augmented_value_parameter;
+		Eigen::MatrixXd d2E_dJ2(4, 4);
+		d2E_dJ2 <<
+			2 + u * d(i)*d(i)										, -u * d(i)*c(i)										, -u * d(i)*b(i)										, -lambda(i) - 2 - u + 2 * u * d(i)*a(i) - u * b(i)*c(i),
+			-u * d(i)*c(i)											, 2 + u * c(i)*c(i)										, 2 + lambda(i) - u * a(i)*d(i) + 2 * u*b(i)*c(i) + u	, -u * c(i)*a(i)										,
+			-u * d(i)*b(i)											, 2 + lambda(i) - u * a(i)*d(i) + 2 * u*b(i)*c(i) + u	, 2 + u * b(i)*b(i)										, -u * b(i)*a(i)										,
+			-lambda(i) - 2 - u + 2 * u * d(i)*a(i) - u * b(i)*c(i)	, -u * c(i)*a(i)										, -u * b(i)*a(i)										, 2 + u * a(i)*a(i)										;
+
+		Hessian[i] = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
+
+		for (int a = 0; a < 6; ++a)
+		{
+			for (int b = 0; b <= a; ++b)
+			{
+				SS_aug[index2++] = Hessian[i](a, b);
+			}
+		}
 	}
 }
