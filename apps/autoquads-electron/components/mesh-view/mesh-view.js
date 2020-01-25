@@ -1034,7 +1034,7 @@ export class MeshView extends LitElement {
     _createRaycaster() {
         this._raycaster = new THREE.Raycaster();
         this._raycaster.params.Points.threshold = 0.05;
-        this._raycaster.linePrecision = 0.05;
+        this._raycaster.linePrecision = 0.005;
     }
 
     _createGrid() {
@@ -1173,20 +1173,20 @@ export class MeshView extends LitElement {
     }
 
     _colorEdge(edgeIndex, color) {
-        let baseIndex = 3 * edgeIndex;
+        let edgeBaseVertexIndex = 2 * edgeIndex;
         this._edgeColors.push({
-            baseIndex: baseIndex,
+            baseIndex: 3 * edgeBaseVertexIndex,
             value0: color.r,
             value1: color.g,
             value2: color.b
         });
 
-        // this._edgeColors.push({
-        //     baseIndex: baseIndex + 1,
-        //     value0: color.r,
-        //     value1: color.g,
-        //     value2: color.b
-        // });
+        this._edgeColors.push({
+            baseIndex: 3 * (edgeBaseVertexIndex + 1),
+            value0: color.r,
+            value1: color.g,
+            value2: color.b
+        });
     }
 
     _uncolorEdge(edge) {
@@ -1267,7 +1267,7 @@ export class MeshView extends LitElement {
     }
 
     _colorEdges() {
-        if (this._highlightedEdge) {
+        if (this._highlightedEdge !== null) {
             this._colorEdge(this._highlightedEdge, this._highlightedEdgeColor);
         }
     }
@@ -1365,6 +1365,7 @@ export class MeshView extends LitElement {
                             let edgeIntersection = this._edgeIntersections[i];
                             let intersectedEdgeIndex = edgeIntersection.index / 2;
                             if(adjacencyList.find(edgeIndex => edgeIndex === intersectedEdgeIndex)) {
+                                this._resetHighlightedFace();
                                 this._setHighlightedEdge(intersectedEdgeIndex);
                             }
                         }
@@ -1373,14 +1374,17 @@ export class MeshView extends LitElement {
                 else {
                     let edgeIntersection = this._edgeIntersections[0];
                     let intersectedEdgeIndex = edgeIntersection.index / 2;
+                    this._resetHighlightedFace();
                     this._setHighlightedEdge(intersectedEdgeIndex);
                 }
             }
             else if (this._faceIntersection) {
+                this._resetHighlightedEdge();
                 this._setHighlightedFace(this._faceIntersection.face);
                 this._publishFaceMessage('mesh-view-face-highlighted', this._faceIntersection.face);  
             } else {
                 this._resetHighlightedFace();
+                this._resetHighlightedEdge();
                 this._publishFaceMessage('mesh-view-face-unhighlighted');        
             }
         }
