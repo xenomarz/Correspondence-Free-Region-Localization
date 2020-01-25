@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/HaifaGraphics/RDS#readme",
   "dependencies": {
+    "@vaadin/vaadin-dialog": "^2.2.1",
     "node-addon-api": "latest"
   }
 }

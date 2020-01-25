@@ -3,6 +3,7 @@ import { LitElement, html, css } from '../../web_modules/lit-element.js';
 import { classMap } from '../../web_modules/lit-html/directives/class-map.js';
 import '../../web_modules/@vaadin/vaadin-button.js';
 import '../../web_modules/@vaadin/vaadin-split-layout.js';
+import '../../web_modules/@vaadin/vaadin-dialog.js';
 import { PubSub } from '../../web_modules/pubsub-js.js';
 import * as THREE from '../../web_modules/three.js';
 import { connect } from '../../web_modules/pwa-helpers.js';
@@ -76,6 +77,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         highlighted-edge-color="${this.highlightedEdgeColor}"
                         dragged-face-color="${this.draggedFaceColor}"
                         selected-face-color="${this.fixedFaceColor}"
+                        selected-edge-color="${this.editedEdgeColor}"
                         show-grid-texture>
                     </mesh-view>
                     <mesh-view 
@@ -99,6 +101,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         highlighted-edge-color="${this.highlightedEdgeColor}"
                         dragged-face-color="${this.draggedFaceColor}"
                         selected-face-color="${this.fixedFaceColor}"
+                        selected-edge-color="${this.editedEdgeColor}"
                         ?show-debug-data="${HelpersExports.isVisible(this.optimizationDataMonitorVisibility)}"
                         show-grid-texture="${this.showGridTextureInSoupView}">
                     </mesh-view>
@@ -212,6 +215,10 @@ export class AutoquadsView extends connect(store)(LitElement) {
             fixedFaceColor: {
                 type: String,
                 attribute: 'fixed-face-color'
+            },
+            editedEdgeColor: {
+                type: String,
+                attribute: 'edited-edge-color'
             },
             gridSize: {
                 type: Number,
@@ -592,6 +599,16 @@ export class AutoquadsView extends connect(store)(LitElement) {
     get fixedFaceColor() {
         return this._fixedFaceColor;
     }
+
+    set editedEdgeColor(value) {
+        const oldValue = this._editedEdgeColor;
+        this._editedEdgeColor = value;
+        this.requestUpdate('editedEdgeColor', oldValue);
+    }
+
+    get editedEdgeColor() {
+        return this._editedEdgeColor;
+    }    
     
     set gridSize(value) {
         const oldValue = this._gridSize;
@@ -737,6 +754,9 @@ export class AutoquadsView extends connect(store)(LitElement) {
     connectedCallback() {
         super.connectedCallback();
 
+        /**
+         * Face highlighting
+         */
         this._meshViewFaceHighlightedSubscriptionToken = PubSub.subscribe('mesh-view-face-highlighted', (name, payload) => {
             PubSub.publish('mesh-view-highlight-face', payload);
         });
@@ -745,6 +765,9 @@ export class AutoquadsView extends connect(store)(LitElement) {
             PubSub.publish('mesh-view-unhighlight-face', payload);
         });
 
+        /**
+         * Face dragging
+         */
         this._meshViewFaceDraggingBeginSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging-begin', (name, payload) => {
             if(!payload.faceSelected) {
                 this._engine.constrainFacePosition(payload.face.id);
@@ -766,6 +789,9 @@ export class AutoquadsView extends connect(store)(LitElement) {
             PubSub.publish('mesh-view-reset-dragged-face', payload);
         });
 
+        /**
+         * Face selection
+         */
         this._meshViewFaceSelectedSubscriptionToken = PubSub.subscribe('mesh-view-face-selected', (name, payload) => {
             this._engine.constrainFacePosition(payload.face.id);
             PubSub.publish('mesh-view-select-face', payload);
@@ -774,7 +800,14 @@ export class AutoquadsView extends connect(store)(LitElement) {
         this._meshViewFaceUnselectedSubscriptionToken = PubSub.subscribe('mesh-view-face-unselected', (name, payload) => {
             this._engine.unconstrainFacePosition(payload.face.id);
             PubSub.publish('mesh-view-unselect-face', payload);
-        });        
+        });
+        
+        /**
+         * Edge selection
+         */
+        this._meshViewEdgeSelectedSubscriptionToken = PubSub.subscribe('mesh-view-edge-selected', (name, payload) => {
+            alert('dfgdf');
+        });
     }
     
     disconnectedCallback() {

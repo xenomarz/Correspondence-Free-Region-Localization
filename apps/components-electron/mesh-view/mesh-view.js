@@ -219,6 +219,10 @@ export class MeshView extends LitElement {
                 type: String,
                 attribute: 'selected-face-color'
             },
+            selectedEdgeColor: {
+                type: String,
+                attribute: 'selected-edge-color'
+            },
             showDebugData: {
                 type: Boolean,
                 attribute: 'show-debug-data'
@@ -247,6 +251,7 @@ export class MeshView extends LitElement {
         this._faceIntersection = null;
         this._previousFaceIntersection = null;
         this._selectedFaces = {};
+        this._selectedEdges = {};
         this._selectedVerticesPoints = {};
         this._draggedFace = null;
         this._highlightedFace = null;
@@ -353,7 +358,19 @@ export class MeshView extends LitElement {
 
     get selectedFaceColor() {
         return this._selectedFaceColor;
-    }     
+    }
+    
+    set selectedEdgeColor(value) {
+        const oldValue = this._selectedEdgeColor;
+        if(oldValue !== value) {
+            this._selectedEdgeColor = new THREE.Color(value);
+            this.requestUpdate('selectedEdgeColor', oldValue);
+        }
+    }
+
+    get selectedEdgeColor() {
+        return this._selectedEdgeColor;
+    }      
 
     set gridHorizontalColor(value) {
         const oldValue = this._gridHorizontalColor;
@@ -720,8 +737,8 @@ export class MeshView extends LitElement {
                             target: 'vertexSelection',
                             actions: ['beginVertexSelection']
                         },
-                        BEGIN_FACE_SELECTION: {
-                            target: 'faceSelection',
+                        BEGIN_ELEMENT_SELECTION: {
+                            target: 'elementSelection',
                             actions: []
                         },
                         BEGIN_FACE_DRAGGING: {
@@ -742,9 +759,9 @@ export class MeshView extends LitElement {
                         },                         
                     }
                 },
-                faceSelection: {
+                elementSelection: {
                     on: {
-                        END_FACE_SELECTION: {
+                        END_ELEMENT_SELECTION: {
                             target: 'idle',
                             actions: []
                         },                         
@@ -880,8 +897,16 @@ export class MeshView extends LitElement {
                     });
                 }
             }
-        } else if (this._interactionService.state.value === 'faceSelection') {
-            if (this._faceIntersection) {
+        } else if (this._interactionService.state.value === 'elementSelection') {
+            if(this._edgeIntersection) {
+                if (this._selectedEdges[this._edgeIntersection.edge.id]) {
+                    this._unselectEdge(this._edgeIntersection.edge);
+                    this._publishEdgeMessage('mesh-view-edge-unselected', this._edgeIntersection.edge);  
+                } else {
+                    this._selectEdge(this._edgeIntersection.edge);
+                    this._publishEdgeMessage('mesh-view-edge-selected', this._edgeIntersection.edge);  
+                }
+            } else if (this._faceIntersection) {
                 if (this._selectedFaces[this._faceIntersection.face.id]) {
                     this._unselectFace(this._faceIntersection.face);
                     this._publishFaceMessage('mesh-view-face-unselected', this._faceIntersection.face);  
@@ -914,7 +939,7 @@ export class MeshView extends LitElement {
                 this._interactionService.send('BEGIN_MESH_ROTATION');
             }
         } else if (e.keyCode === 17) {
-            this._interactionService.send('BEGIN_FACE_SELECTION');
+            this._interactionService.send('BEGIN_ELEMENT_SELECTION');
         }
     }
 
@@ -928,7 +953,7 @@ export class MeshView extends LitElement {
                 this._interactionService.send('END_MESH_ROTATION');
             }
         } else if (e.keyCode === 17) {
-            this._interactionService.send('END_FACE_SELECTION');
+            this._interactionService.send('END_ELEMENT_SELECTION');
         }
     }
 
@@ -1159,50 +1184,39 @@ export class MeshView extends LitElement {
     /**
      * Face, edge and vertex manipulation
      */
-    _colorVertex(vertex, color) {
-        this._vertexColors.push({
-            baseIndex: 3 * vertex,
+    _colorVertex(elementColors, vertexId, color) {
+        elementColors.push({
+            baseIndex: 3 * vertexId,
             value0: color.r,
             value1: color.g,
             value2: color.b
         });
     }
 
-    _uncolorVertex(face) {
-        delete this._vertexColors[vertex];
+    _uncolorVertex(elementColors, vertexId) {
+        delete elementColors[vertexId];
     }
 
-    _colorEdge(edgeIndex, color) {
-        let edgeBaseVertexIndex = 2 * edgeIndex;
-        this._edgeColors.push({
-            baseIndex: 3 * edgeBaseVertexIndex,
-            value0: color.r,
-            value1: color.g,
-            value2: color.b
-        });
-
-        this._edgeColors.push({
-            baseIndex: 3 * (edgeBaseVertexIndex + 1),
-            value0: color.r,
-            value1: color.g,
-            value2: color.b
-        });
+    _colorEdge(edge, color) {
+        this._colorVertex(this._edgeColors, edge.a, color);
+        this._colorVertex(this._edgeColors, edge.b, color);
     }
 
     _uncolorEdge(edge) {
-        delete this._edgeColors[edge];
+        this._uncolorVertex(this._edgeColors, edge.a);
+        this._uncolorVertex(this._edgeColors, edge.b);
     }
 
     _colorFace(face, color) {
-        this._colorVertex(face.a, color);
-        this._colorVertex(face.b, color);
-        this._colorVertex(face.c, color);
+        this._colorVertex(this._vertexColors, face.a, color);
+        this._colorVertex(this._vertexColors, face.b, color);
+        this._colorVertex(this._vertexColors, face.c, color);
     }
 
     _uncolorFace(face) {
-        this._uncolorVertex(face.a);
-        this._uncolorVertex(face.b);
-        this._uncolorVertex(face.c);
+        this._uncolorVertex(this._vertexColors, face.a);
+        this._uncolorVertex(this._vertexColors, face.b);
+        this._uncolorVertex(this._vertexColors, face.c);
     }
 
     _setDraggedFace(face) {
@@ -1237,6 +1251,14 @@ export class MeshView extends LitElement {
         delete this._selectedFaces[face.id];
     }
 
+    _selectEdge(edge) {
+        this._selectedEdges[edge.id] = edge;
+    }
+
+    _unselectEdge(edge) {
+        delete this._selectedEdges[edge.id];
+    }
+
     _selectVertex(vertexId, vertex) {
         this._pointcloud.geometry.attributes.selected.array[vertexId] = 1;
         this._pointcloud.geometry.attributes.selected.needsUpdate = true;
@@ -1267,6 +1289,10 @@ export class MeshView extends LitElement {
     }
 
     _colorEdges() {
+        for (let edgeId in this._selectedEdges) {
+            this._colorEdge(this._selectedEdges[edgeId], this._selectedEdgeColor);
+        }
+
         if (this._highlightedEdge !== null) {
             this._colorEdge(this._highlightedEdge, this._highlightedEdgeColor);
         }
@@ -1352,30 +1378,43 @@ export class MeshView extends LitElement {
          */
         if (this._interactionService.state.value !== 'faceDragging' && this._mouseInCanvas) {
             this._faceIntersection = this._getFaceIntersection();
+            this._edgeIntersection = null;
             this._edgeIntersections = this._getEdgeIntersections();
             this._vertexIntersection = this._getVertexIntersection();
 
             // Give priority to edge intersections
             if(this._edgeIntersections.length > 0) {
+                let adjacencyList;
                 if(this._faceIntersection) {
                     let faceIndex = this._faceIntersection.faceIndex;
-                    let adjacencyList = this.meshProvider.faceEdgeAdjacency[faceIndex];
-                    if(adjacencyList) {
-                        for(let i = 0; i < this._edgeIntersections.length; i++) {
-                            let edgeIntersection = this._edgeIntersections[i];
-                            let intersectedEdgeIndex = edgeIntersection.index / 2;
-                            if(adjacencyList.find(edgeIndex => edgeIndex === intersectedEdgeIndex)) {
-                                this._resetHighlightedFace();
-                                this._setHighlightedEdge(intersectedEdgeIndex);
-                            }
-                        }
-                    }
+                    adjacencyList = this.meshProvider.faceEdgeAdjacency[faceIndex];
                 }
                 else {
                     let edgeIntersection = this._edgeIntersections[0];
                     let intersectedEdgeIndex = edgeIntersection.index / 2;
-                    this._resetHighlightedFace();
-                    this._setHighlightedEdge(intersectedEdgeIndex);
+                    adjacencyList = [intersectedEdgeIndex];
+                }
+       
+                if(adjacencyList) {
+                    for(let i = 0; i < this._edgeIntersections.length; i++) {
+                        let edgeIntersection = this._edgeIntersections[i];
+                        let intersectedEdgeIndex = edgeIntersection.index / 2;
+                        let baseEntryIndex = 2 * intersectedEdgeIndex;
+                        let intersectedEdge = {
+                            id: intersectedEdgeIndex,
+                            a: baseEntryIndex,
+                            b: baseEntryIndex + 1
+                        };
+
+                        if(adjacencyList.includes(intersectedEdgeIndex)) {
+                            this._resetHighlightedFace();
+                            this._setHighlightedEdge(intersectedEdge);
+                            this._edgeIntersection = {
+                                edge: intersectedEdge
+                            };
+                            break;
+                        }
+                    }
                 }
             }
             else if (this._faceIntersection) {
@@ -1507,6 +1546,23 @@ export class MeshView extends LitElement {
                 ...payload,
                 face: face,
                 faceSelected: Boolean(this._selectedFaces[face.id])  
+            }
+        }
+
+        PubSub.publish(message, payload);         
+    }
+
+    _publishEdgeMessage(message, edge, options) {
+        let payload = {
+            meshViewId: this.id,
+            ...options
+        }
+
+        if(edge !== null) {
+            payload = {
+                ...payload,
+                edge: edge,
+                edgeSelected: Boolean(this._selectedEdges[edge.id])  
             }
         }
 

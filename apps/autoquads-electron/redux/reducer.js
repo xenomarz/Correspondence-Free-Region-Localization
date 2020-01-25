@@ -24,6 +24,7 @@ import {
     CHANGE_HIGHLIGHTED_EDGE_COLOR,
     CHANGE_DRAGGED_FACE_COLOR,
     CHANGE_FIXED_FACE_COLOR,
+    CHANGE_EDITED_EDGE_COLOR,
     CHANGE_GRID_SIZE,
     CHANGE_GRID_TEXTURE_SIZE,
     CHANGE_GRID_LINE_WIDTH,
@@ -67,6 +68,7 @@ const INITIAL_STATE = {
     highlightedEdgeColor: 'rgb(0,255,0)',
     draggedFaceColor: 'rgb(0,0,255)',
     fixedFaceColor: 'rgb(255,0,0)',
+    editedEdgeColor: 'rgb(255,0,0)',
     gridSize: 7,
     gridTextureSize: 8,
     gridLineWidth: 4,
@@ -308,6 +310,11 @@ export const reducer = (state = INITIAL_STATE, action) => {
             return {
                 ...state,
                 fixedFaceColor: action.color
+            };
+        case CHANGE_EDITED_EDGE_COLOR:
+            return {
+                ...state,
+                editedEdgeColor: action.color
             };
         case CHANGE_GRID_SIZE:
             return {

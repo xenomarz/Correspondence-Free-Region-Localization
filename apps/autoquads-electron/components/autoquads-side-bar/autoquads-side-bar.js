@@ -246,6 +246,11 @@ export class AutoquadsSideBar extends SideBar {
                     color="${this._highlightedEdgeColor}"
                     @color-changed="${this._highlightedEdgeColorInputChanged}">
                 </side-bar-color-picker>
+                <side-bar-color-picker
+                    caption="Edited Edge Color"
+                    color="${this._editedEdgeColor}"
+                    @color-changed="${this._editedEdgeColorInputChanged}">
+                </side-bar-color-picker>                
             </side-bar-collapsable-section>
             <side-bar-collapsable-section
                 caption="Viewports">
@@ -461,6 +466,10 @@ export class AutoquadsSideBar extends SideBar {
             fixedFaceColor: {
                 type: String,
                 attribute: 'fixed-face-color'
+            },
+            editedEdgeColor: {
+                type: String,
+                attribute: 'edited-edge-color'
             },
             gridSize: {
                 type: Number,
@@ -781,6 +790,16 @@ export class AutoquadsSideBar extends SideBar {
     get fixedFaceColor() {
         return this._fixedFaceColor;
     }
+
+    set editedEdgeColor(value) {
+        const oldValue = this._editedEdgeColor;
+        this._editedEdgeColor = value;
+        this.requestUpdate('editedEdgeColor', oldValue);
+    }
+
+    get editedEdgeColor() {
+        return this._editedEdgeColor;
+    }
     
     set gridSize(value) {
         const oldValue = this._gridSize;
@@ -1002,6 +1021,10 @@ export class AutoquadsSideBar extends SideBar {
 
     _highlightedEdgeColorInputChanged(e) {
         store.dispatch(ActionsExports.setHighlightedEdgeColor(e.detail.color));
+    }
+
+    _editedEdgeColorInputChanged(e) {
+        store.dispatch(ActionsExports.setEditedEdgeColor(e.detail.color));
     }
 
     _modelWireframeVisibilityInputChanged(e) {

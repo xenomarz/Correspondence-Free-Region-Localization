@@ -25,6 +25,7 @@ export const CHANGE_GRID_BACKGROUND_COLOR2 = 'CHANGE_GRID_BACKGROUND_COLOR2';
 export const CHANGE_HIGHLIGHTED_FACE_COLOR = 'CHANGE_HIGHLIGHTED_FACE_COLOR';
 export const CHANGE_DRAGGED_FACE_COLOR = 'CHANGE_DRAGGED_FACE_COLOR';
 export const CHANGE_FIXED_FACE_COLOR = 'CHANGE_FIXED_FACE_COLOR';
+export const CHANGE_EDITED_EDGE_COLOR = 'CHANGE_EDITED_EDGE_COLOR';
 export const CHANGE_HIGHLIGHTED_EDGE_COLOR = 'CHANGE_HIGHLIGHTED_EDGE_COLOR';
 export const CHANGE_GRID_SIZE = 'CHANGE_GRID_SIZE';
 export const CHANGE_GRID_TEXTURE_SIZE = 'CHANGE_GRID_TEXTURE_SIZE';
@@ -239,6 +240,13 @@ export const setDraggedFaceColor = color => {
 export const setFixedFaceColor = color => {
     return {
         type: CHANGE_FIXED_FACE_COLOR,
+        color: color
+    };
+};
+
+export const setEditedEdgeColor = color => {
+    return {
+        type: CHANGE_EDITED_EDGE_COLOR,
         color: color
     };
 };

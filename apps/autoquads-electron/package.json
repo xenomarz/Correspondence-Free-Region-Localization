@@ -47,6 +47,7 @@
       "@vaadin/vaadin-text-field/vaadin-text-field.js",
       "@vaadin/vaadin-text-field/vaadin-number-field.js",
       "@vaadin/vaadin-select",
+      "@vaadin/vaadin-dialog",
       "lit-element",
       "lit-html/directives/class-map.js",
       "nano-id",
