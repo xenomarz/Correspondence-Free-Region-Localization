@@ -23,8 +23,7 @@ export const LoadState = {
 
 export const View = {
     MODEL: 1,
-    SOUP: 2,
-    ALL: 3
+    SOUP: 2
 };
 
 export const PropertyEffectType = {

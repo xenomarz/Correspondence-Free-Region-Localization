@@ -207,6 +207,10 @@ export class MeshView extends LitElement {
                 type: String,
                 attribute: 'highlighted-face-color'
             },
+            highlightedEdgeColor: {
+                type: String,
+                attribute: 'highlighted-edge-color'
+            },
             draggedFaceColor: {
                 type: String,
                 attribute: 'dragged-face-color'
@@ -246,9 +250,11 @@ export class MeshView extends LitElement {
         this._selectedVerticesPoints = {};
         this._draggedFace = null;
         this._highlightedFace = null;
+        this._highlightedEdge = null;
         this._hoveredVertexSize = 20;
         this._vertexSize = 15;
         this._vertexColors = [];
+        this._edgeColors = [];
         this._mouseInCanvas = false;
         this.debugData = [];
         this._needResize = false;
@@ -311,6 +317,18 @@ export class MeshView extends LitElement {
 
     get highlightedFaceColor() {
         return this._highlightedFaceColor;
+    }
+
+    set highlightedEdgeColor(value) {
+        const oldValue = this._highlightedEdgeColor;
+        if(oldValue !== value) {
+            this._highlightedEdgeColor = new THREE.Color(value);
+            this.requestUpdate('highlightedEdgeColor', oldValue);
+        }
+    }
+
+    get highlightedEdgeColor() {
+        return this._highlightedEdgeColor;
     }
 
     set draggedFaceColor(value) {
@@ -598,9 +616,12 @@ export class MeshView extends LitElement {
 
     _initializeMeshEdges() {
         let lineSegmentsGeometry = new LineSegmentsGeometry.LineSegmentsGeometry();
+        let bufferGeometry = new THREE.BufferGeometry();
 
         lineSegmentsGeometry.setPositions(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE));
         lineSegmentsGeometry.setColors(this.meshProvider.getBufferedEdgeColors());
+
+        bufferGeometry.addAttribute('position', new THREE.BufferAttribute(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE), 3));
 
         let lineMaterial = new LineMaterial.LineMaterial({ 
             color: 0xffffff,
@@ -610,8 +631,17 @@ export class MeshView extends LitElement {
 
         lineMaterial.resolution.set(window.innerWidth, window.innerHeight);
 
+        // LineSegments2 supports drawing fat lines but do not support raycasting collision detection
         this._meshEdges = new LineSegments2.LineSegments2(lineSegmentsGeometry, lineMaterial);
+
+        // LineSegments supports raycasting collision detection but do not support drawing fat lines
+        this._meshEdgesHidden = new THREE.LineSegments(bufferGeometry, lineMaterial);
+
+        // We use _meshEdges for rendering
         this._scene.add(this._meshEdges);
+
+        // We use _meshEdgesHidden for collision detection
+        this._scene.add(this._meshEdgesHidden);
     }    
 
     _initializeMeshWireframe() {
@@ -903,10 +933,11 @@ export class MeshView extends LitElement {
     }
 
     /**
-     * Face and vertex intersection
+     * Face, edge and vertex intersection
      */
-    _getMeshIntersection() {
+    _getFaceIntersection() {
         let intersections = this._raycaster.intersectObject(this._mesh);
+
         if (intersections.length > 0) {
             let intersection = intersections[0];
             intersection.plane = new THREE.Plane();
@@ -919,7 +950,11 @@ export class MeshView extends LitElement {
         return null;
     }
 
-    _getVerticesIntersection() {
+    _getEdgeIntersections() {
+        return this._raycaster.intersectObject(this._meshEdgesHidden);
+    }
+
+    _getVertexIntersection() {
         let intersections = this._raycaster.intersectObject(this._pointcloud);
         if (intersections.length > 0) {
             let intersection = intersections[0];
@@ -999,6 +1034,7 @@ export class MeshView extends LitElement {
     _createRaycaster() {
         this._raycaster = new THREE.Raycaster();
         this._raycaster.params.Points.threshold = 0.05;
+        this._raycaster.linePrecision = 0.05;
     }
 
     _createGrid() {
@@ -1121,7 +1157,7 @@ export class MeshView extends LitElement {
     }    
 
     /**
-     * Face & vertex manipulation
+     * Face, edge and vertex manipulation
      */
     _colorVertex(vertex, color) {
         this._vertexColors.push({
@@ -1134,6 +1170,27 @@ export class MeshView extends LitElement {
 
     _uncolorVertex(face) {
         delete this._vertexColors[vertex];
+    }
+
+    _colorEdge(edgeIndex, color) {
+        let baseIndex = 3 * edgeIndex;
+        this._edgeColors.push({
+            baseIndex: baseIndex,
+            value0: color.r,
+            value1: color.g,
+            value2: color.b
+        });
+
+        // this._edgeColors.push({
+        //     baseIndex: baseIndex + 1,
+        //     value0: color.r,
+        //     value1: color.g,
+        //     value2: color.b
+        // });
+    }
+
+    _uncolorEdge(edge) {
+        delete this._edgeColors[edge];
     }
 
     _colorFace(face, color) {
@@ -1162,6 +1219,14 @@ export class MeshView extends LitElement {
 
     _resetHighlightedFace(face) {
         this._highlightedFace = null;
+    }
+
+    _setHighlightedEdge(edge) {
+        this._highlightedEdge = edge;
+    }
+
+    _resetHighlightedEdge(edge) {
+        this._highlightedEdge = null;
     }
 
     _selectFace(face) {
@@ -1201,6 +1266,12 @@ export class MeshView extends LitElement {
         }
     }
 
+    _colorEdges() {
+        if (this._highlightedEdge) {
+            this._colorEdge(this._highlightedEdge, this._highlightedEdgeColor);
+        }
+    }
+
     _colorVertices() {
         let bufferedMeshVertexColors = this.meshProvider.bufferedMeshVertexColors;
         for (let vertexId in bufferedMeshVertexColors) {
@@ -1212,6 +1283,11 @@ export class MeshView extends LitElement {
         this._vertexColors = [];
         // this._colorVertices();
         this._colorFaces();
+    }
+
+    _updateEdgeColors() {
+        this._edgeColors = [];
+        this._colorEdges();
     }
 
     /**
@@ -1253,20 +1329,54 @@ export class MeshView extends LitElement {
     }
     
     _renderScene() {
+        /**
+         * Update debug data
+         */
         this._updateDebugData();
 
+        /**
+         * Handle window reesize
+         */
         if(this._needResize) {
             this._resizeScene();
             this._needResize = false;
         }
 
+        /**
+         * Place the light at the camera position
+         */
         this._pointLight.position.copy(this._camera.position);
 
+        /**
+         * Handle intersections
+         */
         if (this._interactionService.state.value !== 'faceDragging' && this._mouseInCanvas) {
-            this._faceIntersection = this._getMeshIntersection();
-            this._vertexIntersection = this._getVerticesIntersection();
+            this._faceIntersection = this._getFaceIntersection();
+            this._edgeIntersections = this._getEdgeIntersections();
+            this._vertexIntersection = this._getVertexIntersection();
 
-            if (this._faceIntersection) {
+            // Give priority to edge intersections
+            if(this._edgeIntersections.length > 0) {
+                if(this._faceIntersection) {
+                    let faceIndex = this._faceIntersection.faceIndex;
+                    let adjacencyList = this.meshProvider.faceEdgeAdjacency[faceIndex];
+                    if(adjacencyList) {
+                        for(let i = 0; i < this._edgeIntersections.length; i++) {
+                            let edgeIntersection = this._edgeIntersections[i];
+                            let intersectedEdgeIndex = edgeIntersection.index / 2;
+                            if(adjacencyList.find(edgeIndex => edgeIndex === intersectedEdgeIndex)) {
+                                this._setHighlightedEdge(intersectedEdgeIndex);
+                            }
+                        }
+                    }
+                }
+                else {
+                    let edgeIntersection = this._edgeIntersections[0];
+                    let intersectedEdgeIndex = edgeIntersection.index / 2;
+                    this._setHighlightedEdge(intersectedEdgeIndex);
+                }
+            }
+            else if (this._faceIntersection) {
                 this._setHighlightedFace(this._faceIntersection.face);
                 this._publishFaceMessage('mesh-view-face-highlighted', this._faceIntersection.face);  
             } else {
@@ -1275,42 +1385,66 @@ export class MeshView extends LitElement {
             }
         }
 
+        /**
+         * Update mesh attributes (position, uv, color)
+         */
         this._mesh.geometry.attributes.position.array = this.meshProvider.getBufferedVertices(BufferedPrimitiveType.TRIANGLE);
         this._mesh.geometry.attributes.uv.array = this.meshProvider.getBufferedUvs();
-
-        this._meshEdges.geometry.setPositions(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE));
-        this._meshEdges.geometry.setColors(this.meshProvider.getBufferedEdgeColors());
-
-        let bufferedColors = this.meshProvider.getBufferedVertexColors();
+        let bufferedVertexColors = this.meshProvider.getBufferedVertexColors();
         this._updateVertexColors();
-        this._overrideAttributeArray(this._vertexColors, bufferedColors);
-        this._mesh.geometry.attributes.color.array = bufferedColors;
+        this._overrideAttributeArray(this._vertexColors, bufferedVertexColors);
+        this._mesh.geometry.attributes.color.array = bufferedVertexColors;
 
+        /**
+         * Update mesh edges attributes
+         */
+        this._meshEdges.geometry.setPositions(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE));
+        let bufferedEdgeColors = this.meshProvider.getBufferedEdgeColors();
+        this._updateEdgeColors();
+        this._overrideAttributeArray(this._edgeColors, bufferedEdgeColors);
+        this._meshEdges.geometry.setColors(bufferedEdgeColors);
+        this._meshEdgesHidden.geometry.attributes.position.array = this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE);
+
+        /**
+         * Apply transformations to underlying geometry
+         */
         this._mesh.geometry.applyMatrix(this._mesh.matrix);
         this._meshEdges.geometry.applyMatrix(this._mesh.matrix);
+        this._meshEdgesHidden.geometry.applyMatrix(this._mesh.matrix);
         this._pointcloud.geometry.applyMatrix(this._pointcloud.matrix);
 
+        /**
+         * Set needsUpdate flag
+         */
         this._mesh.geometry.attributes.position.needsUpdate = true;
         this._mesh.geometry.attributes.uv.needsUpdate = true;
         this._mesh.geometry.attributes.color.needsUpdate = true;
-
         this._meshEdges.geometry.attributes.position.needsUpdate = true;
         this._meshEdges.geometry.attributes.instanceColorStart.needsUpdate = true;
         this._meshEdges.geometry.attributes.instanceColorEnd.needsUpdate = true;
-
+        this._meshEdgesHidden.geometry.attributes.position.needsUpdate = true;
         this._pointcloud.geometry.attributes.position.needsUpdate = true;
         
+        /**
+         * Remove additional scene objects
+         */
         if(this._additionalSceneObjects) {
             for(let i = 0; i < this._additionalSceneObjects.length; i++) {
                 this._scene.remove(this._additionalSceneObjects[i]);
             }
         }
 
+        /**
+         * Add additional scene objects
+         */
         this._additionalSceneObjects = this._meshProvider.getAdditionalSceneObjects();
         for(let i = 0; i < this._additionalSceneObjects.length; i++) {
             this._scene.add(this._additionalSceneObjects[i]);
         }        
 
+        /**
+         * Render scene and request another animation frame
+         */
         this._renderer.render(this._scene, this._camera);
         this.scheduledAnimationFrameId = requestAnimationFrame(() => this._renderScene());
     }

@@ -49,6 +49,10 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("getImageBufferedVertices", &Engine::GetImageBufferedVertices),
 		InstanceMethod("getDomainBufferedUvs", &Engine::GetDomainBufferedUvs),
 		InstanceMethod("getImageBufferedUvs", &Engine::GetImageBufferedUvs),
+		InstanceMethod("getDomainFaceEdgeAdjacency", &Engine::GetDomainFaceEdgeAdjacency),
+		InstanceMethod("getDomainEdgeFaceAdjacency", &Engine::GetDomainEdgeFaceAdjacency),
+		InstanceMethod("getImageFaceEdgeAdjacency", &Engine::GetImageFaceEdgeAdjacency),
+		InstanceMethod("getImageEdgeFaceAdjacency", &Engine::GetImageEdgeFaceAdjacency),	
 		InstanceMethod("getObjectiveFunctionProperty", &Engine::GetObjectiveFunctionProperty),
 		InstanceMethod("setObjectiveFunctionProperty", &Engine::SetObjectiveFunctionProperty),
 		InstanceAccessor("positionWeight", &Engine::GetPositionWeight, &Engine::SetPositionWeight),
@@ -408,6 +412,88 @@ Napi::Float32Array Engine::GetBufferedVertices(const Napi::CallbackInfo& info, c
 
 	Napi::TypeError::New(env, "Unknown buffered primitive type").ThrowAsJavaScriptException();
 	return Napi::Float32Array::New(env, 0);
+}
+
+Napi::Value Engine::GetFaceEdgeAdjacency(const Napi::CallbackInfo& info, const DataSource data_source)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+	
+	MeshWrapper::FI2EIsMap fi_2_ei;
+	switch(data_source)
+	{
+	case DataSource::DOMAIN_DATA:
+		fi_2_ei = mesh_wrapper_->GetDomainFaceEdgeAdjacency();
+		break;
+	case DataSource::IMAGE_DATA:
+		fi_2_ei = mesh_wrapper_->GetImageFaceEdgeAdjacency();
+		break;
+	}
+
+	Napi::Object face_edge_adjacency_object = Napi::Object::New(env);
+	for (const auto& adjacency_entry : fi_2_ei)
+	{
+		Napi::Array adjacency_list_array = Napi::Array::New(env, adjacency_entry.second.size());
+		face_edge_adjacency_object.Set(adjacency_entry.first, adjacency_list_array);
+
+		for(std::size_t i = 0; i < adjacency_entry.second.size(); i++)
+		{
+			adjacency_list_array[i] = Napi::Number::New(env, adjacency_entry.second[i]);
+		}
+	}
+
+	return face_edge_adjacency_object;
+}
+
+Napi::Value Engine::GetEdgeFaceAdjacency(const Napi::CallbackInfo& info, const DataSource data_source)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	MeshWrapper::EI2FIsMap ei_2_fi;
+	switch (data_source)
+	{
+	case DataSource::DOMAIN_DATA:
+		ei_2_fi = mesh_wrapper_->GetDomainEdgeFaceAdjacency();
+		break;
+	case DataSource::IMAGE_DATA:
+		ei_2_fi = mesh_wrapper_->GetImageEdgeFaceAdjacency();
+		break;
+	}
+
+	Napi::Object edge_face_adjacency_object = Napi::Object::New(env);
+	for (const auto& adjacency_entry : ei_2_fi)
+	{
+		Napi::Array adjacency_list_array = Napi::Array::New(env, adjacency_entry.second.size());
+		edge_face_adjacency_object.Set(adjacency_entry.first, adjacency_list_array);
+
+		for (std::size_t i = 0; i < adjacency_entry.second.size(); i++)
+		{
+			adjacency_list_array[i] = Napi::Number::New(env, adjacency_entry.second[i]);
+		}
+	}
+
+	return edge_face_adjacency_object;
+}
+
+Napi::Value Engine::GetDomainFaceEdgeAdjacency(const Napi::CallbackInfo& info)
+{
+	return GetFaceEdgeAdjacency(info, DataSource::DOMAIN_DATA);
+}
+
+Napi::Value Engine::GetDomainEdgeFaceAdjacency(const Napi::CallbackInfo& info)
+{
+	return GetEdgeFaceAdjacency(info, DataSource::DOMAIN_DATA);
+}
+
+Napi::Value Engine::GetImageFaceEdgeAdjacency(const Napi::CallbackInfo& info)
+{
+	return GetFaceEdgeAdjacency(info, DataSource::IMAGE_DATA);
+}
+
+Napi::Value Engine::GetImageEdgeFaceAdjacency(const Napi::CallbackInfo& info)
+{
+	return GetEdgeFaceAdjacency(info, DataSource::IMAGE_DATA);
 }
 
 Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)

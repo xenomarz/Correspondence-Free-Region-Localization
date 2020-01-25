@@ -45,6 +45,14 @@ export class MeshProvider {
         return [];
     }
 
+    get faceEdgeAdjacency() {
+        return {};
+    }
+
+    get edgeFaceAdjacency() {
+        return {};
+    }
+
     get shadersFolderName() {
         return 'shaders';
     }

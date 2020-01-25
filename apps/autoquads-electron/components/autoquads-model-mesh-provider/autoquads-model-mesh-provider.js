@@ -82,5 +82,5 @@ export class AutoquadsModelMeshProvider extends AutoquadsMeshProvider {
         }
 
         return additionalSceneObjects;
-    }    
+    }
 }

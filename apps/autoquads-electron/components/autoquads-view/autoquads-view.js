@@ -73,6 +73,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         .meshProvider="${this._modelMeshProvider}"
                         mesh-interaction="${this.meshInteraction}"
                         highlighted-face-color="${this.highlightedFaceColor}"
+                        highlighted-edge-color="${this.highlightedEdgeColor}"
                         dragged-face-color="${this.draggedFaceColor}"
                         selected-face-color="${this.fixedFaceColor}"
                         show-grid-texture>
@@ -95,6 +96,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         .meshProvider="${this._soupMeshProvider}"
                         mesh-interaction="${this.meshInteraction}"
                         highlighted-face-color="${this.highlightedFaceColor}"
+                        highlighted-edge-color="${this.highlightedEdgeColor}"
                         dragged-face-color="${this.draggedFaceColor}"
                         selected-face-color="${this.fixedFaceColor}"
                         ?show-debug-data="${HelpersExports.isVisible(this.optimizationDataMonitorVisibility)}"
@@ -198,6 +200,10 @@ export class AutoquadsView extends connect(store)(LitElement) {
             highlightedFaceColor: {
                 type: String,
                 attribute: 'highlighted-face-color'
+            },
+            highlightedEdgeColor: {
+                type: String,
+                attribute: 'highlighted-edge-color'
             },
             draggedFaceColor: {
                 type: String,
@@ -555,6 +561,16 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
     get highlightedFaceColor() {
         return this._highlightedFaceColor;
+    }
+
+    set highlightedEdgeColor(value) {
+        const oldValue = this._highlightedEdgeColor;
+        this._highlightedEdgeColor = value;
+        this.requestUpdate('highlightedEdgeColor', oldValue);
+    }
+
+    get highlightedEdgeColor() {
+        return this._highlightedEdgeColor;
     } 
 
     set draggedFaceColor(value) {

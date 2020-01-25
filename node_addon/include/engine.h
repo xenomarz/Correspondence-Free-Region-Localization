@@ -53,6 +53,12 @@ private:
 		TRIANGLE
 	};
 
+	enum class DataSource
+	{
+		DOMAIN_DATA,
+		IMAGE_DATA
+	};
+	
 	enum class FacesSource
 	{
 		DOMAIN_FACES,
@@ -113,6 +119,10 @@ private:
 	Napi::Value GetImageBufferedVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetDomainBufferedUvs(const Napi::CallbackInfo& info);
 	Napi::Value GetImageBufferedUvs(const Napi::CallbackInfo& info);
+	Napi::Value Engine::GetDomainFaceEdgeAdjacency(const Napi::CallbackInfo& info);
+	Napi::Value Engine::GetDomainEdgeFaceAdjacency(const Napi::CallbackInfo& info);
+	Napi::Value Engine::GetImageFaceEdgeAdjacency(const Napi::CallbackInfo& info);
+	Napi::Value Engine::GetImageEdgeFaceAdjacency(const Napi::CallbackInfo& info);
 	Napi::Value GetObjectiveFunctionProperty(const Napi::CallbackInfo& info);
 	Napi::Value SetObjectiveFunctionProperty(const Napi::CallbackInfo& info);
 	Napi::Value LoadModel(const Napi::CallbackInfo& info);
@@ -141,6 +151,8 @@ private:
 	Napi::Value NativeToJS(Napi::Env env, const double property_value);
 	Napi::Value NativeToJS(Napi::Env env, const std::string& property_value);
 	std::any JSToNative(Napi::Env env, const Napi::Value& value);
+	Napi::Value Engine::GetFaceEdgeAdjacency(const Napi::CallbackInfo& info, const DataSource data_source);
+	Napi::Value Engine::GetEdgeFaceAdjacency(const Napi::CallbackInfo& info, const DataSource data_source);
 
 	/**
 	 * Regular private templated instance methods

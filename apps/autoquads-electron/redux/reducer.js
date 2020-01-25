@@ -21,6 +21,7 @@ import {
     CHANGE_GRID_BACKGROUND_COLOR1,
     CHANGE_GRID_BACKGROUND_COLOR2,
     CHANGE_HIGHLIGHTED_FACE_COLOR,
+    CHANGE_HIGHLIGHTED_EDGE_COLOR,
     CHANGE_DRAGGED_FACE_COLOR,
     CHANGE_FIXED_FACE_COLOR,
     CHANGE_GRID_SIZE,
@@ -63,6 +64,7 @@ const INITIAL_STATE = {
     gridBackgroundColor1: 'rgb(170,170,170)',
     gridBackgroundColor2: 'rgb(170,170,170)',
     highlightedFaceColor: 'rgb(0,255,0)',
+    highlightedEdgeColor: 'rgb(0,255,0)',
     draggedFaceColor: 'rgb(0,0,255)',
     fixedFaceColor: 'rgb(255,0,0)',
     gridSize: 7,
@@ -112,7 +114,7 @@ const INITIAL_STATE = {
             propertyId: 'value_per_edge',
             propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
             objectiveFunctionName: 'Seamless',
-            propertyName: 'Value Per Edge (Domain)',
+            propertyName: 'Value Per Edge',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
             weight: 100
@@ -122,7 +124,7 @@ const INITIAL_STATE = {
             propertyId: 'angle_value_per_edge',
             propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
             objectiveFunctionName: 'Seamless',
-            propertyName: 'Angle Value Per Edge (Domain)',
+            propertyName: 'Angle Value Per Edge',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
             weight: 100
@@ -132,7 +134,7 @@ const INITIAL_STATE = {
             propertyId: 'length_value_per_edge',
             propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
             objectiveFunctionName: 'Seamless',
-            propertyName: 'Length Value Per Edge (Domain)',
+            propertyName: 'Length Value Per Edge',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
             weight: 1000
@@ -291,6 +293,11 @@ export const reducer = (state = INITIAL_STATE, action) => {
             return {
                 ...state,
                 highlightedFaceColor: action.color
+            };
+        case CHANGE_HIGHLIGHTED_EDGE_COLOR:
+            return {
+                ...state,
+                highlightedEdgeColor: action.color
             };
         case CHANGE_DRAGGED_FACE_COLOR:
             return {

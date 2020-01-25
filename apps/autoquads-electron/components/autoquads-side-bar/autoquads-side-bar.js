@@ -177,6 +177,7 @@ export class AutoquadsSideBar extends SideBar {
                     @value-changed="${this._positionWeightInputChanged}">
                 </side-bar-parameter-input>
             </side-bar-collapsable-section>
+
             <side-bar-collapsable-section
                 caption="Vertex Visual Properties">
                 ${this.objectiveFunctionsProperties.filter(item => { 
@@ -196,10 +197,9 @@ export class AutoquadsSideBar extends SideBar {
             </side-bar-collapsable-section>
 
             <side-bar-collapsable-section
-                caption="Edge Visual Properties (Model)">
+                caption="Edge Visual Properties">
                 ${this.objectiveFunctionsProperties.filter(item => { 
-                    return item.propertyEffectType === EnumsExports.PropertyEffectType.EDGE_COLOR &&
-                            item.associatedView === EnumsExports.View.MODEL; 
+                    return item.propertyEffectType === EnumsExports.PropertyEffectType.EDGE_COLOR; 
                 }).map(item => html`
                     <autoquads-side-bar-objective-function-visual-property
                         objective-function-id=${item.objectiveFunctionId}
@@ -212,26 +212,7 @@ export class AutoquadsSideBar extends SideBar {
                         @selected-changed="${this._objectiveFunctionVisualPropertyVisibilityInputChanged}">
                     </autoquads-side-bar-objective-function-visual-property>
                 `)}
-            </side-bar-collapsable-section>
-
-            <side-bar-collapsable-section
-                caption="Edge Visual Properties (Soup)">
-                ${this.objectiveFunctionsProperties.filter(item => { 
-                    return item.propertyEffectType === EnumsExports.PropertyEffectType.EDGE_COLOR &&
-                            item.associatedView === EnumsExports.View.SOUP; 
-                }).map(item => html`
-                    <autoquads-side-bar-objective-function-visual-property
-                        objective-function-id=${item.objectiveFunctionId}
-                        property-id=${item.propertyId}
-                        objective-function-name=${item.objectiveFunctionName}
-                        property-name=${item.propertyName}
-                        color=${item.color}
-                        ?selected=${item.selected}
-                        @color-changed="${this._objectiveFunctionVisualPropertyColorInputChanged}"
-                        @selected-changed="${this._objectiveFunctionVisualPropertyVisibilityInputChanged}">
-                    </autoquads-side-bar-objective-function-visual-property>
-                `)}
-            </side-bar-collapsable-section>            
+            </side-bar-collapsable-section>           
 
             <side-bar-collapsable-section
                 caption="Solver">
@@ -259,6 +240,11 @@ export class AutoquadsSideBar extends SideBar {
                     caption="Fixed Face Color"
                     color="${this._fixedFaceColor}"
                     @color-changed="${this._fixedFaceColorInputChanged}">
+                </side-bar-color-picker>
+                <side-bar-color-picker
+                    caption="Highlighted Edge Color"
+                    color="${this._highlightedEdgeColor}"
+                    @color-changed="${this._highlightedEdgeColorInputChanged}">
                 </side-bar-color-picker>
             </side-bar-collapsable-section>
             <side-bar-collapsable-section
@@ -463,6 +449,10 @@ export class AutoquadsSideBar extends SideBar {
             highlightedFaceColor: {
                 type: String,
                 attribute: 'highlighted-face-color'
+            },
+            highlightedEdgeColor: {
+                type: String,
+                attribute: 'highlighted-edge-color'
             },
             draggedFaceColor: {
                 type: String,
@@ -760,6 +750,16 @@ export class AutoquadsSideBar extends SideBar {
 
     get highlightedFaceColor() {
         return this._highlightedFaceColor;
+    }
+
+    set highlightedEdgeColor(value) {
+        const oldValue = this._highlightedEdgeColor;
+        this._highlightedEdgeColor = value;
+        this.requestUpdate('highlightedEdgeColor', oldValue);
+    }
+
+    get highlightedEdgeColor() {
+        return this._highlightedEdgeColor;
     } 
 
     set draggedFaceColor(value) {
@@ -998,6 +998,10 @@ export class AutoquadsSideBar extends SideBar {
 
     _fixedFaceColorInputChanged(e) {
         store.dispatch(ActionsExports.setFixedFaceColor(e.detail.color));
+    }
+
+    _highlightedEdgeColorInputChanged(e) {
+        store.dispatch(ActionsExports.setHighlightedEdgeColor(e.detail.color));
     }
 
     _modelWireframeVisibilityInputChanged(e) {

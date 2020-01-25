@@ -27,10 +27,14 @@ export class AutoquadsMeshProvider extends MeshProvider {
             case EnumsExports.View.MODEL:
                 this._edgeCount = this._engine.getDomainEdgesCount();
                 this._propertyModifier = 'domain';
+                this._faceEdgeAdjacency = this._engine.getDomainFaceEdgeAdjacency();
+                this._edgeFaceAdjacency = this._engine.getDomainEdgeFaceAdjacency();
                 break;
             case EnumsExports.View.SOUP:
                 this._edgeCount = this._engine.getImageEdgesCount();
                 this._propertyModifier = 'image';
+                this._faceEdgeAdjacency = this._engine.getImageFaceEdgeAdjacency();
+                this._edgeFaceAdjacency = this._engine.getImageEdgeFaceAdjacency();
                 break;                
         }
 
@@ -54,10 +58,8 @@ export class AutoquadsMeshProvider extends MeshProvider {
         }
 
         for(let objectiveFunctionProperty of this._objectiveFunctionsProperties) {
-            if(HelpersExports.isVisible(objectiveFunctionProperty.visibility) && 
-                (objectiveFunctionProperty.propertyEffectType === propertyEffectType) &&
-                ((objectiveFunctionProperty.associatedView & associatedView) !== 0)) {
-                let vector = this._engine.getObjectiveFunctionProperty(objectiveFunctionProperty.objectiveFunctionId, objectiveFunctionProperty.propertyId, 'none');
+            if(HelpersExports.isVisible(objectiveFunctionProperty.visibility) && (objectiveFunctionProperty.propertyEffectType === propertyEffectType)) {
+                let vector = this._engine.getObjectiveFunctionProperty(objectiveFunctionProperty.objectiveFunctionId, objectiveFunctionProperty.propertyId, this._propertyModifier);
                 let color = new THREE.Color(objectiveFunctionProperty.color);
                 let colorArray = color.toArray();
                 let defaultColorArray = defaultColor.toArray();
@@ -107,5 +109,13 @@ export class AutoquadsMeshProvider extends MeshProvider {
 
     get objectiveFunctionsProperties() {
         return this._objectiveFunctionsProperties;
+    }
+
+    get faceEdgeAdjacency() {
+        return this._faceEdgeAdjacency;
+    }
+
+    get edgeFaceAdjacency() {
+        return this._edgeFaceAdjacency;
     }
 }

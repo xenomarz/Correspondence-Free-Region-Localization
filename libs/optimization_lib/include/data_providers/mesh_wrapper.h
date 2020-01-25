@@ -40,6 +40,10 @@ public:
 
 	using EV2EVMap = std::vector<RDS::EdgePairDescriptor>;
 	using VI2VIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
+	using VI2FIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
+	using EI2FIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
+	using FI2VIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
+	using FI2EIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
 	
 	/**
 	 * Constructors and destructor
@@ -62,6 +66,16 @@ public:
 	const Eigen::MatrixX2i& GetImageEdges() const;
 	const VI2VIsMap& GetImageNeighbours() const;
 	const VI2VIsMap& GetDomainVerticesToImageVerticesMap() const;
+	
+	const VI2FIsMap& GetDomainVertexFaceAdjacency() const;
+	const EI2FIsMap& GetDomainEdgeFaceAdjacency() const;
+	const FI2VIsMap& GetDomainFaceVertexAdjacency() const;
+	const FI2EIsMap& GetDomainFaceEdgeAdjacency() const;
+
+	const VI2FIsMap& GetImageVertexFaceAdjacency() const;
+	const EI2FIsMap& GetImageEdgeFaceAdjacency() const;
+	const FI2VIsMap& GetImageFaceVertexAdjacency() const;
+	const FI2EIsMap& GetImageFaceEdgeAdjacency() const;
 
 	/**
 	 * Overrides
@@ -153,6 +167,15 @@ private:
 	// Vertex index -> edge indices maps
 	void ComputeVertexToEdgeIndexMaps();
 
+	// Face/edge/vertex adjacency maps
+	void ComputeAdjacencyMaps(
+		const Eigen::MatrixX3i& f,
+		const ED2EIMap& ed_2_ei,
+		VI2FIsMap& vi_2_fi,
+		VI2FIsMap& ei_2_fi,
+		VI2FIsMap& fi_2_vi,
+		VI2FIsMap& fi_2_ei);
+
 	// Image vertices corresponding pairs and image edges corresponding pairs
 	void ComputeCorrespondingPairs();
 	void ComputeCorrespondingVertexPairsCoefficients();
@@ -207,7 +230,17 @@ private:
 	VI2VIMap v_im_2_v_dom_;
 	EI2EIsMap e_dom_2_e_im_;
 	EI2EIMap e_im_2_e_dom_;
-	VI2EIsMap v_im_2_e_im;
+	VI2EIsMap v_im_2_e_im_;
+
+	VI2FIsMap vi_im_2_fi_im_;
+	EI2FIsMap ei_im_2_fi_im_;
+	FI2VIsMap fi_im_2_vi_im_;
+	FI2EIsMap fi_im_2_ei_im_;
+
+	VI2FIsMap vi_dom_2_fi_dom_;
+	EI2FIsMap ei_dom_2_fi_dom_;
+	FI2VIsMap fi_dom_2_vi_dom_;
+	FI2EIsMap fi_dom_2_ei_dom_;
 
 	// Boost signals
 	boost::signals2::signal<ModelLoadedCallback> model_loaded_signal_;
