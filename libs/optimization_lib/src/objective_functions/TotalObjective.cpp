@@ -97,7 +97,6 @@ void TotalObjective::hessian()
 		SS.insert(SS.end(), SSi.begin(), SSi.end());
 	}
 
-
 	// shift the diagonal of the hessian
 	int rows = *std::max_element(II.begin(), II.end()) + 1;
 	std::vector<double> SSi; SSi.resize(rows);
@@ -118,7 +117,6 @@ void TotalObjective::init_hessian()
 		JJ.insert(JJ.end(), objective->JJ.begin(), objective->JJ.end());
 		SS.insert(SS.end(), objective->SS.begin(), objective->SS.end());
 	}
-
 
 	// shift the diagonal of the hessian
 	int rows = *std::max_element(II.begin(), II.end()) + 1;

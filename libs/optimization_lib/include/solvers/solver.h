@@ -16,7 +16,9 @@ public:
 	solver(const bool IsConstrObjFunc, const int solverID);
 	~solver();
 	int run();
+	int aug_run();
 	void run_one_iteration(const int steps, const bool showGraph);
+	void run_one_aug_iteration(const int steps, const bool showGraph);
 	void stop();
 	void get_data(Eigen::VectorXd& X);
 	void init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0);
@@ -74,11 +76,14 @@ private:
 	// energy output from the last step
 	double currentEnergy;
 	virtual double step() = 0;
+	virtual double aug_step() = 0;
 	void value_linesearch();
 	void gradNorm_linesearch();
+	void aug_gradNorm_linesearch();
 	void constant_linesearch();
 	virtual bool test_progress() = 0;
 	virtual void internal_init() = 0;
+	virtual void internal_aug_init() = 0;
 	void prepareData();
 	void saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo);
 	void saveSolverInfo(int numIteration, std::ofstream& solverInfo);

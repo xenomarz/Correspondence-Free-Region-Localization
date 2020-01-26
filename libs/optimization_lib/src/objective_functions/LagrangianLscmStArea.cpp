@@ -20,7 +20,7 @@ Eigen::VectorXd LagrangianLscmStArea::constrainedValue(const bool update) {
 	areaE = Area.asDiagonal() * areaE;
 	if (update) {
 		Efi = areaE.cwiseAbs2();
-		constraint_value = areaE.sum();
+		constraint_value = areaE.cwiseAbs2().sum();
 	}
 	return areaE;
 }
@@ -109,8 +109,8 @@ void LagrangianLscmStArea::AuglagrangGradWRTX(Eigen::VectorXd& g, const bool upd
 	}
 	if (update) {
 		gradient_norm = g.norm();
-		objective_gradient_norm = g.head(2 * V.rows()).norm();
-		constraint_gradient_norm = g.tail(F.rows()).norm();
+		//objective_gradient_norm = g.norm();
+		//constraint_gradient_norm = g.tail(F.rows()).norm();
 	}
 }
 
@@ -186,4 +186,11 @@ void LagrangianLscmStArea::aughessian()
 			}
 		}
 	}
+
+	// shift the diagonal of the hessian
+	int rows = *std::max_element(II_aug.begin(), II_aug.end()) + 1;
+	for (int i = 0; i < rows; i++) {
+		SS_aug[index2++] = 1e-6;
+	}
+	assert(SS_aug.size() == II_aug.size() && SS_aug.size() == JJ_aug.size());
 }

@@ -804,7 +804,7 @@ void basic_app::Draw_menu_for_solver_settings() {
 
 	if (firstUnconstrIndex != -1) {
 		// prepare the first column
-		ImGui::Columns(Outputs[firstUnconstrIndex].totalObjective->objectiveList.size() + 4, "Unconstrained weights table", true);
+		ImGui::Columns(Outputs[firstUnconstrIndex].totalObjective->objectiveList.size() + 5, "Unconstrained weights table", true);
 		ImGui::Separator();
 		ImGui::NextColumn();
 		for (auto & obj : Outputs[firstUnconstrIndex].totalObjective->objectiveList) {
@@ -816,6 +816,8 @@ void basic_app::Draw_menu_for_solver_settings() {
 		ImGui::Text("Remove output");
 		ImGui::NextColumn();
 		ImGui::Text("copy/paste mesh");
+		ImGui::NextColumn();
+		ImGui::Text("load param");
 		ImGui::NextColumn();
 		ImGui::Separator();
 
@@ -852,7 +854,18 @@ void basic_app::Draw_menu_for_solver_settings() {
 					}
 					ImGui::PopStyleColor();
 				}
-					
+				else
+					ImGui::NextColumn();
+				ImGui::NextColumn();
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
+				if (ImGui::Button("load param")) {
+					viewer->load_mesh_from_file(igl::file_dialog_open().c_str());
+					Eigen::MatrixXd V = viewer->data_list[viewer->data_list.size() - 1].V;
+					viewer->erase_mesh(viewer->data_list.size() - 1);
+					OutputModel(i).set_vertices(V);
+				}
+				ImGui::PopStyleColor();
+
 				ImGui::NextColumn();
 				ImGui::PopID();
 				ImGui::Separator();
@@ -865,7 +878,7 @@ void basic_app::Draw_menu_for_solver_settings() {
 
 	if ((!stop) && (firstConstrIndex != -1)) {
 		// prepare the first column
-		ImGui::Columns(Outputs[firstConstrIndex].totalObjective->objectiveList.size() + 4, "Constrained weights table", true);
+		ImGui::Columns(Outputs[firstConstrIndex].totalObjective->objectiveList.size() + 5, "Constrained weights table", true);
 		ImGui::Separator();
 		ImGui::NextColumn();
 		for (auto & obj : Outputs[firstConstrIndex].totalObjective->objectiveList) {
@@ -877,6 +890,8 @@ void basic_app::Draw_menu_for_solver_settings() {
 		ImGui::Text("Remove output");
 		ImGui::NextColumn();
 		ImGui::Text("copy/paste mesh");
+		ImGui::NextColumn();
+		ImGui::Text("load param");
 		ImGui::NextColumn();
 		ImGui::Separator();
 
@@ -912,6 +927,18 @@ void basic_app::Draw_menu_for_solver_settings() {
 					}
 					ImGui::PopStyleColor();
 				}
+				else
+					ImGui::NextColumn();
+				ImGui::NextColumn();
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
+				if (ImGui::Button("load param")) {
+					viewer->load_mesh_from_file(igl::file_dialog_open().c_str());
+					Eigen::MatrixXd V = viewer->data_list[viewer->data_list.size() - 1].V;
+					viewer->erase_mesh(viewer->data_list.size() - 1);
+					OutputModel(i).set_vertices(V);
+				}
+				ImGui::PopStyleColor();
+				
 
 				ImGui::NextColumn();
 				ImGui::PopID();
@@ -1313,10 +1340,10 @@ void basic_app::start_solver_thread() {
 		//start solver
 		if (step_by_step) {
 			static int step_counter = 0;
-			solver_thread = std::thread(&solver::run_one_iteration, Outputs[i].solver.get(), step_counter++,true);
+			solver_thread = std::thread(&solver::/*run_one_iteration*/run_one_aug_iteration, Outputs[i].solver.get(), step_counter++,true);
 		}
 		else
-			solver_thread = std::thread(&solver::run, Outputs[i].solver.get());
+			solver_thread = std::thread(&solver::/*run*/aug_run, Outputs[i].solver.get());
 		solver_thread.detach();
 	}
 }

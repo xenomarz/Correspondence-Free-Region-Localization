@@ -23,8 +23,13 @@ void ConstrainedObjectiveFunction::init_aug_hessian() {
 	for (int i = 0; i < F.rows(); ++i)
 		AddElementToAugHessian({ F(i, 0), F(i, 1), F(i, 2), F(i, 0) + n, F(i, 1) + n, F(i, 2) + n });
 
+	// shift the diagonal of the hessian
+	for (int i = 0; i < (2 * n); i++) {
+		PushPair(i, i);
+	}
+
 	//we add the indexes of the last element in order to tell the solver the size of the matrix
-	PushPair(2 * n - 1, 2 * n - 1);
+	//PushPair(2 * n - 1, 2 * n - 1);
 
 	SS_aug = std::vector<double>(II_aug.size(), 0.);
 }

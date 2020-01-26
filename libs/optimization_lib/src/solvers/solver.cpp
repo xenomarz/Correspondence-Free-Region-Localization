@@ -86,6 +86,60 @@ int solver::run()
 	return 0;
 }
 
+int solver::aug_run()
+{
+	std::shared_ptr<TotalObjective> total = std::dynamic_pointer_cast<TotalObjective>(objective);
+	assert(total != NULL);
+	std::shared_ptr<LagrangianLscmStArea> aug_function = std::dynamic_pointer_cast<LagrangianLscmStArea>(total->objectiveList[0]);
+	assert(aug_function != NULL);
+
+	is_running = true;
+	halt = false;
+	int steps = 0;
+	double tolerance = 0.1;
+	do {
+		std::cout << ">> one round" << std::endl;
+		int sub_steps = 0;
+		do {
+			std::cout << "     >> sub round = " << g.norm() << std::endl;
+			run_one_aug_iteration(steps, false);
+		} while (g.norm() > tolerance && sub_steps++ < 10);
+		//update lambda
+		objective->updateX(X);
+		std::cout << (X.tail(F.rows())
+			+ aug_function->augmented_value_parameter*aug_function->constrainedValue(true)).cwiseAbs2().sum()<<std::endl;
+		X.tail(F.rows()) = 
+			X.tail(F.rows())
+			-aug_function->augmented_value_parameter*aug_function->constrainedValue(true);
+		//update meo
+		if(aug_function->augmented_value_parameter < 100000.0f)
+			aug_function->augmented_value_parameter *= 1.1;
+
+	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
+	is_running = false;
+
+	std::cout << ">> solver " + std::to_string(solverID) + " stopped" << std::endl;
+	return 0;
+}
+
+void solver::run_one_aug_iteration(const int steps, const bool showGraph) {
+	currentEnergy = aug_step();
+#if defined SAVE_DATA_IN_CSV || defined SAVE_DATA_IN_MATLAB
+	prepareData();
+#endif
+	aug_gradNorm_linesearch();
+	update_external_data();
+
+#ifdef SAVE_DATA_IN_MATLAB
+	sendDataToMatlab(showGraph);
+#endif 
+#ifdef SAVE_DATA_IN_CSV
+	saveSolverInfo(steps, solverInfo);
+	saveHessianInfo(steps, hessianInfo);
+	saveSearchDirInfo(steps, SearchDirInfo);
+#endif 
+}
+
 void solver::run_one_iteration(const int steps,const bool showGraph) {
 	currentEnergy = step();
 #if defined SAVE_DATA_IN_CSV || defined SAVE_DATA_IN_MATLAB
@@ -192,7 +246,7 @@ void solver::prepareData() {
 	int counter;
 	double alpha = 0;
 	for (alpha = LOW, counter = 0; alpha <= HIGH; alpha += JUMP, counter++) {
-		Eigen::MatrixXd curr_x = X + alpha * p;
+		Eigen::VectorXd curr_x = X + alpha * p;
 		Eigen::VectorXd grad;
 		objective->updateX(curr_x);
 		objective->gradient(grad, false);
@@ -437,7 +491,7 @@ void solver::value_linesearch()
 
 	while (cur_iter < MAX_STEP_SIZE_ITER)
 	{
-		Eigen::MatrixXd curr_x = X + step_size * p;
+		Eigen::VectorXd curr_x = X + step_size * p;
 
 		objective->updateX(curr_x);
 
@@ -463,7 +517,7 @@ void solver::value_linesearch()
 		step_size = -1;
 		while (cur_iter < MAX_STEP_SIZE_ITER)
 		{
-			Eigen::MatrixXd curr_x = X + step_size * p;
+			Eigen::VectorXd curr_x = X + step_size * p;
 
 			objective->updateX(curr_x);
 
@@ -507,7 +561,7 @@ void solver::gradNorm_linesearch()
 
 	while (cur_iter < MAX_STEP_SIZE_ITER)
 	{
-		Eigen::MatrixXd curr_x = X + step_size * p;
+		Eigen::VectorXd curr_x = X + step_size * p;
 
 		objective->updateX(curr_x);
 		objective->gradient(grad,false);
@@ -531,7 +585,7 @@ void solver::gradNorm_linesearch()
 	
 		while (cur_iter < MAX_STEP_SIZE_ITER)
 		{
-			Eigen::MatrixXd curr_x = X + step_size * p;
+			Eigen::VectorXd curr_x = X + step_size * p;
 
 			objective->updateX(curr_x);
 			objective->gradient(grad, false);
@@ -548,6 +602,46 @@ void solver::gradNorm_linesearch()
 			}
 			cur_iter++;
 		}
+	}
+}
+
+void solver::aug_gradNorm_linesearch()
+{
+	std::shared_ptr<TotalObjective> total = std::dynamic_pointer_cast<TotalObjective>(objective);
+	assert(total != NULL);
+	std::shared_ptr<LagrangianLscmStArea> aug_function = std::dynamic_pointer_cast<LagrangianLscmStArea>(total->objectiveList[0]);
+	assert(aug_function != NULL);
+
+	step_size = 1;
+	Eigen::VectorXd grad;
+
+	objective->updateX(X);
+	aug_function->AuglagrangGradWRTX(grad, false);
+	double current_GradNrom = grad.norm();
+	double new_GradNrom = current_GradNrom;
+
+	cur_iter = 0; int MAX_STEP_SIZE_ITER = 50;
+
+	while (cur_iter < MAX_STEP_SIZE_ITER)
+	{
+		Eigen::VectorXd curr_x(X.size());
+		curr_x.head(X.size() - F.rows()) = X.head(X.size() - F.rows()) + step_size * p;
+		curr_x.tail(F.rows()) = X.tail(F.rows());
+
+		objective->updateX(curr_x);
+		aug_function->AuglagrangGradWRTX(grad, false);
+		new_GradNrom = grad.norm();
+
+		if (new_GradNrom >= current_GradNrom)
+		{
+			step_size /= 2;
+		}
+		else
+		{
+			X = curr_x;
+			break;
+		}
+		cur_iter++;
 	}
 }
 

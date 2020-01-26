@@ -31,6 +31,25 @@ double NewtonSolver::step()
 	return f;
 }
 
+double NewtonSolver::aug_step()
+{
+	std::shared_ptr<TotalObjective> total = std::dynamic_pointer_cast<TotalObjective>(objective);
+	assert(total != NULL);
+	std::shared_ptr<LagrangianLscmStArea> aug_function = std::dynamic_pointer_cast<LagrangianLscmStArea>(total->objectiveList[0]);
+	assert(aug_function != NULL);
+
+	objective->updateX(X);
+	f = aug_function->AugmentedValue(true);
+	
+	aug_function->AuglagrangGradWRTX(g, true);
+	aug_function->aughessian();
+
+	eigen_solver->factorize(aug_function->II_aug, aug_function->JJ_aug, aug_function->SS_aug);
+	Eigen::VectorXd rhs = -g;
+	p = eigen_solver->solve(rhs);
+	return f;
+}
+
 Eigen::SparseMatrix<double> NewtonSolver::get_Hessian()
 {
 	return eigen_solver->full_A;
@@ -81,4 +100,29 @@ void NewtonSolver::internal_init()
 		eigen_solver->analyze_pattern();
 	}
 #endif
+}
+
+void NewtonSolver::internal_aug_init()
+{
+	std::shared_ptr<TotalObjective> total = std::dynamic_pointer_cast<TotalObjective>(objective);
+	assert(total != NULL);
+	std::shared_ptr<LagrangianLscmStArea> aug_function = std::dynamic_pointer_cast<LagrangianLscmStArea>(total->objectiveList[0]);
+	assert(aug_function != NULL);
+
+	bool needs_init = eigen_solver == nullptr;
+
+	if (needs_init)
+	{
+		eigen_solver = std::make_unique<EigenSparseSolver<std::vector<int>, std::vector<double>>>();
+	}
+	objective->updateX(X);
+	g.resize(X.size() - F.rows());
+	
+	aug_function->aughessian();
+
+	if (needs_init)
+	{
+		eigen_solver->set_pattern(aug_function->II_aug, aug_function->JJ_aug, aug_function->SS_aug);
+		eigen_solver->analyze_pattern();
+	}
 }
