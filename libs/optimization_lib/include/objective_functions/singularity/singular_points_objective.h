@@ -62,9 +62,9 @@ public:
 		interval_ = interval;
 	}
 
-	bool SetProperty(const int32_t property_id, const std::any& property_value) override
+	bool SetProperty(const int32_t property_id, const std::any property_context, const std::any property_value) override
 	{
-		if (SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::SetProperty(property_id, property_value))
+		if (SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::SetProperty(property_id, property_context, property_value))
 		{
 			return true;
 		}
@@ -103,9 +103,9 @@ public:
 		return negative_angular_defect_singularity_indices_;
 	}
 
-	bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, std::any& property_value) override
+	bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, const std::any property_context, std::any& property_value) override
 	{
-		if (SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::GetProperty(property_id, property_modifier_id, property_value))
+		if (SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::GetProperty(property_id, property_modifier_id, property_context, property_value))
 		{
 			return true;
 		}

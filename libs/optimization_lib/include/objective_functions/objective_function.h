@@ -98,7 +98,7 @@ public:
 	}
 
 	// Generic property getter
-	virtual bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, std::any& property_value) override
+	virtual bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, const std::any property_context, std::any& property_value) override
 	{
 		const Properties properties = static_cast<Properties>(property_id);
 		switch (properties)
@@ -138,7 +138,7 @@ public:
 	}
 
 	// Generic property setter
-	virtual bool SetProperty(const int32_t property_id, const std::any& property_value) override
+	virtual bool SetProperty(const int32_t property_id, const std::any property_context, const std::any property_value) override
 	{
 		const Properties properties = static_cast<Properties>(property_id);
 		switch (properties)

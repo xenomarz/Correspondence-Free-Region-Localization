@@ -59,7 +59,7 @@ export class AutoquadsMeshProvider extends MeshProvider {
 
         for(let objectiveFunctionProperty of this._objectiveFunctionsProperties) {
             if(HelpersExports.isVisible(objectiveFunctionProperty.visibility) && (objectiveFunctionProperty.propertyEffectType === propertyEffectType)) {
-                let vector = this._engine.getObjectiveFunctionProperty(objectiveFunctionProperty.objectiveFunctionId, objectiveFunctionProperty.propertyId, this._propertyModifier);
+                let vector = this._engine.getObjectiveFunctionProperty(objectiveFunctionProperty.objectiveFunctionId, objectiveFunctionProperty.propertyId, this._propertyModifier, '');
                 let color = new THREE.Color(objectiveFunctionProperty.color);
                 let colorArray = color.toArray();
                 let defaultColorArray = defaultColor.toArray();
@@ -86,7 +86,7 @@ export class AutoquadsMeshProvider extends MeshProvider {
 
     getBufferedUvs() {
         let bufferedUvs = this._engine.getImageBufferedUvs();
-        let interval = this._engine.getObjectiveFunctionProperty('Singular Points', 'interval', 'none');
+        let interval = this._engine.getObjectiveFunctionProperty('Singular Points', 'interval', 'none', '');
         for(let i = 0; i < bufferedUvs.length; i++)
         {
             bufferedUvs[i] = bufferedUvs[i] / interval;

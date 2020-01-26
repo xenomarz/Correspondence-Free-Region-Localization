@@ -15,6 +15,9 @@ export const CHANGE_DELTA = 'CHANGE_DELTA';
 export const CHANGE_LAMBDA = 'CHANGE_LAMBDA';
 export const CHANGE_ZETA = 'CHANGE_ZETA';
 export const CHANGE_SEAMLESS_WEIGHT = 'CHANGE_SEAMLESS_WEIGHT';
+export const CHANGE_SELECTED_EDGE_SEAMLESS_WEIGHT = 'CHANGE_SELECTED_EDGE_SEAMLESS_WEIGHT';
+export const CHANGE_SELECTED_EDGE_SEAMLESS_ANGLE_WEIGHT = 'CHANGE_SELECTED_EDGE_SEAMLESS_ANGLE_WEIGHT';
+export const CHANGE_SELECTED_EDGE_SEAMLESS_LENGTH_WEIGHT = 'CHANGE_SELECTED_EDGE_SEAMLESS_LENGTH_WEIGHT';
 export const CHANGE_SINGULARITY_WEIGHT = 'CHANGE_SINGULARITY_WEIGHT';
 export const CHANGE_SINGULARITY_INTERVAL = 'CHANGE_SINGULARITY_INTERVAL';
 export const CHANGE_POSITION_WEIGHT = 'CHANGE_POSITION_WEIGHT';
@@ -163,6 +166,20 @@ export const setZeta = zeta => {
 export const setSeamlessWeight = weight => {
     return {
         type: CHANGE_SEAMLESS_WEIGHT,
+        weight: weight
+    };
+};
+
+export const setSelectedEdgeSeamlessAngleWeight = weight => {
+    return {
+        type: CHANGE_SELECTED_EDGE_SEAMLESS_ANGLE_WEIGHT,
+        weight: weight
+    };
+};
+
+export const setSelectedEdgeSeamlessLengthWeight = weight => {
+    return {
+        type: CHANGE_SELECTED_EDGE_SEAMLESS_LENGTH_WEIGHT,
         weight: weight
     };
 };

@@ -82,7 +82,19 @@ export class AutoquadsSideBar extends SideBar {
                     @change="${this._soupWireframeVisibilityInputChanged}"
                     checked>
                     <span>Show Soup Wireframe</span>
-                </vaadin-checkbox>                   
+                </vaadin-checkbox>
+                <vaadin-checkbox
+                    ?checked=${HelpersExports.isVisible(this._modelFatWireframeVisibility)}
+                    @change="${this._modelFatWireframeVisibilityInputChanged}"
+                    checked>
+                    <span>Show Model Fat Wireframe</span>
+                </vaadin-checkbox>
+                <vaadin-checkbox
+                    ?checked=${HelpersExports.isVisible(this._soupFatWireframeVisibility)}
+                    @change="${this._soupFatWireframeVisibilityInputChanged}"
+                    checked>
+                    <span>Show Soup Fat Wireframe</span>
+                </vaadin-checkbox>             
             </side-bar-collapsable-section>
             <side-bar-collapsable-section
                 caption="Numeric Properties">
@@ -122,8 +134,8 @@ export class AutoquadsSideBar extends SideBar {
                 </side-bar-parameter-input>
                 <side-bar-parameter-input
                     id="zeta"
-                    increase-key="b"
-                    decrease-key="v"
+                    increase-key=","
+                    decrease-key="m"
                     value="${this._zeta}"
                     min="0"
                     max="1"
@@ -133,8 +145,8 @@ export class AutoquadsSideBar extends SideBar {
                 </side-bar-parameter-input>
                 <side-bar-parameter-input
                     id="seamless-weight"
-                    increase-key="c"
-                    decrease-key="x"
+                    increase-key="x"
+                    decrease-key="z"
                     value="${this._seamlessWeight}"
                     min="0"
                     max="300"
@@ -167,8 +179,8 @@ export class AutoquadsSideBar extends SideBar {
                 </side-bar-parameter-input>
                 <side-bar-parameter-input
                     id="position-weight"
-                    increase-key="m"
-                    decrease-key="n"
+                    increase-key="/"
+                    decrease-key="."
                     value="${this._positionWeight}"
                     min="0"
                     max="10000"
@@ -176,8 +188,29 @@ export class AutoquadsSideBar extends SideBar {
                     label="Position Weight"
                     @value-changed="${this._positionWeightInputChanged}">
                 </side-bar-parameter-input>
+                <side-bar-parameter-input
+                    id="selected-edge-seamless-angle-weight"
+                    increase-key="v"
+                    decrease-key="c"
+                    value="${this._selectedEdgeSeamlessAngleWeight}"
+                    min="0"
+                    max="300"
+                    step="0.01"
+                    label="Seamless Angle Weight (Selected Edge)"
+                    @value-changed="${this._selectedEdgeSeamlessAngleWeightInputChanged}">
+                </side-bar-parameter-input>
+                <side-bar-parameter-input
+                    id="selected-edge-seamless-length-weight"
+                    increase-key="n"
+                    decrease-key="b"
+                    value="${this._selectedEdgeSeamlessLengthWeight}"
+                    min="0"
+                    max="300"
+                    step="0.01"
+                    label="Seamless Length Weight (Selected Edge)"
+                    @value-changed="${this._selectedEdgeSeamlessLengthWeightInputChanged}">
+                </side-bar-parameter-input>
             </side-bar-collapsable-section>
-
             <side-bar-collapsable-section
                 caption="Vertex Visual Properties">
                 ${this.objectiveFunctionsProperties.filter(item => { 
@@ -195,7 +228,6 @@ export class AutoquadsSideBar extends SideBar {
                     </autoquads-side-bar-objective-function-visual-property>
                 `)}
             </side-bar-collapsable-section>
-
             <side-bar-collapsable-section
                 caption="Edge Visual Properties">
                 ${this.objectiveFunctionsProperties.filter(item => { 
@@ -213,7 +245,6 @@ export class AutoquadsSideBar extends SideBar {
                     </autoquads-side-bar-objective-function-visual-property>
                 `)}
             </side-bar-collapsable-section>           
-
             <side-bar-collapsable-section
                 caption="Solver">
                 <paper-toggle-button
@@ -422,6 +453,14 @@ export class AutoquadsSideBar extends SideBar {
             seamlessWeight: {
                 type: Number,
                 attribute: 'seamless-weight'
+            },
+            selectedEdgeSeamlessAngleWeight: {
+                type: Number,
+                attribute: 'selected-edge-seamless-angle-weight'
+            },
+            selectedEdgeSeamlessLengthWeight: {
+                type: Number,
+                attribute: 'selected-edge-seamless-length-weight'
             },
             singularityWeight: {
                 type: Number,
@@ -679,6 +718,26 @@ export class AutoquadsSideBar extends SideBar {
 
     get seamlessWeight() {
         return this._seamlessWeight;
+    }
+
+    set selectedEdgeSeamlessAngleWeight(value) {
+        const oldValue = this._selectedEdgeSeamlessAngleWeight;
+        this._selectedEdgeSeamlessAngleWeight = value;
+        this.requestUpdate('selectedEdgeSeamlessAngleWeight', oldValue);
+    }
+
+    get selectedEdgeSeamlessAngleWeight() {
+        return this._selectedEdgeSeamlessAngleWeight;
+    }
+
+    set selectedEdgeSeamlessLengthWeight(value) {
+        const oldValue = this._selectedEdgeSeamlessLengthWeight;
+        this._selectedEdgeSeamlessLengthWeight = value;
+        this.requestUpdate('selectedEdgeSeamlessLengthWeight', oldValue);
+    }
+
+    get selectedEdgeSeamlessLengthWeight() {
+        return this._selectedEdgeSeamlessLengthWeight;
     }
 
     set singularityWeight(value) {
@@ -1093,6 +1152,14 @@ export class AutoquadsSideBar extends SideBar {
 
     _seamlessWeightInputChanged(e) {
         store.dispatch(ActionsExports.setSeamlessWeight(e.srcElement.value)); 
+    }
+
+    _selectedEdgeSeamlessAngleWeightInputChanged(e) {
+        store.dispatch(ActionsExports.setSelectedEdgeSeamlessAngleWeight(e.srcElement.value)); 
+    }
+
+    _selectedEdgeSeamlessLengthWeightInputChanged(e) {
+        store.dispatch(ActionsExports.setSelectedEdgeSeamlessLengthWeight(e.srcElement.value)); 
     }
 
     _singularityWeightInputChanged(e) {

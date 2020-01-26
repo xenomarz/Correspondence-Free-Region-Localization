@@ -85,6 +85,8 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "angle_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::AngleValuePerEdge) });
 	properties_map_.insert({ "length_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::LengthValuePerEdge) });
 	properties_map_.insert({ "value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::ValuePerEdge) });
+	properties_map_.insert({ "edge_angle_weight", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::EdgeAngleWeight) });
+	properties_map_.insert({ "edge_length_weight", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::EdgeLengthWeight) });
 	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
 	properties_map_.insert({ "singularity_weight_per_vertex", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::SingularityWeightPerVertex) });
 	properties_map_.insert({ "negative_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::NegativeAngularDefectSingularitiesIndices) });
@@ -504,7 +506,7 @@ Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	/**
 	 * Validate input arguments
 	 */
-	if (info.Length() >= 3)
+	if (info.Length() >= 4)
 	{
 		if (!info[0].IsString())
 		{
@@ -551,7 +553,7 @@ Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 		const uint32_t property_id = properties_map_.at(property_name);
 		const uint32_t property_modifier_id = property_modifiers_map_.at(property_modifier_name);
 		std::any any_value;
-		if (objective_function->GetProperty(property_id, property_modifier_id, any_value))
+		if (objective_function->GetProperty(property_id, property_modifier_id, JSToNative(env, info[3]), any_value))
 		{
 			return NativeToJS(env, any_value);
 		}
@@ -575,7 +577,7 @@ Napi::Value Engine::SetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	/**
 	 * Validate input arguments
 	 */
-	if (info.Length() >= 2)
+	if (info.Length() >= 3)
 	{
 		if (!info[0].IsString())
 		{
@@ -613,7 +615,7 @@ Napi::Value Engine::SetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	if (properties_map_.contains(property_name))
 	{
 		const uint32_t property_id = properties_map_.at(property_name);
-		if(!objective_function->SetProperty(property_id, JSToNative(env, info[2])))
+		if(!objective_function->SetProperty(property_id, JSToNative(env, info[2]), JSToNative(env, info[3])))
 		{
 			Napi::TypeError::New(env, "Couldn't set property").ThrowAsJavaScriptException();
 		}
@@ -736,6 +738,18 @@ std::any Engine::JSToNative(Napi::Env env, const Napi::Value& value)
 	if (value.IsNumber())
 	{
 		return std::make_any<double>(value.ToNumber());
+	}
+
+	if (value.IsArray())
+	{
+		auto array = value.As<Napi::Array>();
+		std::vector<double> double_vector;
+		for(int i = 0; i < array.Length(); i++)
+		{
+			Napi::Value value = array[i];	
+			double_vector.push_back(value.ToNumber());
+		}
+		return std::make_any<std::vector<double>>(double_vector);
 	}
 
 	Napi::TypeError::New(env, "Type not supported").ThrowAsJavaScriptException();

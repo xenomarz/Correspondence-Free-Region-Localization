@@ -172,9 +172,17 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: Number,
                 attribute: 'seamless-weight'
             },
-            singularityWeight: {
+            seamlessWeight: {
                 type: Number,
-                attribute: 'singularity-weight'
+                attribute: 'seamless-weight'
+            },
+            selectedEdgeSeamlessAngleWeight: {
+                type: Number,
+                attribute: 'selected-edge-seamless-angle-weight'
+            },
+            selectedEdgeSeamlessLengthWeight: {
+                type: Number,
+                attribute: 'selected-edge-seamless-length-weight'
             },
             singularityInterval: {
                 type: Number,
@@ -288,7 +296,8 @@ export class AutoquadsView extends connect(store)(LitElement) {
         this._modelMeshProvider = new MeshProvider();
         this._soupMeshProvider = new MeshProvider();
         this._modelMeshViewClasses = { hidden: false };
-        this._soupMeshViewClasses = { hidden: false };           
+        this._soupMeshViewClasses = { hidden: false };
+        this._selectedEdge = null;      
     }
 
     /**
@@ -406,8 +415,8 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._autocutsWeight;
             this._autocutsWeight = value;
-            this._engine.setObjectiveFunctionProperty('Separation', 'weight', this.autocutsWeight * this.lambda);
-            this._engine.setObjectiveFunctionProperty('Symmetric Dirichlet', 'weight', this.autocutsWeight * (1 - this.lambda));
+            this._engine.setObjectiveFunctionProperty('Separation', 'weight', '', this.autocutsWeight * this.lambda);
+            this._engine.setObjectiveFunctionProperty('Symmetric Dirichlet', 'weight', '', this.autocutsWeight * (1 - this.lambda));
             this.requestUpdate('autocutsWeight', oldValue);
         }
     }
@@ -420,14 +429,14 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._delta;
             this._delta = value;
-            this._engine.setObjectiveFunctionProperty('Separation', 'delta', value);
+            this._engine.setObjectiveFunctionProperty('Separation', 'delta', '', value);
             this.requestUpdate('delta', oldValue);
         }
     }
 
     get delta() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Separation', 'delta', 'none');
+            return this._engine.getObjectiveFunctionProperty('Separation', 'delta', 'none', '');
         }
     }
 
@@ -435,15 +444,15 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._lambda;
             this._lambda = value;
-            this._engine.setObjectiveFunctionProperty('Separation', 'weight', this.autocutsWeight * value);
-            this._engine.setObjectiveFunctionProperty('Symmetric Dirichlet', 'weight', this.autocutsWeight * (1 - value));
+            this._engine.setObjectiveFunctionProperty('Separation', 'weight', '', this.autocutsWeight * value);
+            this._engine.setObjectiveFunctionProperty('Symmetric Dirichlet', 'weight', '', this.autocutsWeight * (1 - value));
             this.requestUpdate('lambda', oldValue);
         }
     }
 
     get lambda() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Separation', 'weight', 'none');
+            return this._engine.getObjectiveFunctionProperty('Separation', 'weight', 'none', '');
         }
     }
 
@@ -451,14 +460,14 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._zeta;
             this._zeta = value;
-            this._engine.setObjectiveFunctionProperty('Seamless', 'zeta', value);
+            this._engine.setObjectiveFunctionProperty('Seamless', 'zeta', '', value);
             this.requestUpdate('zeta', oldValue);
         }
     }
 
     get zeta() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Seamless', 'zeta', 'none');
+            return this._engine.getObjectiveFunctionProperty('Seamless', 'zeta', 'none', '');
         }
     }    
 
@@ -466,14 +475,44 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._seamlessWeight;
             this._seamlessWeight = value;
-            this._engine.setObjectiveFunctionProperty('Seamless', 'weight', value);
+            this._engine.setObjectiveFunctionProperty('Seamless', 'weight', '', value);
             this.requestUpdate('seamlessWeight', oldValue);
         }
     }
 
     get seamlessWeight() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Seamless', 'weight', 'none');
+            return this._engine.getObjectiveFunctionProperty('Seamless', 'weight', 'none', '');
+        }
+    }
+
+    set selectedEdgeSeamlessAngleWeight(value) {
+        if(HelpersExports.isModuleLoaded(this.moduleState) && this._selectedEdge !== null) {
+            const oldValue = this._selectedEdgeSeamlessAngleWeight;
+            this._selectedEdgeSeamlessAngleWeight = value;
+            this._engine.setObjectiveFunctionProperty('Seamless', 'edge_angle_weight', this._selectedEdge.id, value);
+            this.requestUpdate('selectedEdgeSeamlessAngleWeight', oldValue);
+        }
+    }
+
+    get selectedEdgeSeamlessAngleWeight() {
+        if(HelpersExports.isModuleLoaded(this.moduleState) && this._selectedEdge !== null) {
+            return this._engine.getObjectiveFunctionProperty('Seamless', 'edge_angle_weight', 'none', this._selectedEdge.id);
+        }
+    }
+
+    set selectedEdgeSeamlessLengthWeight(value) {
+        if(HelpersExports.isModuleLoaded(this.moduleState) && this._selectedEdge !== null) {
+            const oldValue = this._selectedEdgeSeamlessLengthWeight;
+            this._selectedEdgeSeamlessLengthWeight = value;
+            this._engine.setObjectiveFunctionProperty('Seamless', 'edge_length_weight', this._selectedEdge.id, value);
+            this.requestUpdate('selectedEdgeSeamlessLengthWeight', oldValue);
+        }
+    }
+
+    get selectedEdgeSeamlessLengthWeight() {
+        if(HelpersExports.isModuleLoaded(this.moduleState) && this._selectedEdge !== null) {
+            return this._engine.getObjectiveFunctionProperty('Seamless', 'edge_length_weight', 'none', this._selectedEdge.id);
         }
     }
 
@@ -481,14 +520,14 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._singularityWeight;
             this._singularityWeight = value;
-            this._engine.setObjectiveFunctionProperty('Singular Points', 'weight', value / 2);
+            this._engine.setObjectiveFunctionProperty('Singular Points', 'weight', '', value / 2);
             this.requestUpdate('singularityWeight', oldValue);
         }
     }
 
     get singularityWeight() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Singular Points', 'weight', 'none');
+            return this._engine.getObjectiveFunctionProperty('Singular Points', 'weight', 'none', '');
         }
     }
 
@@ -496,14 +535,14 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             const oldValue = this._singularityInterval;
             this._singularityInterval = value;
-            this._engine.setObjectiveFunctionProperty('Singular Points', 'interval', value);
+            this._engine.setObjectiveFunctionProperty('Singular Points', 'interval', '', value);
             this.requestUpdate('singularityInterval', oldValue);
         }
     }
 
     get singularityInterval() {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Singular Points', 'interval', 'none');
+            return this._engine.getObjectiveFunctionProperty('Singular Points', 'interval', 'none', '');
         }
     }
 
@@ -806,7 +845,22 @@ export class AutoquadsView extends connect(store)(LitElement) {
          * Edge selection
          */
         this._meshViewEdgeSelectedSubscriptionToken = PubSub.subscribe('mesh-view-edge-selected', (name, payload) => {
-            alert('dfgdf');
+            let previousSelectedEdge = this._selectedEdge;
+            if(previousSelectedEdge) {
+                payload.edge = previousSelectedEdge;
+                PubSub.publish('mesh-view-unselect-edge', payload);
+            }
+
+            this._selectedEdge = payload.edge;   
+
+            let edgeAngleWeight = this._engine.getObjectiveFunctionProperty('Seamless', 'edge_angle_weight', 'none', this._selectedEdge.id);
+            let edgeLengthWeight = this._engine.getObjectiveFunctionProperty('Seamless', 'edge_length_weight', 'none', this._selectedEdge.id);
+            store.dispatch(ActionsExports.setSelectedEdgeSeamlessAngleWeight(edgeAngleWeight));
+            store.dispatch(ActionsExports.setSelectedEdgeSeamlessLengthWeight(edgeLengthWeight));
+        });
+
+        this._meshViewEdgeUnselectedSubscriptionToken = PubSub.subscribe('mesh-view-edge-unselected', (name, payload) => {
+            this._selectedEdge = null;
         });
     }
     

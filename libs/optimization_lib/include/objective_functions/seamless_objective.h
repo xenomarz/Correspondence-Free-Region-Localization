@@ -32,7 +32,9 @@ public:
 		Zeta = SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::Properties::Count_,
 		AngleValuePerEdge,
 		LengthValuePerEdge,
-		ValuePerEdge
+		ValuePerEdge,
+		EdgeAngleWeight,
+		EdgeLengthWeight
 	};
 	
 	/**
@@ -74,9 +76,32 @@ public:
 		zeta_ = zeta;
 	}
 
-	bool SetProperty(const int32_t property_id, const std::any& property_value) override
+	void SetEdgeAngleWeight(const RDS::EdgeIndex edge_index, const double weight)
 	{
-		if (SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::SetProperty(property_id, property_value))
+		for (auto& periodic_edge_pair_angle_objective : periodic_edge_pair_angle_objectives)
+		{
+			auto edge_pair_angle_objective = std::dynamic_pointer_cast<EdgePairAngleObjective<StorageOrder_>>(periodic_edge_pair_angle_objective->GetInnerObjective());
+			if (edge_pair_angle_objective->GetEdgePairDataProvider().GetDomainEdgeIndex() == edge_index)
+			{
+				edge_pair_angle_objective->SetWeight(weight);
+			}
+		}
+	}
+
+	void SetEdgeLengthWeight(const RDS::EdgeIndex edge_index, const double weight)
+	{
+		for (auto& edge_pair_length_objective : edge_pair_length_objectives)
+		{
+			if (edge_pair_length_objective->GetEdgePairDataProvider().GetDomainEdgeIndex() == edge_index)
+			{
+				edge_pair_length_objective->SetWeight(weight);
+			}
+		}
+	}
+
+	bool SetProperty(const int32_t property_id, const std::any property_context, const std::any property_value) override
+	{
+		if (SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::SetProperty(property_id, property_context, property_value))
 		{
 			return true;
 		}
@@ -86,6 +111,12 @@ public:
 		{
 		case Properties::Zeta:
 			SetZeta(std::any_cast<const double>(property_value));
+			return true;
+		case Properties::EdgeAngleWeight:
+			SetEdgeAngleWeight(static_cast<RDS::EdgeIndex>(std::any_cast<double>(property_context)), std::any_cast<const double>(property_value));
+			return true;
+		case Properties::EdgeLengthWeight:
+			SetEdgeLengthWeight(static_cast<RDS::EdgeIndex>(std::any_cast<double>(property_context)), std::any_cast<const double>(property_value));
 			return true;
 		}
 
@@ -162,10 +193,37 @@ public:
 	{
 		return domain_length_value_per_edge_;
 	}
-	
-	bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, std::any& property_value) override
+
+	double GetEdgeAngleWeight(const RDS::EdgeIndex edge_index)
 	{
-		if (SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::GetProperty(property_id, property_modifier_id, property_value))
+		for (auto& periodic_edge_pair_angle_objective : periodic_edge_pair_angle_objectives)
+		{
+			auto edge_pair_angle_objective = std::dynamic_pointer_cast<EdgePairAngleObjective<StorageOrder_>>(periodic_edge_pair_angle_objective->GetInnerObjective());
+			if (edge_pair_angle_objective->GetEdgePairDataProvider().GetDomainEdgeIndex() == edge_index)
+			{
+				return edge_pair_angle_objective->GetWeight();
+			}
+		}
+
+		return 0;
+	}
+
+	double GetEdgeLengthWeight(const RDS::EdgeIndex edge_index)
+	{
+		for (auto& edge_pair_length_objective : edge_pair_length_objectives)
+		{
+			if (edge_pair_length_objective->GetEdgePairDataProvider().GetDomainEdgeIndex() == edge_index)
+			{
+				return edge_pair_length_objective->GetWeight();
+			}
+		}
+
+		return 0;
+	}
+	
+	bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, const std::any property_context, std::any& property_value) override
+	{
+		if (SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::GetProperty(property_id, property_modifier_id, property_context, property_value))
 		{
 			return true;
 		}
@@ -185,6 +243,12 @@ public:
 			return true;
 		case Properties::ValuePerEdge:
 			property_value = GetValuePerEdge(property_modifiers);
+			return true;
+		case Properties::EdgeAngleWeight:
+			property_value = GetEdgeAngleWeight(static_cast<RDS::EdgeIndex>(std::any_cast<double>(property_context)));
+			return true;
+		case Properties::EdgeLengthWeight:
+			property_value = GetEdgeLengthWeight(static_cast<RDS::EdgeIndex>(std::any_cast<double>(property_context)));
 			return true;
 		}
 

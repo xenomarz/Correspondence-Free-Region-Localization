@@ -56,12 +56,12 @@ public:
 	/**
 	 * Getters
 	 */
-	virtual bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, std::any& property_value) = 0;
+	virtual bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, const std::any property_context, std::any& property_value) = 0;
 
 	/**
 	 * Setters
 	 */
-	virtual bool SetProperty(const int32_t property_id, const std::any& property_value) = 0;
+	virtual bool SetProperty(const int32_t property_id, const std::any property_context, const std::any property_value) = 0;
 };
 
 // http://blog.bitwigglers.org/using-enum-classes-as-type-safe-bitmasks/

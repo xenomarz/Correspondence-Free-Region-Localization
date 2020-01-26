@@ -13,6 +13,8 @@ import {
     CHANGE_LAMBDA,
     CHANGE_ZETA,
     CHANGE_SEAMLESS_WEIGHT,
+    CHANGE_SELECTED_EDGE_SEAMLESS_ANGLE_WEIGHT,
+    CHANGE_SELECTED_EDGE_SEAMLESS_LENGTH_WEIGHT,
     CHANGE_SINGULARITY_WEIGHT,
     CHANGE_SINGULARITY_INTERVAL,
     CHANGE_POSITION_WEIGHT,
@@ -68,7 +70,7 @@ const INITIAL_STATE = {
     highlightedEdgeColor: 'rgb(0,255,0)',
     draggedFaceColor: 'rgb(0,0,255)',
     fixedFaceColor: 'rgb(255,0,0)',
-    editedEdgeColor: 'rgb(255,0,0)',
+    editedEdgeColor: 'rgb(0,0,255)',
     gridSize: 7,
     gridTextureSize: 8,
     gridLineWidth: 4,
@@ -256,6 +258,16 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 seamlessWeight: action.weight
             };
+        case CHANGE_SELECTED_EDGE_SEAMLESS_ANGLE_WEIGHT:
+            return {
+                ...state,
+                selectedEdgeSeamlessAngleWeight: action.weight
+            };
+        case CHANGE_SELECTED_EDGE_SEAMLESS_LENGTH_WEIGHT:
+            return {
+                ...state,
+                selectedEdgeSeamlessLengthWeight: action.weight
+            };            
         case CHANGE_SINGULARITY_WEIGHT:
             return {
                 ...state,

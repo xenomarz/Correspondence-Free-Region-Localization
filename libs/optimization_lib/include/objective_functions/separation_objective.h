@@ -43,9 +43,9 @@ public:
 		delta_ = delta;
 	}
 
-	bool SetProperty(const int32_t property_id, const std::any& property_value) override
+	bool SetProperty(const int32_t property_id, const std::any property_context, const std::any property_value) override
 	{
-		if(DenseObjectiveFunction<StorageOrder_>::SetProperty(property_id, property_value))
+		if(DenseObjectiveFunction<StorageOrder_>::SetProperty(property_id, property_context, property_value))
 		{
 			return true;
 		}
@@ -69,9 +69,9 @@ public:
 		return delta_;
 	}
 
-	bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, std::any& property_value) override
+	bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, const std::any property_context, std::any& property_value) override
 	{
-		if (DenseObjectiveFunction<StorageOrder_>::GetProperty(property_id, property_modifier_id, property_value))
+		if (DenseObjectiveFunction<StorageOrder_>::GetProperty(property_id, property_modifier_id, property_context, property_value))
 		{
 			return true;
 		}
