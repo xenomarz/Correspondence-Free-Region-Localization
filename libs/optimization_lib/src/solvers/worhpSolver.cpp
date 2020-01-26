@@ -369,11 +369,7 @@ void worhpSolver::UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 	LagrangianLscmStArea f = *this->functionF;
 	f.updateX(X);
 
-	Eigen::VectorXd LSCM = (f.a - f.d).cwiseAbs2() + (f.b + f.c).cwiseAbs2();
-	//VectorXd AREA = f.detJ - VectorXd::Ones(opt->m);
-
-	double obj_value = (f.Area.asDiagonal() * LSCM).sum();
-	opt->F = wsp->ScaleObj * obj_value;
+	opt->F = wsp->ScaleObj * f.objectiveValue(false);
 }
 
 void worhpSolver::UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
@@ -381,10 +377,9 @@ void worhpSolver::UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 	Eigen::VectorXd X = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
 	LagrangianLscmStArea f = *this->functionG;
 	f.updateX(X);
-	
+	Eigen::VectorXd constraints = f.constrainedValue(false);
 	for (int i = 0; i < opt->m; i++) {
-		double AREA = (f.detJ(i) - 1);
-		opt->G[i] = f.Area(i) * AREA;
+		opt->G[i] = constraints(i);
 	}
 }
 
