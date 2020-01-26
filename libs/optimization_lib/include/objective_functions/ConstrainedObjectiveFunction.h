@@ -25,5 +25,5 @@ public:
 	double constraint_value = 0;
 	double objective_gradient_norm = 0;
 	double constraint_gradient_norm = 0;
-	float augmented_value_parameter = 100000.0f;
+	float augmented_value_parameter = 20.0f;
 };
