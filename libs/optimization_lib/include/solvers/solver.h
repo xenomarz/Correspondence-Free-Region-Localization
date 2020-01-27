@@ -20,8 +20,8 @@ public:
 	void run_one_iteration(const int steps, const bool showGraph);
 	void run_one_aug_iteration(const int steps, const bool showGraph);
 	void stop();
-	void get_data(Eigen::VectorXd& X);
-	void init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0, Eigen::MatrixXi& F, Eigen::MatrixXd& V);
+	void get_data(Eigen::VectorXd& X, Eigen::VectorXd& lambda);
+	void init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0, const Eigen::VectorXd& lambda0, const Eigen::MatrixXi& F, const Eigen::MatrixXd& V);
 	void setFlipAvoidingLineSearch(Eigen::MatrixX3i& F);
 	Eigen::VectorXd getLambda(const Eigen::VectorXd& vec);
 	Eigen::VectorXd solver::getXY(const Eigen::VectorXd& vec);
@@ -40,7 +40,7 @@ public:
 	void release_parameter_update_slot();
 
 	// External (interface) and internal working mesh
-	Eigen::VectorXd ext_x;
+	Eigen::VectorXd ext_x, ext_lambda;
 	Eigen::VectorXd X;
 	Eigen::MatrixX3i F;
 	Eigen::MatrixXd V;

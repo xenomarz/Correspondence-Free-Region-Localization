@@ -71,8 +71,13 @@ void solver::setXY(Eigen::VectorXd& vec, const Eigen::VectorXd& XY) {
 	vec.head(2 * V.rows()) = XY;
 }
 
-void solver::init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0, Eigen::MatrixXi& F, Eigen::MatrixXd& V)
-{
+void solver::init(
+	std::shared_ptr<ObjectiveFunction> objective, 
+	const Eigen::VectorXd& X0, 
+	const Eigen::VectorXd& lambda0,
+	const Eigen::MatrixXi& F, 
+	const Eigen::MatrixXd& V
+) {
 	this->F = F;
 	this->V = V;
 	this->constant_step = 0.01;
@@ -81,12 +86,14 @@ void solver::init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::Vec
 	std::cout << "F.rows() = " << F.rows() << std::endl;
 	std::cout << "V.rows() = " << V.rows() << std::endl;
 	assert(X0.rows() == (2*V.rows()) && "X0 should contain the (x,y) coordinates for each vertice");
+	assert(lambda0.rows() == F.rows());
 
 	if (IsConstrObjFunc) { //for constraint objective function
 		X.resize(2 * V.rows() + F.rows());
 		setXY(X,X0);
-		setLambda(X,Eigen::VectorXd::Zero(F.rows()));
+		setLambda(X, lambda0);
 		ext_x = X0;
+		ext_lambda = lambda0;
 	}
 	else { //for unconstraint objective function
 		X = X0;
@@ -135,8 +142,6 @@ int solver::aug_run()
 		} while (g.norm() > tolerance && sub_steps++ < 10);
 		//update lambda
 		objective->updateX(X);
-		std::cout << (getLambda(X)
-			+ aug_function->augmented_value_parameter*aug_function->constrainedValue(true)).cwiseAbs2().sum()<<std::endl;
 		setLambda(X,getLambda(X)-aug_function->augmented_value_parameter*aug_function->constrainedValue(true));
 		//update meo
 		if(aug_function->augmented_value_parameter < 100000.0f)
@@ -144,7 +149,6 @@ int solver::aug_run()
 
 	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
 	is_running = false;
-
 	std::cout << ">> solver " + std::to_string(solverID) + " stopped" << std::endl;
 	return 0;
 }
@@ -617,17 +621,20 @@ void solver::update_external_data()
 {
 	give_parameter_update_slot();
 	std::unique_lock<std::shared_timed_mutex> lock(*data_mutex);
-	if(IsConstrObjFunc)
+	if (IsConstrObjFunc) {
 		ext_x = getXY(X);
+		ext_lambda = getLambda(X);
+	}
 	else 
 		ext_x = X;
 	progressed = true;
 }
 
-void solver::get_data(Eigen::VectorXd& X)
+void solver::get_data(Eigen::VectorXd& X, Eigen::VectorXd& lambda)
 {
 	std::unique_lock<std::shared_timed_mutex> lock(*data_mutex);
 	X = ext_x;
+	lambda = ext_lambda;
 	progressed = false;
 }
 

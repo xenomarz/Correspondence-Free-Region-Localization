@@ -294,6 +294,8 @@ public:
 
 class Output
 {
+private:
+	Eigen::VectorXd lambda;
 public:
 	float prev_camera_zoom;
 	std::vector<int> *HandlesInd; //pointer to indices in constraitPositional
@@ -308,6 +310,16 @@ public:
 	std::shared_ptr<solver> solver;
 	std::shared_ptr<TotalObjective> totalObjective;
 	std::shared_ptr<worhpSolver> worhpsolver;
+
+	Eigen::VectorXd getLambda(int numF){
+		if (lambda.rows() != numF)
+			lambda.setZero(numF);
+		return lambda;
+	}
+
+	void setLambda(Eigen::VectorXd l) {
+		lambda = l;
+	}
 
 	//Constructor & initialization
 	Output(
