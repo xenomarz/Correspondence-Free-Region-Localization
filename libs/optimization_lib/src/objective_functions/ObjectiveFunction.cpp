@@ -5,7 +5,7 @@ void ObjectiveFunction::FDGradient(const Eigen::VectorXd& X, Eigen::VectorXd& g)
 {
 	Eigen::VectorXd Xd = X;
     updateX(Xd);
-    double dX = 1e-7; //10e-6;
+    double dX = 1e-9; //10e-6;
 
     double f_P, f_M;
     //this is a very slow method that evaluates the gradient of the objective function through FD...
@@ -32,7 +32,7 @@ void ObjectiveFunction::FDHessian(const Eigen::VectorXd& X)
 	Eigen::VectorXd Xd = X;
     updateX(Xd);
 	Eigen::VectorXd g(X.size()), gp(X.size()), gm(X.size()), Hi(X.size());
-    double dX = 10e-6;
+    double dX = 10e-9;
     II.clear(); JJ.clear(); SS.clear();
     for (int i = 0; i < X.size(); i++) {
         double tmpVal = X(i);
@@ -199,7 +199,7 @@ void ObjectiveFunction::FDAugGradient(const Eigen::VectorXd& X, Eigen::VectorXd&
 
 	Eigen::VectorXd Xd = X;
 	updateX(Xd);
-	double dX = 1e-7; //10e-6;
+	double dX = 1e-9; //10e-6;
 
 	double f_P, f_M;
 	//this is a very slow method that evaluates the gradient of the objective function through FD...
@@ -232,7 +232,7 @@ void ObjectiveFunction::FDAugHessian(const Eigen::VectorXd& X)
 	Eigen::VectorXd Xd = X;
 	updateX(Xd);
 	Eigen::VectorXd g(2 * V.rows()), gp(2 * V.rows()), gm(2 * V.rows()), Hi(2 * V.rows());
-	double dX = 10e-6;
+	double dX = 10e-9;
 	c->II_aug.clear(); c->JJ_aug.clear(); c->SS_aug.clear();
 	for (int i = 0; i < (2 * V.rows()); i++) {
 		double tmpVal = X(i);

@@ -1,12 +1,14 @@
 #include "solvers/solver.h"
 #include "solvers/NewtonSolver.h"
 //#define SAVE_DATA_IN_CSV
-//#define SAVE_DATA_IN_MATLAB
+#define SAVE_DATA_IN_MATLAB
 
 #define HIGH 3
 #define LOW -3
 #define JUMP 0.01f
 #define ARRAY_OUTPUT_SIZE (int)((HIGH - LOW) / JUMP) + 1
+
+
 
 solver::solver(const bool isConstrObjFunc, const int solverID)
 	:
@@ -47,17 +49,44 @@ solver::~solver() {
 #endif
 }
 
-void solver::init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0)
+Eigen::VectorXd solver::getLambda(const Eigen::VectorXd& vec) {
+	assert(vec.rows() == (2 * V.rows() + F.rows()));
+	return vec.tail(F.rows());
+}
+
+Eigen::VectorXd solver::getXY(const Eigen::VectorXd& vec) {
+	assert(vec.rows() == (2 * V.rows() + F.rows()));
+	return vec.head(2 * V.rows());
+}
+
+void solver::setLambda(Eigen::VectorXd& vec, const Eigen::VectorXd& lambda) {
+	assert(lambda.rows() == F.rows());
+	assert(vec.rows() == (2 * V.rows() + F.rows()));
+	vec.tail(F.rows()) = lambda;
+}
+
+void solver::setXY(Eigen::VectorXd& vec, const Eigen::VectorXd& XY) {
+	assert(XY.rows() == (2 * V.rows()));
+	assert(vec.rows() == (2 * V.rows() + F.rows()));
+	vec.head(2 * V.rows()) = XY;
+}
+
+void solver::init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0, Eigen::MatrixXi& F, Eigen::MatrixXd& V)
 {
-	constant_step = 0.01;
+	this->F = F;
+	this->V = V;
+	this->constant_step = 0.01;
 	this->objective = objective;
+
 	std::cout << "F.rows() = " << F.rows() << std::endl;
-	std::cout << "V.rows() = " << X.rows() - F.rows() << std::endl;
+	std::cout << "V.rows() = " << V.rows() << std::endl;
+	assert(X0.rows() == (2*V.rows()) && "X0 should contain the (x,y) coordinates for each vertice");
+
 	if (IsConstrObjFunc) { //for constraint objective function
-		X.resize(X0.rows() + F.rows());
-		X.head(X0.rows()) = X0;
-		X.tail(F.rows()) = Eigen::VectorXd::Zero(F.rows());
-		ext_x = X.head(X.rows() - F.rows());
+		X.resize(2 * V.rows() + F.rows());
+		setXY(X,X0);
+		setLambda(X,Eigen::VectorXd::Zero(F.rows()));
+		ext_x = X0;
 	}
 	else { //for unconstraint objective function
 		X = X0;
@@ -106,11 +135,9 @@ int solver::aug_run()
 		} while (g.norm() > tolerance && sub_steps++ < 10);
 		//update lambda
 		objective->updateX(X);
-		std::cout << (X.tail(F.rows())
+		std::cout << (getLambda(X)
 			+ aug_function->augmented_value_parameter*aug_function->constrainedValue(true)).cwiseAbs2().sum()<<std::endl;
-		X.tail(F.rows()) = 
-			X.tail(F.rows())
-			-aug_function->augmented_value_parameter*aug_function->constrainedValue(true);
+		setLambda(X,getLambda(X)-aug_function->augmented_value_parameter*aug_function->constrainedValue(true));
 		//update meo
 		if(aug_function->augmented_value_parameter < 100000.0f)
 			aug_function->augmented_value_parameter *= 1.1;
@@ -470,16 +497,17 @@ void solver::value_linesearch()
 	if (/*FlipAvoidingLineSearch*/false)
 	{
 		double min_step_to_singularity;
+		Eigen::MatrixX2d MatX;
+		Eigen::MatrixXd MatP;
 		if (IsConstrObjFunc) {
-			auto MatX = Eigen::Map<Eigen::MatrixX2d>(X.head(X.rows() - F.rows()).data(), X.head(X.rows() - F.rows()).rows() / 2, 2);
-			Eigen::MatrixXd MatP = Eigen::Map<const Eigen::MatrixX2d>(p.head(X.rows() - F.rows()).data(), p.head(X.rows() - F.rows()).rows() / 2, 2);
-			min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(MatX, F, MatP);
+			MatX = Eigen::Map<Eigen::MatrixX2d>(getXY(X).data(), V.rows(), 2);
+			MatP = Eigen::Map<const Eigen::MatrixX2d>(getXY(p).data(), V.rows(), 2);
 		}
 		else {
-			auto MatX = Eigen::Map<Eigen::MatrixX2d>(X.data(), X.rows() / 2, 2);
-			Eigen::MatrixXd MatP = Eigen::Map<const Eigen::MatrixX2d>(p.data(), p.rows() / 2, 2);
-			min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(MatX, F, MatP);
+			MatX = Eigen::Map<Eigen::MatrixX2d>(X.data(), V.rows(), 2);
+			MatP = Eigen::Map<const Eigen::MatrixX2d>(p.data(), V.rows(), 2);
 		}
+		min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(MatX, F, MatP);
 		step_size = std::min(1., min_step_to_singularity*0.8);
 	}
 	else
@@ -489,8 +517,7 @@ void solver::value_linesearch()
 	
 	cur_iter = 0; int MAX_STEP_SIZE_ITER = 50;
 
-	while (cur_iter < MAX_STEP_SIZE_ITER)
-	{
+	while (cur_iter++ < MAX_STEP_SIZE_ITER) {
 		Eigen::VectorXd curr_x = X + step_size * p;
 
 		objective->updateX(curr_x);
@@ -501,41 +528,10 @@ void solver::value_linesearch()
 			new_energy = objective->value(false);
 		
 		if (new_energy >= currentEnergy)
-		{
 			step_size /= 2;
-		}
-		else
-		{
+		else {
 			X = curr_x;
 			break;
-		}
-		cur_iter++;
-	}
-
-	if (cur_iter == MAX_STEP_SIZE_ITER) {
-		cur_iter = 0;
-		step_size = -1;
-		while (cur_iter < MAX_STEP_SIZE_ITER)
-		{
-			Eigen::VectorXd curr_x = X + step_size * p;
-
-			objective->updateX(curr_x);
-
-			if (IsConstrObjFunc)
-				new_energy = objective->AugmentedValue(false);
-			else
-				new_energy = objective->value(false);
-
-			if (new_energy >= currentEnergy)
-			{
-				step_size /= 2;
-			}
-			else
-			{
-				X = curr_x;
-				break;
-			}
-			cur_iter++;
 		}
 	}
 }
@@ -559,8 +555,7 @@ void solver::gradNorm_linesearch()
 
 	cur_iter = 0; int MAX_STEP_SIZE_ITER = 50;
 
-	while (cur_iter < MAX_STEP_SIZE_ITER)
-	{
+	while (cur_iter++ < MAX_STEP_SIZE_ITER) {
 		Eigen::VectorXd curr_x = X + step_size * p;
 
 		objective->updateX(curr_x);
@@ -568,39 +563,10 @@ void solver::gradNorm_linesearch()
 		new_GradNrom = grad.norm();
 		
 		if (new_GradNrom >= current_GradNrom)
-		{
 			step_size /= 2;
-		}
-		else
-		{
+		else {
 			X = curr_x;
 			break;
-		}
-		cur_iter++;
-	}
-
-	if (cur_iter == MAX_STEP_SIZE_ITER) {
-		cur_iter = 0;
-		step_size = -1;
-	
-		while (cur_iter < MAX_STEP_SIZE_ITER)
-		{
-			Eigen::VectorXd curr_x = X + step_size * p;
-
-			objective->updateX(curr_x);
-			objective->gradient(grad, false);
-			new_GradNrom = grad.norm();
-
-			if (new_GradNrom >= current_GradNrom)
-			{
-				step_size /= 2;
-			}
-			else
-			{
-				X = curr_x;
-				break;
-			}
-			cur_iter++;
 		}
 	}
 }
@@ -622,26 +588,21 @@ void solver::aug_gradNorm_linesearch()
 
 	cur_iter = 0; int MAX_STEP_SIZE_ITER = 50;
 
-	while (cur_iter < MAX_STEP_SIZE_ITER)
-	{
+	while (cur_iter++ < MAX_STEP_SIZE_ITER) {
 		Eigen::VectorXd curr_x(X.size());
-		curr_x.head(X.size() - F.rows()) = X.head(X.size() - F.rows()) + step_size * p;
-		curr_x.tail(F.rows()) = X.tail(F.rows());
+		setXY(curr_x, getXY(X) + step_size * p);
+		setLambda(curr_x, getLambda(X));
 
 		objective->updateX(curr_x);
 		aug_function->AuglagrangGradWRTX(grad, false);
 		new_GradNrom = grad.norm();
 
 		if (new_GradNrom >= current_GradNrom)
-		{
 			step_size /= 2;
-		}
-		else
-		{
+		else {
 			X = curr_x;
 			break;
 		}
-		cur_iter++;
 	}
 }
 
@@ -657,7 +618,7 @@ void solver::update_external_data()
 	give_parameter_update_slot();
 	std::unique_lock<std::shared_timed_mutex> lock(*data_mutex);
 	if(IsConstrObjFunc)
-		ext_x = X.head(X.rows() - F.rows());
+		ext_x = getXY(X);
 	else 
 		ext_x = X;
 	progressed = true;

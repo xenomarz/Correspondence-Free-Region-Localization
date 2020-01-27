@@ -21,8 +21,12 @@ public:
 	void run_one_aug_iteration(const int steps, const bool showGraph);
 	void stop();
 	void get_data(Eigen::VectorXd& X);
-	void init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0);
+	void init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0, Eigen::MatrixXi& F, Eigen::MatrixXd& V);
 	void setFlipAvoidingLineSearch(Eigen::MatrixX3i& F);
+	Eigen::VectorXd getLambda(const Eigen::VectorXd& vec);
+	Eigen::VectorXd solver::getXY(const Eigen::VectorXd& vec);
+	void setLambda(Eigen::VectorXd& vec, const Eigen::VectorXd& lambda);
+	void solver::setXY(Eigen::VectorXd& vec, const Eigen::VectorXd& XY);
 
 	// Pointer to the energy class
 	std::shared_ptr<ObjectiveFunction> objective;
@@ -39,6 +43,7 @@ public:
 	Eigen::VectorXd ext_x;
 	Eigen::VectorXd X;
 	Eigen::MatrixX3i F;
+	Eigen::MatrixXd V;
 	int num_steps;
 	bool IsConstrObjFunc;
 	Utils::LineSearch lineSearch_type;

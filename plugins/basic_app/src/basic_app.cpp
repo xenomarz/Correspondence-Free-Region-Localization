@@ -566,7 +566,7 @@ void basic_app::Draw_menu_for_Solver() {
 				Eigen::MatrixX3i F = OutputModel(i).F;
 				Outputs[i].solver->setFlipAvoidingLineSearch(F);
 				Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(OutputModel(i).V.leftCols(2).data(), OutputModel(i).V.leftCols(2).rows() * 2);
-				Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
+				Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX, OutputModel(i).F, OutputModel(i).V);
 			}
 			start_solver_thread();
 		}
@@ -607,7 +607,7 @@ void basic_app::Draw_menu_for_Solver() {
 					for (int i = 0; i < Outputs.size(); i++)
 					{
 						Outputs[i].solver->setFlipAvoidingLineSearch(F[i]);
-						Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
+						Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX, OutputModel(i).F, OutputModel(i).V);
 					}
 					
 				}
@@ -634,7 +634,7 @@ void basic_app::Draw_menu_for_Solver() {
 				for (int i = 0; i < Outputs.size(); i++)
 				{
 					Outputs[i].solver->setFlipAvoidingLineSearch(F[i]);
-					Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX);
+					Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX, OutputModel(i).F, OutputModel(i).V);
 				}
 			}
 			
@@ -1335,15 +1335,15 @@ void basic_app::start_solver_thread() {
 		solver_on = true;
 		//update solver
 		Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(OutputModel(i).V.leftCols(2).data(), OutputModel(i).V.rows() * 2);
-		Outputs[i].newton->init(Outputs[i].totalObjective, initialguessXX);
-		Outputs[i].gradient_descent->init(Outputs[i].totalObjective, initialguessXX);
+		Outputs[i].newton->init(Outputs[i].totalObjective, initialguessXX,OutputModel(i).F, OutputModel(i).V);
+		Outputs[i].gradient_descent->init(Outputs[i].totalObjective, initialguessXX, OutputModel(i).F, OutputModel(i).V);
 		//start solver
 		if (step_by_step) {
 			static int step_counter = 0;
-			solver_thread = std::thread(&solver::/*run_one_iteration*/run_one_aug_iteration, Outputs[i].solver.get(), step_counter++,true);
+			solver_thread = std::thread(&solver::run_one_iteration/*run_one_aug_iteration*/, Outputs[i].solver.get(), step_counter++,true);
 		}
 		else
-			solver_thread = std::thread(&solver::/*run*/aug_run, Outputs[i].solver.get());
+			solver_thread = std::thread(&solver::run/*aug_run*/, Outputs[i].solver.get());
 		solver_thread.detach();
 	}
 }
@@ -1436,9 +1436,9 @@ void basic_app::initializeSolver(const int index)
 	}
 	Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(initialguess.data(), initialguess.rows() * 2);
 	Outputs[index].newton->setFlipAvoidingLineSearch(F);
-	Outputs[index].newton->init(Outputs[index].totalObjective, initialguessXX);
+	Outputs[index].newton->init(Outputs[index].totalObjective, initialguessXX, OutputModel(index).F, OutputModel(index).V);
 	Outputs[index].gradient_descent->setFlipAvoidingLineSearch(F);
-	Outputs[index].gradient_descent->init(Outputs[index].totalObjective, initialguessXX);
+	Outputs[index].gradient_descent->init(Outputs[index].totalObjective, initialguessXX, OutputModel(index).F, OutputModel(index).V);
 
 	//update worhp solver
 	Outputs[index].worhpsolver->init(V, F);

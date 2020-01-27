@@ -30,26 +30,34 @@ template <typename vectorTypeI, typename vectorTypeS>
 bool EigenSparseSolver<vectorTypeI, vectorTypeS>::factorize(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS)
 {
 	BuildMatrix(II,JJ,SS);
-	solver.factorize(full_A/*UpperTriangular_A*/);
-	assert(solver.info() == Eigen::Success && "factorization failed!");
-	return solver.info() == 0;
+	//solver.factorize(full_A/*UpperTriangular_A*/);
+	//assert(solver.info() == Eigen::Success && "factorization failed!");
+	//return solver.info() == 0;
+
+	// Launch MATLAB
+	igl::matlab::mlinit(&engine);
+	igl::matlab::mleval(&engine, "desktop");
+
+	// Send matrix to matlab
+	igl::matlab::mlsetmatrix(&engine, "A", full_A);
+	igl::matlab::mleval(&engine, "A = full(A);");
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
 Eigen::VectorXd EigenSparseSolver<vectorTypeI, vectorTypeS>::solve(Eigen::VectorXd &rhs)
 {
-	Eigen::VectorXd x = solver.solve(rhs);
-	/*cout << "x = " << endl << x << endl;
-	cout << "full_A = " << endl << full_A.toDense() << endl;
-	cout << "UpperTriangular_A = " << endl << UpperTriangular_A.toDense() << endl;
-	cout << "rhs = " << endl << rhs << endl;*/
+	Eigen::VectorXd x;
+	//x = solver.solve(rhs);
 
+	Eigen::MatrixXd temp;
+	igl::matlab::mlsetmatrix(&engine, "b", Eigen::MatrixXd(rhs));
+	igl::matlab::mleval(&engine, "x = A\\b;");
+	//igl::matlab::mleval(&engine, "x = symmlq(A,b);");
+	igl::matlab::mlgetmatrix(&engine, "x",temp);
+	x = temp;
 
-	//cout <<"upper = " << (UpperTriangular_A * x - rhs).cwiseAbs2().sum();
-	//cout <<" , full = " << (full_A * x - rhs).cwiseAbs2().sum() << endl;
 
 	MSE = (full_A * x - rhs).cwiseAbs2().sum();
-	//cout << "MSE = " << MSE << endl;
 	return x;
 }
 
