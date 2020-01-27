@@ -2,6 +2,10 @@
 #ifndef OPTIMIZATION_LIB_EDGE_PAIR_ANGLE_OBJECTIVE_H
 #define OPTIMIZATION_LIB_EDGE_PAIR_ANGLE_OBJECTIVE_H
 
+// C includes
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 // Optimization lib includes
 #include "../../data_providers/edge_pair_data_provider.h"
 #include "./edge_pair_objective.h"
@@ -128,7 +132,7 @@ private:
 	void CalculateValue(double& f) override
 	{
 		auto& edge_pair_data_provider = this->GetEdgePairDataProvider();
-		f = std::atan2(edge_pair_data_provider.GetEdge1YDiff(), edge_pair_data_provider.GetEdge1XDiff()) - atan2(edge_pair_data_provider.GetEdge2YDiff(), edge_pair_data_provider.GetEdge2XDiff());
+		f = std::atan2(edge_pair_data_provider.GetEdge1YDiff(), edge_pair_data_provider.GetEdge1XDiff()) - std::atan2(edge_pair_data_provider.GetEdge2YDiff(), edge_pair_data_provider.GetEdge2XDiff()) + M_PI;
 	}
 };
 

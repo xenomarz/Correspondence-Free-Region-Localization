@@ -22,6 +22,7 @@ file(GLOB SOURCES
 	src/objective_functions/symmetric_dirichlet_objective.cpp
 	src/objective_functions/separation_objective.cpp
 	src/objective_functions/periodic_objective.cpp
+	src/objective_functions/parabolic_objective.cpp
 	src/objective_functions/coordinate_objective.cpp
 	src/objective_functions/seamless_objective.cpp
 	src/objective_functions/position/position_objective.cpp
@@ -59,6 +60,7 @@ file(GLOB SOURCES
 	include/objective_functions/symmetric_dirichlet_objective.h
 	include/objective_functions/separation_objective.h
 	include/objective_functions/periodic_objective.h
+	include/objective_functions/parabolic_objective.h
 	include/objective_functions/coordinate_objective.h
 	include/objective_functions/seamless_objective.h
 	include/objective_functions/position/position_objective.h
