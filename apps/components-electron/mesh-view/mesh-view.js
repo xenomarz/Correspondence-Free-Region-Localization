@@ -155,6 +155,10 @@ export class MeshView extends LitElement {
                 type: Boolean,
                 attribute: 'show-wireframe'
             },
+            showFatWireframe: {
+                type: Boolean,
+                attribute: 'show-fat-wireframe'
+            },
             syncFaceSelection: {
                 type: Boolean,
                 attribute: 'sync-face-selection'
@@ -264,6 +268,7 @@ export class MeshView extends LitElement {
         this.debugData = [];
         this._needResize = false;
         this.showWireframe = false;
+        this.showFatWireframe = false;
         this.showUnitGrid = false;
         this.showDebugData = false;
         this._initializeStateMachine();
@@ -478,6 +483,24 @@ export class MeshView extends LitElement {
         return this._showWireframe;
     }
 
+    set showFatWireframe(value) {
+        const oldValue = this._showFatWireframe;
+        if(oldValue !== value) {
+            this._showFatWireframe = value;
+            if(this._meshEdges) {
+                this._meshEdges.visible = value;
+            }
+            if(this._meshEdgesHidden) {
+                this._meshEdgesHidden.visible = value;
+            }
+            this.requestUpdate('showFatWireframe', oldValue);
+        }
+    }
+
+    get showFatWireframe() {
+        return this._showFatWireframe;
+    }
+
     set showUnitGrid(value) {
         const oldValue = this._showUnitGrid;
         if(oldValue !== value) {
@@ -659,6 +682,9 @@ export class MeshView extends LitElement {
 
         // We use _meshEdgesHidden for collision detection
         this._scene.add(this._meshEdgesHidden);
+
+        this._meshEdges.visible = this.showFatWireframe;
+        this._meshEdgesHidden.visible = this.showFatWireframe;
     }    
 
     _initializeMeshWireframe() {

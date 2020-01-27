@@ -172,7 +172,7 @@ export class AutoquadsSideBar extends SideBar {
                     value="${this._singularityInterval}"
                     min="0"
                     max="10000"
-                    step="1.005"
+                    step="1.1"
                     label="Singularity Interval"
                     @value-changed="${this._singularityIntervalInputChanged}"
                     is-exponential>
@@ -425,7 +425,15 @@ export class AutoquadsSideBar extends SideBar {
             soupWireframeVisibility: {
                 type: String,
                 attribute: 'soup-wireframe-visibility'
-            },            
+            },
+            modelFatWireframeVisibility: {
+                type: String,
+                attribute: 'model-fat-wireframe-visibility'
+            },
+            soupFatWireframeVisibility: {
+                type: String,
+                attribute: 'soup-fat-wireframe-visibility'
+            },         
             modelViewVisibility: {
                 type: String,
                 attribute: 'model-view-visibility'
@@ -648,7 +656,27 @@ export class AutoquadsSideBar extends SideBar {
 
     get soupWireframeVisibility() {
         return this._soupWireframeVisibility;        
-    }    
+    }
+
+    set modelFatWireframeVisibility(value) {
+        const oldValue = this._modelFatWireframeVisibility;
+        this._modelFatWireframeVisibility = value;
+        this.requestUpdate('modelFatWireframeVisibility', oldValue);
+    }
+
+    get modelFatWireframeVisibility() {
+        return this._modelFatWireframeVisibility;        
+    }
+
+    set soupFatWireframeVisibility(value) {
+        const oldValue = this._soupFatWireframeVisibility;
+        this._soupFatWireframeVisibility = value;
+        this.requestUpdate('soupFatWireframeVisibility', oldValue);
+    }
+
+    get soupFatWireframeVisibility() {
+        return this._soupFatWireframeVisibility;        
+    }  
 
     set modelViewVisibility(value) {
         const oldValue = this._modelViewVisibility;
@@ -1100,7 +1128,23 @@ export class AutoquadsSideBar extends SideBar {
         } else {
             store.dispatch(ActionsExports.hideSoupWireframe());
         }
-    }    
+    }
+
+    _modelFatWireframeVisibilityInputChanged(e) {
+        if(e.srcElement.checked) {
+            store.dispatch(ActionsExports.showModelFatWireframe());
+        } else {
+            store.dispatch(ActionsExports.hideModelFatWireframe());
+        }
+    }
+
+    _soupFatWireframeVisibilityInputChanged(e) {
+        if(e.srcElement.checked) {
+            store.dispatch(ActionsExports.showSoupFatWireframe());
+        } else {
+            store.dispatch(ActionsExports.hideSoupFatWireframe());
+        }
+    }   
 
     _modelViewVisibilityInputChanged(e) {
         if(e.srcElement.checked) {

@@ -5,7 +5,9 @@ import {
     CHANGE_MODEL_COLOR,
     CHANGE_SOUP_COLOR,
     CHANGE_MODEL_WIREFRAME_VISIBILITY,
-    CHANGE_SOUP_WIREFRAME_VISIBILITY, 
+    CHANGE_SOUP_WIREFRAME_VISIBILITY,
+    CHANGE_MODEL_FAT_WIREFRAME_VISIBILITY,
+    CHANGE_SOUP_FAT_WIREFRAME_VISIBILITY,
     CHANGE_MODEL_VIEW_VISIBILITY,
     CHANGE_SOUP_VIEW_VISIBILITY,
     CHANGE_AUTOCUTS_WEIGHT,    
@@ -51,7 +53,9 @@ const INITIAL_STATE = {
     modelColor: 'rgb(255, 255, 255)',
     soupColor: 'rgb(255, 255, 255)',
     modelWireframeVisibility: EnumsExports.Visibility.HIDDEN,
-    soupWireframeVisibility: EnumsExports.Visibility.VISIBLE, 
+    soupWireframeVisibility: EnumsExports.Visibility.VISIBLE,
+    modelFatWireframeVisibility: EnumsExports.Visibility.VISIBLE,
+    soupFatWireframeVisibility: EnumsExports.Visibility.HIDDEN,
     modelViewVisibility: EnumsExports.Visibility.VISIBLE,
     soupViewVisibility: EnumsExports.Visibility.VISIBLE,
     autocutsWeight: 1,
@@ -121,7 +125,7 @@ const INITIAL_STATE = {
             propertyName: 'Value Per Edge',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            weight: 100
+            weight: 10000
         },
         {
             objectiveFunctionId: 'Seamless',
@@ -131,7 +135,7 @@ const INITIAL_STATE = {
             propertyName: 'Angle Value Per Edge',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            weight: 100
+            weight: 10000
         },
         {
             objectiveFunctionId: 'Seamless',
@@ -141,7 +145,7 @@ const INITIAL_STATE = {
             propertyName: 'Length Value Per Edge',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
-            weight: 1000
+            weight: 100000
         },
         {
             objectiveFunctionId: 'Singular Points',
@@ -222,6 +226,16 @@ export const reducer = (state = INITIAL_STATE, action) => {
             return {
                 ...state,
                 soupWireframeVisibility: action.visibility
+            };
+        case CHANGE_MODEL_FAT_WIREFRAME_VISIBILITY:
+            return {
+                ...state,
+                modelFatWireframeVisibility: action.visibility
+            };
+        case CHANGE_SOUP_FAT_WIREFRAME_VISIBILITY:
+            return {
+                ...state,
+                soupFatWireframeVisibility: action.visibility
             };
         case CHANGE_MODEL_VIEW_VISIBILITY:
             return {

@@ -69,6 +69,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         grid-texture-size="${this.gridTextureSize}"
                         grid-line-width="${this.gridLineWidth}"
                         ?show-wireframe="${HelpersExports.isVisible(this.modelWireframeVisibility)}"
+                        ?show-fat-wireframe="${HelpersExports.isVisible(this.modelFatWireframeVisibility)}"
                         background-color="${this.modelViewportColor}"
                         mesh-color="${this.modelColor}"
                         .meshProvider="${this._modelMeshProvider}"
@@ -93,6 +94,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         grid-texture-size="${this.gridTextureSize}"
                         grid-line-width="${this.gridLineWidth}"
                         ?show-wireframe="${HelpersExports.isVisible(this.soupWireframeVisibility)}"
+                        ?show-fat-wireframe="${HelpersExports.isVisible(this.soupFatWireframeVisibility)}"
                         background-color="${this.soupViewportColor}"
                         mesh-color="${this.soupColor}"
                         .meshProvider="${this._soupMeshProvider}"
@@ -143,6 +145,14 @@ export class AutoquadsView extends connect(store)(LitElement) {
             soupWireframeVisibility: {
                 type: String,
                 attribute: 'soup-wireframe-visibility'
+            },
+            modelFatWireframeVisibility: {
+                type: String,
+                attribute: 'model-fat-wireframe-visibility'
+            },
+            soupFatWireframeVisibility: {
+                type: String,
+                attribute: 'soup-fat-wireframe-visibility'
             },            
             modelViewVisibility: {
                 type: String,
