@@ -87,10 +87,10 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::ValuePerEdge) });
 	properties_map_.insert({ "edge_angle_weight", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::EdgeAngleWeight) });
 	properties_map_.insert({ "edge_length_weight", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::EdgeLengthWeight) });
-	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
-	properties_map_.insert({ "singularity_weight_per_vertex", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::SingularityWeightPerVertex) });
-	properties_map_.insert({ "negative_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::NegativeAngularDefectSingularitiesIndices) });
-	properties_map_.insert({ "positive_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsObjective<Eigen::StorageOptions::RowMajor>::Properties::PositiveAngularDefectSingularitiesIndices) });
+	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
+	properties_map_.insert({ "singularity_weight_per_vertex", static_cast<uint32_t>(SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>::Properties::SingularityWeightPerVertex) });
+	properties_map_.insert({ "negative_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>::Properties::NegativeAngularDefectSingularitiesIndices) });
+	properties_map_.insert({ "positive_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>::Properties::PositiveAngularDefectSingularitiesIndices) });
 
 	property_modifiers_map_.insert({ "none", static_cast<uint32_t>(ObjectiveFunctionBase::PropertyModifiers::None) });
 	property_modifiers_map_.insert({ "domain", static_cast<uint32_t>(ObjectiveFunctionBase::PropertyModifiers::Domain) });
@@ -103,7 +103,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_);
 	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_);
 	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_);
-	singular_points_ = std::make_shared<SingularPointsObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_, 1);
+	singular_points_ = std::make_shared<SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_, 1);
   	position_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, std::string("Position"));
 	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> objective_functions;
 	//objective_functions.push_back(position_);

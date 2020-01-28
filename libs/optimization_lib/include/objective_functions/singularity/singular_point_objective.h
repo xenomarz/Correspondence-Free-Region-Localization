@@ -19,7 +19,7 @@
 #include "../../data_providers/face_fan_data_provider.h"
 
 template <Eigen::StorageOptions StorageOrder_>
-class SingularPointObjective : public SummationObjective<PeriodicObjective<StorageOrder_>, Eigen::SparseVector<double>>
+class SingularPointPositionObjective : public SummationObjective<PeriodicObjective<StorageOrder_>, Eigen::SparseVector<double>>
 {
 public:
 	/**
@@ -33,20 +33,20 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SingularPointObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider, const std::string& name, const double interval, const bool enforce_children_psd = true) :
+	SingularPointPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider, const std::string& name, const double interval, const bool enforce_children_psd = true) :
 		SummationObjective(mesh_data_provider, face_fan_data_provider, name, enforce_children_psd),
 		interval_(interval)
 	{
 		this->Initialize();
 	}
 
-	SingularPointObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider, const double interval, const bool enforce_children_psd = true) :
-		SingularPointObjective(mesh_data_provider, face_fan_data_provider, "Singular Point", interval, enforce_children_psd)
+	SingularPointPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider, const double interval, const bool enforce_children_psd = true) :
+		SingularPointPositionObjective(mesh_data_provider, face_fan_data_provider, "Singular Point Position", interval, enforce_children_psd)
 	{
 
 	}
 
-	virtual ~SingularPointObjective()
+	virtual ~SingularPointPositionObjective()
 	{
 
 	}

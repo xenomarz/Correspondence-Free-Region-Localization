@@ -14,7 +14,7 @@
 #include "./singular_point_objective.h"
 
 template <Eigen::StorageOptions StorageOrder_>
-class SingularPointsObjective : public SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>
+class SingularPointsPositionObjective : public SummationObjective<SingularPointPositionObjective<StorageOrder_>, Eigen::VectorXd>
 {
 public:
 	/**
@@ -22,7 +22,7 @@ public:
 	 */
 	enum class Properties : int32_t
 	{
-		Interval = SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::Properties::Count_,
+		Interval = SummationObjective<SingularPointPositionObjective<StorageOrder_>, Eigen::VectorXd>::Properties::Count_,
 		SingularityWeightPerVertex,
 		PositiveAngularDefectSingularitiesIndices,
 		NegativeAngularDefectSingularitiesIndices
@@ -32,20 +32,20 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	SingularPointsObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EmptyDataProvider>& empty_data_provider, const std::string& name, double interval, const bool enforce_children_psd = true) :
+	SingularPointsPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EmptyDataProvider>& empty_data_provider, const std::string& name, double interval, const bool enforce_children_psd = true) :
 		SummationObjective(mesh_data_provider, empty_data_provider, name, enforce_children_psd),
 		interval_(interval)
 	{
 		this->Initialize();
 	}
 
-	SingularPointsObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EmptyDataProvider>& empty_data_provider, double interval, const bool enforce_children_psd = true) :
-		SingularPointsObjective(mesh_data_provider, empty_data_provider, "Singular Points", interval, enforce_children_psd)
+	SingularPointsPositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<EmptyDataProvider>& empty_data_provider, double interval, const bool enforce_children_psd = true) :
+		SingularPointsPositionObjective(mesh_data_provider, empty_data_provider, "Singular Points Position", interval, enforce_children_psd)
 	{
 
 	}
 
-	virtual ~SingularPointsObjective()
+	virtual ~SingularPointsPositionObjective()
 	{
 
 	}
@@ -64,7 +64,7 @@ public:
 
 	bool SetProperty(const int32_t property_id, const std::any property_context, const std::any property_value) override
 	{
-		if (SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::SetProperty(property_id, property_context, property_value))
+		if (SummationObjective<SingularPointPositionObjective<StorageOrder_>, Eigen::VectorXd>::SetProperty(property_id, property_context, property_value))
 		{
 			return true;
 		}
@@ -105,7 +105,7 @@ public:
 
 	bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, const std::any property_context, std::any& property_value) override
 	{
-		if (SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::GetProperty(property_id, property_modifier_id, property_context, property_value))
+		if (SummationObjective<SingularPointPositionObjective<StorageOrder_>, Eigen::VectorXd>::GetProperty(property_id, property_modifier_id, property_context, property_value))
 		{
 			return true;
 		}
@@ -135,7 +135,7 @@ public:
 	 */
 	void PreInitialize() override
 	{
-		SummationObjective<SingularPointObjective<StorageOrder_>, Eigen::VectorXd>::PreInitialize();
+		SummationObjective<SingularPointPositionObjective<StorageOrder_>, Eigen::VectorXd>::PreInitialize();
 		singularity_weight_per_vertex_.resize(this->mesh_data_provider_->GetImageVerticesCount());
 	}
 
@@ -144,7 +144,7 @@ public:
 	 */
 	void AddSingularPointObjective(const std::shared_ptr<FaceFanDataProvider>& face_fan_data_provider)
 	{
-		this->AddObjectiveFunction(std::make_shared<SingularPointObjective<StorageOrder_>>(this->GetMeshDataProvider(), face_fan_data_provider, interval_, this->GetEnforceChildrenPsd()));
+		this->AddObjectiveFunction(std::make_shared<SingularPointPositionObjective<StorageOrder_>>(this->GetMeshDataProvider(), face_fan_data_provider, interval_, this->GetEnforceChildrenPsd()));
 	}
 
 protected:

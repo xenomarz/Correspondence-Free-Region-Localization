@@ -148,30 +148,30 @@ const INITIAL_STATE = {
             weight: 100000
         },
         {
-            objectiveFunctionId: 'Singular Points',
+            objectiveFunctionId: 'Singular Points Position',
             propertyId: 'singularity_weight_per_vertex',
             propertyEffectType: EnumsExports.PropertyEffectType.VERTEX_COLOR,
-            objectiveFunctionName: 'Singular Points',
+            objectiveFunctionName: 'Singular Points Position',
             propertyName: 'Singularity Weight Per Vertex',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,
             weight: 100
         },
         {
-            objectiveFunctionId: 'Singular Points',
+            objectiveFunctionId: 'Singular Points Position',
             propertyId: 'positive_angular_defect_singularities_indices',
             propertyEffectType: EnumsExports.PropertyEffectType.SCENE_OBJECTS,
-            objectiveFunctionName: 'Singular Points',
+            objectiveFunctionName: 'Singular Points Position',
             propertyName: 'Positive Angular Defect',
             color: 'rgb(0,0,255)',
             visibility: EnumsExports.Visibility.HIDDEN,
             weight: 100
         },
         {
-            objectiveFunctionId: 'Singular Points',
+            objectiveFunctionId: 'Singular Points Position',
             propertyId: 'negative_angular_defect_singularities_indices',
             propertyEffectType: EnumsExports.PropertyEffectType.SCENE_OBJECTS,
-            objectiveFunctionName: 'Singular Points',
+            objectiveFunctionName: 'Singular Points Position',
             propertyName: 'Negative Angular Defect',
             color: 'rgb(255,0,0)',
             visibility: EnumsExports.Visibility.HIDDEN,

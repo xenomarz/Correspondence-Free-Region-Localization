@@ -230,7 +230,7 @@ protected:
 
 	void CreateObjectiveFunction() override
 	{
-		objective_function_ = std::make_shared<SingularPointObjective<Eigen::StorageOptions::RowMajor>>(
+		objective_function_ = std::make_shared<SingularPointPositionObjective<Eigen::StorageOptions::RowMajor>>(
 			mesh_wrapper_,
 			std::dynamic_pointer_cast<FaceFanDataProvider>(data_providers_[0]), 
 			1, 
@@ -263,7 +263,7 @@ protected:
 
 	void CreateObjectiveFunction() override
 	{
-		std::shared_ptr<SingularPointsObjective<Eigen::StorageOptions::RowMajor>> singular_points_objective = std::make_shared<SingularPointsObjective<Eigen::StorageOptions::RowMajor>>(
+		std::shared_ptr<SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>> singular_points_objective = std::make_shared<SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>>(
 			mesh_wrapper_,
 			std::static_pointer_cast<EmptyDataProvider>(data_providers_[0]), 
 			1, 
