@@ -25,7 +25,7 @@
 #include <libs/optimization_lib/include/objective_functions/separation_objective.h>
 #include <libs/optimization_lib/include/objective_functions/symmetric_dirichlet_objective.h>
 #include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
-#include <libs/optimization_lib/include/objective_functions/singularity/singular_points_objective.h>
+#include <libs/optimization_lib/include/objective_functions/singularity/singular_points_position_objective.h>
 #include <libs/optimization_lib/include/iterative_methods/newton_method.h>
 #include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
 #include <libs/optimization_lib/include/solvers/pardiso_solver.h>

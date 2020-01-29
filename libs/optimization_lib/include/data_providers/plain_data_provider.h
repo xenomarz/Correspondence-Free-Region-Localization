@@ -11,6 +11,7 @@
 // Optimization lib includes
 #include "./data_provider.h"
 
+// TODO: Remove this data provider, which is currently being used in position objectives (barycenter and vertex-position)
 class PlainDataProvider : public DataProvider
 {
 public:

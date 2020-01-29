@@ -14,7 +14,7 @@
 #include "libs/optimization_lib/include/objective_functions/position/vertex_position_objective.h"
 #include "libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h"
 #include "libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_length_objective.h"
-#include "libs/optimization_lib/include/objective_functions/singularity/singular_points_objective.h"
+#include "libs/optimization_lib/include/objective_functions/singularity/singular_points_position_objective.h"
 
 Napi::FunctionReference Engine::constructor;
 

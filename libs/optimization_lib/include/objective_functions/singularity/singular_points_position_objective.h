@@ -11,7 +11,7 @@
 // Optimization lib includes
 #include "../../data_providers/empty_data_provider.h"
 #include "../summation_objective.h"
-#include "./singular_point_objective.h"
+#include "./singular_point_position_objective.h"
 
 template <Eigen::StorageOptions StorageOrder_>
 class SingularPointsPositionObjective : public SummationObjective<SingularPointPositionObjective<StorageOrder_>, Eigen::VectorXd>

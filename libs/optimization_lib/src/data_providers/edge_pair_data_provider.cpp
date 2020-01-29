@@ -27,6 +27,15 @@ EdgePairDataProvider::~EdgePairDataProvider()
 
 void EdgePairDataProvider::Update(const Eigen::VectorXd& x)
 {
+	variables_.coeffRef(edge1_v2_x_index_) = x(edge1_v2_x_index_);
+	variables_.coeffRef(edge1_v1_x_index_) = x(edge1_v1_x_index_);
+	variables_.coeffRef(edge1_v2_y_index_) = x(edge1_v2_y_index_);
+	variables_.coeffRef(edge1_v1_y_index_) = x(edge1_v1_y_index_);
+	variables_.coeffRef(edge2_v2_x_index_) = x(edge2_v2_x_index_);
+	variables_.coeffRef(edge2_v1_x_index_) = x(edge2_v1_x_index_);
+	variables_.coeffRef(edge2_v2_y_index_) = x(edge2_v2_y_index_);
+	variables_.coeffRef(edge2_v1_y_index_) = x(edge2_v1_y_index_);
+	
 	edge1_.coeffRef(0) = x(edge1_v2_x_index_) - x(edge1_v1_x_index_);
 	edge1_.coeffRef(1) = x(edge1_v2_y_index_) - x(edge1_v1_y_index_);
 	

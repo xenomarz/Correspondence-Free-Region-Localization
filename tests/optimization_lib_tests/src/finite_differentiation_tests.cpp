@@ -20,8 +20,8 @@
 #include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_length_objective.h>
 #include <libs/optimization_lib/include/objective_functions/coordinate_objective.h>
 #include <libs/optimization_lib/include/objective_functions/periodic_objective.h>
-#include <libs/optimization_lib/include/objective_functions/singularity/singular_point_objective.h>
-#include <libs/optimization_lib/include/objective_functions/singularity/singular_points_objective.h>
+#include <libs/optimization_lib/include/objective_functions/singularity/singular_point_position_objective.h>
+#include <libs/optimization_lib/include/objective_functions/singularity/singular_points_position_objective.h>
 #include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
 #include <libs/optimization_lib/include/objective_functions/separation_objective.h>
 

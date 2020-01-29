@@ -20,26 +20,31 @@ void FaceFanDataProvider::Update(const Eigen::VectorXd& x)
 	for (std::size_t face_fan_index = 0; face_fan_index < face_fan_count; face_fan_index++)
 	{
 		RDS::FaceFanSlice face_fan_slice = face_fan_[face_fan_index];
-		
-		RDS::VertexIndex v0_index = face_fan_slice.first;
-		RDS::VertexIndex v1_index = face_fan_slice.second.first;
-		RDS::VertexIndex v2_index = face_fan_slice.second.second;
 
-		Eigen::Vector2d v0;
-		Eigen::Vector2d v1;
-		Eigen::Vector2d v2;
+		RDS::VertexIndex v_index[3];
+		v_index[0] = face_fan_slice.first;
+		v_index[1] = face_fan_slice.second.first;
+		v_index[2] = face_fan_slice.second.second;
 
-		v0.coeffRef(0) = x.coeffRef(mesh_data_provider_->GetXVariableIndex(v0_index));
-		v0.coeffRef(1) = x.coeffRef(mesh_data_provider_->GetYVariableIndex(v0_index));
+		Eigen::Vector2d v[3];
 
-		v1.coeffRef(0) = x.coeffRef(mesh_data_provider_->GetXVariableIndex(v1_index));
-		v1.coeffRef(1) = x.coeffRef(mesh_data_provider_->GetYVariableIndex(v1_index));
+		for(int i = 0; i < 3; i++)
+		{
+			const RDS::SparseVariableIndex v_x_index = mesh_data_provider_->GetXVariableIndex(v_index[i]);
+			const RDS::SparseVariableIndex v_y_index = mesh_data_provider_->GetYVariableIndex(v_index[i]);
 
-		v2.coeffRef(0) = x.coeffRef(mesh_data_provider_->GetXVariableIndex(v2_index));
-		v2.coeffRef(1) = x.coeffRef(mesh_data_provider_->GetYVariableIndex(v2_index));
+			const double v_x = x.coeffRef(v_x_index);
+			const double v_y = x.coeffRef(v_y_index);
 
-		Eigen::Vector2d e1 = v1 - v0;
-		Eigen::Vector2d e2 = v2 - v0;
+			variables_.coeffRef(v_x_index) = v_x;
+			variables_.coeffRef(v_y_index) = v_y;
+
+			v[i].coeffRef(0) = v_x;
+			v[i].coeffRef(1) = v_y;
+		}
+
+		Eigen::Vector2d e1 = v[1] - v[0];
+		Eigen::Vector2d e2 = v[2] - v[0];
 
 		e1.normalize();
 		e2.normalize();

@@ -24,6 +24,7 @@ file(GLOB SOURCES
 	src/objective_functions/periodic_objective.cpp
 	src/objective_functions/parabolic_objective.cpp
 	src/objective_functions/coordinate_objective.cpp
+	src/objective_functions/coordinate_diff_objective.cpp
 	src/objective_functions/seamless_objective.cpp
 	src/objective_functions/position/position_objective.cpp
 	src/objective_functions/position/vertex_position_objective.cpp
@@ -31,8 +32,9 @@ file(GLOB SOURCES
 	src/objective_functions/edge_pair/edge_pair_objective.cpp
 	src/objective_functions/edge_pair/edge_pair_angle_objective.cpp
 	src/objective_functions/edge_pair/edge_pair_length_objective.cpp
-	src/objective_functions/singularity/singular_point_objective.cpp
-	src/objective_functions/singularity/singular_points_objective.cpp
+	src/objective_functions/edge_pair/edge_pair_translation_objective.cpp
+	src/objective_functions/singularity/singular_point_position_objective.cpp
+	src/objective_functions/singularity/singular_points_position_objective.cpp
 	src/iterative_methods/iterative_method.cpp
 	src/iterative_methods/newton_method.cpp
 	src/iterative_methods/gradient_descent.cpp
@@ -62,6 +64,7 @@ file(GLOB SOURCES
 	include/objective_functions/periodic_objective.h
 	include/objective_functions/parabolic_objective.h
 	include/objective_functions/coordinate_objective.h
+	include/objective_functions/coordinate_diff_objective.h
 	include/objective_functions/seamless_objective.h
 	include/objective_functions/position/position_objective.h
 	include/objective_functions/position/vertex_position_objective.h
@@ -69,8 +72,9 @@ file(GLOB SOURCES
 	include/objective_functions/edge_pair/edge_pair_objective.h
 	include/objective_functions/edge_pair/edge_pair_angle_objective.h
 	include/objective_functions/edge_pair/edge_pair_length_objective.h
-	include/objective_functions/singularity/singular_point_objective.h
-	include/objective_functions/singularity/singular_points_objective.h
+	include/objective_functions/edge_pair/edge_pair_translation_objective.h
+	include/objective_functions/singularity/singular_point_position_objective.h
+	include/objective_functions/singularity/singular_points_position_objective.h
 	include/iterative_methods/iterative_method.h
 	include/iterative_methods/newton_method.h
 	include/iterative_methods/gradient_descent.h
