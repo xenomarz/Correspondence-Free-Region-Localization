@@ -154,7 +154,7 @@ int solver::aug_run()
 }
 
 void solver::run_one_aug_iteration(const int steps, const bool showGraph) {
-	currentEnergy = aug_step();
+	aug_step();
 #if defined SAVE_DATA_IN_CSV || defined SAVE_DATA_IN_MATLAB
 	prepareData();
 #endif
@@ -172,7 +172,7 @@ void solver::run_one_aug_iteration(const int steps, const bool showGraph) {
 }
 
 void solver::run_one_iteration(const int steps,const bool showGraph) {
-	currentEnergy = step();
+	step();
 #if defined SAVE_DATA_IN_CSV || defined SAVE_DATA_IN_MATLAB
 	prepareData();
 #endif
@@ -609,6 +609,8 @@ void solver::aug_gradNorm_linesearch()
 		}
 	}
 }
+
+
 
 void solver::stop()
 {

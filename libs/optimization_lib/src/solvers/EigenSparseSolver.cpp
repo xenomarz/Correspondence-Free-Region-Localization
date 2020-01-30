@@ -41,6 +41,7 @@ bool EigenSparseSolver<vectorTypeI, vectorTypeS>::factorize(const vectorTypeI &I
 	// Send matrix to matlab
 	igl::matlab::mlsetmatrix(&engine, "A", full_A);
 	igl::matlab::mleval(&engine, "A = full(A);");
+	return true;
 }
 
 template <typename vectorTypeI, typename vectorTypeS>

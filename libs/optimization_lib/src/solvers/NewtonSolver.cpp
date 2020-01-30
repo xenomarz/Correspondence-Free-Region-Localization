@@ -1,12 +1,12 @@
 #include "solvers/NewtonSolver.h"
 
-double NewtonSolver::step()
+void NewtonSolver::step()
 {
 	objective->updateX(X);
 	if(IsConstrObjFunc)
-		f = objective->AugmentedValue(true);
+		currentEnergy = objective->AugmentedValue(true);
 	else
-		f = objective->value(true);
+		currentEnergy = objective->value(true);
 	objective->gradient(g,true);
 	objective->hessian();
 
@@ -28,10 +28,9 @@ double NewtonSolver::step()
 	Eigen::VectorXd rhs = -g;
 	p = eigen_solver->solve(rhs);
 #endif
-	return f;
 }
 
-double NewtonSolver::aug_step()
+void NewtonSolver::aug_step()
 {
 	std::shared_ptr<TotalObjective> total = std::dynamic_pointer_cast<TotalObjective>(objective);
 	assert(total != NULL);
@@ -39,7 +38,7 @@ double NewtonSolver::aug_step()
 	assert(aug_function != NULL);
 
 	objective->updateX(X);
-	f = aug_function->AugmentedValue(true);
+	currentEnergy = aug_function->AugmentedValue(true);
 	
 	aug_function->AuglagrangGradWRTX(g, true);
 	aug_function->aughessian();
@@ -47,7 +46,6 @@ double NewtonSolver::aug_step()
 	eigen_solver->factorize(aug_function->II_aug, aug_function->JJ_aug, aug_function->SS_aug);
 	Eigen::VectorXd rhs = -g;
 	p = eigen_solver->solve(rhs);
-	return f;
 }
 
 Eigen::SparseMatrix<double> NewtonSolver::get_Hessian()

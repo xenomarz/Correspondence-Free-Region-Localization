@@ -1,19 +1,18 @@
 #include "solvers/GradientDescentSolver.h"
 
-double GradientDescentSolver::step()
+void GradientDescentSolver::step()
 {
 	objective->updateX(X);
 	if (IsConstrObjFunc)
-		f = objective->AugmentedValue(true);
+		currentEnergy = objective->AugmentedValue(true);
 	else
-		f = objective->value(true);
+		currentEnergy = objective->value(true);
 
 	objective->gradient(g,true);
 	p = -g;
-	return f;
 }
 
-double GradientDescentSolver::aug_step()
+void GradientDescentSolver::aug_step()
 {
 	std::shared_ptr<TotalObjective> total = std::dynamic_pointer_cast<TotalObjective>(objective);
 	assert(total != NULL);
@@ -21,11 +20,10 @@ double GradientDescentSolver::aug_step()
 	assert(aug_function != NULL);
 
 	objective->updateX(X);
-	f = objective->AugmentedValue(true);
+	currentEnergy = objective->AugmentedValue(true);
 	
 	aug_function->AuglagrangGradWRTX(g, true);
 	p = -g;
-	return f;
 }
 
 bool GradientDescentSolver::test_progress()

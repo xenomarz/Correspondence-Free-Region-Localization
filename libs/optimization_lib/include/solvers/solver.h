@@ -58,7 +58,6 @@ protected:
 	Eigen::VectorXd p;
 	
 	// Current energy, gradient and hessian
-	double f;
 	Eigen::VectorXd g;
 
 	// Synchronization structures
@@ -68,20 +67,16 @@ protected:
 	std::atomic_bool halt = {false};
 	
 	std::unique_ptr<std::shared_timed_mutex> data_mutex;
-
-	// pardiso variables
-	//vector<int> II, JJ;
-	//vector<double> SS;
-
+	double currentEnergy;
 private:
 	// Matlab instance
 	Engine *engine;
 
 	int solverID;
 	// energy output from the last step
-	double currentEnergy;
-	virtual double step() = 0;
-	virtual double aug_step() = 0;
+	
+	virtual void step() = 0;
+	virtual void aug_step() = 0;
 	void value_linesearch();
 	void gradNorm_linesearch();
 	void aug_gradNorm_linesearch();
