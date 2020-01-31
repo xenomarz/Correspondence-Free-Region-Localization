@@ -15,18 +15,9 @@ class CoordinateDataProvider : public DataProvider
 {
 public:
 	/**
-	 * Public type definitions
-	 */
-	enum class CoordinateType : int32_t
-	{
-		X,
-		Y
-	};
-	
-	/**
 	 * Constructors and destructor
 	 */
-	CoordinateDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const RDS::VertexIndex vertex_index, const CoordinateType coordinate_type);
+	CoordinateDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const RDS::VertexIndex vertex_index, const RDS::CoordinateType coordinate_type);
 	virtual ~CoordinateDataProvider();
 
 	/**
@@ -43,7 +34,7 @@ private:
 	 */
 	RDS::VertexIndex vertex_index_;
 	RDS::SparseVariableIndex sparse_variable_index_;
-	CoordinateType coordinate_type_;
+	RDS::CoordinateType coordinate_type_;
 	double coordinate_value_;
 };
 

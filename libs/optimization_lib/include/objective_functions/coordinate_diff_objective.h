@@ -1,27 +1,27 @@
 #pragma once
-#ifndef OPTIMIZATION_LIB_COORDINATE_OBJECTIVE_H
-#define OPTIMIZATION_LIB_COORDINATE_OBJECTIVE_H
+#ifndef OPTIMIZATION_LIB_COORDINATE_DIFF_OBJECTIVE_H
+#define OPTIMIZATION_LIB_COORDINATE_DIFF_OBJECTIVE_H
 
 // Optimization lib includes
 #include "../core/core.h"
-#include "../data_providers/coordinate_data_provider.h"
+#include "../data_providers/coordinate_diff_data_provider.h"
 #include "./sparse_objective_function.h"
 
 template<Eigen::StorageOptions StorageOrder_>
-class CoordinateObjective : public SparseObjectiveFunction<StorageOrder_>
+class CoordinateDiffObjective : public SparseObjectiveFunction<StorageOrder_>
 {
 public:
 	/**
 	 * Constructors and destructor
 	 */
-	CoordinateObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<CoordinateDataProvider>& coordinate_data_provider) :
-		SparseObjectiveFunction(mesh_data_provider, coordinate_data_provider, "Coordinate Objective", 1, 1, false),
-		coordinate_data_provider_(coordinate_data_provider)
+	CoordinateDiffObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<CoordinateDiffDataProvider>& coordinate_diff_data_provider) :
+		SparseObjectiveFunction(mesh_data_provider, coordinate_diff_data_provider, "Coordinate Diff Objective", 2, 2, false),
+		coordinate_diff_data_provider_(coordinate_diff_data_provider)
 	{
 		this->Initialize();
 	}
 
-	virtual ~CoordinateObjective()
+	virtual ~CoordinateDiffObjective()
 	{
 
 	}
@@ -29,18 +29,18 @@ public:
 protected:
 	void CalculateValue(double& f) override
 	{
-		f = coordinate_data_provider_->GetCoordinateValue();
+		f = coordinate_diff_data_provider_->GetCoordinateDiffValue();
 	}
 
 	void CalculateGradient(Eigen::SparseVector<double>& g) override
 	{
-		g.coeffRef(coordinate_data_provider_->GetSparseVariableIndex()) = 1;
+		g.coeffRef(coordinate_diff_data_provider_->GetSparseVariable1Index()) = 1;
+		g.coeffRef(coordinate_diff_data_provider_->GetSparseVariable2Index()) = -1;
 	}
 
 	void CalculateRawTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
-		const auto sparse_variable_index = coordinate_data_provider_->GetSparseVariableIndex();
-		triplets[0] = Eigen::Triplet<double>(sparse_variable_index, sparse_variable_index, 0);
+		// Empty implementation
 	}
 
 private:
@@ -49,13 +49,14 @@ private:
 	 */
 	void InitializeSparseVariableIndices(std::vector<RDS::SparseVariableIndex>& sparse_variable_indices) override
 	{
-		sparse_variable_indices.push_back(coordinate_data_provider_->GetSparseVariableIndex());
+		sparse_variable_indices.push_back(coordinate_diff_data_provider_->GetSparseVariable1Index());
+		sparse_variable_indices.push_back(coordinate_diff_data_provider_->GetSparseVariable2Index());
 	}
 
 	/**
 	 * Private fields
 	 */
-	std::shared_ptr<CoordinateDataProvider> coordinate_data_provider_;
+	std::shared_ptr<CoordinateDiffDataProvider> coordinate_diff_data_provider_;
 };
 
 #endif

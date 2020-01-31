@@ -18,7 +18,9 @@
 #include <libs/optimization_lib/include/objective_functions/composite_objective.h>
 #include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h>
 #include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_length_objective.h>
+#include <libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_translation_objective.h>
 #include <libs/optimization_lib/include/objective_functions/coordinate_objective.h>
+#include <libs/optimization_lib/include/objective_functions/coordinate_diff_objective.h>
 #include <libs/optimization_lib/include/objective_functions/periodic_objective.h>
 #include <libs/optimization_lib/include/objective_functions/singularity/singular_point_position_objective.h>
 #include <libs/optimization_lib/include/objective_functions/singularity/singular_points_position_objective.h>
@@ -110,6 +112,74 @@ protected:
 	std::string filename_;
 };
 
+class PeriodicCoordinateObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
+{
+protected:
+	PeriodicCoordinateObjectiveFDTest() :
+		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+	{
+
+	}
+
+	~PeriodicCoordinateObjectiveFDTest() override
+	{
+
+	}
+
+	void CreateDataProvider() override
+	{
+		data_providers_.push_back(std::make_shared<CoordinateDataProvider>(mesh_wrapper_, 1, RDS::CoordinateType::Y));
+	}
+
+	void CreateObjectiveFunction() override
+	{
+		auto coordinate_objective = std::make_shared<CoordinateObjective<Eigen::StorageOptions::RowMajor>>(
+			mesh_wrapper_,
+			std::static_pointer_cast<CoordinateDataProvider>(data_providers_[0]));
+
+		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(
+			mesh_wrapper_,
+			std::make_shared<EmptyDataProvider>(mesh_wrapper_),
+			coordinate_objective,
+			1,
+			false);
+	}
+};
+
+class PeriodicCoordinateDiffObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
+{
+protected:
+	PeriodicCoordinateDiffObjectiveFDTest() :
+		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+	{
+
+	}
+
+	~PeriodicCoordinateDiffObjectiveFDTest() override
+	{
+
+	}
+
+	void CreateDataProvider() override
+	{
+		data_providers_.push_back(std::make_shared<CoordinateDiffDataProvider>(mesh_wrapper_, 2, 5, RDS::CoordinateType::Y));
+	}
+
+	void CreateObjectiveFunction() override
+	{
+		auto coordinate_diff_objective = std::make_shared<CoordinateDiffObjective<Eigen::StorageOptions::RowMajor>>(
+			mesh_wrapper_,
+			std::static_pointer_cast<CoordinateDiffDataProvider>(data_providers_[0]));
+
+		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(
+			mesh_wrapper_,
+			std::make_shared<EmptyDataProvider>(mesh_wrapper_),
+			coordinate_diff_objective,
+			1,
+			false);
+	}
+};
+
 class PeriodicEdgePairAngleObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
 {
 protected:
@@ -145,40 +215,6 @@ protected:
 	}
 };
 
-class PeriodicCoordinateObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
-{
-protected:
-	PeriodicCoordinateObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
-	{
-
-	}
-
-	~PeriodicCoordinateObjectiveFDTest() override
-	{
-
-	}
-
-	void CreateDataProvider() override
-	{
-		data_providers_.push_back(std::make_shared<CoordinateDataProvider>(mesh_wrapper_, 1, CoordinateDataProvider::CoordinateType::Y));
-	}
-
-	void CreateObjectiveFunction() override
-	{
-		auto coordinate_objective = std::make_shared<CoordinateObjective<Eigen::StorageOptions::RowMajor>>(
-			mesh_wrapper_, 
-			std::static_pointer_cast<CoordinateDataProvider>(data_providers_[0]));
-		
-		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(
-			mesh_wrapper_,
-			std::make_shared<EmptyDataProvider>(mesh_wrapper_),
-			coordinate_objective,
-			1, 
-			false);
-	}
-};
-
 class EdgePairLengthObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
 {
 protected:
@@ -204,6 +240,35 @@ protected:
 		objective_function_ = std::make_shared<EdgePairLengthObjective<Eigen::StorageOptions::RowMajor>>(
 			mesh_wrapper_,
 			std::dynamic_pointer_cast<EdgePairDataProvider>(data_providers_[0]), 
+			false);
+	}
+};
+
+class EdgePairTranslationObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptions::RowMajor, Eigen::SparseVector<double>>
+{
+protected:
+	EdgePairTranslationObjectiveFDTest() :
+		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+	{
+
+	}
+
+	~EdgePairTranslationObjectiveFDTest() override
+	{
+
+	}
+
+	void CreateDataProvider() override
+	{
+		auto& edge_pair_descriptors = mesh_wrapper_->GetEdgePairDescriptors();
+		data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptors[0]));
+	}
+
+	void CreateObjectiveFunction() override
+	{
+		objective_function_ = std::make_shared<EdgePairTranslationObjective<Eigen::StorageOptions::RowMajor>>(
+			mesh_wrapper_,
+			std::dynamic_pointer_cast<EdgePairDataProvider>(data_providers_[0]),
 			false);
 	}
 };
@@ -362,12 +427,32 @@ TEST_F(PeriodicCoordinateObjectiveFDTest, Hessian)
 	AssertHessian();
 }
 
+TEST_F(PeriodicCoordinateDiffObjectiveFDTest, Gradient)
+{
+	AssertGradient();
+}
+
+TEST_F(PeriodicCoordinateDiffObjectiveFDTest, Hessian)
+{
+	AssertHessian();
+}
+
 TEST_F(EdgePairLengthObjectiveFDTest, Gradient)
 {
 	AssertGradient();
 }
 
 TEST_F(EdgePairLengthObjectiveFDTest, Hessian)
+{
+	AssertHessian();
+}
+
+TEST_F(EdgePairTranslationObjectiveFDTest, Gradient)
+{
+	AssertGradient();
+}
+
+TEST_F(EdgePairTranslationObjectiveFDTest, Hessian)
 {
 	AssertHessian();
 }

@@ -55,6 +55,26 @@ public:
 		return domain_edge_index_;
 	}
 
+	inline RDS::VertexIndex EdgePairDataProvider::GetEdge1Vertex1Index() const
+	{
+		return edge1_v1_index_;
+	}
+
+	inline RDS::VertexIndex EdgePairDataProvider::GetEdge1Vertex2Index() const
+	{
+		return edge1_v2_index_;
+	}
+
+	inline RDS::VertexIndex EdgePairDataProvider::GetEdge2Vertex1Index() const
+	{
+		return edge2_v1_index_;
+	}
+
+	inline RDS::VertexIndex EdgePairDataProvider::GetEdge2Vertex2Index() const
+	{
+		return edge2_v2_index_;
+	}
+
 	inline int64_t EdgePairDataProvider::GetEdge1Vertex1XIndex() const
 	{
 		return edge1_v1_x_index_;
@@ -163,7 +183,12 @@ private:
 	
 	Eigen::Vector2d edge1_;
 	Eigen::Vector2d edge2_;
-	
+
+	RDS::VertexIndex edge1_v1_index_;
+	RDS::VertexIndex edge1_v2_index_;
+	RDS::VertexIndex edge2_v1_index_;
+	RDS::VertexIndex edge2_v2_index_;
+
 	int64_t edge1_v1_x_index_;
 	int64_t edge1_v1_y_index_;
 	int64_t edge1_v2_x_index_;

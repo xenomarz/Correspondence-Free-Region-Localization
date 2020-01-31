@@ -34,6 +34,15 @@ namespace RDS
 	using FaceFanSlice = std::pair<VertexIndex, std::pair<VertexIndex, VertexIndex>>;
 	using FaceFan = std::vector<FaceFanSlice>;
 	using FaceFans = std::vector<FaceFan>;
+
+	/**
+	 * Enums
+	 */
+	enum class CoordinateType : int32_t
+	{
+		X,
+		Y
+	};
 	
 	/**
 	 * Custom hash and equals function objects for unordered_map
