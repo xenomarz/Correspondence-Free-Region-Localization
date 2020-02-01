@@ -18,10 +18,11 @@
 #include "./summation_objective.h"
 #include "./edge_pair/edge_pair_angle_objective.h"
 #include "./edge_pair/edge_pair_length_objective.h"
+#include "./edge_pair/edge_pair_translation_objective.h"
 #include "../objective_functions/periodic_objective.h"
 
 template <Eigen::StorageOptions StorageOrder_>
-class SeamlessObjective : public SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>
+class SeamlessObjective : public SummationObjective<ObjectiveFunction<StorageOrder_, Eigen::SparseVector<double>>, Eigen::VectorXd>
 {
 public:
 	/**
@@ -101,7 +102,7 @@ public:
 
 	bool SetProperty(const int32_t property_id, const std::any property_context, const std::any property_value) override
 	{
-		if (SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::SetProperty(property_id, property_context, property_value))
+		if (SummationObjective<ObjectiveFunction<StorageOrder_, Eigen::SparseVector<double>>, Eigen::VectorXd>::SetProperty(property_id, property_context, property_value))
 		{
 			return true;
 		}
@@ -223,7 +224,7 @@ public:
 	
 	bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, const std::any property_context, std::any& property_value) override
 	{
-		if (SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::GetProperty(property_id, property_modifier_id, property_context, property_value))
+		if (SummationObjective<ObjectiveFunction<StorageOrder_, Eigen::SparseVector<double>>, Eigen::VectorXd>::GetProperty(property_id, property_modifier_id, property_context, property_value))
 		{
 			return true;
 		}
@@ -260,15 +261,17 @@ public:
 	 */	
 	void AddEdgePairObjectives(const std::shared_ptr<EdgePairDataProvider>& edge_pair_data_provider)
 	{	
-		std::shared_ptr<EdgePairAngleObjective<StorageOrder_>> edge_pair_angle_objective = std::make_shared<EdgePairAngleObjective<StorageOrder_>>(this->GetMeshDataProvider(), edge_pair_data_provider, false);
-		std::shared_ptr<EdgePairLengthObjective<StorageOrder_>> edge_pair_length_objective = std::make_shared<EdgePairLengthObjective<StorageOrder_>>(this->GetMeshDataProvider(), edge_pair_data_provider, false);
-
+		auto edge_pair_angle_objective = std::make_shared<EdgePairAngleObjective<StorageOrder_>>(this->GetMeshDataProvider(), edge_pair_data_provider, false);
+		auto edge_pair_length_objective = std::make_shared<EdgePairLengthObjective<StorageOrder_>>(this->GetMeshDataProvider(), edge_pair_data_provider, false);
+		auto edge_pair_translation_objective = std::make_shared<EdgePairTranslationObjective<StorageOrder_>>(this->GetMeshDataProvider(), edge_pair_data_provider, this->GetEnforceChildrenPsd());
+		
 		double period = M_PI / 2;
 		auto empty_data_provider = std::make_shared<EmptyDataProvider>(this->GetMeshDataProvider());
 		std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_edge_pair_angle_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(this->GetMeshDataProvider(), empty_data_provider, edge_pair_angle_objective, period, this->GetEnforceChildrenPsd());
 
 		this->AddObjectiveFunction(periodic_edge_pair_angle_objective);
 		this->AddObjectiveFunction(edge_pair_length_objective);
+		this->AddObjectiveFunction(edge_pair_translation_objective);
 
 		periodic_edge_pair_angle_objectives.push_back(periodic_edge_pair_angle_objective);
 		edge_pair_length_objectives.push_back(edge_pair_length_objective);
@@ -281,7 +284,7 @@ protected:
 	 */
 	void PostInitialize() override
 	{
-		SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::PostInitialize();
+		SummationObjective<ObjectiveFunction<StorageOrder_, Eigen::SparseVector<double>>, Eigen::VectorXd>::PostInitialize();
 		image_value_per_edge_.resize(this->mesh_data_provider_->GetImageEdgesCount());
 		image_angle_value_per_edge_.resize(this->mesh_data_provider_->GetImageEdgesCount());
 		image_length_value_per_edge_.resize(this->mesh_data_provider_->GetImageEdgesCount());
