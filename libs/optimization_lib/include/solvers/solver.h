@@ -46,7 +46,7 @@ public:
 	Eigen::MatrixXd V;
 	int num_steps;
 	bool IsConstrObjFunc;
-	Utils::LineSearch lineSearch_type;
+	Utils::LineSearch lineSearch_type = Utils::GradientNorm;
 	double constant_step;
 protected:
 	// Give the wrapper a chance to intersect gracefully

@@ -13,11 +13,11 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         igl::core
+		rds::optimization_lib
+		rds::plugins
         igl::opengl
         igl::opengl_glfw
         igl::opengl_glfw_imgui
-        rds::optimization_lib
-        rds::plugins
 		igl::matlab)
 
 set_target_properties(${PROJECT_NAME} 

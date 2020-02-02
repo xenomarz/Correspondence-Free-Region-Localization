@@ -1,76 +1,62 @@
 #include "../../../libs/optimization_lib/include/utils.h"
-#include "../../../libs/optimization_lib/include/solvers/EigenSparseSolver.h"
+#include "../../../libs/optimization_lib/include/solvers/NewtonSolver.h"
+#include "../../../libs/optimization_lib/include/solvers/worhpSolver.h"
+#include "../../../libs/optimization_lib/include/objective_functions/PenaltyPositionalConstraints.h"
+#include "../../../libs/optimization_lib/include/objective_functions/LagrangianAreaStLscm.h"
+#include "../../../libs/optimization_lib/include/objective_functions/TotalObjective.h"
 
-#include <Eigen/SparseLU>
 #include <iostream>
-#include <fstream>
 using namespace std;
-int main(int argc, char * argv[])
+
+#define N 4
+#define M 2
+
+
+int main()
 {
-	EigenSparseSolver<std::vector<int>, std::vector<double>> eigen_solver;
-	vector<int> II, JJ;
-	vector<double> SS;
-	Eigen::VectorXd b(2); b << 1 ,5;
+	NewtonSolver solver(true,0);
+	Eigen::MatrixXd V(N / 2, 2);
+	Eigen::MatrixX3i F(M, 3);
+	Eigen::VectorXd X(N),Lambda(M);
+	V.setZero();
+	F.setZero();
+	X.setZero();
+	Lambda.setZero();
 
-	II.clear();	JJ.clear(); SS.clear();
-	II.push_back(0); JJ.push_back(0); SS.push_back(1);
-	II.push_back(0); JJ.push_back(1); SS.push_back(2);
-	II.push_back(1); JJ.push_back(1); SS.push_back(3);
+	// initialize the energy
+	auto cF = std::make_shared<LagrangianAreaStLscm>();
+	cF->init_mesh(V, F);
+	cF->init();
+	auto cPositional = std::make_shared<PenaltyPositionalConstraints>(true);
+	cPositional->numV = V.rows();
+	cPositional->numF = F.rows();
+	cPositional->init();
+	auto totalObjective = std::make_shared<TotalObjective>();
+	totalObjective->objectiveList.clear();
+	totalObjective->init_mesh(V, F);
+	totalObjective->objectiveList.push_back(move(cF));
+	totalObjective->objectiveList.push_back(move(cPositional));
+	totalObjective->init();
 
-	eigen_solver.set_pattern(II, JJ, SS);
-	eigen_solver.analyze_pattern();
-	eigen_solver.factorize(II, JJ, SS);
-	eigen_solver.solve(b);
+	X << -100, -100, 100, -100;
+	Lambda << 0,0;
+	
+	worhpSolver wor;
+	wor.init(V, F);
+	wor.run(X);
+	
+	//X << 0.2444214, 0, 0.855272, -0.855272;
+	//Lambda << 5, 6;
 
-	//Eigen::SparseMatrix<double> A1(2,2);
-	//A1.insert(0, 0) = 1; A1.insert(0, 1) = 2;
-	//A1.insert(1, 0) = 2; A1.insert(1, 1) = 3;
-	//A1.makeCompressed();
+	solver.init(totalObjective, X, Lambda, F, V);
+	solver.run();
 
-	//Eigen::SparseMatrix<double> A2(2, 2);
-	//A2.insert(0, 0) = 1; A2.insert(0, 1) = 2;
-	//A2.insert(1, 0) = 0; A2.insert(1, 1) = 3;
-	//A2.makeCompressed();
-
-
-	//Eigen::VectorXd b(2), x1,x2;
-	//b << 1 ,5;
-	//
-	//// solve A1 * x1 = b
-	//Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
-	//solver.analyzePattern(A1);
-	//solver.factorize(A1);
-	//if (solver.info() != Eigen::Success) {
-	//	// decomposition failed
-	//	return -1;
-	//}
-	//x1 = solver.solve(b);
-	//if (solver.info() != Eigen::Success) {
-	//	// solving failed
-	//	return -2;
-	//}
-
-	//solver.analyzePattern(A2);
-	//solver.factorize(A2);
-	//if (solver.info() != Eigen::Success) {
-	//	// decomposition failed
-	//	return -1;
-	//}
-	//x2 = solver.solve(b);
-	//if (solver.info() != Eigen::Success) {
-	//	// solving failed
-	//	return -2;
-	//}
-
-	//
-	//cout << "A1 = " << endl << A1.toDense() << endl;
-	//cout << "x1 = " << endl << x1 << endl;
-	//cout << "b = " << endl << b << endl;
-
-	//cout << "A2 = " << endl << A2.toDense() << endl;
-	//cout << "x2 = " << endl << x2 << endl;
-	//cout << "b = " << endl << b << endl;
-
+	/*solver.init(totalObjective, X, Lambda, F, V);
+	solver.run_one_iteration(0,true);
+	solver.get_data(X, Lambda);
+	solver.init(totalObjective, X, Lambda, F, V);
+	solver.run_one_iteration(0, true);
+	solver.get_data(X, Lambda);*/
 
 	
 	return 0;
