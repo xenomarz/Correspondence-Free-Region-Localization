@@ -3,22 +3,19 @@
 
 class LagrangianAreaStLscm : public ConstrainedObjectiveFunction
 {	
-private:
-	Eigen::VectorXd X;
 public:
 	virtual void init_hessian() override;
-	virtual bool update_variables(const Eigen::VectorXd& X) override;
 	LagrangianAreaStLscm();
-	virtual double value(const bool update) override;
-	virtual void gradient(Eigen::VectorXd& g, const bool update) override;
 	virtual void hessian() override;
-	virtual double AugmentedValue(const bool update) override;
+	
+	virtual double objectiveValue(const bool update) override;
+	virtual Eigen::VectorXd objectiveGradient(const bool update) override;
+	virtual Eigen::SparseMatrix<double> objectiveHessian(const bool update) override;
+	virtual Eigen::VectorXd constrainedValue(const bool update) override;
+	virtual Eigen::SparseMatrix<double> constrainedGradient(const bool update) override;
+	virtual std::vector<Eigen::SparseMatrix<double>> constrainedHessian(const bool update) override;
+	virtual void lagrangianGradient(Eigen::VectorXd& g, const bool update) override;
 
-	double objectiveValue(const bool update);
-	double lagrangianValue(const bool update);
-	Eigen::VectorXd constrainedValue(const bool update);
-
-	void lagrangianGradient(Eigen::VectorXd& g, const bool update);
 	void AuglagrangGradWRTX(Eigen::VectorXd& g, const bool update);
 	void aughessian();
 };

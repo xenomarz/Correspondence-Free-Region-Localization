@@ -132,3 +132,37 @@ void TotalObjective::init_hessian()
 	II.insert(II.end(), IIi.begin(), IIi.end());
 	JJ.insert(JJ.end(), JJi.begin(), JJi.end());
 }
+
+double TotalObjective::objectiveValue(const bool update) {
+	double w;
+	return w;
+}
+
+Eigen::VectorXd TotalObjective::objectiveGradient(const bool update) {
+	Eigen::VectorXd w;
+	return w;
+}
+
+Eigen::SparseMatrix<double> TotalObjective::objectiveHessian(const bool update) {
+	Eigen::SparseMatrix<double> w;
+	return w;
+}
+
+Eigen::VectorXd TotalObjective::constrainedValue(const bool update) {
+	Eigen::VectorXd w;
+	return w;
+}
+
+Eigen::SparseMatrix<double> TotalObjective::constrainedGradient(const bool update) {
+	Eigen::SparseMatrix<double> w;
+	return w;
+}
+
+std::vector<Eigen::SparseMatrix<double>> TotalObjective::constrainedHessian(const bool update) {
+	std::vector<Eigen::SparseMatrix<double>> w;
+	return w;
+}
+
+void TotalObjective::lagrangianGradient(Eigen::VectorXd& g, const bool update) {
+	
+}

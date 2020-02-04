@@ -96,3 +96,37 @@ void PenaltyPositionalConstraints::init_hessian()
 	}
 	SS = std::vector<double>(II.size(), 0.);
 }
+
+double PenaltyPositionalConstraints::objectiveValue(const bool update){
+	double w;
+	return w;
+}
+
+Eigen::VectorXd PenaltyPositionalConstraints::objectiveGradient(const bool update) {
+	Eigen::VectorXd w;
+	return w;
+}
+
+Eigen::SparseMatrix<double> PenaltyPositionalConstraints::objectiveHessian(const bool update) {
+	Eigen::SparseMatrix<double> w;
+	return w;
+}
+
+Eigen::VectorXd PenaltyPositionalConstraints::constrainedValue(const bool update) {
+	Eigen::VectorXd w;
+	return w;
+}
+
+Eigen::SparseMatrix<double> PenaltyPositionalConstraints::constrainedGradient(const bool update) {
+	Eigen::SparseMatrix<double> w;
+	return w;
+}
+
+std::vector<Eigen::SparseMatrix<double>> PenaltyPositionalConstraints::constrainedHessian(const bool update) {
+	std::vector<Eigen::SparseMatrix<double>> w;
+	return w;
+}
+
+void PenaltyPositionalConstraints::lagrangianGradient(Eigen::VectorXd& g, const bool update) {
+
+}

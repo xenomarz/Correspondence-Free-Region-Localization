@@ -15,6 +15,36 @@ void ConstrainedObjectiveFunction::AddElementToAugHessian(std::vector<int> ind)
 			PushPair(ind[i], ind[j]);
 }
 
+double ConstrainedObjectiveFunction::lagrangianValue(const bool update)
+{
+	// f(x) - objective function value 
+	// c(x) - constraint function vector 
+	// lambda - lagrange multipliers 
+	// Lagrangian = f(x) - lambda * c(x)
+	double lagrangian = objectiveValue(update) - lambda.cwiseProduct(constrainedValue(update)).sum();
+	if (update) {
+		energy_value = lagrangian;
+	}
+	return lagrangian;
+}
+
+double ConstrainedObjectiveFunction::value(const bool update) {
+	return lagrangianValue(update);
+}
+
+double ConstrainedObjectiveFunction::AugmentedValue(const bool update)
+{
+	double augmented = lagrangianValue(update) +
+		(augmented_value_parameter / 2) * constrainedValue(update).cwiseAbs2().sum();
+
+	return augmented;
+}
+
+void ConstrainedObjectiveFunction::gradient(Eigen::VectorXd& g, const bool update)
+{
+	lagrangianGradient(g, update);
+}
+
 void ConstrainedObjectiveFunction::init_aug_hessian() {
 	II_aug.clear();
 	JJ_aug.clear();
@@ -60,9 +90,7 @@ void ConstrainedObjectiveFunction::init_hessian()
 
 bool ConstrainedObjectiveFunction::update_variables(const Eigen::VectorXd& X)
 {
-	lambda = X.tail(F.rows());
-	/*std::cout << "X = " << X << std::endl;
-	std::cout << "lambda = " << lambda << std::endl;
-	std::cout << "X.head(2 * V.rows()) = " << X.head(2 * V.rows()) << std::endl;*/
+	this->X = X;
+	this->lambda = X.tail(F.rows());
 	return TriangleMeshObjectiveFunction::update_variables(X.head(2 * V.rows()));
 }

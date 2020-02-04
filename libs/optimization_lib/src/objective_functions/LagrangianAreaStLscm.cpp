@@ -15,12 +15,6 @@ double LagrangianAreaStLscm::objectiveValue(const bool update) {
 	return objVal;
 }
 
-bool LagrangianAreaStLscm::update_variables(const Eigen::VectorXd& X)
-{
-	this->X = X;
-	return ConstrainedObjectiveFunction::update_variables(X);
-}
-
 Eigen::VectorXd LagrangianAreaStLscm::constrainedValue(const bool update) {
 	Eigen::VectorXd constr(F.rows());
 	constr(0) = X(0)*X(0) + X(2)*X(2) + X(0)*X(2) - 1;
@@ -32,29 +26,24 @@ Eigen::VectorXd LagrangianAreaStLscm::constrainedValue(const bool update) {
 	return constr;
 }
 
-double LagrangianAreaStLscm::lagrangianValue(const bool update)
-{
-	// f(x) - objective function value 
-	// c(x) - constraint function vector 
-	// lambda - lagrange multipliers 
-	// Lagrangian = f(x) - lambda * c(x)
-	double lagrangian = objectiveValue(update) - lambda.cwiseProduct(constrainedValue(update)).sum();
-	if (update) {
-		energy_value = lagrangian;
-	}
-	return lagrangian;
+Eigen::VectorXd LagrangianAreaStLscm::objectiveGradient(const bool update) {
+	Eigen::VectorXd w;
+	return w;
 }
 
-double LagrangianAreaStLscm::value(const bool update) {
-	return lagrangianValue(update);
+Eigen::SparseMatrix<double> LagrangianAreaStLscm::objectiveHessian(const bool update) {
+	Eigen::SparseMatrix<double> w;
+	return w;
 }
 
-double LagrangianAreaStLscm::AugmentedValue(const bool update)
-{
-	double augmented = lagrangianValue(update) +
-		(augmented_value_parameter / 2) * constrainedValue(update).cwiseAbs2().sum();
+Eigen::SparseMatrix<double> LagrangianAreaStLscm::constrainedGradient(const bool update) {
+	Eigen::SparseMatrix<double> w;
+	return w;
+}
 
-	return augmented;
+std::vector<Eigen::SparseMatrix<double>> LagrangianAreaStLscm::constrainedHessian(const bool update) {
+	std::vector<Eigen::SparseMatrix<double>> w;
+	return w;
 }
 
 void LagrangianAreaStLscm::lagrangianGradient(Eigen::VectorXd& g, const bool update) {
@@ -77,11 +66,6 @@ void LagrangianAreaStLscm::lagrangianGradient(Eigen::VectorXd& g, const bool upd
 
 void LagrangianAreaStLscm::AuglagrangGradWRTX(Eigen::VectorXd& g, const bool update) {
 	std::cout << "Error 0" << std::endl;
-}
-
-void LagrangianAreaStLscm::gradient(Eigen::VectorXd& g, const bool update)
-{
-	lagrangianGradient(g, update);
 }
 
 void LagrangianAreaStLscm::init_hessian()

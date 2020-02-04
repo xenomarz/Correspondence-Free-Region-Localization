@@ -15,6 +15,26 @@ double LagrangianLscmStArea::objectiveValue(const bool update) {
 	return objVal;
 }
 
+Eigen::VectorXd LagrangianLscmStArea::objectiveGradient(const bool update) {
+	Eigen::VectorXd w;
+	return w;
+}
+
+Eigen::SparseMatrix<double> LagrangianLscmStArea::objectiveHessian(const bool update) {
+	Eigen::SparseMatrix<double> w;
+	return w;
+}
+
+Eigen::SparseMatrix<double> LagrangianLscmStArea::constrainedGradient(const bool update) {
+	Eigen::SparseMatrix<double> w;
+	return w;
+}
+
+std::vector<Eigen::SparseMatrix<double>> LagrangianLscmStArea::constrainedHessian(const bool update) {
+	std::vector<Eigen::SparseMatrix<double>> w;
+	return w;
+}
+
 Eigen::VectorXd LagrangianLscmStArea::constrainedValue(const bool update) {
 	Eigen::VectorXd areaE = detJ - Eigen::VectorXd::Ones(F.rows());
 	areaE = Area.asDiagonal() * areaE;
@@ -23,31 +43,6 @@ Eigen::VectorXd LagrangianLscmStArea::constrainedValue(const bool update) {
 		constraint_value = areaE.cwiseAbs2().sum();
 	}
 	return areaE;
-}
-
-double LagrangianLscmStArea::lagrangianValue(const bool update)
-{
-	// f(x) - objective function value 
-	// c(x) - constraint function vector 
-	// lambda - lagrange multipliers 
-	// Lagrangian = f(x) - lambda * c(x)
-	double lagrangian = objectiveValue(update) - lambda.cwiseProduct(constrainedValue(update)).sum();
-	if (update) {
-		energy_value = lagrangian;
-	}
-	return lagrangian;
-}
-
-double LagrangianLscmStArea::value(const bool update) {
-	return lagrangianValue(update);
-}
-
-double LagrangianLscmStArea::AugmentedValue(const bool update)
-{
-	double augmented = lagrangianValue(update) + 
-		(augmented_value_parameter / 2) * constrainedValue(update).cwiseAbs2().sum();
-
-	return augmented;
 }
 
 void LagrangianLscmStArea::lagrangianGradient(Eigen::VectorXd& g, const bool update) {
@@ -112,11 +107,6 @@ void LagrangianLscmStArea::AuglagrangGradWRTX(Eigen::VectorXd& g, const bool upd
 		//objective_gradient_norm = g.norm();
 		//constraint_gradient_norm = g.tail(F.rows()).norm();
 	}
-}
-
-void LagrangianLscmStArea::gradient(Eigen::VectorXd& g, const bool update)
-{
-	lagrangianGradient(g,update);
 }
 
 void LagrangianLscmStArea::hessian()

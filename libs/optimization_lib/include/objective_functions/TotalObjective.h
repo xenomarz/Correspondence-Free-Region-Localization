@@ -17,6 +17,14 @@ public:
 	virtual void hessian() override;
 	virtual double AugmentedValue(const bool update) override;
 
+	virtual double objectiveValue(const bool update) override;
+	virtual Eigen::VectorXd objectiveGradient(const bool update) override;
+	virtual Eigen::SparseMatrix<double> objectiveHessian(const bool update) override;
+	virtual Eigen::VectorXd constrainedValue(const bool update) override;
+	virtual Eigen::SparseMatrix<double> constrainedGradient(const bool update) override;
+	virtual std::vector<Eigen::SparseMatrix<double>> constrainedHessian(const bool update) override;
+	virtual void lagrangianGradient(Eigen::VectorXd& g, const bool update) override;
+	
 	// sub objectives
 	float Shift_eigen_values = 0;
 	std::vector<std::shared_ptr<ObjectiveFunction>> objectiveList;
