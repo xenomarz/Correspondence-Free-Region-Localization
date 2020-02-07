@@ -156,9 +156,8 @@ void TotalObjective::constrainedGradient(std::vector<int>& I, std::vector<int>& 
 	
 }
 
-std::vector<Eigen::SparseMatrix<double>> TotalObjective::constrainedHessian(const bool update) {
-	std::vector<Eigen::SparseMatrix<double>> w;
-	return w;
+void TotalObjective::constrainedHessian(std::vector<std::vector<int>>& Is, std::vector < std::vector<int>>& Js, std::vector < std::vector<double>>& Ss) {
+	
 }
 
 void TotalObjective::lagrangianGradient(Eigen::VectorXd& g, const bool update) {

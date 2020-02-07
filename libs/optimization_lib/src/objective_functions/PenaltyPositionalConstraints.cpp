@@ -120,9 +120,8 @@ void PenaltyPositionalConstraints::constrainedGradient(std::vector<int>& I, std:
 
 }
 
-std::vector<Eigen::SparseMatrix<double>> PenaltyPositionalConstraints::constrainedHessian(const bool update) {
-	std::vector<Eigen::SparseMatrix<double>> w;
-	return w;
+void PenaltyPositionalConstraints::constrainedHessian(std::vector<std::vector<int>>& Is, std::vector < std::vector<int>>& Js, std::vector < std::vector<double>>& Ss) {
+	
 }
 
 void PenaltyPositionalConstraints::lagrangianGradient(Eigen::VectorXd& g, const bool update) {

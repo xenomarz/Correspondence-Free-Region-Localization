@@ -39,9 +39,8 @@ void LagrangianAreaStLscm::constrainedGradient(std::vector<int>& I, std::vector<
 	
 }
 
-std::vector<Eigen::SparseMatrix<double>> LagrangianAreaStLscm::constrainedHessian(const bool update) {
-	std::vector<Eigen::SparseMatrix<double>> w;
-	return w;
+void LagrangianAreaStLscm::constrainedHessian(std::vector<std::vector<int>>& Is, std::vector < std::vector<int>>& Js, std::vector < std::vector<double>>& Ss) {
+	
 }
 
 void LagrangianAreaStLscm::lagrangianGradient(Eigen::VectorXd& g, const bool update) {

@@ -81,32 +81,32 @@ void LagrangianLscmStArea::objectiveHessian(std::vector<int>& I, std::vector<int
 
 void LagrangianLscmStArea::constrainedGradient(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
 	I.clear();	J.clear();	S.clear();
-	Eigen::SparseMatrix<double> constrGrad(F.rows(),2*V.rows());
-	
+	auto PushTripple = [&](int i, int j, double v) { if (i > j) std::swap(i, j); I.push_back(i); J.push_back(j); S.push_back(v); };
+
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		//prepare gradient
 		Eigen::Vector4d dE_dJ(
-			-d(fi),
-			c(fi),
-			b(fi),
-			-a(fi)
+			d(fi),
+			-c(fi),
+			-b(fi),
+			a(fi)
 		);
-		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
-
+		Eigen::VectorXd curr_grad = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
 		//Update the gradient of the x-axis
-		constrGrad.insert(fi, F(fi, 0)) += grad(fi, 0);
-		constrGrad.insert(fi, F(fi, 1)) += grad(fi, 1);
-		constrGrad.insert(fi, F(fi, 2)) += grad(fi, 2);
+		PushTripple(fi, F(fi, 0), curr_grad(0));
+		PushTripple(fi, F(fi, 1), curr_grad(1));
+		PushTripple(fi, F(fi, 2), curr_grad(2));
 		//Update the gradient of the y-axis
-		constrGrad.insert(fi, F(fi, 0) + V.rows()) += grad(fi, 3);
-		constrGrad.insert(fi, F(fi, 1) + V.rows()) += grad(fi, 4);
-		constrGrad.insert(fi, F(fi, 2) + V.rows()) += grad(fi, 5);
+		PushTripple(fi, F(fi, 0) + V.rows(), curr_grad(3));
+		PushTripple(fi, F(fi, 1) + V.rows(), curr_grad(4));
+		PushTripple(fi, F(fi, 2) + V.rows(), curr_grad(5));
 	}
+	//we add the indexes of the last element in order to tell the solver the size of the matrix
+	PushTripple(F.rows() - 1, 2 * V.rows() - 1, 0);
 }
 
-std::vector<Eigen::SparseMatrix<double>> LagrangianLscmStArea::constrainedHessian(const bool update) {
-	std::vector<Eigen::SparseMatrix<double>> w;
-	return w;
+void LagrangianLscmStArea::constrainedHessian(std::vector<std::vector<int>>& Is, std::vector < std::vector<int>>& Js, std::vector < std::vector<double>>& Ss) {
+	
 }
 
 Eigen::VectorXd LagrangianLscmStArea::constrainedValue(const bool update) {
