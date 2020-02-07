@@ -143,9 +143,8 @@ Eigen::VectorXd TotalObjective::objectiveGradient(const bool update) {
 	return w;
 }
 
-Eigen::SparseMatrix<double> TotalObjective::objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
-	Eigen::SparseMatrix<double> w;
-	return w;
+void TotalObjective::objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
+	
 }
 
 Eigen::VectorXd TotalObjective::constrainedValue(const bool update) {
@@ -153,9 +152,8 @@ Eigen::VectorXd TotalObjective::constrainedValue(const bool update) {
 	return w;
 }
 
-Eigen::SparseMatrix<double> TotalObjective::constrainedGradient(const bool update) {
-	Eigen::SparseMatrix<double> w;
-	return w;
+void TotalObjective::constrainedGradient(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
+	
 }
 
 std::vector<Eigen::SparseMatrix<double>> TotalObjective::constrainedHessian(const bool update) {

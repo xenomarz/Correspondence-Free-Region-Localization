@@ -31,14 +31,12 @@ Eigen::VectorXd LagrangianAreaStLscm::objectiveGradient(const bool update) {
 	return w;
 }
 
-Eigen::SparseMatrix<double> LagrangianAreaStLscm::objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
-	Eigen::SparseMatrix<double> w;
-	return w;
+void LagrangianAreaStLscm::objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
+	
 }
 
-Eigen::SparseMatrix<double> LagrangianAreaStLscm::constrainedGradient(const bool update) {
-	Eigen::SparseMatrix<double> w;
-	return w;
+void LagrangianAreaStLscm::constrainedGradient(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
+	
 }
 
 std::vector<Eigen::SparseMatrix<double>> LagrangianAreaStLscm::constrainedHessian(const bool update) {

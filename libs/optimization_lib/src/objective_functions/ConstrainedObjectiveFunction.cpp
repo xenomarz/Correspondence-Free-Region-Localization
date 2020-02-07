@@ -71,7 +71,7 @@ void ConstrainedObjectiveFunction::init_hessian()
 	auto PushPair = [&](int i, int j) { if (i > j) std::swap(i, j); II.push_back(i); JJ.push_back(j); };
 	int n = V.rows();
 	for (int i = 0; i < F.rows(); ++i)
-		AddElementToHessian({ F(i, 0), F(i, 1), F(i, 2), F(i, 0) + n, F(i, 1) + n, F(i, 2) + n });
+		AddElementToHessian(II, JJ, { F(i, 0), F(i, 1), F(i, 2), F(i, 0) + n, F(i, 1) + n, F(i, 2) + n });
 
 	for (int i = 0; i < F.rows(); ++i)
 	{

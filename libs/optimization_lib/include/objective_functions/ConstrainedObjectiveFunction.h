@@ -22,9 +22,9 @@ public:
 	
 	virtual double objectiveValue(const bool update) = 0;
 	virtual Eigen::VectorXd objectiveGradient(const bool update) = 0;
-	virtual Eigen::SparseMatrix<double> objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) = 0;
+	virtual void objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) = 0;
 	virtual Eigen::VectorXd constrainedValue(const bool update) = 0;
-	virtual Eigen::SparseMatrix<double> constrainedGradient(const bool update) = 0;
+	virtual void constrainedGradient(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) = 0;
 	virtual std::vector<Eigen::SparseMatrix<double>> constrainedHessian(const bool update) = 0;
 	virtual void lagrangianGradient(Eigen::VectorXd& g, const bool update) = 0;
 

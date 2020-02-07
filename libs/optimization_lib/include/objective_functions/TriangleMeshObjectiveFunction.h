@@ -16,5 +16,5 @@ public:
 	virtual ~TriangleMeshObjectiveFunction(){}
 	virtual void init() override;
 	virtual void updateX(const Eigen::VectorXd& X) override;
-	void AddElementToHessian(std::vector<int> ind);
+	void AddElementToHessian(std::vector<int>& I, std::vector<int>& J, std::vector<int> ind);
 };

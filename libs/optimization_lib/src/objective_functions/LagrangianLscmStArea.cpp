@@ -45,10 +45,19 @@ Eigen::VectorXd LagrangianLscmStArea::objectiveGradient(const bool update) {
 	return obj;
 }
 
-Eigen::SparseMatrix<double> LagrangianLscmStArea::objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
-	Eigen::SparseMatrix<double> w;
+void LagrangianLscmStArea::objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
+	I.clear();	J.clear();	S.clear();
+	int n = V.rows();
+	for (int i = 0; i < F.rows(); ++i) {
+		AddElementToHessian(I, J, { F(i, 0), F(i, 1), F(i, 2), F(i, 0) + n, F(i, 1) + n, F(i, 2) + n });
+	}
+	//we add the indexes of the last element in order to tell the solver the size of the matrix
+	I.push_back(2 * n - 1);
+	J.push_back(2 * n - 1);
+	S = std::vector<double>(I.size(), 0.);
+	
 #pragma omp parallel for num_threads(24)
-	int index2 = 0;
+	int index = 0;
 	for (int i = 0; i < F.rows(); ++i) {
 		//prepare hessian
 		Eigen::MatrixXd d2E_dJ2(4, 4);
@@ -58,20 +67,20 @@ Eigen::SparseMatrix<double> LagrangianLscmStArea::objectiveHessian(std::vector<i
 			0	, 2 , 2	, 0,
 			- 2	, 0	, 0	, 2;
 
-		Hessian[i] = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
+		Eigen::Matrix<double, 6, 6> H = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
 
 		for (int a = 0; a < 6; ++a)
 		{
 			for (int b = 0; b <= a; ++b)
 			{
-				SS[index2++] = Hessian[i](a, b);
+				S[index++] = H(a, b);
 			}
 		}
 	}
-	return w;
 }
 
-Eigen::SparseMatrix<double> LagrangianLscmStArea::constrainedGradient(const bool update) {
+void LagrangianLscmStArea::constrainedGradient(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
+	I.clear();	J.clear();	S.clear();
 	Eigen::SparseMatrix<double> constrGrad(F.rows(),2*V.rows());
 	
 	for (int fi = 0; fi < F.rows(); ++fi) {
@@ -93,7 +102,6 @@ Eigen::SparseMatrix<double> LagrangianLscmStArea::constrainedGradient(const bool
 		constrGrad.insert(fi, F(fi, 1) + V.rows()) += grad(fi, 4);
 		constrGrad.insert(fi, F(fi, 2) + V.rows()) += grad(fi, 5);
 	}
-	return constrGrad;
 }
 
 std::vector<Eigen::SparseMatrix<double>> LagrangianLscmStArea::constrainedHessian(const bool update) {

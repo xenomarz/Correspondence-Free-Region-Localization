@@ -107,9 +107,8 @@ Eigen::VectorXd PenaltyPositionalConstraints::objectiveGradient(const bool updat
 	return w;
 }
 
-Eigen::SparseMatrix<double> PenaltyPositionalConstraints::objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
-	Eigen::SparseMatrix<double> w;
-	return w;
+void PenaltyPositionalConstraints::objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
+	
 }
 
 Eigen::VectorXd PenaltyPositionalConstraints::constrainedValue(const bool update) {
@@ -117,9 +116,8 @@ Eigen::VectorXd PenaltyPositionalConstraints::constrainedValue(const bool update
 	return w;
 }
 
-Eigen::SparseMatrix<double> PenaltyPositionalConstraints::constrainedGradient(const bool update) {
-	Eigen::SparseMatrix<double> w;
-	return w;
+void PenaltyPositionalConstraints::constrainedGradient(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
+
 }
 
 std::vector<Eigen::SparseMatrix<double>> PenaltyPositionalConstraints::constrainedHessian(const bool update) {
