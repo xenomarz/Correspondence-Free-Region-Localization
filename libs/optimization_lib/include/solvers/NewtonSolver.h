@@ -1,13 +1,7 @@
 #pragma once
-//#define USE_PARDISO
 
 #include "libs/optimization_lib/include/solvers/solver.h"
-
-#ifdef USE_PARDISO
-	#include "libs/optimization_lib/include/solvers/PardisoSolver.h"
-#else
-	#include "libs/optimization_lib/include/solvers/EigenSparseSolver.h"
-#endif
+#include "libs/optimization_lib/include/solvers/EigenSparseSolver.h"
 
 class NewtonSolver : public solver
 {
@@ -22,9 +16,5 @@ public:
 	Eigen::SparseMatrix<double> get_Hessian();
 	double get_MSE();
 private:
-	#ifdef USE_PARDISO
-		std::unique_ptr<PardisoSolver<std::vector<int>, std::vector<double>>> pardiso = nullptr;
-	#else
-		std::unique_ptr<EigenSparseSolver<std::vector<int>, std::vector<double>>> eigen_solver = nullptr;
-	#endif
+	std::unique_ptr<EigenSparseSolver<std::vector<int>, std::vector<double>>> eigen_solver = nullptr;
 };

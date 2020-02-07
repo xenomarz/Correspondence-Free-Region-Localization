@@ -17,6 +17,23 @@ public:
 		ConstantStep = 2
 	};
 
+	static Eigen::SparseMatrix<double> BuildMatrix(const std::vector<int>& I, const std::vector<int>& J, const std::vector<double>& S) {
+		assert(I.size() == J.size() && I.size() == S.size() && "II,JJ,SS must have the same size!");
+		std::vector<Eigen::Triplet<double>> tripletList;
+		tripletList.reserve(I.size());
+		int rows = *std::max_element(I.begin(), I.end()) + 1;
+		int cols = *std::max_element(J.begin(), J.end()) + 1;
+		assert(rows == cols && "The matrix must be square (rows == cols)!");
+		for (int i = 0; i < I.size(); i++)
+			tripletList.push_back(Eigen::Triplet<double>(I[i], J[i], S[i]));
+
+		Eigen::SparseMatrix<double> A;
+		A.resize(rows, cols);
+		A.setFromTriplets(tripletList.begin(), tripletList.end());
+		A.makeCompressed();
+		return A;
+	}
+
 	static void computeSurfaceGradientPerFace(const Eigen::MatrixX3d &V, const Eigen::MatrixX3i &F, Eigen::MatrixX3d &D1, Eigen::MatrixX3d &D2)
 	{
 		using namespace Eigen;

@@ -16,7 +16,7 @@ EigenSparseSolver<vectorTypeI, vectorTypeS>::~EigenSparseSolver()
 template <typename vectorTypeI, typename vectorTypeS>
 void EigenSparseSolver<vectorTypeI, vectorTypeS>::set_pattern(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS)
 {
-	BuildMatrix(II, JJ, SS);
+	perpareMatrix(II, JJ, SS);
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
@@ -29,7 +29,7 @@ void EigenSparseSolver<vectorTypeI, vectorTypeS>::analyze_pattern()
 template <typename vectorTypeI, typename vectorTypeS>
 bool EigenSparseSolver<vectorTypeI, vectorTypeS>::factorize(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS)
 {
-	BuildMatrix(II,JJ,SS);
+	perpareMatrix(II,JJ,SS);
 	solver.factorize(full_A/*UpperTriangular_A*/);
 	assert(solver.info() == Eigen::Success && "factorization failed!");
 	return solver.info() == 0;
@@ -62,19 +62,9 @@ Eigen::VectorXd EigenSparseSolver<vectorTypeI, vectorTypeS>::solve(Eigen::Vector
 }
 
 template <typename vectorTypeI, typename vectorTypeS>
-void EigenSparseSolver<vectorTypeI, vectorTypeS>::BuildMatrix(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS)
+void EigenSparseSolver<vectorTypeI, vectorTypeS>::perpareMatrix(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS)
 {
-	assert(II.size() == JJ.size() && II.size() == SS.size() && "II == JJ at Eigen solver internal init");
-	std::vector<Eigen::Triplet<double>> tripletList;
-	tripletList.reserve(II.size());
-	int rows = *std::max_element(II.begin(), II.end()) + 1;
-	int cols = *std::max_element(JJ.begin(), JJ.end()) + 1;
-	assert(rows == cols && "Rows == Cols at Newton internal init");
-	for (int i = 0; i < II.size(); i++)
-		tripletList.push_back(Eigen::Triplet<double>(II[i], JJ[i], SS[i]));
-	UpperTriangular_A.resize(rows, cols);
-	UpperTriangular_A.setFromTriplets(tripletList.begin(), tripletList.end());
-	
+	UpperTriangular_A = Utils::BuildMatrix(II,JJ,SS);
 	full_A = UpperTriangular_A.selfadjointView<Eigen::Upper>();
 
 	full_A.makeCompressed();

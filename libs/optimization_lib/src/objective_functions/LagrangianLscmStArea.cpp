@@ -16,18 +16,84 @@ double LagrangianLscmStArea::objectiveValue(const bool update) {
 }
 
 Eigen::VectorXd LagrangianLscmStArea::objectiveGradient(const bool update) {
-	Eigen::VectorXd w;
-	return w;
+	Eigen::VectorXd obj;
+	obj.conservativeResize(V.rows() * 2);
+	obj.setZero();
+
+	for (int fi = 0; fi < F.rows(); ++fi) {
+		//prepare gradient
+		Eigen::Vector4d dE_dJ(
+			2 * a(fi) - 2 * d(fi),
+			2 * b(fi) + 2 * c(fi),
+			2 * b(fi) + 2 * c(fi),
+			2 * d(fi) - 2 * a(fi)
+		);
+		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
+
+		//Update the gradient of the x-axis
+		obj(F(fi, 0)) += grad(fi, 0);
+		obj(F(fi, 1)) += grad(fi, 1);
+		obj(F(fi, 2)) += grad(fi, 2);
+		//Update the gradient of the y-axis
+		obj(F(fi, 0) + V.rows()) += grad(fi, 3);
+		obj(F(fi, 1) + V.rows()) += grad(fi, 4);
+		obj(F(fi, 2) + V.rows()) += grad(fi, 5);
+	}
+	if (update) {
+		objective_gradient_norm = obj.norm();
+	}
+	return obj;
 }
 
-Eigen::SparseMatrix<double> LagrangianLscmStArea::objectiveHessian(const bool update) {
+Eigen::SparseMatrix<double> LagrangianLscmStArea::objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
 	Eigen::SparseMatrix<double> w;
+#pragma omp parallel for num_threads(24)
+	int index2 = 0;
+	for (int i = 0; i < F.rows(); ++i) {
+		//prepare hessian
+		Eigen::MatrixXd d2E_dJ2(4, 4);
+		d2E_dJ2 <<
+			2	, 0	, 0	, - 2,
+			0	, 2	, 2 , 0,
+			0	, 2 , 2	, 0,
+			- 2	, 0	, 0	, 2;
+
+		Hessian[i] = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
+
+		for (int a = 0; a < 6; ++a)
+		{
+			for (int b = 0; b <= a; ++b)
+			{
+				SS[index2++] = Hessian[i](a, b);
+			}
+		}
+	}
 	return w;
 }
 
 Eigen::SparseMatrix<double> LagrangianLscmStArea::constrainedGradient(const bool update) {
-	Eigen::SparseMatrix<double> w;
-	return w;
+	Eigen::SparseMatrix<double> constrGrad(F.rows(),2*V.rows());
+	
+	for (int fi = 0; fi < F.rows(); ++fi) {
+		//prepare gradient
+		Eigen::Vector4d dE_dJ(
+			-d(fi),
+			c(fi),
+			b(fi),
+			-a(fi)
+		);
+		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
+
+		//Update the gradient of the x-axis
+		constrGrad.insert(fi, F(fi, 0)) += grad(fi, 0);
+		constrGrad.insert(fi, F(fi, 1)) += grad(fi, 1);
+		constrGrad.insert(fi, F(fi, 2)) += grad(fi, 2);
+		//Update the gradient of the y-axis
+		constrGrad.insert(fi, F(fi, 0) + V.rows()) += grad(fi, 3);
+		constrGrad.insert(fi, F(fi, 1) + V.rows()) += grad(fi, 4);
+		constrGrad.insert(fi, F(fi, 2) + V.rows()) += grad(fi, 5);
+	}
+	return constrGrad;
 }
 
 std::vector<Eigen::SparseMatrix<double>> LagrangianLscmStArea::constrainedHessian(const bool update) {

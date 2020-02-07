@@ -143,7 +143,7 @@ Eigen::VectorXd TotalObjective::objectiveGradient(const bool update) {
 	return w;
 }
 
-Eigen::SparseMatrix<double> TotalObjective::objectiveHessian(const bool update) {
+Eigen::SparseMatrix<double> TotalObjective::objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
 	Eigen::SparseMatrix<double> w;
 	return w;
 }
