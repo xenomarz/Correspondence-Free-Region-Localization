@@ -23,7 +23,7 @@ public:
 		tripletList.reserve(I.size());
 		int rows = *std::max_element(I.begin(), I.end()) + 1;
 		int cols = *std::max_element(J.begin(), J.end()) + 1;
-		assert(rows == cols && "The matrix must be square (rows == cols)!");
+
 		for (int i = 0; i < I.size(); i++)
 			tripletList.push_back(Eigen::Triplet<double>(I[i], J[i], S[i]));
 

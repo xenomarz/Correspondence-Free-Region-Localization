@@ -62,6 +62,13 @@ void ObjectiveFunction::FDHessian(const Eigen::VectorXd& X)
 
 bool ObjectiveFunction::checkGradient(const Eigen::VectorXd& X)
 {
+	LagrangianLscmStArea* constrained_function = dynamic_cast<LagrangianLscmStArea*>(this);
+	if (constrained_function == NULL) {
+		std::cout << name << " is not a contrained function" << std::endl;
+		return false;
+	}
+	constrained_function->checkObjectiveGradient(X);
+
 	//////////////////////////////////////////
 	checkAugGradient(X);
 	//////////////////////////////////////////

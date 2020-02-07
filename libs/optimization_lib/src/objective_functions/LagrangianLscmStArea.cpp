@@ -67,13 +67,13 @@ void LagrangianLscmStArea::objectiveHessian(std::vector<int>& I, std::vector<int
 			0	, 2 , 2	, 0,
 			- 2	, 0	, 0	, 2;
 
-		Eigen::Matrix<double, 6, 6> H = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
+		Eigen::Matrix<double, 6, 6> curr_H = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
 
 		for (int a = 0; a < 6; ++a)
 		{
 			for (int b = 0; b <= a; ++b)
 			{
-				S[index++] = H(a, b);
+				S[index++] = curr_H(a, b);
 			}
 		}
 	}
@@ -105,8 +105,36 @@ void LagrangianLscmStArea::constrainedGradient(std::vector<int>& I, std::vector<
 	PushTripple(F.rows() - 1, 2 * V.rows() - 1, 0);
 }
 
-void LagrangianLscmStArea::constrainedHessian(std::vector<std::vector<int>>& Is, std::vector < std::vector<int>>& Js, std::vector < std::vector<double>>& Ss) {
+void LagrangianLscmStArea::constrainedHessian(std::vector<std::vector<int>>& Is, std::vector<std::vector<int>>& Js, std::vector < std::vector<double>>& Ss) {
+	Is.clear();	Js.clear();	Ss.clear();
+	int n = V.rows();
 	
+#pragma omp parallel for num_threads(24)
+	for (int i = 0; i < F.rows(); ++i) {
+		std::vector<int> I, J;
+		std::vector<double> S;
+		AddElementToHessian(I, J, { F(i, 0), F(i, 1), F(i, 2), F(i, 0) + n, F(i, 1) + n, F(i, 2) + n });
+		//we add the indexes of the last element in order to tell the solver the size of the matrix
+		I.push_back(2 * n - 1);	J.push_back(2 * n - 1);
+
+		//prepare hessian
+		Eigen::MatrixXd d2E_dJ2(4, 4);
+		d2E_dJ2 <<
+			0, 0,  0,  1,
+			0, 0,  -1, 0,
+			0, -1, 0,  0,
+			1, 0,  0,  0;
+
+		Eigen::Matrix<double, 6, 6> curr_H = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
+		for (int a = 0; a < 6; ++a)
+			for (int b = 0; b <= a; ++b)
+				S.push_back(curr_H(a, b));
+		S.push_back(0);
+
+		Is.push_back(I);
+		Js.push_back(J);
+		Ss.push_back(S);
+	}
 }
 
 Eigen::VectorXd LagrangianLscmStArea::constrainedValue(const bool update) {
@@ -115,11 +143,25 @@ Eigen::VectorXd LagrangianLscmStArea::constrainedValue(const bool update) {
 	if (update) {
 		Efi = areaE.cwiseAbs2();
 		constraint_value = areaE.cwiseAbs2().sum();
+		constraint_gradient_norm = areaE.norm();
 	}
 	return areaE;
 }
 
 void LagrangianLscmStArea::lagrangianGradient(Eigen::VectorXd& g, const bool update) {
+	/*g.conservativeResize(V.rows() * 2 + F.rows());
+	std::vector<int> I, J; std::vector<double> S;
+	constrainedGradient(I, J, S);
+	Eigen::SparseMatrix<double> ConstrGrad = Utils::BuildMatrix(I, J, S);
+
+	Eigen::VectorXd asd(2 * V.rows());
+	asd.setZero();
+	asd = objectiveGradient(update);
+	asd = lambda.transpose() * ConstrGrad;
+	g.head(2*V.rows()) = objectiveGradient(update) - (ConstrGrad.transpose()*lambda);
+	g.tail(F.rows()) = -1 * constrainedValue(update);*/
+
+
 	g.conservativeResize(V.rows() * 2 + F.rows());
 	g.setZero();
 
@@ -144,6 +186,7 @@ void LagrangianLscmStArea::lagrangianGradient(Eigen::VectorXd& g, const bool upd
 		//Update the gradient of lambda
 		g(fi + 2 * V.rows()) += Area(fi)*(1 - detJ(fi));
 	}
+
 	if (update) {
 		gradient_norm = g.norm();
 		objective_gradient_norm = g.head(2 * V.rows()).norm();
