@@ -1255,12 +1255,14 @@ void basic_app::checkGradients()
 				Eigen::VectorXd x;
 				x = Eigen::VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
-				objective->checkGradient(x,0,"Regular");
-				objective->checkGradient(x,1,"AugmentedGradCheck");
+				objective->checkGradient(x,0,"Lagrangian gradient");
+				objective->checkGradient(x,1,"Augmented Lagrangian gradient");
+				objective->checkGradient(x,2,"Lagrangian Objective gradient");
 			}
 			else {
-				objective->checkGradient(Outputs[i].solver->ext_x,0,"Regular");
-				objective->checkGradient(Outputs[i].solver->ext_x,1,"AugmentedGradCheck");
+				objective->checkGradient(Outputs[i].solver->ext_x, 0, "Lagrangian gradient");
+				objective->checkGradient(Outputs[i].solver->ext_x, 1, "Augmented Lagrangian gradient");
+				objective->checkGradient(Outputs[i].solver->ext_x, 2, "Lagrangian Objective gradient");
 			}
 			
 		}
@@ -1280,10 +1282,16 @@ void basic_app::checkHessians()
 				Eigen::VectorXd x;
 				x = Eigen::VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
-				objective->checkHessian(x);
+				HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE); // For use of SetConsoleTextAttribute()
+				SetConsoleTextAttribute(console, 200);
+				objective->checkHessian(x, 0, "Lagrangian hessian");
+				objective->checkHessian(x, 1, "Augmented Lagrangian hessian");
+				//objective->checkHessian(x, 2, "Lagrangian Objective hessian");
 			}
 			else {
-				objective->checkHessian(Outputs[i].solver->ext_x);
+				objective->checkHessian(Outputs[i].solver->ext_x, 0, "Lagrangian hessian");
+				objective->checkHessian(Outputs[i].solver->ext_x, 1, "Augmented Lagrangian hessian");
+				//objective->checkHessian(Outputs[i].solver->ext_x, 2, "Lagrangian Objective hessian");
 			}
 		}
 	}

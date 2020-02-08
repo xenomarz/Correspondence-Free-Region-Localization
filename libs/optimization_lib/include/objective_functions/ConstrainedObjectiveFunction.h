@@ -28,13 +28,6 @@ public:
 	virtual void constrainedHessian(std::vector<std::vector<int>>& Is, std::vector < std::vector<int>>& Js, std::vector < std::vector<double>>& Ss) = 0;
 	virtual void lagrangianGradient(Eigen::VectorXd& g, const bool update) = 0;
 
-	//FD functions
-	void FDObjectiveGradient(const Eigen::VectorXd& X, Eigen::VectorXd& g);
-	bool checkObjectiveGradient(const Eigen::VectorXd& X);
-	bool checkConstrainedJacobian(const Eigen::VectorXd& X);
-	void FDConstrainedJacobian(const Eigen::VectorXd& X);
-
-
 	//save values to show results
 	double objective_value = 0;
 	double constraint_value = 0;

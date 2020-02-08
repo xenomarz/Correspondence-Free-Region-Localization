@@ -34,13 +34,9 @@ public:
 
 	//Finite Differences check point
 	Eigen::VectorXd FDGradient(const Eigen::VectorXd& X, const int type);
-    void FDHessian(const Eigen::VectorXd& X);
+    void FDHessian(const Eigen::VectorXd& X, const int type, std::vector<int>& I, std::vector<int>& J, std::vector<double>& S);
     void checkGradient(const Eigen::VectorXd& X, const int type,const std::string str);
-    bool checkHessian(const Eigen::VectorXd& X);
-	bool checkAugGradient(const Eigen::VectorXd& X);
-	bool checkAugHessian(const Eigen::VectorXd& X);
-	void FDAugGradient(const Eigen::VectorXd& X, Eigen::VectorXd& g);
-	void FDAugHessian(const Eigen::VectorXd& X);
+    void checkHessian(const Eigen::VectorXd& X, const int type, const std::string str);
 	
 	// Hessian sparse reprensentation
 	std::vector<int> II, JJ;
