@@ -1255,14 +1255,14 @@ void basic_app::checkGradients()
 				Eigen::VectorXd x;
 				x = Eigen::VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
-				objective->checkGradient(x,0,"Lagrangian gradient");
-				objective->checkGradient(x,1,"Augmented Lagrangian gradient");
-				objective->checkGradient(x,2,"Lagrangian Objective gradient");
+				objective->checkGradient(x, Utils::Lagrangian);
+				objective->checkGradient(x, Utils::AugmentedLagrangian);
+				objective->checkGradient(x, Utils::LagrangianObjective);
 			}
 			else {
-				objective->checkGradient(Outputs[i].solver->ext_x, 0, "Lagrangian gradient");
-				objective->checkGradient(Outputs[i].solver->ext_x, 1, "Augmented Lagrangian gradient");
-				objective->checkGradient(Outputs[i].solver->ext_x, 2, "Lagrangian Objective gradient");
+				objective->checkGradient(Outputs[i].solver->ext_x, Utils::Lagrangian);
+				objective->checkGradient(Outputs[i].solver->ext_x, Utils::AugmentedLagrangian);
+				objective->checkGradient(Outputs[i].solver->ext_x, Utils::LagrangianObjective);
 			}
 			
 		}
@@ -1282,16 +1282,16 @@ void basic_app::checkHessians()
 				Eigen::VectorXd x;
 				x = Eigen::VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
-				HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE); // For use of SetConsoleTextAttribute()
-				SetConsoleTextAttribute(console, 200);
-				objective->checkHessian(x, 0, "Lagrangian hessian");
-				objective->checkHessian(x, 1, "Augmented Lagrangian hessian");
-				//objective->checkHessian(x, 2, "Lagrangian Objective hessian");
+				objective->checkHessian(x, Utils::Lagrangian);
+				objective->checkHessian(x, Utils::AugmentedLagrangian);
+				objective->checkHessian(x, Utils::LagrangianObjective);
+				objective->checkHessian(x, Utils::LagrangianConstraint);
 			}
 			else {
-				objective->checkHessian(Outputs[i].solver->ext_x, 0, "Lagrangian hessian");
-				objective->checkHessian(Outputs[i].solver->ext_x, 1, "Augmented Lagrangian hessian");
-				//objective->checkHessian(Outputs[i].solver->ext_x, 2, "Lagrangian Objective hessian");
+				objective->checkHessian(Outputs[i].solver->ext_x, Utils::Lagrangian);
+				objective->checkHessian(Outputs[i].solver->ext_x, Utils::AugmentedLagrangian);
+				objective->checkHessian(Outputs[i].solver->ext_x, Utils::LagrangianObjective);
+				objective->checkHessian(Outputs[i].solver->ext_x, Utils::LagrangianConstraint);
 			}
 		}
 	}

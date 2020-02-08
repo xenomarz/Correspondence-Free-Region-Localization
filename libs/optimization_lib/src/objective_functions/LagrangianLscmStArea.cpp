@@ -81,7 +81,7 @@ void LagrangianLscmStArea::objectiveHessian(std::vector<int>& I, std::vector<int
 
 void LagrangianLscmStArea::constrainedGradient(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
 	I.clear();	J.clear();	S.clear();
-	auto PushTripple = [&](int i, int j, double v) { if (i > j) std::swap(i, j); I.push_back(i); J.push_back(j); S.push_back(v); };
+	auto PushTripple = [&](int i, int j, double v) { I.push_back(i); J.push_back(j); S.push_back(v); };
 
 	for (int fi = 0; fi < F.rows(); ++fi) {
 		//prepare gradient
@@ -149,43 +149,38 @@ Eigen::VectorXd LagrangianLscmStArea::constrainedValue(const bool update) {
 }
 
 void LagrangianLscmStArea::lagrangianGradient(Eigen::VectorXd& g, const bool update) {
-	/*g.conservativeResize(V.rows() * 2 + F.rows());
+	g.conservativeResize(V.rows() * 2 + F.rows());
 	std::vector<int> I, J; std::vector<double> S;
 	constrainedGradient(I, J, S);
 	Eigen::SparseMatrix<double> ConstrGrad = Utils::BuildMatrix(I, J, S);
 
-	Eigen::VectorXd asd(2 * V.rows());
-	asd.setZero();
-	asd = objectiveGradient(update);
-	asd = lambda.transpose() * ConstrGrad;
 	g.head(2*V.rows()) = objectiveGradient(update) - (ConstrGrad.transpose()*lambda);
-	g.tail(F.rows()) = -1 * constrainedValue(update);*/
+	g.tail(F.rows()) = -1 * constrainedValue(update);
 
+	//g.conservativeResize(V.rows() * 2 + F.rows());
+	//g.setZero();
 
-	g.conservativeResize(V.rows() * 2 + F.rows());
-	g.setZero();
+	//for (int fi = 0; fi < F.rows(); ++fi) {
+	//	//prepare gradient
+	//	Eigen::Vector4d dE_dJ(
+	//		2 * a(fi) - 2 * d(fi) - lambda(fi) * d(fi),
+	//		2 * b(fi) + 2 * c(fi) + lambda(fi) * c(fi),
+	//		2 * b(fi) + 2 * c(fi) + lambda(fi) * b(fi),
+	//		2 * d(fi) - 2 * a(fi) - lambda(fi) * a(fi)
+	//	);
+	//	grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
 
-	for (int fi = 0; fi < F.rows(); ++fi) {
-		//prepare gradient
-		Eigen::Vector4d dE_dJ(
-			2 * a(fi) - 2 * d(fi) - lambda(fi) * d(fi),
-			2 * b(fi) + 2 * c(fi) + lambda(fi) * c(fi),
-			2 * b(fi) + 2 * c(fi) + lambda(fi) * b(fi),
-			2 * d(fi) - 2 * a(fi) - lambda(fi) * a(fi)
-		);
-		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
-
-		//Update the gradient of the x-axis
-		g(F(fi, 0)) += grad(fi, 0);
-		g(F(fi, 1)) += grad(fi, 1);
-		g(F(fi, 2)) += grad(fi, 2);
-		//Update the gradient of the y-axis
-		g(F(fi, 0) + V.rows()) += grad(fi, 3);
-		g(F(fi, 1) + V.rows()) += grad(fi, 4);
-		g(F(fi, 2) + V.rows()) += grad(fi, 5);
-		//Update the gradient of lambda
-		g(fi + 2 * V.rows()) += Area(fi)*(1 - detJ(fi));
-	}
+	//	//Update the gradient of the x-axis
+	//	g(F(fi, 0)) += grad(fi, 0);
+	//	g(F(fi, 1)) += grad(fi, 1);
+	//	g(F(fi, 2)) += grad(fi, 2);
+	//	//Update the gradient of the y-axis
+	//	g(F(fi, 0) + V.rows()) += grad(fi, 3);
+	//	g(F(fi, 1) + V.rows()) += grad(fi, 4);
+	//	g(F(fi, 2) + V.rows()) += grad(fi, 5);
+	//	//Update the gradient of lambda
+	//	g(fi + 2 * V.rows()) += Area(fi)*(1 - detJ(fi));
+	//}
 
 	if (update) {
 		gradient_norm = g.norm();

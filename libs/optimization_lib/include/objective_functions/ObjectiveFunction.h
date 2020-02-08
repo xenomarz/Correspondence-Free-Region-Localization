@@ -33,10 +33,10 @@ public:
 	void init_mesh(const Eigen::MatrixXd& V, const Eigen::MatrixX3i& F);
 
 	//Finite Differences check point
-	Eigen::VectorXd FDGradient(const Eigen::VectorXd& X, const int type);
-    void FDHessian(const Eigen::VectorXd& X, const int type, std::vector<int>& I, std::vector<int>& J, std::vector<double>& S);
-    void checkGradient(const Eigen::VectorXd& X, const int type,const std::string str);
-    void checkHessian(const Eigen::VectorXd& X, const int type, const std::string str);
+	Eigen::VectorXd FDGradient(const Eigen::VectorXd& X, const Utils::FDtype type);
+    void FDHessian(const Eigen::VectorXd& X, const Utils::FDtype type, std::vector<int>& I, std::vector<int>& J, std::vector<double>& S);
+    void checkGradient(const Eigen::VectorXd& X, const Utils::FDtype type);
+    void checkHessian(const Eigen::VectorXd& X, const Utils::FDtype type);
 	
 	// Hessian sparse reprensentation
 	std::vector<int> II, JJ;
