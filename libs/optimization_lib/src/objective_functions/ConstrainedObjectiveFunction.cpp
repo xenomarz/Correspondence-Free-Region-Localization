@@ -150,7 +150,7 @@ bool ConstrainedObjectiveFunction::checkObjectiveGradient(const Eigen::VectorXd&
 	return true;
 }
 
-bool ConstrainedObjectiveFunction::checkObjectiveHessian(const Eigen::VectorXd& X)
+bool ConstrainedObjectiveFunction::checkConstrainedJacobian(const Eigen::VectorXd& X)
 {
 	/////////////////////////////////////////////////////
 	checkAugHessian(X);
@@ -195,4 +195,38 @@ bool ConstrainedObjectiveFunction::checkObjectiveHessian(const Eigen::VectorXd& 
 		}
 	}
 	return true;
+}
+
+void ConstrainedObjectiveFunction::FDConstrainedJacobian(const Eigen::VectorXd& X)
+{
+	Eigen::VectorXd Xd = X;
+	updateX(Xd);
+	Eigen::VectorXd gp(X.size()), gm(X.size()), Hi(X.size());
+	double dX = 10e-9;
+	II.clear(); JJ.clear(); SS.clear();
+	for (int i = 0; i < X.size(); i++) {
+		double tmpVal = X(i);
+		Xd(i) = tmpVal + dX;
+		updateX(Xd);
+		gp = constrainedValue(false);
+
+		Xd(i) = tmpVal - dX;
+		updateX(Xd);
+		gm = constrainedValue(false);
+
+		//now reset the ith param value
+		Xd(i) = tmpVal;
+		//and compute the row of the hessian
+		Hi = (gp - gm) / (2 * dX);
+		//each vector is a column vector of the hessian, so copy it in place...
+		for (int j = i; j < X.size(); j++)
+		{
+			if (abs(Hi[j]) > 1e-8)
+			{
+				II.push_back(i);
+				JJ.push_back(j);
+				SS.push_back(Hi[j]);
+			}
+		}
+	}
 }

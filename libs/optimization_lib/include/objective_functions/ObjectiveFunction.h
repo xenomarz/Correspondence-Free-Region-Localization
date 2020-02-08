@@ -33,9 +33,9 @@ public:
 	void init_mesh(const Eigen::MatrixXd& V, const Eigen::MatrixX3i& F);
 
 	//Finite Differences check point
-    void FDGradient(const Eigen::VectorXd& X, Eigen::VectorXd& g);
+	Eigen::VectorXd FDGradient(const Eigen::VectorXd& X, const int type);
     void FDHessian(const Eigen::VectorXd& X);
-    bool checkGradient(const Eigen::VectorXd& X);
+    void checkGradient(const Eigen::VectorXd& X, const int type,const std::string str);
     bool checkHessian(const Eigen::VectorXd& X);
 	bool checkAugGradient(const Eigen::VectorXd& X);
 	bool checkAugHessian(const Eigen::VectorXd& X);

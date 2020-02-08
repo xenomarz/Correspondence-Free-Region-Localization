@@ -1255,10 +1255,12 @@ void basic_app::checkGradients()
 				Eigen::VectorXd x;
 				x = Eigen::VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
 				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
-				objective->checkGradient(x);
+				objective->checkGradient(x,0,"Regular");
+				objective->checkGradient(x,1,"AugmentedGradCheck");
 			}
 			else {
-				objective->checkGradient(Outputs[i].solver->ext_x);
+				objective->checkGradient(Outputs[i].solver->ext_x,0,"Regular");
+				objective->checkGradient(Outputs[i].solver->ext_x,1,"AugmentedGradCheck");
 			}
 			
 		}

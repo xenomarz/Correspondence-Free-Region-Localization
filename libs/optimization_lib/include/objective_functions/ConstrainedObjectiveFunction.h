@@ -31,7 +31,9 @@ public:
 	//FD functions
 	void FDObjectiveGradient(const Eigen::VectorXd& X, Eigen::VectorXd& g);
 	bool checkObjectiveGradient(const Eigen::VectorXd& X);
-	bool checkObjectiveHessian(const Eigen::VectorXd& X);
+	bool checkConstrainedJacobian(const Eigen::VectorXd& X);
+	void FDConstrainedJacobian(const Eigen::VectorXd& X);
+
 
 	//save values to show results
 	double objective_value = 0;
