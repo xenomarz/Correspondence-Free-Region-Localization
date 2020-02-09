@@ -192,30 +192,34 @@ void LagrangianLscmStArea::lagrangianGradient(Eigen::VectorXd& g, const bool upd
 }
 
 void LagrangianLscmStArea::AuglagrangGradWRTX(Eigen::VectorXd& g, const bool update) {
-	g.conservativeResize(V.rows() * 2);
-	g.setZero();
+	std::vector<int> I, J; std::vector<double> S;
+	constrainedGradient(I, J, S);
+	Eigen::SparseMatrix<double> ConstrGrad = Utils::BuildMatrix(I, J, S);
+	Eigen::VectorXd objGrad = objectiveGradient(update);
+	Eigen::VectorXd constrGrad = constrainedValue(update);
+	g = objGrad + (ConstrGrad.transpose()*(augmented_value_parameter*constrGrad - lambda));
+	
+	//Eigen::VectorXd constr = constrainedValue(false);
 
-	Eigen::VectorXd constr = constrainedValue(false);
+	//for (int fi = 0; fi < F.rows(); ++fi) {
+	//	//prepare gradient
+	//	Eigen::Vector4d dE_dJ(
+	//		2 * a(fi) - 2 * d(fi) + ((augmented_value_parameter*constr(fi)) - lambda(fi)) * d(fi),
+	//		2 * b(fi) + 2 * c(fi) - ((augmented_value_parameter*constr(fi)) - lambda(fi)) * c(fi),
+	//		2 * b(fi) + 2 * c(fi) - ((augmented_value_parameter*constr(fi)) - lambda(fi)) * b(fi),
+	//		2 * d(fi) - 2 * a(fi) + ((augmented_value_parameter*constr(fi)) - lambda(fi)) * a(fi)
+	//	);
+	//	grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
 
-	for (int fi = 0; fi < F.rows(); ++fi) {
-		//prepare gradient
-		Eigen::Vector4d dE_dJ(
-			2 * a(fi) - 2 * d(fi) + ((augmented_value_parameter*constr(fi)) - lambda(fi)) * d(fi),
-			2 * b(fi) + 2 * c(fi) - ((augmented_value_parameter*constr(fi)) - lambda(fi)) * c(fi),
-			2 * b(fi) + 2 * c(fi) - ((augmented_value_parameter*constr(fi)) - lambda(fi)) * b(fi),
-			2 * d(fi) - 2 * a(fi) + ((augmented_value_parameter*constr(fi)) - lambda(fi)) * a(fi)
-		);
-		grad.row(fi) = Area(fi)*(dE_dJ.transpose() * dJ_dX[fi]).transpose();
-
-		//Update the gradient of the x-axis
-		g(F(fi, 0)) += grad(fi, 0);
-		g(F(fi, 1)) += grad(fi, 1);
-		g(F(fi, 2)) += grad(fi, 2);
-		//Update the gradient of the y-axis
-		g(F(fi, 0) + V.rows()) += grad(fi, 3);
-		g(F(fi, 1) + V.rows()) += grad(fi, 4);
-		g(F(fi, 2) + V.rows()) += grad(fi, 5);
-	}
+	//	//Update the gradient of the x-axis
+	//	g(F(fi, 0)) += grad(fi, 0);
+	//	g(F(fi, 1)) += grad(fi, 1);
+	//	g(F(fi, 2)) += grad(fi, 2);
+	//	//Update the gradient of the y-axis
+	//	g(F(fi, 0) + V.rows()) += grad(fi, 3);
+	//	g(F(fi, 1) + V.rows()) += grad(fi, 4);
+	//	g(F(fi, 2) + V.rows()) += grad(fi, 5);
+	//}
 	if (update) {
 		gradient_norm = g.norm();
 		//objective_gradient_norm = g.norm();

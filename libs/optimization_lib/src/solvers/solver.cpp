@@ -8,8 +8,6 @@
 #define JUMP 0.01f
 #define ARRAY_OUTPUT_SIZE (int)((HIGH - LOW) / JUMP) + 1
 
-
-
 solver::solver(const bool isConstrObjFunc, const int solverID)
 	:
 	solverID(solverID),
