@@ -84,7 +84,7 @@ void TotalObjective::gradient(Eigen::VectorXd& g, const bool update)
 
 void TotalObjective::hessian()
 {
-	SS.clear();
+	II.clear(); JJ.clear(); SS.clear();
 	
 	for (auto const &objective : objectiveList)
 	{
@@ -95,12 +95,16 @@ void TotalObjective::hessian()
             SSi[i] = objective->w * objective->SS[i];
 
 		SS.insert(SS.end(), SSi.begin(), SSi.end());
+		II.insert(II.end(), objective->II.begin(), objective->II.end());
+		JJ.insert(JJ.end(), objective->JJ.begin(), objective->JJ.end());
 	}
 
 	// shift the diagonal of the hessian
 	int rows = *std::max_element(II.begin(), II.end()) + 1;
 	std::vector<double> SSi; SSi.resize(rows);
 	for (int i = 0; i < rows; i++) {
+		II.push_back(i);
+		JJ.push_back(i);
 		SSi[i] = 1e-6 + Shift_eigen_values;
 	}
 	SS.insert(SS.end(), SSi.begin(), SSi.end());

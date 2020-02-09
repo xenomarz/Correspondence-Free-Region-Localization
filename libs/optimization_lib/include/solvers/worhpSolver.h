@@ -24,6 +24,7 @@ private:
 	// mesh vertices and faces
 	Eigen::MatrixX3i F;
 	Eigen::MatrixXd V;
+
 	// Objective function
 	void UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt);
 	// Function of constraints

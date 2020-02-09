@@ -148,6 +148,8 @@ Eigen::VectorXd LagrangianLscmStArea::constrainedValue(const bool update) {
 	return areaE;
 }
 
+
+
 void LagrangianLscmStArea::lagrangianGradient(Eigen::VectorXd& g, const bool update) {
 	g.conservativeResize(V.rows() * 2 + F.rows());
 	std::vector<int> I, J; std::vector<double> S;
@@ -223,44 +225,80 @@ void LagrangianLscmStArea::AuglagrangGradWRTX(Eigen::VectorXd& g, const bool upd
 
 void LagrangianLscmStArea::hessian()
 {
-#pragma omp parallel for num_threads(24)
-	int index2 = 0;
-	for (int i = 0; i < F.rows(); ++i) {
-		//prepare hessian
-		Eigen::MatrixXd d2E_dJ2(4, 4);
-		d2E_dJ2 <<
-			2			, 0				, 0				, -lambda(i) -2,
-			0			, 2				, 2+lambda(i)	, 0			,
-			0			, 2 + lambda(i)	, 2				, 0			,
-			-lambda(i)-2	, 0				, 0				, 2;
+	std::vector<int> I, J;
+	std::vector<double> S;
+	std::vector<std::vector<int>> Is, Js;
+	std::vector<std::vector<double>> Ss;
 
-		Hessian[i] = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
+	/*
+	* Adding the first part of the hessian => Hess(f(x)) - lambda*Hess(c(x))
+	*/
+	// add Hess(f(x))
+	objectiveHessian(II, JJ, SS);
+	// add ( -lambda * Hess(c(x)).transpose() )
+	constrainedHessian(Is,Js,Ss);
+	for (int fi = 0; fi < F.rows(); fi++) {
+		II.insert(II.end(), Is[fi].begin(), Is[fi].end());
+		JJ.insert(JJ.end(), Js[fi].begin(), Js[fi].end());
+		for (double val : Ss[fi])
+			SS.push_back(val * (-lambda(fi)));
+	}
 
-		for (int a = 0; a < 6; ++a)
-		{
-			for (int b = 0; b <= a; ++b)
-			{
-				SS[index2++] = Hessian[i](a, b);
-			}
-		}
+	/*
+	* Adding the second part of the hessian => -grad(C(x)).transpose()
+	*/
+	constrainedGradient(I, J, S);
+	II.insert(II.end(), J.begin(), J.end());
+	for (int i = 0; i < I.size(); i++) {
+		JJ.push_back(I[i] + 2 * V.rows());
+		SS.push_back(-S[i]);
 	}
-	
-	for (int i = 0; i < F.rows(); ++i) {
-		//prepare hessian
-		Eigen::Vector4d dE_dJ(
-			-d(i),
-			c(i),
-			b(i),
-			-a(i)
-		);
-		Eigen::VectorXd hess = Area(i)*(dE_dJ.transpose() * dJ_dX[i]).transpose();
-		SS[index2++] = hess[0];
-		SS[index2++] = hess[1];
-		SS[index2++] = hess[2];
-		SS[index2++] = hess[3];
-		SS[index2++] = hess[4];
-		SS[index2++] = hess[5];	
-	}
+
+	/*
+	* Tell the solver the size of the matrix
+	*/
+	II.push_back(2 * V.rows() + F.rows() - 1);
+	JJ.push_back(2 * V.rows() + F.rows() - 1);
+	SS.push_back(0);
+
+//#pragma omp parallel for num_threads(24)
+//	int index2 = 0;
+//	for (int i = 0; i < F.rows(); ++i) {
+//		//prepare hessian
+//		Eigen::MatrixXd d2E_dJ2(4, 4);
+//		d2E_dJ2 <<
+//			2			, 0				, 0				, -lambda(i) -2,
+//			0			, 2				, 2+lambda(i)	, 0			,
+//			0			, 2 + lambda(i)	, 2				, 0			,
+//			-lambda(i)-2	, 0				, 0				, 2;
+//
+//		Hessian[i] = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
+//		
+//		for (int a = 0; a < 6; ++a)
+//		{
+//			for (int b = 0; b <= a; ++b)
+//			{
+//				SS[index2++] = Hessian[i](a, b);
+//			}
+//		}
+//	}
+//	
+//	for (int i = 0; i < F.rows(); ++i) {
+//		//prepare hessian
+//		Eigen::Vector4d dE_dJ(
+//			-d(i),
+//			c(i),
+//			b(i),
+//			-a(i)
+//		);
+//		Eigen::VectorXd hess = Area(i)*(dE_dJ.transpose() * dJ_dX[i]).transpose();
+//		SS[index2++] = hess[0];
+//		SS[index2++] = hess[1];
+//		SS[index2++] = hess[2];
+//		SS[index2++] = hess[3];
+//		SS[index2++] = hess[4];
+//		SS[index2++] = hess[5];	
+//	}
 }
 
 void LagrangianLscmStArea::aughessian()

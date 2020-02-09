@@ -386,9 +386,13 @@ void worhpSolver::UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 void worhpSolver::UserDF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
 	std::cout << "-------------UserDF" << std::endl;
-	wsp->DF.val[0] = wsp->ScaleObj * 2.0 * opt->X[0];
-	wsp->DF.val[1] = wsp->ScaleObj * 4.0 * opt->X[1];
-	wsp->DF.val[2] = wsp->ScaleObj * -1.0;
+	Eigen::VectorXd X = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
+	LagrangianLscmStArea f = *this->functionF;
+	f.updateX(X);
+	Eigen::VectorXd objGrad = f.objectiveGradient(false);
+	for (int i = 0; i < opt->n; i++) {
+		wsp->DF.val[i] = wsp->ScaleObj * objGrad(i);
+	}
 }
 
 void worhpSolver::UserDG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)

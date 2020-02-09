@@ -55,19 +55,6 @@ int main()
 	//solver.run_one_iteration(0, true);
 	//solver.get_data(X, Lambda);*/
 
-	Eigen::SparseMatrix<double> w,fsddsd;
-	w.resize(2, 2);
-	w.insert(0, 0) = 5;
-	w.insert(0, 1) = 6;
-	w.insert(1, 1) = 8;
-	w.makeCompressed();
-	cout << w.diagonal() << endl;
-	cout << w.toDense() << endl;
-	cout << w.selfadjointView<Eigen::Upper>() << endl;
-	//w.triangularView<Eigen::StrictlyUpper>();
 	
-	fsddsd = w.selfadjointView<Eigen::Upper>();
-	cout << fsddsd << endl;
-
 	return 0;
 }
