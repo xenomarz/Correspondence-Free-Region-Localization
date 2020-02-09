@@ -5,11 +5,6 @@ class LagrangianLscmStArea : public ConstrainedObjectiveFunction
 {	
 public:
 	LagrangianLscmStArea();
-	virtual void hessian() override;
-	virtual void lagrangianGradient(Eigen::VectorXd& g, const bool update) override;
-	void AuglagrangGradWRTX(Eigen::VectorXd& g, const bool update);
-	void aughessian();
-
 	virtual double objectiveValue(const bool update) override;
 	virtual Eigen::VectorXd objectiveGradient(const bool update) override;
 	virtual void objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) override;

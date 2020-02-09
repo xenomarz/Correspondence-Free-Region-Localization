@@ -164,6 +164,3 @@ void TotalObjective::constrainedHessian(std::vector<std::vector<int>>& Is, std::
 	
 }
 
-void TotalObjective::lagrangianGradient(Eigen::VectorXd& g, const bool update) {
-	
-}

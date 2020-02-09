@@ -26,7 +26,11 @@ public:
 	virtual Eigen::VectorXd constrainedValue(const bool update) = 0;
 	virtual void constrainedGradient(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) = 0;
 	virtual void constrainedHessian(std::vector<std::vector<int>>& Is, std::vector < std::vector<int>>& Js, std::vector < std::vector<double>>& Ss) = 0;
-	virtual void lagrangianGradient(Eigen::VectorXd& g, const bool update) = 0;
+	
+	void lagrangianGradient(Eigen::VectorXd& g, const bool update);
+	void AuglagrangGradWRTX(Eigen::VectorXd& g, const bool update);
+	void hessian();
+	void aughessian();
 
 	//save values to show results
 	double objective_value = 0;
