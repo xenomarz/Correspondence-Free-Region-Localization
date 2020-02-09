@@ -229,17 +229,23 @@ void LagrangianLscmStArea::AuglagrangGradWRTX(Eigen::VectorXd& g, const bool upd
 
 void LagrangianLscmStArea::hessian()
 {
+	/*
+	*  Hess(L) = [Hess(f) - lambda*Hess(C)	,	-Grad(C).Transpose	]
+	*			 [-Grad(C)					,	0					]
+	* 
+	*  we build Hess(L) as an upper triangular matrix!
+	*/
 	std::vector<int> I, J;
 	std::vector<double> S;
 	std::vector<std::vector<int>> Is, Js;
 	std::vector<std::vector<double>> Ss;
 
 	/*
-	* Adding the first part of the hessian => Hess(f(x)) - lambda*Hess(c(x))
+	* Adding the first part of the hessian => Hess(f) - lambda*Hess(C)
 	*/
-	// add Hess(f(x))
+	// add Hess(f)
 	objectiveHessian(II, JJ, SS);
-	// add ( -lambda * Hess(c(x)).transpose() )
+	// add ( -lambda * Hess(C))
 	constrainedHessian(Is,Js,Ss);
 	for (int fi = 0; fi < F.rows(); fi++) {
 		II.insert(II.end(), Is[fi].begin(), Is[fi].end());
@@ -307,34 +313,84 @@ void LagrangianLscmStArea::hessian()
 
 void LagrangianLscmStArea::aughessian()
 {
-#pragma omp parallel for num_threads(24)
-	int index2 = 0;
+	std::vector<int> I, J;
+	std::vector<double> S;
+	std::vector<std::vector<int>> Is, Js;
+	std::vector<std::vector<double>> Ss;
+
+	// add Hess(f(x))
+	objectiveHessian(II_aug, JJ_aug, SS_aug);
 	
-	for (int i = 0; i < F.rows(); ++i) {
-		//prepare hessian
-		float u = Area(i) * augmented_value_parameter;
-		Eigen::MatrixXd d2E_dJ2(4, 4);
-		d2E_dJ2 <<
-			2 + u * d(i)*d(i)										, -u * d(i)*c(i)										, -u * d(i)*b(i)										, -lambda(i) - 2 - u + 2 * u * d(i)*a(i) - u * b(i)*c(i),
-			-u * d(i)*c(i)											, 2 + u * c(i)*c(i)										, 2 + lambda(i) - u * a(i)*d(i) + 2 * u*b(i)*c(i) + u	, -u * c(i)*a(i)										,
-			-u * d(i)*b(i)											, 2 + lambda(i) - u * a(i)*d(i) + 2 * u*b(i)*c(i) + u	, 2 + u * b(i)*b(i)										, -u * b(i)*a(i)										,
-			-lambda(i) - 2 - u + 2 * u * d(i)*a(i) - u * b(i)*c(i)	, -u * c(i)*a(i)										, -u * b(i)*a(i)										, 2 + u * a(i)*a(i)										;
+	// add (Meo * C - lambda) * Hess(C)
+	constrainedHessian(Is, Js, Ss);
+	Eigen::VectorXd constr = constrainedValue(true);
+	for (int fi = 0; fi < F.rows(); fi++) {
+		II_aug.insert(II_aug.end(), Is[fi].begin(), Is[fi].end());
+		JJ_aug.insert(JJ_aug.end(), Js[fi].begin(), Js[fi].end());
+		for (double val : Ss[fi])
+			SS_aug.push_back(val * (augmented_value_parameter*constr(fi)-lambda(fi)));
+	}
 
-		Hessian[i] = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
-
-		for (int a = 0; a < 6; ++a)
+	// add Meo * grad(C) * grad(C)
+	constrainedGradient(I, J, S);
+	Eigen::SparseMatrix<double> res,ConstrGrad = Utils::BuildMatrix(I, J, S);
+	res = augmented_value_parameter *  ConstrGrad.transpose() * ConstrGrad;
+	for (int k = 0; k < res.outerSize(); ++k)
+	{
+		for (Eigen::SparseMatrix<double>::InnerIterator it(res, k); it; ++it)
 		{
-			for (int b = 0; b <= a; ++b)
-			{
-				SS_aug[index2++] = Hessian[i](a, b);
+			if (it.col() >= it.row()) {
+				II_aug.push_back(it.row());
+				JJ_aug.push_back(it.col());
+				SS_aug.push_back(it.value());
 			}
 		}
 	}
+	/*
+	* Tell the solver the size of the matrix
+	*/
+	II_aug.push_back(2 * V.rows() - 1);
+	JJ_aug.push_back(2 * V.rows() - 1);
+	SS_aug.push_back(0);
 
-	// shift the diagonal of the hessian
-	int rows = *std::max_element(II_aug.begin(), II_aug.end()) + 1;
-	for (int i = 0; i < rows; i++) {
-		SS_aug[index2++] = 1e-6;
+	/*
+	* Shift the diagonal of the hessian
+	*/
+	for (int i = 0; i < (2*V.rows()); i++) {
+		II_aug.push_back(i);
+		JJ_aug.push_back(i);
+		SS_aug.push_back(1e-6);
 	}
 	assert(SS_aug.size() == II_aug.size() && SS_aug.size() == JJ_aug.size());
+
+//#pragma omp parallel for num_threads(24)
+//	int index2 = 0;
+//	
+//	for (int i = 0; i < F.rows(); ++i) {
+//		//prepare hessian
+//		float u = Area(i) * augmented_value_parameter;
+//		Eigen::MatrixXd d2E_dJ2(4, 4);
+//		d2E_dJ2 <<
+//			2 + u * d(i)*d(i)										, -u * d(i)*c(i)										, -u * d(i)*b(i)										, -lambda(i) - 2 - u + 2 * u * d(i)*a(i) - u * b(i)*c(i),
+//			-u * d(i)*c(i)											, 2 + u * c(i)*c(i)										, 2 + lambda(i) - u * a(i)*d(i) + 2 * u*b(i)*c(i) + u	, -u * c(i)*a(i)										,
+//			-u * d(i)*b(i)											, 2 + lambda(i) - u * a(i)*d(i) + 2 * u*b(i)*c(i) + u	, 2 + u * b(i)*b(i)										, -u * b(i)*a(i)										,
+//			-lambda(i) - 2 - u + 2 * u * d(i)*a(i) - u * b(i)*c(i)	, -u * c(i)*a(i)										, -u * b(i)*a(i)										, 2 + u * a(i)*a(i)										;
+//
+//		Hessian[i] = Area(i) * dJ_dX[i].transpose() * d2E_dJ2 * dJ_dX[i];
+//
+//		for (int a = 0; a < 6; ++a)
+//		{
+//			for (int b = 0; b <= a; ++b)
+//			{
+//				SS_aug[index2++] = Hessian[i](a, b);
+//			}
+//		}
+//	}
+
+	//// shift the diagonal of the hessian
+	//int rows = *std::max_element(II_aug.begin(), II_aug.end()) + 1;
+	//for (int i = 0; i < rows; i++) {
+	//	SS_aug[index2++] = 1e-6;
+	//}
+	//assert(SS_aug.size() == II_aug.size() && SS_aug.size() == JJ_aug.size());
 }
