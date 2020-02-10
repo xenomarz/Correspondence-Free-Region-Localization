@@ -1,10 +1,10 @@
 #pragma once
 #include "libs/optimization_lib/include/objective_functions/ConstrainedObjectiveFunction.h"
 
-class LagrangianAreaStLscm : public ConstrainedObjectiveFunction
+class TestConstrainedRosenbrock : public ConstrainedObjectiveFunction
 {	
 public:
-	LagrangianAreaStLscm();
+	TestConstrainedRosenbrock();
 	
 	virtual double objectiveValue(const bool update) override;
 	virtual Eigen::VectorXd objectiveGradient(const bool update) override;
