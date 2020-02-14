@@ -73,7 +73,7 @@ public:
 	}
 
 	void Pause()
-	{
+	{ 
 		std::lock_guard<std::mutex> lock(thread_state_mutex_);
 		switch (thread_state_)
 		{

@@ -31,3 +31,11 @@ export const solverStateText = (solverState) => {
 export const splitOrientationText = (splitOrientation) => {
     return splitOrientation;
 };
+
+export const isAutocutsEnabled = (algorithmType) => {
+    return algorithmType === EnumsExports.AlgorithmType.AUTOCUTS;
+};
+
+export const isAutoquadsEnabled = (algorithmType) => {
+    return algorithmType === EnumsExports.AlgorithmType.AUTOQUADS;
+};

@@ -31,6 +31,17 @@ public:
 	}
 
 	/**
+	 * Setters
+	 */
+	void SetInterval(const double interval)
+	{
+		for (auto& periodic_objective : periodic_objectives)
+		{
+			periodic_objective->SetPeriod(interval);
+		}
+	}
+
+	/**
 	 * Getters
 	 */
 	const EdgePairDataProvider& GetEdgePairDataProvider() const
@@ -64,7 +75,18 @@ public:
 		this->AddObjectiveFunction(periodic_v1_y_coordinate_diff_objective);
 		this->AddObjectiveFunction(periodic_v2_x_coordinate_diff_objective);
 		this->AddObjectiveFunction(periodic_v2_y_coordinate_diff_objective);
+
+		periodic_objectives.push_back(periodic_v1_x_coordinate_diff_objective);
+		periodic_objectives.push_back(periodic_v1_y_coordinate_diff_objective);
+		periodic_objectives.push_back(periodic_v2_x_coordinate_diff_objective);
+		periodic_objectives.push_back(periodic_v2_y_coordinate_diff_objective);
 	}
+
+private:
+	/**
+	 * Private fields
+	 */
+	std::vector<std::shared_ptr<PeriodicObjective<StorageOrder_>>> periodic_objectives;
 };
 
 #endif

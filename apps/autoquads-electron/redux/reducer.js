@@ -1,4 +1,5 @@
 import {
+    CHANGE_ALGORITHM_TYPE,
     CHANGE_SPLIT_ORIENTATION,
     CHANGE_MODEL_VIEWPORT_COLOR,
     CHANGE_SOUP_VIEWPORT_COLOR,
@@ -47,6 +48,7 @@ import {
 import * as EnumsExports from './enums.js';
 
 const INITIAL_STATE = {
+    algorithmType: 'autocuts',
     splitOrientation: EnumsExports.SplitOrientation.HORIZONTAL,
     modelViewportColor: 'rgb(200,200,200)',
     soupViewportColor: 'rgb(200,200,200)',
@@ -192,6 +194,11 @@ function matchObjectiveFunctionProperty(objectivePropertyVisualData, action) {
 
 export const reducer = (state = INITIAL_STATE, action) => {
     switch (action.type) {
+        case CHANGE_ALGORITHM_TYPE:
+            return {
+                ...state,
+                algorithmType: action.algorithmType
+            };
         case CHANGE_SPLIT_ORIENTATION:
             return {
                 ...state,

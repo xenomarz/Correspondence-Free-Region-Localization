@@ -77,6 +77,12 @@ private:
 		IMAGE_VERTICES
 	};
 
+	enum class AlgorithmType
+	{
+		AUTOCUTS,
+		AUTOQUADS
+	};
+
 	static Napi::FunctionReference constructor;
 
 	/**
@@ -128,11 +134,12 @@ private:
 	Napi::Value LoadModel(const Napi::CallbackInfo& info);
 	Napi::Value ResumeSolver(const Napi::CallbackInfo& info);
 	Napi::Value PauseSolver(const Napi::CallbackInfo& info);
+	Napi::Value SetAlgorithmType(const Napi::CallbackInfo& info);
 	Napi::Value ConstrainFacePosition(const Napi::CallbackInfo& info);
 	Napi::Value UpdateConstrainedFacePosition(const Napi::CallbackInfo& info);
 	Napi::Value UnconstrainFacePosition(const Napi::CallbackInfo& info);
 	Napi::Value ReconstrainFacePosition(const Napi::CallbackInfo& info);
-	
+
 	/**
 	 * Regular private instance methods
 	 */
@@ -153,6 +160,8 @@ private:
 	std::any JSToNative(Napi::Env env, const Napi::Value& value);
 	Napi::Value Engine::GetFaceEdgeAdjacency(const Napi::CallbackInfo& info, const DataSource data_source);
 	Napi::Value Engine::GetEdgeFaceAdjacency(const Napi::CallbackInfo& info, const DataSource data_source);
+	AlgorithmType StringToAlgorithmType(const std::string& algorithm_type_string);
+	Napi::Value CreateObjectiveFunctionDataObject(Napi::Env env, std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>> objective_function) const;
 
 	/**
 	 * Regular private templated instance methods
@@ -304,6 +313,7 @@ private:
 	std::shared_ptr<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>> symmetric_dirichlet_;
 	std::shared_ptr<SeamlessObjective<Eigen::StorageOptions::RowMajor>> seamless_;
 	std::shared_ptr<SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>> singular_points_;
+	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> objective_functions_;
 	
 	std::unique_ptr<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>> newton_method_;
 	std::vector<Eigen::DenseIndex> constrained_faces_indices;

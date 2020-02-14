@@ -31,3 +31,8 @@ export const PropertyEffectType = {
     EDGE_COLOR: "EdgeColor",
     SCENE_OBJECTS: "SceneObjects"
 };
+
+export const AlgorithmType = {
+    AUTOCUTS: "Autocuts",
+    AUTOQUADS: "Autoquads"
+};

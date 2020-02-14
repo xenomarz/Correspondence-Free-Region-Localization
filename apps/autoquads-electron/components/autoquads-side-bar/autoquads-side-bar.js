@@ -65,6 +65,14 @@ export class AutoquadsSideBar extends SideBar {
     render() {
         return html`
             <side-bar-collapsable-section
+                caption="Algorithms">
+                <vaadin-checkbox
+                    ?checked=${HelpersExports.isAutoquadsEnabled(this._algorithmType)}
+                    @change="${this._autoquadsEnabledInputChanged}">
+                    <span>Enable Autoquads</span>
+                </vaadin-checkbox>             
+            </side-bar-collapsable-section>
+            <side-bar-collapsable-section
                 caption="Model Options">
                 <vaadin-button
                     theme="contrast primary"
@@ -557,6 +565,10 @@ export class AutoquadsSideBar extends SideBar {
             objectiveFunctionsProperties: {
                 type: Object,
                 attribute: 'objective-functions-properties'
+            },
+            algorithmType: {
+                type: String,
+                attribute: 'algorithm-type'
             }
         };
     }
@@ -1006,7 +1018,17 @@ export class AutoquadsSideBar extends SideBar {
 
     get objectivePropertiesVisualData() {
         return this._objectivePropertiesVisualData;
-    }     
+    }
+
+    set algorithmType(value) {
+        const oldValue = this._algorithmType;
+        this._algorithmType = value;
+        this.requestUpdate('algorithmType', oldValue);
+    }
+
+    get algorithmType() {
+        return this._algorithmType;
+    }
 
     /**
      * Element life-cycle callbacks
@@ -1112,6 +1134,14 @@ export class AutoquadsSideBar extends SideBar {
 
     _editedEdgeColorInputChanged(e) {
         store.dispatch(ActionsExports.setEditedEdgeColor(e.detail.color));
+    }
+
+    _autoquadsEnabledInputChanged(e) {
+        if(e.srcElement.checked) {
+            store.dispatch(ActionsExports.setAlgorithmType(EnumsExports.AlgorithmType.AUTOQUADS));
+        } else {
+            store.dispatch(ActionsExports.setAlgorithmType(EnumsExports.AlgorithmType.AUTOCUTS));
+        }
     }
 
     _modelWireframeVisibilityInputChanged(e) {

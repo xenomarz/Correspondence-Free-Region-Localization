@@ -55,6 +55,7 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("getImageEdgeFaceAdjacency", &Engine::GetImageEdgeFaceAdjacency),	
 		InstanceMethod("getObjectiveFunctionProperty", &Engine::GetObjectiveFunctionProperty),
 		InstanceMethod("setObjectiveFunctionProperty", &Engine::SetObjectiveFunctionProperty),
+		InstanceMethod("setAlgorithmType", &Engine::SetAlgorithmType),
 		InstanceAccessor("positionWeight", &Engine::GetPositionWeight, &Engine::SetPositionWeight),
 		InstanceAccessor("seamlessWeight", &Engine::GetSeamlessWeight, &Engine::SetSeamlessWeight),
 		InstanceAccessor("lambda", &Engine::GetLambda, &Engine::SetLambda),
@@ -87,6 +88,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::ValuePerEdge) });
 	properties_map_.insert({ "edge_angle_weight", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::EdgeAngleWeight) });
 	properties_map_.insert({ "edge_length_weight", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::EdgeLengthWeight) });
+	properties_map_.insert({ "translation_interval", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
 	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
 	properties_map_.insert({ "singularity_weight_per_vertex", static_cast<uint32_t>(SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>::Properties::SingularityWeightPerVertex) });
 	properties_map_.insert({ "negative_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>::Properties::NegativeAngularDefectSingularitiesIndices) });
@@ -105,13 +107,13 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_);
 	singular_points_ = std::make_shared<SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_, 1);
   	position_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, std::string("Position"));
-	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> objective_functions;
+
 	//objective_functions.push_back(position_);
-	objective_functions.push_back(separation_);
-	objective_functions.push_back(symmetric_dirichlet_);
-	objective_functions.push_back(seamless_);
-	objective_functions.push_back(singular_points_);
-	summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, objective_functions, false);
+	objective_functions_.push_back(separation_);
+	objective_functions_.push_back(symmetric_dirichlet_);
+	objective_functions_.push_back(seamless_);
+	objective_functions_.push_back(singular_points_);
+	summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, objective_functions_, false);
 	mesh_wrapper_->RegisterModelLoadedCallback([this]() {
 		/**
 		 * Initialize objective functions
@@ -539,7 +541,7 @@ Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	const auto objective_function = summation_objective_->GetObjectiveFunction(objective_function_name);
 	if(objective_function == nullptr)
 	{
-		Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
+		//Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
 		return Napi::Value();
 	}
 
@@ -604,7 +606,7 @@ Napi::Value Engine::SetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	const auto objective_function = summation_objective_->GetObjectiveFunction(objective_function_name);
 	if (objective_function == nullptr)
 	{
-		Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
+		//Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
 		return Napi::Value();
 	}
 
@@ -931,35 +933,39 @@ Napi::Value Engine::GetDelta(const Napi::CallbackInfo& info)
 	return delta;
 }
 
+Napi::Value Engine::CreateObjectiveFunctionDataObject(Napi::Env env, std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>> objective_function) const
+{
+	Napi::Object data_object = Napi::Object::New(env);
+	Napi::Object data_object_internal = Napi::Object::New(env);
+	Napi::Array value_per_vertex_array = Napi::Array::New(env, mesh_wrapper_->GetImageVerticesCount());
+
+	data_object.Set("name", objective_function->GetName());
+	data_object.Set("data", data_object_internal);
+	data_object_internal.Set("value", objective_function->GetValue());
+	data_object_internal.Set("gradientNorm", objective_function->GetGradient().norm());
+
+	auto value_per_vertex = objective_function->GetValuePerVertex();
+	for (int32_t i = 0; i < value_per_vertex.rows(); i++)
+	{
+		value_per_vertex_array[i] = Napi::Number::New(env, value_per_vertex.coeffRef(i));
+	}
+
+	return data_object;
+}
+
 Napi::Value Engine::GetObjectiveFunctionsData(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
 	auto objective_functions_count = summation_objective_->GetObjectiveFunctionsCount();
-	Napi::Array objective_functions_data_array = Napi::Array::New(env, objective_functions_count);
+	Napi::Array objective_functions_data_array = Napi::Array::New(env, objective_functions_count + 1);
 	for (std::uint32_t index = 0; index < summation_objective_->GetObjectiveFunctionsCount(); index++)
 	{
-		Napi::Object data_object = Napi::Object::New(env);
-		Napi::Object data_object_internal = Napi::Object::New(env);
-		Napi::Array value_per_vertex_array = Napi::Array::New(env, mesh_wrapper_->GetImageVerticesCount());
-
-		auto current_objective_function = summation_objective_->GetObjectiveFunction(index);
-		data_object.Set("name", current_objective_function->GetName());
-		data_object.Set("data", data_object_internal);
-		data_object_internal.Set("value", current_objective_function->GetValue());
-		data_object_internal.Set("gradientNorm", current_objective_function->GetGradient().norm());
-
-		auto value_per_vertex = current_objective_function->GetValuePerVertex();
-		for(int32_t i = 0; i < value_per_vertex.rows(); i++)
-		{
-			value_per_vertex_array[i] = Napi::Number::New(env, value_per_vertex.coeffRef(i));
-		}
-		
-		//data_object_internal.Set("valuePerVertex", value_per_vertex_array);
-		
-		objective_functions_data_array[index] = data_object;
+		objective_functions_data_array[index] = CreateObjectiveFunctionDataObject(env, summation_objective_->GetObjectiveFunction(index));
 	}
+
+	objective_functions_data_array[objective_functions_count] = CreateObjectiveFunctionDataObject(env, summation_objective_);
 
 	return objective_functions_data_array;
 }
@@ -1035,6 +1041,70 @@ Napi::Value Engine::PauseSolver(const Napi::CallbackInfo& info)
 		newton_method_->Pause();
 	}
 
+	return env.Null();
+}
+
+Engine::AlgorithmType Engine::StringToAlgorithmType(const std::string& algorithm_type_string)
+{
+	std::string mutable_string = algorithm_type_string;
+	std::transform(mutable_string.begin(), mutable_string.end(), mutable_string.begin(), ::tolower);
+	if(mutable_string == "autocuts")
+	{
+		return Engine::AlgorithmType::AUTOCUTS;
+	}
+	else if (mutable_string == "autoquads")
+	{
+		return Engine::AlgorithmType::AUTOQUADS;
+	}
+
+	throw std::exception("Unknown algorithm type");
+}
+
+Napi::Value Engine::SetAlgorithmType(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (info.Length() >= 1)
+	{
+		if (!info[0].IsString())
+		{
+			Napi::TypeError::New(env, "First argument is expected to be a String").ThrowAsJavaScriptException();
+			return Napi::Value();
+		}
+	}
+	else
+	{
+		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
+		return Napi::Value();
+	}
+
+	/**
+	 * Set algorithm type
+	 */
+	summation_objective_->RemoveObjectiveFunctions(objective_functions_);
+	objective_functions_.clear();
+	AlgorithmType algorithm_type = StringToAlgorithmType(info[0].ToString());
+	
+	switch(algorithm_type)
+	{
+	case AlgorithmType::AUTOCUTS:
+		objective_functions_.push_back(separation_);
+		objective_functions_.push_back(symmetric_dirichlet_);
+		break;
+	case AlgorithmType::AUTOQUADS:
+		objective_functions_.push_back(separation_);
+		objective_functions_.push_back(symmetric_dirichlet_);
+		objective_functions_.push_back(seamless_);
+		objective_functions_.push_back(singular_points_);
+		break;
+	}
+	
+	summation_objective_->AddObjectiveFunctions(objective_functions_);
+	summation_objective_->Initialize();
 	return env.Null();
 }
 

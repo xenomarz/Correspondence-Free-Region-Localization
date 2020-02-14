@@ -1,6 +1,7 @@
 import nanoid from '../web_modules/nano-id.js';
 import * as Enums from './enums.js';
 
+export const CHANGE_ALGORITHM_TYPE = 'CHANGE_ALGORITHM_TYPE';
 export const CHANGE_SPLIT_ORIENTATION = 'CHANGE_SPLIT_ORIENTATION';
 export const CHANGE_MODEL_VIEWPORT_COLOR = 'CHANGE_MODEL_VIEWPORT_COLOR';
 export const CHANGE_SOUP_VIEWPORT_COLOR = 'CHANGE_SOUP_VIEWPORT_COLOR';
@@ -45,6 +46,13 @@ export const CHANGE_MODEL_STATE = 'CHANGE_MODEL_STATE';
 export const CHANGE_MODULE_STATE = 'CHANGE_MODULE_STATE';
 export const CHANGE_OBJECTIVE_FUNCTION_PROPERTY_COLOR = 'CHANGE_OBJECTIVE_FUNCTION_PROPERTY_COLOR';
 export const CHANGE_OBJECTIVE_FUNCTION_PROPERTY_VISIBILITY = 'CHANGE_OBJECTIVE_FUNCTION_PROPERTY_VISIBILITY';
+
+export const setAlgorithmType = algorithmType => {
+    return {
+        type: CHANGE_ALGORITHM_TYPE,
+        algorithmType: algorithmType
+    };
+};
 
 export const setSplitOrientation = orientation => {
     return {

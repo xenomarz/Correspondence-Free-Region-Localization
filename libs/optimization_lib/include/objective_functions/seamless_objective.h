@@ -35,7 +35,8 @@ public:
 		LengthValuePerEdge,
 		ValuePerEdge,
 		EdgeAngleWeight,
-		EdgeLengthWeight
+		EdgeLengthWeight,
+		Interval
 	};
 	
 	/**
@@ -62,19 +63,29 @@ public:
 	/**
 	 * Setters
 	 */
-	void SetZeta(const double zeta)
+	void SetInterval(const double interval)
 	{
-		for(auto& periodic_edge_pair_angle_objective : periodic_edge_pair_angle_objectives)
+		for (auto& edge_pair_translation_objective : edge_pair_translation_objectives)
 		{
-			periodic_edge_pair_angle_objective->SetWeight(1.0 - zeta);
+			edge_pair_translation_objective->SetInterval(interval);
 		}
 
-		for (auto& edge_pair_length_objective : edge_pair_length_objectives)
-		{
-			edge_pair_length_objective->SetWeight(zeta);
-		}
-		
-		zeta_ = zeta;
+		interval_ = interval;
+	}
+	
+	void SetZeta(const double zeta)
+	{
+		//for(auto& periodic_edge_pair_angle_objective : periodic_edge_pair_angle_objectives)
+		//{
+		//	periodic_edge_pair_angle_objective->SetWeight(1.0 - zeta);
+		//}
+
+		//for (auto& edge_pair_length_objective : edge_pair_length_objectives)
+		//{
+		//	edge_pair_length_objective->SetWeight(zeta);
+		//}
+		//
+		//zeta_ = zeta;
 	}
 
 	void SetEdgeAngleWeight(const RDS::EdgeIndex edge_index, const double weight)
@@ -118,6 +129,9 @@ public:
 			return true;
 		case Properties::EdgeLengthWeight:
 			SetEdgeLengthWeight(static_cast<RDS::EdgeIndex>(std::any_cast<double>(property_context)), std::any_cast<const double>(property_value));
+			return true;
+		case Properties::Interval:
+			SetInterval(std::any_cast<const double>(property_value));
 			return true;
 		}
 
@@ -269,13 +283,17 @@ public:
 		auto empty_data_provider = std::make_shared<EmptyDataProvider>(this->GetMeshDataProvider());
 		std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_edge_pair_angle_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(this->GetMeshDataProvider(), empty_data_provider, edge_pair_angle_objective, period, this->GetEnforceChildrenPsd());
 
+		periodic_edge_pair_angle_objective->SetWeight(1);
+		edge_pair_length_objective->SetWeight(100);
+		
 		this->AddObjectiveFunction(periodic_edge_pair_angle_objective);
 		this->AddObjectiveFunction(edge_pair_length_objective);
-		this->AddObjectiveFunction(edge_pair_translation_objective);
+		//this->AddObjectiveFunction(edge_pair_translation_objective);
 
 		periodic_edge_pair_angle_objectives.push_back(periodic_edge_pair_angle_objective);
 		edge_pair_length_objectives.push_back(edge_pair_length_objective);
 		edge_pair_angle_objectives.push_back(edge_pair_angle_objective);
+		//edge_pair_translation_objectives.push_back(edge_pair_translation_objective);
 	}
 
 protected:
@@ -349,9 +367,11 @@ private:
 	 * Private fields
 	 */
 	double zeta_;
+	double interval_;
 	std::vector<std::shared_ptr<EdgePairLengthObjective<StorageOrder_>>> edge_pair_length_objectives;
 	std::vector<std::shared_ptr<EdgePairAngleObjective<StorageOrder_>>> edge_pair_angle_objectives;
 	std::vector<std::shared_ptr<PeriodicObjective<StorageOrder_>>> periodic_edge_pair_angle_objectives;
+	std::vector<std::shared_ptr<EdgePairTranslationObjective<StorageOrder_>>> edge_pair_translation_objectives;
 
 	Eigen::VectorXd image_value_per_edge_;
 	Eigen::VectorXd image_angle_value_per_edge_;

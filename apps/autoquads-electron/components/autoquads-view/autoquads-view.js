@@ -277,6 +277,10 @@ export class AutoquadsView extends connect(store)(LitElement) {
             objectiveFunctionsProperties: {
                 type: Object,
                 attribute: 'objective-functions-properties'
+            },
+            algorithmType: {
+                type: String,
+                attribute: 'algorithm-type'
             }
         };
     }
@@ -546,6 +550,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
             const oldValue = this._singularityInterval;
             this._singularityInterval = value;
             this._engine.setObjectiveFunctionProperty('Singular Points Position', 'interval', '', value);
+            this._engine.setObjectiveFunctionProperty('Seamless', 'translation_interval', '', value);
             this.requestUpdate('singularityInterval', oldValue);
         }
     }
@@ -795,6 +800,19 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
     get objectiveFunctionsProperties() {
         return this._objectiveFunctionsProperties;
+    }
+
+    set algorithmType(value) {
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            const oldValue = this._algorithmType;
+            this._algorithmType = value;
+            this._engine.setAlgorithmType(this._algorithmType);
+            this.requestUpdate('algorithmType', oldValue);
+        }
+    }
+
+    get algorithmType() {
+        return this._algorithmType;
     }
 
     /**
