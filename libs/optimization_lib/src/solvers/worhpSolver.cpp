@@ -1,6 +1,6 @@
 #include "solvers/worhpSolver.h"
 
-
+void hessian(LagrangianLscmStArea* f, double scale);
 /*-----------------------------------------------------------------------
  *
  * Minimise    f
@@ -89,7 +89,7 @@ void worhpSolver::run(const Eigen::VectorXd& initialPoint)
 	 * Parameter XML import routine that does not reset
 	 * all parameters to default values (InitParams does this)
 	 */
-	ReadParamsNoInit(&status, "worhpFD.xml", &par);
+	ReadParamsNoInit(&status, "worhpPartialFD.xml", &par);
 	if (status == DataError || status == InitError)
 	{
 		exit(EXIT_FAILURE);
@@ -117,8 +117,7 @@ void worhpSolver::run(const Eigen::VectorXd& initialPoint)
 	// set the amount of nonzeros here
 	//wsp.DF.nnz = opt.n;
 	//wsp.DG.nnz = opt.n * opt.m;
-	//wsp.HM.nnz = 1 + opt.n;  // 1 entry on strict lower triangle
-							 // plus full diagonal
+	//wsp.HM.nnz = (opt.n + opt.m) * (opt.n + opt.m);
 
 	WorhpInit(&opt, &wsp, &par, &cnt);
 	if (cnt.status != FirstCall)
@@ -193,37 +192,24 @@ void worhpSolver::run(const Eigen::VectorXd& initialPoint)
 	if (wsp.DF.NeedStructure)
 	{
 		std::cout << "------------wsp.DF.NeedStructure" << std::endl;
-
 		// only set the nonzero entries, so omit the 4th entry,
 		// which is a structural zero
-		wsp.DF.row[0] = 1;
-		wsp.DF.row[1] = 2;
-		wsp.DF.row[2] = 3;
+		for (int i = 0; i < opt.n; i++) {
+			wsp.DF.row[i] = i+1;
+		}
+		
 	}
 
 	// Define DG as CS-matrix
 	if (wsp.DG.NeedStructure)
 	{
 		std::cout << "------------wsp.DG.NeedStructure" << std::endl;
-
-		// only set the nonzero entries in column-major order
-		wsp.DG.row[0] = 1;
-		wsp.DG.col[0] = 1;
-
-		wsp.DG.row[1] = 3; // num of constr func
-		wsp.DG.col[1] = 2; // num of variable
-
-		wsp.DG.row[2] = 1;
-		wsp.DG.col[2] = 3;
-
-		wsp.DG.row[3] = 2;
-		wsp.DG.col[3] = 3;
-
-		wsp.DG.row[4] = 2;
-		wsp.DG.col[4] = 4;
-
-		wsp.DG.row[5] = 3;
-		wsp.DG.col[5] = 4;
+		for (int col = 0; col < opt.n; col++) {
+			for (int row = 0; row < opt.m; row++) {
+				wsp.DG.row[row + col * opt.m] = row+1;
+				wsp.DG.col[row + col * opt.m] = col+1;
+			}
+		}
 	}
 
 	// Define HM as a diagonal LT-CS-matrix, but only if needed by WORHP
@@ -235,16 +221,25 @@ void worhpSolver::run(const Eigen::VectorXd& initialPoint)
 		 * even though it is a structural zero
 		 */
 		std::cout << "------------wsp.HM.NeedStructure" << std::endl;
-		 // strict lower triangle
-		wsp.HM.row[0] = 3;
-		wsp.HM.col[0] = 1;
-
-		// diagonal
-		for (int i = 0; i < opt.n; i += 1)
-		{
-			wsp.HM.row[wsp.HM.nnz - opt.n + i] = i + 1;
-			wsp.HM.col[wsp.HM.nnz - opt.n + i] = i + 1;
+		
+		int count = 0;
+		for (int col = 0; col < (opt.n + opt.m); col++) {
+			for (int row = 0; row < (opt.n + opt.m); row++) {
+				wsp.HM.row[count] = row + 1;
+				wsp.HM.col[count] = col + 1;
+				count++;
+			}
 		}
+		// // strict lower triangle
+		//wsp.HM.row[0] = 3;
+		//wsp.HM.col[0] = 1;
+
+		//// diagonal
+		//for (int i = 0; i < opt.n; i += 1)
+		//{
+		//	wsp.HM.row[wsp.HM.nnz - opt.n + i] = i + 1;
+		//	wsp.HM.col[wsp.HM.nnz - opt.n + i] = i + 1;
+		//}
 	}
 
 	/*
@@ -398,22 +393,99 @@ void worhpSolver::UserDF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 void worhpSolver::UserDG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
 	std::cout << "-------------UserDG" << std::endl;
-	wsp->DG.val[0] = 2.0 * opt->X[0] + opt->X[2];
-	wsp->DG.val[1] = 1.0;
-	wsp->DG.val[2] = opt->X[0] + 2.0 * opt->X[2];
-	wsp->DG.val[3] = 1.0;
-	wsp->DG.val[4] = -1.0;
-	wsp->DG.val[5] = 1.0;
+	Eigen::VectorXd X = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
+	LagrangianLscmStArea f = *this->functionG;
+	f.updateX(X);
+	std::vector<int> I, J;
+	std::vector<double> S;
+	f.constrainedGradient(I,J,S);
+	Eigen::SparseMatrix<double> DG = Utils::BuildMatrix(I, J, S);
+	
+	for (int col = 0; col < opt->n; col++) {
+		for (int row = 0; row < opt->m; row++) {
+			wsp->DG.val[row + col*opt->m] = DG.coeff(row, col);
+		}
+	}
 }
 
 void worhpSolver::UserHM(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
 	std::cout << "-------------UserHM" << std::endl;
-	// Only scale the F part of HM
-	wsp->HM.val[0] = opt->Mu[0];
-	wsp->HM.val[1] = wsp->ScaleObj * 2.0 + 2.0 * opt->Mu[0];
-	wsp->HM.val[2] = wsp->ScaleObj * 4.0;
-	wsp->HM.val[3] = 2.0 * opt->Mu[0];
-	wsp->HM.val[4] = 0.0;
+	Eigen::VectorXd X = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
+	LagrangianLscmStArea f = *this->functionG;
+	f.updateX(X);
+
+	for (int i = 0; i < opt->m; i++) {
+		f.lambda(i) = opt->Mu[i];
+	}
+	hessian(&f, wsp->ScaleObj);
+
+	Eigen::SparseMatrix<double> Upper_HM = Utils::BuildMatrix(f.II, f.JJ, f.SS);
+	Eigen::SparseMatrix<double> HM = Upper_HM.selfadjointView<Eigen::Upper>();
+
+	
+
+	int count = 0;
+	for (int col = 0; col < opt->n; col++) {
+		for (int row = 0; row < opt->n; row++) {
+			if (row > col) {
+				wsp->HM.val[count] = HM.coeff(row, col);
+				count++;
+			}
+		}
+	}
+	for (int diag = 0; diag < opt->n; diag++) {
+		wsp->HM.val[count] = HM.coeff(diag, diag);
+		count++;
+	}
+	std::cout << count << std::endl;
+}
+
+void hessian(LagrangianLscmStArea* f, double scale)
+{
+	/*
+	*  Hess(L) = [Hess(f) - lambda*Hess(C)	,	-Grad(C).Transpose	]
+	*			 [-Grad(C)					,	0					]
+	*
+	*  we build Hess(L) as an upper triangular matrix!
+	*/
+	std::vector<int> I, J;
+	std::vector<double> S;
+	std::vector<std::vector<int>> Is, Js;
+	std::vector<std::vector<double>> Ss;
+
+	/*
+	* Adding the first part of the hessian => Hess(f) - lambda*Hess(C)
+	*/
+	// add Hess(f)
+	f->objectiveHessian(f->II, f->JJ, f->SS);
+	for (int i = 0; i < f->SS.size(); i++) {
+		f->SS[i] = f->SS[i] * scale;
+	}
+	// add ( -lambda * Hess(C))
+	f->constrainedHessian(Is, Js, Ss);
+	for (int fi = 0; fi < f->F.rows(); fi++) {
+		f->II.insert(f->II.end(), Is[fi].begin(), Is[fi].end());
+		f->JJ.insert(f->JJ.end(), Js[fi].begin(), Js[fi].end());
+		for (double val : Ss[fi])
+			f->SS.push_back(val * (-f->lambda(fi)));
+	}
+
+	/*
+	* Adding the second part of the hessian => -grad(C(x)).transpose()
+	*/
+	f->constrainedGradient(I, J, S);
+	f->II.insert(f->II.end(), J.begin(), J.end());
+	for (int i = 0; i < I.size(); i++) {
+		f->JJ.push_back(I[i] + 2 * f->V.rows());
+		f->SS.push_back(-S[i]);
+	}
+
+	/*
+	* Tell the solver the size of the matrix
+	*/
+	f->II.push_back(2 * f->V.rows() + f->F.rows() - 1);
+	f->JJ.push_back(2 * f->V.rows() + f->F.rows() - 1);
+	f->SS.push_back(0);
 }
 
