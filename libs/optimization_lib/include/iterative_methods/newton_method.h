@@ -24,8 +24,7 @@ public:
 	NewtonMethod(std::shared_ptr<ObjectiveFunction<StorageOrder_, Eigen::VectorXd>> objective_function, const Eigen::VectorXd& x0) :
 		IterativeMethod(objective_function, x0)
 	{
-		// TODO: Call 'AnalyzePattern' after any objective function addition/removal
-		solver_.AnalyzePattern(objective_function->GetHessian());
+		InitializeSolver();
 	}
 
 	virtual ~NewtonMethod()
@@ -34,6 +33,11 @@ public:
 	}
 
 private:
+	void InitializeSolver()
+	{
+		solver_.AnalyzePattern(this->GetObjectiveFunction()->GetHessian());
+	}
+	
 	void ComputeDescentDirection(Eigen::VectorXd& p) override
 	{
 		auto objective_function = this->GetObjectiveFunction();

@@ -113,7 +113,22 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	objective_functions_.push_back(symmetric_dirichlet_);
 	objective_functions_.push_back(seamless_);
 	objective_functions_.push_back(singular_points_);
-	summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, objective_functions_, false);
+
+	autoquads_objective_functions_.push_back(separation_);
+	autoquads_objective_functions_.push_back(symmetric_dirichlet_);
+	autoquads_objective_functions_.push_back(seamless_);
+	autoquads_objective_functions_.push_back(singular_points_);
+
+	autocuts_objective_functions_.push_back(separation_);
+	autocuts_objective_functions_.push_back(symmetric_dirichlet_);
+	
+	autocuts_summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, autocuts_objective_functions_, false);
+	autoquads_summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, autoquads_objective_functions_, false);
+	summation_objectives_.push_back(autocuts_summation_objective_);
+	summation_objectives_.push_back(autoquads_summation_objective_);
+	
+	summation_objective_ = autocuts_summation_objective_;
+	
 	mesh_wrapper_->RegisterModelLoadedCallback([this]() {
 		/**
 		 * Initialize objective functions
@@ -138,8 +153,9 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 			singular_points_->AddSingularPointObjective(face_fan_data_provider);
 		}
 
-		summation_objective_->Initialize();
-
+		autocuts_summation_objective_->Initialize();
+		autoquads_summation_objective_->Initialize();
+		
 		/**
 		 * Create newton method iterator
 		 */
@@ -500,6 +516,20 @@ Napi::Value Engine::GetImageEdgeFaceAdjacency(const Napi::CallbackInfo& info)
 	return GetEdgeFaceAdjacency(info, DataSource::IMAGE_DATA);
 }
 
+std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>> Engine::GetObjectiveFunctionByName(const std::string& name)
+{
+	for(const auto& summation_objective : summation_objectives_)
+	{
+		auto objective_function = summation_objective->GetObjectiveFunction(name);
+		if(objective_function != nullptr)
+		{
+			return objective_function;
+		}
+	}
+
+	return nullptr;
+}
+
 Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
@@ -538,10 +568,10 @@ Napi::Value Engine::GetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	 * Get objective function by name
 	 */
 	const std::string objective_function_name = info[0].ToString();
-	const auto objective_function = summation_objective_->GetObjectiveFunction(objective_function_name);
+	const auto objective_function = GetObjectiveFunctionByName(objective_function_name);
 	if(objective_function == nullptr)
 	{
-		//Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
+		Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
 		return Napi::Value();
 	}
 
@@ -603,10 +633,10 @@ Napi::Value Engine::SetObjectiveFunctionProperty(const Napi::CallbackInfo& info)
 	 * Get objective function by name
 	 */
 	const std::string objective_function_name = info[0].ToString();
-	const auto objective_function = summation_objective_->GetObjectiveFunction(objective_function_name);
+	const auto objective_function = GetObjectiveFunctionByName(objective_function_name);
 	if (objective_function == nullptr)
 	{
-		//Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
+		Napi::TypeError::New(env, "Objective function could not be found").ThrowAsJavaScriptException();
 		return Napi::Value();
 	}
 
@@ -1064,47 +1094,48 @@ Napi::Value Engine::SetAlgorithmType(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
-
-	/**
-	 * Validate input arguments
-	 */
-	if (info.Length() >= 1)
+	
+	if (newton_method_ != nullptr)
 	{
-		if (!info[0].IsString())
+		/**
+		 * Validate input arguments
+		 */
+		if (info.Length() >= 1)
 		{
-			Napi::TypeError::New(env, "First argument is expected to be a String").ThrowAsJavaScriptException();
+			if (!info[0].IsString())
+			{
+				Napi::TypeError::New(env, "First argument is expected to be a String").ThrowAsJavaScriptException();
+				return Napi::Value();
+			}
+		}
+		else
+		{
+			Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
 			return Napi::Value();
 		}
-	}
-	else
-	{
-		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
-		return Napi::Value();
-	}
 
-	/**
-	 * Set algorithm type
-	 */
-	summation_objective_->RemoveObjectiveFunctions(objective_functions_);
-	objective_functions_.clear();
-	AlgorithmType algorithm_type = StringToAlgorithmType(info[0].ToString());
-	
-	switch(algorithm_type)
-	{
-	case AlgorithmType::AUTOCUTS:
-		objective_functions_.push_back(separation_);
-		objective_functions_.push_back(symmetric_dirichlet_);
-		break;
-	case AlgorithmType::AUTOQUADS:
-		objective_functions_.push_back(separation_);
-		objective_functions_.push_back(symmetric_dirichlet_);
-		objective_functions_.push_back(seamless_);
-		objective_functions_.push_back(singular_points_);
-		break;
+		/**
+		 * Set algorithm type
+		 */
+		AlgorithmType algorithm_type = StringToAlgorithmType(info[0].ToString());
+
+		switch (algorithm_type)
+		{
+		case AlgorithmType::AUTOCUTS:
+			summation_objective_ = autocuts_summation_objective_;
+			break;
+		case AlgorithmType::AUTOQUADS:
+			summation_objective_ = autoquads_summation_objective_;
+			break;
+		}
+
+		Eigen::VectorXd x0 = newton_method_->GetX();
+		newton_method_->Terminate();
+		newton_method_.release();
+		newton_method_ = std::make_unique<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>>(summation_objective_, x0);
+		newton_method_->EnableFlipAvoidingLineSearch(mesh_wrapper_->GetImageFaces());
+		newton_method_->Start();
 	}
-	
-	summation_objective_->AddObjectiveFunctions(objective_functions_);
-	summation_objective_->Initialize();
 	return env.Null();
 }
 

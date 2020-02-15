@@ -162,7 +162,8 @@ private:
 	Napi::Value Engine::GetEdgeFaceAdjacency(const Napi::CallbackInfo& info, const DataSource data_source);
 	AlgorithmType StringToAlgorithmType(const std::string& algorithm_type_string);
 	Napi::Value CreateObjectiveFunctionDataObject(Napi::Env env, std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>> objective_function) const;
-
+	std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>> GetObjectiveFunctionByName(const std::string& name);
+	
 	/**
 	 * Regular private templated instance methods
 	 */
@@ -306,14 +307,20 @@ private:
 	std::shared_ptr<EmptyDataProvider> empty_data_provider_;
 	std::vector<std::shared_ptr<EdgePairDataProvider>> edge_pair_data_providers_;
 	std::vector<std::shared_ptr<FaceFanDataProvider>> face_fan_data_providers_;
-	
+
+	std::vector<std::shared_ptr<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>> summation_objectives_;
 	std::shared_ptr<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>> summation_objective_;
+	std::shared_ptr<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>> autoquads_summation_objective_;
+	std::shared_ptr<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>> autocuts_summation_objective_;
 	std::shared_ptr<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>> position_;
 	std::shared_ptr<Separation<Eigen::StorageOptions::RowMajor>> separation_;
 	std::shared_ptr<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>> symmetric_dirichlet_;
 	std::shared_ptr<SeamlessObjective<Eigen::StorageOptions::RowMajor>> seamless_;
 	std::shared_ptr<SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>> singular_points_;
 	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> objective_functions_;
+	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> autocuts_objective_functions_;
+	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> autoquads_objective_functions_;
+
 	
 	std::unique_ptr<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>> newton_method_;
 	std::vector<Eigen::DenseIndex> constrained_faces_indices;

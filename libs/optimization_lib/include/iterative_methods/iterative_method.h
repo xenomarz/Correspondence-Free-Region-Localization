@@ -124,6 +124,11 @@ public:
 		return false;
 	}
 
+	const Eigen::VectorXd& GetX() const
+	{
+		return x_;
+	}
+
 	void EnableFlipAvoidingLineSearch(const Eigen::MatrixX3i& F)
 	{
 		F_ = F;
@@ -150,7 +155,7 @@ private:
 	 * Private methods
 	 */
 	virtual void ComputeDescentDirection(Eigen::VectorXd& p) = 0;
-	
+
 	void LineSearch(const Eigen::VectorXd& p)
 	{
 		/**
