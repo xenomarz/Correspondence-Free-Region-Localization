@@ -89,7 +89,7 @@ void worhpSolver::run(const Eigen::VectorXd& initialPoint)
 	 * Parameter XML import routine that does not reset
 	 * all parameters to default values (InitParams does this)
 	 */
-	ReadParamsNoInit(&status, "worhpPartialFD.xml", &par);
+	ReadParamsNoInit(&status, "worhp.xml", &par);
 	if (status == DataError || status == InitError)
 	{
 		exit(EXIT_FAILURE);
@@ -157,11 +157,11 @@ void worhpSolver::run(const Eigen::VectorXd& initialPoint)
 	}
 	
 	for (int i = 0; i < opt.n; i++) {
-		opt.Lambda[i] = 0.0;
+		opt.Lambda[i] = i; //0.0
 	}
 	
 	for (int i = 0; i < opt.m; i++) {
-		opt.Mu[i] = 0.0;
+		opt.Mu[i] = i; //0.0
 	}
 
 	/*
@@ -363,7 +363,6 @@ void worhpSolver::UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 	Eigen::VectorXd X = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
 	LagrangianLscmStArea f = *this->functionF;
 	f.updateX(X);
-
 	opt->F = wsp->ScaleObj * f.objectiveValue(false);
 }
 
@@ -423,8 +422,6 @@ void worhpSolver::UserHM(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 	Eigen::SparseMatrix<double> Upper_HM = Utils::BuildMatrix(f.II, f.JJ, f.SS);
 	Eigen::SparseMatrix<double> HM = Upper_HM.selfadjointView<Eigen::Upper>();
 
-	
-
 	int count = 0;
 	for (int col = 0; col < opt->n; col++) {
 		for (int row = 0; row < opt->n; row++) {
@@ -438,7 +435,6 @@ void worhpSolver::UserHM(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 		wsp->HM.val[count] = HM.coeff(diag, diag);
 		count++;
 	}
-	std::cout << count << std::endl;
 }
 
 void hessian(LagrangianLscmStArea* f, double scale)
@@ -468,7 +464,7 @@ void hessian(LagrangianLscmStArea* f, double scale)
 		f->II.insert(f->II.end(), Is[fi].begin(), Is[fi].end());
 		f->JJ.insert(f->JJ.end(), Js[fi].begin(), Js[fi].end());
 		for (double val : Ss[fi])
-			f->SS.push_back(val * (-f->lambda(fi)));
+			f->SS.push_back(val * f->lambda(fi));
 	}
 
 	/*

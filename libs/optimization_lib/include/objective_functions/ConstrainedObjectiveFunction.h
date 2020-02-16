@@ -6,13 +6,14 @@ class ConstrainedObjectiveFunction : public TriangleMeshObjectiveFunction
 {	
 protected:
 	Eigen::VectorXd X;
-	Eigen::VectorXd lambda;
 	
 	virtual bool update_variables(const Eigen::VectorXd& X) override;
 	virtual void init_hessian() override;
 	void init_aug_hessian();
 	void AddElementToAugHessian(std::vector<int> ind);
 public:
+	Eigen::VectorXd lambda;
+
 	ConstrainedObjectiveFunction() {}
 	virtual void init() override;
 	virtual double AugmentedValue(const bool update) override;

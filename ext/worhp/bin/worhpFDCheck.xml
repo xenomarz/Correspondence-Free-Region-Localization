@@ -36,13 +36,13 @@
 
     <!-- ######## Derivatives              ######## -->
     <!-- ........ User Derivatives         ........ -->
-    <BOOL   name="UserDF"                  >False</BOOL>
-    <BOOL   name="UserDG"                  >False</BOOL>
-    <BOOL   name="UserHM"                  >False</BOOL>
+    <BOOL   name="UserDF"                  >True</BOOL>
+    <BOOL   name="UserDG"                  >True</BOOL>
+    <BOOL   name="UserHM"                  >True</BOOL>
     <BOOL   name="FGtogether"              >False</BOOL>
-    <INT    name="UserHMstructure"         >0</INT>
+    <INT    name="UserHMstructure"         >2</INT>
     <!-- ........ Finite Differences       ........ -->
-    <BOOL   name="FidifHM"                 >True</BOOL>
+    <BOOL   name="FidifHM"                 >False</BOOL>
     <BOOL   name="FidifGroups"             >True</BOOL>
     <BOOL   name="ScaledFD"                >True</BOOL>
     <BOOL   name="CheckGroups"             >False</BOOL>
@@ -53,12 +53,12 @@
     <INT    name="PairMethod"              >11</INT>
     <DOUBLE name="FidifEps"                >1.0000000000000000e-05</DOUBLE>
     <!-- ........ Derivative Check         ........ -->
-    <BOOL   name="CheckStructureDF"        >False</BOOL>
-    <BOOL   name="CheckStructureDG"        >False</BOOL>
-    <BOOL   name="CheckStructureHM"        >False</BOOL>
-    <BOOL   name="CheckValuesDF"           >False</BOOL>
-    <BOOL   name="CheckValuesDG"           >False</BOOL>
-    <BOOL   name="CheckValuesHM"           >False</BOOL>
+    <BOOL   name="CheckStructureDF"        >True</BOOL>
+    <BOOL   name="CheckStructureDG"        >True</BOOL>
+    <BOOL   name="CheckStructureHM"        >True</BOOL>
+    <BOOL   name="CheckValuesDF"           >True</BOOL>
+    <BOOL   name="CheckValuesDG"           >True</BOOL>
+    <BOOL   name="CheckValuesHM"           >True</BOOL>
     <INT    name="CheckDerivIter"          >0</INT>
     <DOUBLE name="CheckDerivTolAbs"        >1.0000000000000000e-03</DOUBLE>
     <DOUBLE name="CheckDerivTolRel"        >1.0000000000000000e-03</DOUBLE>
