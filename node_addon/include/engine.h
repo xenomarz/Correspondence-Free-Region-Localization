@@ -21,7 +21,7 @@
 #include <libs/optimization_lib/include/data_providers/plain_data_provider.h>
 #include <libs/optimization_lib/include/data_providers/edge_pair_data_provider.h>
 #include <libs/optimization_lib/include/objective_functions/summation_objective.h>
-#include <libs/optimization_lib/include/objective_functions/position/position_objective.h>
+#include <libs/optimization_lib/include/objective_functions/position/face_position_objective.h>
 #include <libs/optimization_lib/include/objective_functions/separation_objective.h>
 #include <libs/optimization_lib/include/objective_functions/symmetric_dirichlet_objective.h>
 #include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
@@ -300,7 +300,7 @@ private:
 	/**
 	 * Fields
 	 */
-	std::unordered_map<Eigen::VectorXi, std::shared_ptr<PositionObjective<Eigen::StorageOptions::RowMajor>>, RDS::VectorHash, RDS::VectorEquals> indices_2_position_objective_map;
+	std::unordered_map<Eigen::VectorXi, std::shared_ptr<FacePositionObjective<Eigen::StorageOptions::RowMajor>>, RDS::VectorHash, RDS::VectorEquals> indices_2_position_objective_map;
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
 	
 	std::shared_ptr<PlainDataProvider> plain_data_provider_;

@@ -13,6 +13,7 @@ file(GLOB SOURCES
 	src/data_providers/plain_data_provider.cpp
 	src/data_providers/edge_pair_data_provider.cpp
 	src/data_providers/face_fan_data_provider.cpp
+	src/data_providers/face_data_provider.cpp
 	src/objective_functions/objective_function_base.cpp
 	src/objective_functions/objective_function.cpp
 	src/objective_functions/concrete_objective.cpp
@@ -27,9 +28,10 @@ file(GLOB SOURCES
 	src/objective_functions/coordinate_objective.cpp
 	src/objective_functions/coordinate_diff_objective.cpp
 	src/objective_functions/seamless_objective.cpp
-	src/objective_functions/position/position_objective.cpp
-	src/objective_functions/position/vertex_position_objective.cpp
-	src/objective_functions/position/barycenter_position_objective.cpp
+	src/objective_functions/position/patch_position_objective.cpp
+	src/objective_functions/position/face_position_objective.cpp
+	src/objective_functions/position/face_vertices_position_objective.cpp
+	src/objective_functions/position/face_barycenter_position_objective.cpp
 	src/objective_functions/edge_pair/edge_pair_objective.cpp
 	src/objective_functions/edge_pair/edge_pair_angle_objective.cpp
 	src/objective_functions/edge_pair/edge_pair_length_objective.cpp
@@ -54,6 +56,7 @@ file(GLOB SOURCES
 	include/data_providers/plain_data_provider.h
 	include/data_providers/edge_pair_data_provider.h
 	include/data_providers/face_fan_data_provider.h
+	include/data_providers/face_data_provider.h
 	include/objective_functions/objective_function_base.h	
 	include/objective_functions/objective_function.h
 	include/objective_functions/concrete_objective.h	
@@ -68,9 +71,10 @@ file(GLOB SOURCES
 	include/objective_functions/coordinate_objective.h
 	include/objective_functions/coordinate_diff_objective.h
 	include/objective_functions/seamless_objective.h
-	include/objective_functions/position/position_objective.h
-	include/objective_functions/position/vertex_position_objective.h
-	include/objective_functions/position/barycenter_position_objective.h
+	include/objective_functions/position/patch_position_objective.h
+	include/objective_functions/position/face_position_objective.h
+	include/objective_functions/position/face_vertices_position_objective.h
+	include/objective_functions/position/face_barycenter_position_objective.h
 	include/objective_functions/edge_pair/edge_pair_objective.h
 	include/objective_functions/edge_pair/edge_pair_angle_objective.h
 	include/objective_functions/edge_pair/edge_pair_length_objective.h

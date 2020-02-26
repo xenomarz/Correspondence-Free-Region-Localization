@@ -85,13 +85,13 @@ public:
 	/**
 	 * Barycenter calculation
 	 */
-	template <typename MatrixType, typename VectorType>
-	static inline bool CalculateBarycenter(const std::vector<int64_t>& indices, const Eigen::Map<MatrixType>& X, VectorType& barycenter)
+	static Eigen::VectorXd CalculateBarycenter(const std::vector<int64_t>& indices, const Eigen::VectorXd& x)
 	{
 		const auto indices_count = indices.size();
 		if(indices_count > 0)
 		{
-			barycenter = VectorType::Zero(X.cols());
+			auto X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
+			auto barycenter = Eigen::VectorXd::Zero(X.cols());
 			for (int32_t i = 0; i < indices_count; i++)
 			{
 				barycenter += X.row(indices[i]);
@@ -99,44 +99,10 @@ public:
 
 			barycenter /= indices_count;
 
-			return true;
+			return barycenter;
 		}
 
-		return false;
-	}
-
-	template <typename Derived, typename VectorType>
-	static inline bool CalculateBarycenter(const std::vector<int64_t>& indices, const Eigen::MatrixBase<Derived>& X, VectorType& barycenter)
-	{
-		const auto indices_count = indices.size();
-		if (indices_count > 0)
-		{
-			barycenter = VectorType::Zero(X.cols());
-			for (int32_t i = 0; i < indices_count; i++)
-			{
-				barycenter += X.row(indices[i]);
-			}
-
-			barycenter /= indices_count;
-
-			return true;
-		}
-
-		return false;
-	}
-
-	template <typename MatrixType, typename VectorType>
-	static inline bool CalculateBarycenter(const Eigen::VectorXi& indices, const Eigen::Map<MatrixType>& X, VectorType& barycenter)
-	{
-		auto indices_internal = std::vector<int64_t>(indices.data(), indices.data() + indices.rows());
-		return CalculateBarycenter(indices_internal, X, barycenter);
-	}
-
-	template <typename Derived, typename VectorType>
-	static inline bool CalculateBarycenter(const Eigen::VectorXi& indices, const Eigen::MatrixBase<Derived>& X, VectorType& barycenter)
-	{
-		auto indices_internal = std::vector<int64_t>(indices.data(), indices.data() + indices.rows());
-		return CalculateBarycenter(indices_internal, X, barycenter);
+		throw std::exception("Empty indices vector");
 	}
 
 	/**

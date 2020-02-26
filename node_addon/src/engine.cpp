@@ -10,8 +10,8 @@
 #include "../include/engine.h"
 #include "libs/optimization_lib/include/objective_functions/objective_function.h"
 #include "libs/optimization_lib/include/objective_functions/dense_objective_function.h"
-#include "libs/optimization_lib/include/objective_functions/position/barycenter_position_objective.h"
-#include "libs/optimization_lib/include/objective_functions/position/vertex_position_objective.h"
+#include "libs/optimization_lib/include/objective_functions/position/face_barycenter_position_objective.h"
+#include "libs/optimization_lib/include/objective_functions/position/face_vertices_position_objective.h"
 #include "libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h"
 #include "libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_length_objective.h"
 #include "libs/optimization_lib/include/objective_functions/singularity/singular_points_position_objective.h"
@@ -1181,7 +1181,7 @@ Napi::Value Engine::ConstrainFacePosition(const Napi::CallbackInfo& info)
 
 	//auto vertex_position_objective = std::make_shared<VertexPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, index_vertex_pairs);
 	
-	auto barycenter_position_objective = std::make_shared<BarycenterPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, plain_data_provider_, indices, barycenter);
+	auto barycenter_position_objective = std::make_shared<FaceBarycenterPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, plain_data_provider_, indices, barycenter);
 	position_->AddObjectiveFunction(barycenter_position_objective);
 	indices_2_position_objective_map.insert(std::make_pair(indices, barycenter_position_objective));
 
@@ -1231,7 +1231,7 @@ Napi::Value Engine::UpdateConstrainedFacePosition(const Napi::CallbackInfo& info
 	Eigen::Vector2d offset = Eigen::Vector2d(offset_x, offset_y);
 	Eigen::VectorXi indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
 
-	indices_2_position_objective_map.at(indices)->OffsetPositionConstraint(offset);
+	indices_2_position_objective_map.at(indices)->MoveFacePosition(offset);
 
 	return Napi::Value();
 }

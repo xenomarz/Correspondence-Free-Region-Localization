@@ -25,12 +25,13 @@ namespace RDS
 	using FaceIndex = std::int64_t;
 	using EdgeDescriptor = std::pair<VertexIndex, VertexIndex>;
 	using EdgePairDescriptor = std::pair<EdgeDescriptor, EdgeDescriptor>;
-	using EdgePairDescriptors = std::vector<RDS::EdgePairDescriptor>;
+	using EdgePairDescriptors = std::vector<EdgePairDescriptor>;
 	using SparseVariableIndex = std::int64_t;
 	using DenseVariableIndex = std::int64_t;
 	using HessianTripletIndex = std::int64_t;
 	using PartialDerivativeIndex = std::int64_t;
 	using HessianEntry = std::pair<DenseVariableIndex, DenseVariableIndex>;
+	using FaceDescriptor = std::vector<VertexIndex>;
 	using FaceFanSlice = std::pair<VertexIndex, std::pair<VertexIndex, VertexIndex>>;
 	using FaceFan = std::vector<FaceFanSlice>;
 	using FaceFans = std::vector<FaceFan>;

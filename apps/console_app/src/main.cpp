@@ -13,8 +13,8 @@
 // Optimization lib includes
 #include "../libs/optimization_lib/include/objective_functions/objective_function.h"
 #include "../libs/optimization_lib/include/objective_functions/dense_objective_function.h"
-#include "../libs/optimization_lib/include/objective_functions/position/barycenter_position_objective.h"
-#include "../libs/optimization_lib/include/objective_functions/position/vertex_position_objective.h"
+#include "../libs/optimization_lib/include/objective_functions/position/face_barycenter_position_objective.h"
+#include "../libs/optimization_lib/include/objective_functions/position/face_vertices_position_objective.h"
 #include "../libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h"
 #include "../libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_length_objective.h"
 #include "../libs/optimization_lib/include/objective_functions/singularity/singular_points_position_objective.h"
