@@ -108,7 +108,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	singular_points_ = std::make_shared<SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_, 1);
   	position_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, std::string("Position"));
 
-	//objective_functions.push_back(position_);
+	objective_functions_.push_back(position_);
 	objective_functions_.push_back(separation_);
 	objective_functions_.push_back(symmetric_dirichlet_);
 	objective_functions_.push_back(seamless_);
@@ -133,6 +133,15 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 		/**
 		 * Initialize objective functions
 		 */
+		face_data_providers_.clear();
+		face_to_face_data_provider_map_.clear();
+		for (auto& face : mesh_wrapper_->GetImageFacesSTL())
+		{
+			auto face_data_provider = std::make_shared<FaceDataProvider>(mesh_wrapper_, face);
+			face_data_providers_.push_back(face_data_provider);
+			face_to_face_data_provider_map_.insert(std::make_pair(face, face_data_provider));
+		}
+
 		for (auto& edge_pair_descriptor : mesh_wrapper_->GetEdgePairDescriptors())
 		{
 			edge_pair_data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptor));
@@ -1165,25 +1174,13 @@ Napi::Value Engine::ConstrainFacePosition(const Napi::CallbackInfo& info)
 	 * Create a new barycenter position constraint for the given face
 	 */
 	int64_t face_index = info[0].As<Napi::Number>().Int64Value();
-	Eigen::VectorXi indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
-	
-	//std::vector<std::pair<int64_t, Eigen::Vector2d>> index_vertex_pairs;
-
+	auto face = mesh_wrapper_->GetImageFaceVerticesIndicesSTL(face_index);
 	auto V_im = mesh_wrapper_->GetImageVertices();
-	
-	//for(int64_t i = 0; i < indices.rows(); i++)
-	//{
-	//	index_vertex_pairs.push_back({ indices.coeffRef(i,0), V_im.row(indices.coeffRef(i,0))});
-	//}
-
-	Eigen::Vector2d barycenter;
-	Utils::CalculateBarycenter(indices, mesh_wrapper_->GetImageVertices(), barycenter);
-
-	//auto vertex_position_objective = std::make_shared<VertexPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, index_vertex_pairs);
-	
-	auto barycenter_position_objective = std::make_shared<FaceBarycenterPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, plain_data_provider_, indices, barycenter);
+	Eigen::Vector2d barycenter = Utils::CalculateBarycenter(face, V_im);
+	auto face_data_provider = face_to_face_data_provider_map_.at(face);
+	auto barycenter_position_objective = std::make_shared<FaceBarycenterPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, face_data_provider, barycenter);
 	position_->AddObjectiveFunction(barycenter_position_objective);
-	indices_2_position_objective_map.insert(std::make_pair(indices, barycenter_position_objective));
+	face_to_position_objective_map_.insert(std::make_pair(face, barycenter_position_objective));
 
 	return Napi::Value();
 }
@@ -1229,9 +1226,9 @@ Napi::Value Engine::UpdateConstrainedFacePosition(const Napi::CallbackInfo& info
 	double offset_y = info[2].As<Napi::Number>().DoubleValue();
 	
 	Eigen::Vector2d offset = Eigen::Vector2d(offset_x, offset_y);
-	Eigen::VectorXi indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
+	RDS::Face face = mesh_wrapper_->GetImageFaceVerticesIndicesSTL(face_index);
 
-	indices_2_position_objective_map.at(indices)->MoveFacePosition(offset);
+	face_to_position_objective_map_.at(face)->MoveFacePosition(offset);
 
 	return Napi::Value();
 }
@@ -1262,10 +1259,10 @@ Napi::Value Engine::UnconstrainFacePosition(const Napi::CallbackInfo& info)
 	 * Remove the barycenter constraint of the given face
 	 */
 	int64_t face_index = info[0].As<Napi::Number>().Int64Value();
-	Eigen::VectorXi indices = mesh_wrapper_->GetImageFaceVerticesIndices(face_index);
+	RDS::Face face = mesh_wrapper_->GetImageFaceVerticesIndicesSTL(face_index);
 
-	position_->RemoveObjectiveFunction(indices_2_position_objective_map.at(indices));
-	indices_2_position_objective_map.erase(indices);
+	position_->RemoveObjectiveFunction(face_to_position_objective_map_.at(face));
+	face_to_position_objective_map_.erase(face);
 
 	return Napi::Value();
 }

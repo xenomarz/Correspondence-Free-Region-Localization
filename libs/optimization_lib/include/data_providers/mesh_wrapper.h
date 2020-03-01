@@ -61,7 +61,7 @@ public:
 	/**
 	 * Getters
 	 */
-	const Eigen::MatrixX3i& GetImageFaces() const;
+	RDS::Faces GetImageFacesSTL() const;
 	const Eigen::MatrixX2d& GetImageVertices() const;
 	const Eigen::MatrixX2i& GetImageEdges() const;
 	const VI2VIsMap& GetImageNeighbours() const;
@@ -80,6 +80,7 @@ public:
 	/**
 	 * Overrides
 	 */
+	const Eigen::MatrixX3i& GetImageFaces() const override;
 	const Eigen::MatrixX3i& GetDomainFaces() const override;
 	const Eigen::MatrixX3d& GetDomainVertices() const override;
 	const Eigen::MatrixX2i& GetDomainEdges() const override;
@@ -105,7 +106,8 @@ public:
 	 * Public methods
 	 */
 	Eigen::VectorXi GetImageFaceVerticesIndices(int64_t face_index);
-	Eigen::MatrixXd GetImageVertices(const Eigen::VectorXi& vertex_indices);
+	RDS::Face GetImageFaceVerticesIndicesSTL(int64_t face_index);
+	Eigen::MatrixX2d GetImageVertices(const Eigen::VectorXi& vertex_indices);
 	void LoadModel(const std::string& model_file_path);
 	void RegisterModelLoadedCallback(const std::function<ModelLoadedCallback>& model_loaded_callback);
 
@@ -220,8 +222,11 @@ private:
 	// Image neighbour vertices
 	VI2VIsMap v_im_2_neighbours;
 
-	// Face fans
+	// Faces
 	RDS::FaceFans face_fans_;
+
+	// Face fans
+	RDS::Faces faces_;
 
 	// Maps
 	ED2EIMap ed_im_2_ei_im_;

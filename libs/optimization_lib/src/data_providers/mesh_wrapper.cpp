@@ -65,6 +65,19 @@ const Eigen::MatrixX3i& MeshWrapper::GetImageFaces() const
 	return f_im_;
 }
 
+RDS::Faces MeshWrapper::GetImageFacesSTL() const
+{
+	RDS::Faces faces_stl;
+	for(int64_t i = 0; i < f_im_.rows(); i++)
+	{
+		Eigen::VectorXi face = f_im_.row(i);
+		auto face_stl = RDS::Face(face.data(), face.data() + face.rows() * face.cols());
+		faces_stl.push_back(face_stl);
+	}
+
+	return faces_stl;
+}
+
 const Eigen::MatrixX2i& MeshWrapper::GetImageEdges() const
 {
 	return e_im_;
@@ -591,7 +604,13 @@ Eigen::VectorXi MeshWrapper::GetImageFaceVerticesIndices(int64_t face_index)
 	return f_im_.row(face_index);
 }
 
-Eigen::MatrixXd MeshWrapper::GetImageVertices(const Eigen::VectorXi& vertex_indices)
+RDS::Face MeshWrapper::GetImageFaceVerticesIndicesSTL(int64_t face_index)
+{
+	auto face = GetImageFaceVerticesIndices(face_index);
+	return RDS::Face(face.data(), face.data() + face.rows() * face.cols());
+}
+
+Eigen::MatrixX2d MeshWrapper::GetImageVertices(const Eigen::VectorXi& vertex_indices)
 {
 	return igl::slice(v_im_, vertex_indices, 1);
 }

@@ -300,13 +300,16 @@ private:
 	/**
 	 * Fields
 	 */
-	std::unordered_map<Eigen::VectorXi, std::shared_ptr<FacePositionObjective<Eigen::StorageOptions::RowMajor>>, RDS::VectorHash, RDS::VectorEquals> indices_2_position_objective_map;
+	std::unordered_map<RDS::Face, std::shared_ptr<FacePositionObjective<Eigen::StorageOptions::RowMajor>>, RDS::VectorHash, RDS::VectorEquals> face_to_position_objective_map_;
+	std::unordered_map<RDS::Face, std::shared_ptr<FaceDataProvider>, RDS::VectorHash, RDS::VectorEquals> face_to_face_data_provider_map_;
+	
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
 	
 	std::shared_ptr<PlainDataProvider> plain_data_provider_;
 	std::shared_ptr<EmptyDataProvider> empty_data_provider_;
 	std::vector<std::shared_ptr<EdgePairDataProvider>> edge_pair_data_providers_;
 	std::vector<std::shared_ptr<FaceFanDataProvider>> face_fan_data_providers_;
+	std::vector<std::shared_ptr<FaceDataProvider>> face_data_providers_;
 
 	std::vector<std::shared_ptr<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>> summation_objectives_;
 	std::shared_ptr<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>> summation_objective_;
@@ -320,6 +323,7 @@ private:
 	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> objective_functions_;
 	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> autocuts_objective_functions_;
 	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> autoquads_objective_functions_;
+
 
 	
 	std::unique_ptr<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>> newton_method_;

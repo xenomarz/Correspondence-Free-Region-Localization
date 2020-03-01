@@ -31,7 +31,8 @@ namespace RDS
 	using HessianTripletIndex = std::int64_t;
 	using PartialDerivativeIndex = std::int64_t;
 	using HessianEntry = std::pair<DenseVariableIndex, DenseVariableIndex>;
-	using FaceDescriptor = std::vector<VertexIndex>;
+	using Face = std::vector<VertexIndex>;
+	using Faces = std::vector<Face>;
 	using FaceFanSlice = std::pair<VertexIndex, std::pair<VertexIndex, VertexIndex>>;
 	using FaceFan = std::vector<FaceFanSlice>;
 	using FaceFans = std::vector<FaceFan>;

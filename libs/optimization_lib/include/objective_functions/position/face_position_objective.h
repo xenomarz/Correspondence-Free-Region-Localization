@@ -21,7 +21,7 @@ public:
 	 * Constructors and destructor
 	 */
 	FacePositionObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const std::shared_ptr<FaceDataProvider>& face_data_provider, const std::string& name) :
-		DenseObjectiveFunction(mesh_data_provider, face_data_provider, name, face_data_provider->GetFaceDescriptor().size(), false)
+		DenseObjectiveFunction(mesh_data_provider, face_data_provider, name, face_data_provider->GetFace().size(), false)
 	{
 
 	}
@@ -36,7 +36,7 @@ public:
 	 */
 	virtual void MoveFacePosition(const Eigen::Vector2d& offset) = 0;
 
-	[[nodiscard]] const std::shared_ptr<FaceDataProvider>& GetFaceDataProvider() const
+	[[nodiscard]] std::shared_ptr<FaceDataProvider> GetFaceDataProvider() const
 	{
 		return std::dynamic_pointer_cast<FaceDataProvider>(this->GetDataProvider());
 	}

@@ -85,26 +85,35 @@ public:
 	/**
 	 * Barycenter calculation
 	 */
-	static Eigen::VectorXd CalculateBarycenter(const std::vector<int64_t>& indices, const Eigen::VectorXd& x)
+	static Eigen::VectorXd CalculateBarycenter(const std::vector<int64_t>& indices, const Eigen::Map<const Eigen::MatrixX2d>& X)
 	{
 		const auto indices_count = indices.size();
-		if(indices_count > 0)
+		if (indices_count > 0)
 		{
-			auto X = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
-			auto barycenter = Eigen::VectorXd::Zero(X.cols());
-			for (int32_t i = 0; i < indices_count; i++)
+			Eigen::VectorXd barycenter = Eigen::VectorXd::Zero(X.cols());
+			for (int64_t i = 0; i < indices_count; i++)
 			{
 				barycenter += X.row(indices[i]);
 			}
 
-			barycenter /= indices_count;
-
-			return barycenter;
+			return barycenter / indices_count;
 		}
 
 		throw std::exception("Empty indices vector");
 	}
 
+	static Eigen::VectorXd CalculateBarycenter(const std::vector<int64_t>& indices, const Eigen::MatrixX2d& X)
+	{
+		const auto map = Eigen::Map<const Eigen::MatrixX2d>(X.data(), X.rows(), X.cols());
+		return CalculateBarycenter(indices, map);
+	}
+
+	static Eigen::VectorXd CalculateBarycenter(const std::vector<int64_t>& indices, const Eigen::VectorXd& x)
+	{
+		const auto map = Eigen::Map<const Eigen::MatrixX2d>(x.data(), x.rows() >> 1, 2);
+		return CalculateBarycenter(indices, map);
+	}
+	
 	/**
 	 * Hash generation methods
 	 */

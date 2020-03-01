@@ -18,7 +18,7 @@ public:
 	/**
 	 * Constructors and destructor
 	 */
-	FaceDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const RDS::FaceDescriptor& face_descriptor);
+	FaceDataProvider(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const RDS::Face& face);
 	virtual ~FaceDataProvider();
 
 	/**
@@ -30,11 +30,11 @@ public:
 	/**
 	 * Getters
 	 */
-	const RDS::FaceDescriptor& GetFaceDescriptor() const;
+	const RDS::Face& GetFace() const;
 	const Eigen::VectorXd& GetBarycenter() const;
 
 private:
-	RDS::FaceDescriptor face_descriptor_;
+	RDS::Face face_;
 	Eigen::VectorXd barycenter_;
 };
 

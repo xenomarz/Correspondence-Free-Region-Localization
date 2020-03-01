@@ -24,7 +24,7 @@ public:
 		FacePositionObjective(mesh_data_provider, face_data_provider, "Barycenter Position Objective"),
 		objective_barycenter_(objective_barycenter)
 	{
-		const auto indices_count = face_data_provider->GetFaceDescriptor().size();
+		const auto indices_count = face_data_provider->GetFace().size();
 		gradient_coeff_ = 2.0 / indices_count;
 		hessian_coeff_ = gradient_coeff_ / indices_count;
 		this->Initialize();
@@ -55,10 +55,12 @@ private:
 	void CalculateGradient(Eigen::VectorXd& g) override
 	{
 		g.setZero();
+		auto face_data_provider = this->GetFaceDataProvider();
 		for (int64_t i = 0; i < this->objective_variables_count_; i++)
 		{
 			const auto row = i % this->mesh_data_provider_->GetImageVerticesCount();
-			const auto current_index = this->GetFaceDataProvider()->GetFaceDescriptor()[i];
+			auto face = face_data_provider->GetFace();
+			const auto current_index = face[i];
 			g(current_index) = gradient_coeff_ * barycenters_diff_(row, 0);
 		}
 	}
@@ -66,10 +68,14 @@ private:
 	void InitializeTriplets(std::vector<Eigen::Triplet<double>>& triplets) override
 	{
 		triplets.resize(this->objective_variables_count_);
+		auto face_data_provider = this->GetFaceDataProvider();
+		auto face = face_data_provider->GetFace();
 		for (int64_t i = 0; i < this->objective_variables_count_; i++)
 		{
-			auto vertex_index = this->GetFaceDataProvider()->GetFaceDescriptor()[i];
-			triplets[i] = Eigen::Triplet<double>(vertex_index, vertex_index, 0);
+			int64_t offset = (i / this->objective_vertices_count_) * this->objective_vertices_count_;
+			auto vertex_index = face[i % this->objective_vertices_count_];
+			auto variable_index = vertex_index + offset;
+			triplets[i] = Eigen::Triplet<double>(variable_index, variable_index, 0);
 		}
 	}
 	
