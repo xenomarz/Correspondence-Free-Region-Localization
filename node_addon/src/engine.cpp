@@ -108,12 +108,12 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	singular_points_ = std::make_shared<SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_, 1);
   	position_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, std::string("Position"));
 
-	objective_functions_.push_back(position_);
 	objective_functions_.push_back(separation_);
 	objective_functions_.push_back(symmetric_dirichlet_);
 	objective_functions_.push_back(seamless_);
 	objective_functions_.push_back(singular_points_);
-
+	objective_functions_.push_back(position_);
+	
 	autoquads_objective_functions_.push_back(separation_);
 	autoquads_objective_functions_.push_back(symmetric_dirichlet_);
 	autoquads_objective_functions_.push_back(seamless_);
@@ -121,6 +121,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 
 	autocuts_objective_functions_.push_back(separation_);
 	autocuts_objective_functions_.push_back(symmetric_dirichlet_);
+	autocuts_objective_functions_.push_back(position_);
 	
 	autocuts_summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, autocuts_objective_functions_, false);
 	autoquads_summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, autoquads_objective_functions_, false);
@@ -1180,6 +1181,7 @@ Napi::Value Engine::ConstrainFacePosition(const Napi::CallbackInfo& info)
 	auto face_data_provider = face_to_face_data_provider_map_.at(face);
 	auto barycenter_position_objective = std::make_shared<FaceBarycenterPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, face_data_provider, barycenter);
 	position_->AddObjectiveFunction(barycenter_position_objective);
+	summation_objective_->Initialize();
 	face_to_position_objective_map_.insert(std::make_pair(face, barycenter_position_objective));
 
 	return Napi::Value();
@@ -1262,6 +1264,7 @@ Napi::Value Engine::UnconstrainFacePosition(const Napi::CallbackInfo& info)
 	RDS::Face face = mesh_wrapper_->GetImageFaceVerticesIndicesSTL(face_index);
 
 	position_->RemoveObjectiveFunction(face_to_position_objective_map_.at(face));
+	summation_objective_->Initialize();
 	face_to_position_objective_map_.erase(face);
 
 	return Napi::Value();

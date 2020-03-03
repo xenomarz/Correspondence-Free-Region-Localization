@@ -47,6 +47,21 @@ private:
 	/**
 	 * Private overrides
 	 */
+	int64_t CalculateVariableType(const int64_t objective_variable_index)
+	{
+		return objective_variable_index / this->objective_vertices_count_;
+	}
+
+	int64_t CalculateVertexEntry(const int64_t objective_variable_index)
+	{
+		return objective_variable_index % this->objective_vertices_count_;
+	}
+
+	int64_t CalculateOffset(const int64_t objective_variable_index)
+	{
+		return CalculateVariableType(objective_variable_index) * this->mesh_data_provider_->GetImageVerticesCount();
+	}
+	
 	void CalculateValue(double& f) override
 	{
 		f = barycenters_diff_.squaredNorm();
@@ -56,12 +71,12 @@ private:
 	{
 		g.setZero();
 		auto face_data_provider = this->GetFaceDataProvider();
+		auto face = face_data_provider->GetFace();
 		for (int64_t i = 0; i < this->objective_variables_count_; i++)
 		{
-			const auto row = i % this->mesh_data_provider_->GetImageVerticesCount();
-			auto face = face_data_provider->GetFace();
-			const auto current_index = face[i];
-			g(current_index) = gradient_coeff_ * barycenters_diff_(row, 0);
+			auto vertex_index = face[CalculateVertexEntry(i)];
+			auto variable_index = vertex_index + CalculateOffset(i);
+			g(variable_index) = gradient_coeff_ * barycenters_diff_(CalculateVariableType(i), 0);
 		}
 	}
 
@@ -72,9 +87,8 @@ private:
 		auto face = face_data_provider->GetFace();
 		for (int64_t i = 0; i < this->objective_variables_count_; i++)
 		{
-			int64_t offset = (i / this->objective_vertices_count_) * this->objective_vertices_count_;
-			auto vertex_index = face[i % this->objective_vertices_count_];
-			auto variable_index = vertex_index + offset;
+			auto vertex_index = face[CalculateVertexEntry(i)];
+			auto variable_index = vertex_index + CalculateOffset(i);
 			triplets[i] = Eigen::Triplet<double>(variable_index, variable_index, 0);
 		}
 	}

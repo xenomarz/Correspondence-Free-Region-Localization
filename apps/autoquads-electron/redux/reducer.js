@@ -100,6 +100,16 @@ const INITIAL_STATE = {
             weight: 100
         },
         {
+            objectiveFunctionId: 'Separation',
+            propertyId: 'value_per_edge',
+            propertyEffectType: EnumsExports.PropertyEffectType.EDGE_COLOR,
+            objectiveFunctionName: 'Separation',
+            propertyName: 'Value Per Edge',
+            color: 'rgb(255,0,0)',
+            visibility: EnumsExports.Visibility.HIDDEN,
+            weight: 10000
+        },
+        {
             objectiveFunctionId: 'Symmetric Dirichlet',
             propertyId: 'value_per_vertex',
             propertyEffectType: EnumsExports.PropertyEffectType.VERTEX_COLOR,

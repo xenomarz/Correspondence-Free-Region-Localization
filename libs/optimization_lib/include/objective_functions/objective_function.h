@@ -158,6 +158,7 @@ public:
 	// Initializes the objective function object. Must be called from any derived class constructor.
 	void Initialize()
 	{
+		std::lock_guard<std::mutex> lock(mutex_);
 		PreInitialize();
 		InitializeValue(f_);
 		InitializeValuePerVertex(f_per_vertex_);
@@ -210,6 +211,7 @@ public:
 
 	void UpdateLayers(const Eigen::VectorXd& x, const UpdateOptions update_options)
 	{
+		std::lock_guard<std::mutex> lock(mutex_);
 		int32_t update_modifiers = static_cast<int32_t>(update_options);
 		const auto layers_count = dependency_layers_.size();
 		for(std::size_t current_layer_index = 0; current_layer_index < layers_count; current_layer_index++)
@@ -436,6 +438,9 @@ private:
 	/**
 	 * Private fields
 	 */
+
+	// Mutex
+	mutable std::mutex mutex_;
 
 	// Value
 	double f_;

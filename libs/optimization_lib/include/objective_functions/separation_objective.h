@@ -18,7 +18,8 @@ public:
 	 */
 	enum class Properties : int32_t
 	{
-		Delta = DenseObjectiveFunction<StorageOrder_>::Properties::Count_
+		Delta = DenseObjectiveFunction<StorageOrder_>::Properties::Count_,
+		ValuePerEdge
 	};
 	
 	/**
