@@ -173,6 +173,11 @@ private:
 		}
 	}
 
+	void CalculateValuePerEdge(Eigen::VectorXd& domain_value_per_edge, Eigen::VectorXd& image_value_per_edge) override
+	{
+		// TODO: Add implementation
+	}
+
 	void CalculateGradient(VectorType_& g) override
 	{
 		g.setZero();

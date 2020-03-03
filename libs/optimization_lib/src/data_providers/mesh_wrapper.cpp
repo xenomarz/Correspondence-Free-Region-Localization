@@ -715,3 +715,13 @@ RDS::EdgeIndex MeshWrapper::GetImageEdgeIndex(RDS::EdgeDescriptor image_edge_des
 {
 	return ed_im_2_ei_im_.at(image_edge_descriptor);
 }
+
+RDS::EdgeIndices MeshWrapper::GetDomainAdjacentEdgeIndicesByVertex(RDS::VertexIndex vertex_index) const
+{
+	return RDS::EdgeIndices();
+}
+
+RDS::EdgeIndices MeshWrapper::GetImageAdjacentEdgeIndicesByVertex(RDS::VertexIndex vertex_index) const
+{
+	return RDS::EdgeIndices();
+}

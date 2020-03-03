@@ -137,6 +137,11 @@ private:
 			f_per_vertex.coeffRef(vertex2_index) += EsepP_squared_rowwise_sum[i];
 		}
 	}
+
+	void CalculateValuePerEdge(Eigen::VectorXd& domain_value_per_edge, Eigen::VectorXd& image_value_per_edge) override
+	{
+
+	}
 	
 	void CalculateGradient(Eigen::VectorXd& g) override
 	{

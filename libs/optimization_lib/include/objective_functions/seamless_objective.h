@@ -33,7 +33,6 @@ public:
 		Zeta = SummationObjective<SparseObjectiveFunction<StorageOrder_>, Eigen::VectorXd>::Properties::Count_,
 		AngleValuePerEdge,
 		LengthValuePerEdge,
-		ValuePerEdge,
 		EdgeAngleWeight,
 		EdgeLengthWeight,
 		Interval
@@ -146,17 +145,6 @@ public:
 		return zeta_;
 	}
 
-	const Eigen::VectorXd& SeamlessObjective::GetValuePerEdge(const ObjectiveFunctionBase::PropertyModifiers property_modifiers) const
-	{
-		switch(property_modifiers)
-		{
-		case ObjectiveFunctionBase::PropertyModifiers::Domain:
-			return GetDomainValuePerEdge();
-		case ObjectiveFunctionBase::PropertyModifiers::Image:
-			return GetImageValuePerEdge();
-		}
-	}
-
 	const Eigen::VectorXd& SeamlessObjective::GetAngleValuePerEdge(const ObjectiveFunctionBase::PropertyModifiers property_modifiers) const
 	{
 		switch (property_modifiers)
@@ -179,11 +167,6 @@ public:
 		}
 	}
 
-	const Eigen::VectorXd& SeamlessObjective::GetImageValuePerEdge() const
-	{
-		return image_value_per_edge_;
-	}
-
 	const Eigen::VectorXd& SeamlessObjective::GetImageAngleValuePerEdge() const
 	{
 		return image_angle_value_per_edge_;
@@ -192,11 +175,6 @@ public:
 	const Eigen::VectorXd& SeamlessObjective::GetImageLengthValuePerEdge() const
 	{
 		return image_length_value_per_edge_;
-	}
-
-	const Eigen::VectorXd& SeamlessObjective::GetDomainValuePerEdge() const
-	{
-		return domain_value_per_edge_;
 	}
 
 	const Eigen::VectorXd& SeamlessObjective::GetDomainAngleValuePerEdge() const
@@ -256,9 +234,6 @@ public:
 		case Properties::LengthValuePerEdge:
 			property_value = GetLengthValuePerEdge(property_modifiers);
 			return true;
-		case Properties::ValuePerEdge:
-			property_value = GetValuePerEdge(property_modifiers);
-			return true;
 		case Properties::EdgeAngleWeight:
 			property_value = GetEdgeAngleWeight(static_cast<RDS::EdgeIndex>(std::any_cast<double>(property_context)));
 			return true;
@@ -303,31 +278,28 @@ protected:
 	void PostInitialize() override
 	{
 		SummationObjective<ObjectiveFunction<StorageOrder_, Eigen::SparseVector<double>>, Eigen::VectorXd>::PostInitialize();
-		image_value_per_edge_.resize(this->mesh_data_provider_->GetImageEdgesCount());
 		image_angle_value_per_edge_.resize(this->mesh_data_provider_->GetImageEdgesCount());
 		image_length_value_per_edge_.resize(this->mesh_data_provider_->GetImageEdgesCount());
-		domain_value_per_edge_.resize(this->mesh_data_provider_->GetDomainEdgesCount());
 		domain_angle_value_per_edge_.resize(this->mesh_data_provider_->GetDomainEdgesCount());
 		domain_length_value_per_edge_.resize(this->mesh_data_provider_->GetDomainEdgesCount());
 	}
-
-	void PostUpdate(const Eigen::VectorXd& x) override
+	
+private:
+	
+	/**
+	 * Private overrides
+	 */
+	void CalculateValuePerEdge(Eigen::VectorXd& domain_value_per_edge, Eigen::VectorXd& image_value_per_edge) override
 	{
 		CalculateAngleValuePerEdge(domain_angle_value_per_edge_, image_angle_value_per_edge_);
 		CalculateLengthValuePerEdge(domain_length_value_per_edge_, image_length_value_per_edge_);
-		CalculateValuePerEdge(domain_value_per_edge_, image_value_per_edge_);
+ 		domain_value_per_edge = domain_angle_value_per_edge_ + domain_length_value_per_edge_;
+		image_value_per_edge = image_angle_value_per_edge_ + image_length_value_per_edge_;
 	}
 	
-private:
 	/**
 	 * Private methods
 	 */
-	void CalculateValuePerEdge(Eigen::VectorXd& domain_value_per_edge, Eigen::VectorXd& image_value_per_edge)
-	{
-		domain_value_per_edge = domain_angle_value_per_edge_ + domain_length_value_per_edge_;
-		image_value_per_edge = image_angle_value_per_edge_ + image_length_value_per_edge_;
-	}
-
 	void CalculateAngleValuePerEdge(Eigen::VectorXd& domain_angle_value_per_edge, Eigen::VectorXd& image_angle_value_per_edge)
 	{
 		domain_angle_value_per_edge.setZero();
@@ -373,10 +345,8 @@ private:
 	std::vector<std::shared_ptr<PeriodicObjective<StorageOrder_>>> periodic_edge_pair_angle_objectives;
 	std::vector<std::shared_ptr<EdgePairTranslationObjective<StorageOrder_>>> edge_pair_translation_objectives;
 
-	Eigen::VectorXd image_value_per_edge_;
 	Eigen::VectorXd image_angle_value_per_edge_;
 	Eigen::VectorXd image_length_value_per_edge_;
-	Eigen::VectorXd domain_value_per_edge_;
 	Eigen::VectorXd domain_angle_value_per_edge_;
 	Eigen::VectorXd domain_length_value_per_edge_;
 };

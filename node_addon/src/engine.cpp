@@ -76,6 +76,7 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 {
 	properties_map_.insert({ "value", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Value) });
 	properties_map_.insert({ "value_per_vertex", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::ValuePerVertex) });
+	properties_map_.insert({ "value_per_edge", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::ValuePerEdge) });
 	properties_map_.insert({ "gradient", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Gradient) });
 	properties_map_.insert({ "gradient_norm", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::GradientNorm) });
 	properties_map_.insert({ "hessian", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Hessian) });
@@ -85,7 +86,6 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	properties_map_.insert({ "zeta", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::Zeta) });
 	properties_map_.insert({ "angle_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::AngleValuePerEdge) });
 	properties_map_.insert({ "length_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::LengthValuePerEdge) });
-	properties_map_.insert({ "value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::ValuePerEdge) });
 	properties_map_.insert({ "edge_angle_weight", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::EdgeAngleWeight) });
 	properties_map_.insert({ "edge_length_weight", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::EdgeLengthWeight) });
 	properties_map_.insert({ "translation_interval", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
@@ -143,14 +143,24 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 			face_to_face_data_provider_map_.insert(std::make_pair(face, face_data_provider));
 		}
 
-		for (auto& edge_pair_descriptor : mesh_wrapper_->GetEdgePairDescriptors())
+		const auto edge_pair_descriptors = mesh_wrapper_->GetEdgePairDescriptors();
+		edge_pair_data_providers_.resize(edge_pair_descriptors.size());
+		#pragma omp parallel for
+		for (int64_t i = 0; i < edge_pair_descriptors.size(); i++)
 		{
-			edge_pair_data_providers_.push_back(std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptor));
+			auto edge_pair_descriptor = edge_pair_descriptors[i];
+			const auto edge_pair_data_provider = std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptor);
+			edge_pair_data_providers_[i] = edge_pair_data_provider;
 		}
 
-		for (auto& face_fan : mesh_wrapper_->GetFaceFans())
+		const auto face_fans = mesh_wrapper_->GetFaceFans();
+		face_fan_data_providers_.resize(face_fans.size());
+		#pragma omp parallel for
+		for (int64_t i = 0; i < face_fans.size(); i++)
 		{
-			face_fan_data_providers_.push_back(std::make_shared<FaceFanDataProvider>(mesh_wrapper_, face_fan));
+			auto face_fan = face_fans[i];
+			const auto face_fan_data_provider = std::make_shared<FaceFanDataProvider>(mesh_wrapper_, face_fan);
+			face_fan_data_providers_[i] = face_fan_data_provider;
 		}
 
 		for (auto& edge_pair_data_provider : edge_pair_data_providers_)

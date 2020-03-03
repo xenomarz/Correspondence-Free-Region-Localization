@@ -23,6 +23,7 @@ namespace RDS
 	using VertexIndex = std::int64_t;
 	using EdgeIndex = std::int64_t;
 	using FaceIndex = std::int64_t;
+	using EdgeIndices = std::vector<EdgeIndex>;
 	using EdgeDescriptor = std::pair<VertexIndex, VertexIndex>;
 	using EdgePairDescriptor = std::pair<EdgeDescriptor, EdgeDescriptor>;
 	using EdgePairDescriptors = std::vector<EdgePairDescriptor>;

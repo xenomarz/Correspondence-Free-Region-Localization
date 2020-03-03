@@ -175,6 +175,11 @@ private:
 		}
 	}
 
+	void CalculateValuePerEdge(Eigen::VectorXd& domain_value_per_edge, Eigen::VectorXd& image_value_per_edge) override
+	{
+		// Empty implementation
+	}
+
 	void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets)
 	{
 		CalculateRawTriplets(triplets);

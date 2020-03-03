@@ -66,6 +66,16 @@ public:
 		return f_per_vertex_;
 	}
 
+	const Eigen::VectorXd& GetImageValuePerEdge() const
+	{
+		return image_value_per_edge_;
+	}
+
+	const Eigen::VectorXd& GetDomainValuePerEdge() const
+	{
+		return domain_value_per_edge_;
+	}
+
 	const VectorType_& GetGradient() const
 	{
 		return g_;
@@ -100,6 +110,7 @@ public:
 	// Generic property getter
 	virtual bool GetProperty(const int32_t property_id, const int32_t property_modifier_id, const std::any property_context, std::any& property_value) override
 	{
+		const ObjectiveFunctionBase::PropertyModifiers property_modifiers = static_cast<ObjectiveFunctionBase::PropertyModifiers>(property_modifier_id);
 		const Properties properties = static_cast<Properties>(property_id);
 		switch (properties)
 		{
@@ -109,6 +120,9 @@ public:
 		case Properties::ValuePerVertex:
 			property_value = GetValuePerVertex();
 			return true;
+		case Properties::ValuePerEdge:
+			property_value = GetValuePerEdge(property_modifiers);
+			return true;		
 		case Properties::Gradient:
 			property_value = GetGradient();
 			return true;
@@ -162,6 +176,7 @@ public:
 		PreInitialize();
 		InitializeValue(f_);
 		InitializeValuePerVertex(f_per_vertex_);
+		InitializeValuePerEdge(image_value_per_edge_, domain_value_per_edge_);
 		InitializeGradient(g_);
 		InitializeHessian(H_);
 		InitializeTriplets(triplets_);
@@ -189,6 +204,11 @@ public:
 		if ((update_options & UpdateOptions::ValuePerVertex) != UpdateOptions::None)
 		{
 			CalculateValuePerVertex(f_per_vertex_);
+		}
+
+		if ((update_options & UpdateOptions::ValuePerEdge) != UpdateOptions::None)
+		{
+			CalculateValuePerEdge(domain_value_per_edge_, image_value_per_edge_);
 		}
 
 		if ((update_options & UpdateOptions::Gradient) != UpdateOptions::None)
@@ -392,6 +412,21 @@ protected:
 private:
 
 	/**
+	 * Private getters
+	 */
+	
+	const Eigen::VectorXd& GetValuePerEdge(const ObjectiveFunctionBase::PropertyModifiers property_modifiers) const
+	{
+		switch (property_modifiers)
+		{
+		case ObjectiveFunctionBase::PropertyModifiers::Domain:
+			return GetDomainValuePerEdge();
+		case ObjectiveFunctionBase::PropertyModifiers::Image:
+			return GetImageValuePerEdge();
+		}
+	}
+
+	/**
 	 * Private methods
 	 */
 
@@ -405,6 +440,15 @@ private:
 	{
 		f_per_vertex.resize(mesh_data_provider_->GetImageVerticesCount());
 		f_per_vertex.setZero();
+	}
+
+	void InitializeValuePerEdge(Eigen::VectorXd& image_value_per_edge, Eigen::VectorXd& domain_value_per_edge)
+	{
+		domain_value_per_edge.resize(mesh_data_provider_->GetDomainEdgesCount());
+		domain_value_per_edge.setZero();
+		
+		image_value_per_edge.resize(mesh_data_provider_->GetImageEdgesCount());
+		image_value_per_edge.setZero();
 	}
 
 	void InitializeGradient(VectorType_& g)
@@ -424,6 +468,10 @@ private:
 	// Value, gradient and hessian calculation functions
 	virtual void CalculateValue(double& f) = 0;
 	virtual void CalculateValuePerVertex(VectorType_& f_per_vertex) = 0;
+
+	// TODO: Should be moved to a new class that will be a super class for edge related objective functions
+	virtual void CalculateValuePerEdge(Eigen::VectorXd& domain_value_per_edge, Eigen::VectorXd& image_value_per_edge) = 0;
+	
 	virtual void CalculateGradient(VectorType_& g) = 0;
 	virtual void CalculateTriplets(std::vector<Eigen::Triplet<double>>& triplets) = 0;
 
@@ -447,6 +495,11 @@ private:
 
 	// Value per vertex
 	VectorType_ f_per_vertex_;
+
+	// Value per edge
+	// TODO: Use generic VectorType_
+	Eigen::VectorXd image_value_per_edge_;
+	Eigen::VectorXd domain_value_per_edge_;
 
 	// Gradient
 	VectorType_ g_;

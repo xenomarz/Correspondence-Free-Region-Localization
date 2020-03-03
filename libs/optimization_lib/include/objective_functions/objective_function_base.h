@@ -22,15 +22,17 @@ public:
 		None = 0,
 		Value = 1,
 		ValuePerVertex = 2,
-		Gradient = 4,
-		Hessian = 8,
-		All = 15
+		ValuePerEdge = 4,
+		Gradient = 8,
+		Hessian = 16,
+		All = 31
 	};
 
 	enum class Properties : int32_t
 	{
 		Value,
 		ValuePerVertex,
+		ValuePerEdge,
 		Gradient,
 		GradientNorm,
 		Hessian,

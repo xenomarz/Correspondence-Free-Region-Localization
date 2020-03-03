@@ -101,6 +101,8 @@ public:
 	int64_t GetVariablesCount() const override;
 	RDS::EdgeIndex GetDomainEdgeIndex(RDS::EdgeDescriptor image_edge_descriptor) const override;
 	RDS::EdgeIndex GetImageEdgeIndex(RDS::EdgeDescriptor image_edge_descriptor) const override;
+	RDS::EdgeIndices GetDomainAdjacentEdgeIndicesByVertex(RDS::VertexIndex vertex_index) const override;
+	RDS::EdgeIndices GetImageAdjacentEdgeIndicesByVertex(RDS::VertexIndex vertex_index) const override;
 	
 	/**
 	 * Public methods

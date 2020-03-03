@@ -201,7 +201,7 @@ private:
 			current_iteration++;
 		}
 
-		objective_function_->UpdateLayers(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::ValuePerVertex);
+		objective_function_->UpdateLayers(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::ValuePerVertex | DenseObjectiveFunction<StorageOrder_>::UpdateOptions::ValuePerEdge);
 
 		std::lock_guard<std::mutex> x_lock(x_mutex_);
 		x_ = std::move(current_x);
