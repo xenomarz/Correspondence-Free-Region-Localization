@@ -2,6 +2,9 @@
 #ifndef OPTIMIZATION_LIB_UPDATABLE_OBJECT_H
 #define OPTIMIZATION_LIB_UPDATABLE_OBJECT_H
 
+// TBB includes
+#include <tbb/concurrent_vector.h>
+
 // Eigen Includes
 #include <Eigen/Core>
 
@@ -23,7 +26,7 @@ public:
 	 * Public getters
 	 */
 	[[nodiscard]] std::shared_ptr<MeshDataProvider> GetMeshDataProvider() const;
-	const std::vector<std::shared_ptr<UpdatableObject>>& GetDependencies() const;
+	const tbb::concurrent_vector<std::shared_ptr<UpdatableObject>>& GetDependencies() const;
 	
 	/**
 	 * Public methods
@@ -39,7 +42,7 @@ protected:
 
 	// Mesh data provider
 	std::shared_ptr<MeshDataProvider> mesh_data_provider_;
-	std::vector<std::shared_ptr<UpdatableObject>> dependencies_;
+	tbb::concurrent_vector<std::shared_ptr<UpdatableObject>> dependencies_;
 	std::vector<std::vector<std::shared_ptr<UpdatableObject>>> dependency_layers_;
 
 private:

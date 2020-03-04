@@ -6,6 +6,9 @@
 #include <memory>
 #include <vector>
 
+// TBB includes
+#include <tbb/concurrent_vector.h>
+
 // Optimization lib includes
 #include "./objective_function.h"
 
@@ -94,16 +97,32 @@ public:
 
 	void RemoveObjectiveFunction(const std::shared_ptr<ObjectiveFunctionType_>& objective_function)
 	{
-		objective_functions_.erase(std::remove(objective_functions_.begin(), objective_functions_.end(), objective_function), objective_functions_.end());
-		this->dependencies_.erase(std::remove(this->dependencies_.begin(), this->dependencies_.end(), objective_function), this->dependencies_.end());
+		tbb::concurrent_vector<std::shared_ptr<ObjectiveFunctionType_>> objective_functions;
+		for (const auto& current_objective_function : objective_functions_)
+		{
+			if(current_objective_function != objective_function)
+			{
+				objective_functions.push_back(current_objective_function);
+			}
+		}
+		objective_functions_ = objective_functions;
+
+		tbb::concurrent_vector<std::shared_ptr<UpdatableObject>> dependencies;
+		for (const auto& current_dependency : this->dependencies_)
+		{
+			if (current_dependency != objective_function)
+			{
+				dependencies.push_back(current_dependency);
+			}
+		}
+		this->dependencies_ = dependencies;
 	}
 
 	void RemoveObjectiveFunctions(const std::vector<std::shared_ptr<ObjectiveFunctionType_>>& objective_functions)
 	{
 		for (const auto& objective_function : objective_functions)
 		{
-			objective_functions_.erase(std::remove(objective_functions_.begin(), objective_functions_.end(), objective_function), objective_functions_.end());
-			this->dependencies_.erase(std::remove(this->dependencies_.begin(), this->dependencies_.end(), objective_function), this->dependencies_.end());
+			RemoveObjectiveFunction(objective_function);
 		}
 	}
 
@@ -207,7 +226,7 @@ private:
 	/**
 	 * Fields
 	 */
-	std::vector<std::shared_ptr<ObjectiveFunctionType_>> objective_functions_;
+	tbb::concurrent_vector<std::shared_ptr<ObjectiveFunctionType_>> objective_functions_;
 	bool parallel_update_;
 	bool enforce_children_psd_;
 };

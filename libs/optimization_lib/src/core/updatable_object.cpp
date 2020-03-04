@@ -25,7 +25,7 @@ void UpdatableObject::Initialize()
 	return mesh_data_provider_;
 }
 
-const std::vector<std::shared_ptr<UpdatableObject>>& UpdatableObject::GetDependencies() const
+const tbb::concurrent_vector<std::shared_ptr<UpdatableObject>>& UpdatableObject::GetDependencies() const
 {
 	return dependencies_;
 }

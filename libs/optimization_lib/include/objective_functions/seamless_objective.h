@@ -9,6 +9,9 @@
 // STL includes
 #include <vector>
 
+// TBB includes
+#include <tbb/concurrent_vector.h>
+
 // Eigen includes
 #include <Eigen/Core>
 
@@ -340,10 +343,10 @@ private:
 	 */
 	double zeta_;
 	double interval_;
-	std::vector<std::shared_ptr<EdgePairLengthObjective<StorageOrder_>>> edge_pair_length_objectives;
-	std::vector<std::shared_ptr<EdgePairAngleObjective<StorageOrder_>>> edge_pair_angle_objectives;
-	std::vector<std::shared_ptr<PeriodicObjective<StorageOrder_>>> periodic_edge_pair_angle_objectives;
-	std::vector<std::shared_ptr<EdgePairTranslationObjective<StorageOrder_>>> edge_pair_translation_objectives;
+	tbb::concurrent_vector<std::shared_ptr<EdgePairLengthObjective<StorageOrder_>>> edge_pair_length_objectives;
+	tbb::concurrent_vector<std::shared_ptr<EdgePairAngleObjective<StorageOrder_>>> edge_pair_angle_objectives;
+	tbb::concurrent_vector<std::shared_ptr<PeriodicObjective<StorageOrder_>>> periodic_edge_pair_angle_objectives;
+	tbb::concurrent_vector<std::shared_ptr<EdgePairTranslationObjective<StorageOrder_>>> edge_pair_translation_objectives;
 
 	Eigen::VectorXd image_angle_value_per_edge_;
 	Eigen::VectorXd image_length_value_per_edge_;

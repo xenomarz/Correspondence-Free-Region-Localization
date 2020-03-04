@@ -163,14 +163,16 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 			face_fan_data_providers_[i] = face_fan_data_provider;
 		}
 
-		for (auto& edge_pair_data_provider : edge_pair_data_providers_)
+		#pragma omp parallel for
+		for (int64_t i = 0; i < edge_pair_data_providers_.size(); i++)
 		{
-			seamless_->AddEdgePairObjectives(edge_pair_data_provider);
+			seamless_->AddEdgePairObjectives(edge_pair_data_providers_[i]);
 		}
 
-		for (auto& face_fan_data_provider : face_fan_data_providers_)
+		#pragma omp parallel for
+		for (int64_t i = 0; i < face_fan_data_providers_.size(); i++)
 		{
-			singular_points_->AddSingularPointObjective(face_fan_data_provider);
+			singular_points_->AddSingularPointObjective(face_fan_data_providers_[i]);
 		}
 
 		autocuts_summation_objective_->Initialize();
