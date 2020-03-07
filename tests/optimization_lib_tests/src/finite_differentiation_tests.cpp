@@ -162,21 +162,21 @@ protected:
 
 	void CreateDataProvider() override
 	{
-		data_providers_.push_back(std::make_shared<CoordinateDiffDataProvider>(mesh_wrapper_, 2, 5, RDS::CoordinateType::Y));
+		//data_providers_.push_back(std::make_shared<CoordinateDiffDataProvider>(mesh_wrapper_, 2, 5, RDS::CoordinateType::Y));
 	}
 
 	void CreateObjectiveFunction() override
 	{
-		auto coordinate_diff_objective = std::make_shared<CoordinateDiffObjective<Eigen::StorageOptions::RowMajor>>(
-			mesh_wrapper_,
-			std::static_pointer_cast<CoordinateDiffDataProvider>(data_providers_[0]));
+		//auto coordinate_diff_objective = std::make_shared<CoordinateDiffObjective<Eigen::StorageOptions::RowMajor>>(
+		//	mesh_wrapper_,
+		//	std::static_pointer_cast<CoordinateDiffDataProvider>(data_providers_[0]));
 
-		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(
-			mesh_wrapper_,
-			std::make_shared<EmptyDataProvider>(mesh_wrapper_),
-			coordinate_diff_objective,
-			1,
-			false);
+		//objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(
+		//	mesh_wrapper_,
+		//	std::make_shared<EmptyDataProvider>(mesh_wrapper_),
+		//	coordinate_diff_objective,
+		//	1,
+		//	false);
 	}
 };
 

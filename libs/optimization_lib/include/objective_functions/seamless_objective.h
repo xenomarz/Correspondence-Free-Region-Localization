@@ -21,6 +21,7 @@
 #include "./summation_objective.h"
 #include "./edge_pair/edge_pair_angle_objective.h"
 #include "./edge_pair/edge_pair_length_objective.h"
+#include "./edge_pair/edge_pair_integer_translation_objective.h"
 #include "./edge_pair/edge_pair_translation_objective.h"
 #include "../objective_functions/periodic_objective.h"
 
@@ -67,7 +68,7 @@ public:
 	 */
 	void SetInterval(const double interval)
 	{
-		for (auto& edge_pair_translation_objective : edge_pair_translation_objectives)
+		for (auto& edge_pair_translation_objective : edge_pair_integer_translation_objectives)
 		{
 			edge_pair_translation_objective->SetInterval(interval);
 		}
@@ -256,22 +257,27 @@ public:
 		auto edge_pair_angle_objective = std::make_shared<EdgePairAngleObjective<StorageOrder_>>(this->GetMeshDataProvider(), edge_pair_data_provider, false);
 		auto edge_pair_length_objective = std::make_shared<EdgePairLengthObjective<StorageOrder_>>(this->GetMeshDataProvider(), edge_pair_data_provider, false);
 		auto edge_pair_translation_objective = std::make_shared<EdgePairTranslationObjective<StorageOrder_>>(this->GetMeshDataProvider(), edge_pair_data_provider, this->GetEnforceChildrenPsd());
-		
+		auto edge_pair_integer_translation_objective = std::make_shared<EdgePairIntegerTranslationObjective<StorageOrder_>>(this->GetMeshDataProvider(), edge_pair_data_provider, this->GetEnforceChildrenPsd());
+
 		double period = M_PI / 2;
 		auto empty_data_provider = std::make_shared<EmptyDataProvider>(this->GetMeshDataProvider());
 		std::shared_ptr<PeriodicObjective<StorageOrder_>> periodic_edge_pair_angle_objective = std::make_shared<PeriodicObjective<StorageOrder_>>(this->GetMeshDataProvider(), empty_data_provider, edge_pair_angle_objective, period, this->GetEnforceChildrenPsd());
 
-		periodic_edge_pair_angle_objective->SetWeight(1);
-		edge_pair_length_objective->SetWeight(100);
+		//periodic_edge_pair_angle_objective->SetWeight(1);
+		//edge_pair_length_objective->SetWeight(100);
+		//edge_pair_translation_objective->SetWeight(10);
+		//edge_pair_integer_translation_objective->SetWeight(10);
 		
 		this->AddObjectiveFunction(periodic_edge_pair_angle_objective);
 		this->AddObjectiveFunction(edge_pair_length_objective);
-		//this->AddObjectiveFunction(edge_pair_translation_objective);
-
+		this->AddObjectiveFunction(edge_pair_translation_objective);
+		this->AddObjectiveFunction(edge_pair_integer_translation_objective);
+		
 		periodic_edge_pair_angle_objectives.push_back(periodic_edge_pair_angle_objective);
 		edge_pair_length_objectives.push_back(edge_pair_length_objective);
 		edge_pair_angle_objectives.push_back(edge_pair_angle_objective);
-		//edge_pair_translation_objectives.push_back(edge_pair_translation_objective);
+		edge_pair_integer_translation_objectives.push_back(edge_pair_integer_translation_objective);
+		edge_pair_translation_objectives.push_back(edge_pair_translation_objective);
 	}
 
 protected:
@@ -346,8 +352,9 @@ private:
 	tbb::concurrent_vector<std::shared_ptr<EdgePairLengthObjective<StorageOrder_>>> edge_pair_length_objectives;
 	tbb::concurrent_vector<std::shared_ptr<EdgePairAngleObjective<StorageOrder_>>> edge_pair_angle_objectives;
 	tbb::concurrent_vector<std::shared_ptr<PeriodicObjective<StorageOrder_>>> periodic_edge_pair_angle_objectives;
+	tbb::concurrent_vector<std::shared_ptr<EdgePairIntegerTranslationObjective<StorageOrder_>>> edge_pair_integer_translation_objectives;
 	tbb::concurrent_vector<std::shared_ptr<EdgePairTranslationObjective<StorageOrder_>>> edge_pair_translation_objectives;
-
+	
 	Eigen::VectorXd image_angle_value_per_edge_;
 	Eigen::VectorXd image_length_value_per_edge_;
 	Eigen::VectorXd domain_angle_value_per_edge_;

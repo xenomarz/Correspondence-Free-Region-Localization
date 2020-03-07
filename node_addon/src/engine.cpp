@@ -119,8 +119,10 @@ Engine::Engine(const Napi::CallbackInfo& info) :
 	autoquads_objective_functions_.push_back(seamless_);
 	autoquads_objective_functions_.push_back(singular_points_);
 
-	autocuts_objective_functions_.push_back(separation_);
+	//autocuts_objective_functions_.push_back(separation_);
 	autocuts_objective_functions_.push_back(symmetric_dirichlet_);
+	autocuts_objective_functions_.push_back(seamless_);
+	autocuts_objective_functions_.push_back(singular_points_);
 	autocuts_objective_functions_.push_back(position_);
 	
 	autocuts_summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, autocuts_objective_functions_, false);

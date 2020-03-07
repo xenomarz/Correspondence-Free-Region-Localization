@@ -244,7 +244,7 @@ public:
 			if(current_layer_index == 0)
 			{
 				#pragma omp parallel for
-				for (long i = 2; i < objects_count; i++)
+				for (long i = 1; i < objects_count; i++)
 				{
 					current_layer[i]->Update(x, update_modifiers);
 				}
@@ -254,10 +254,10 @@ public:
 					current_layer[0]->Update(x, update_modifiers);
 				}
 
-				if (objects_count > 1)
-				{
-					current_layer[1]->Update(x, update_modifiers);
-				}
+				//if (objects_count > 1)
+				//{
+				//	current_layer[1]->Update(x, update_modifiers);
+				//}
 			}
 			else
 			{

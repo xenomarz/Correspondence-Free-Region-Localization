@@ -13,7 +13,7 @@
 
 class CoordinateDiffDataProvider : public DataProvider
 {
-public:	
+public:
 	/**
 	 * Constructors and destructor
 	 */
@@ -28,7 +28,7 @@ public:
 	double GetCoordinateDiffValue() const;
 	RDS::SparseVariableIndex GetSparseVariable1Index() const;
 	RDS::SparseVariableIndex GetSparseVariable2Index() const;
-	
+
 private:
 	/**
 	 * Private fields

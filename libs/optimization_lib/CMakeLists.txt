@@ -9,7 +9,8 @@ file(GLOB SOURCES
 	src/data_providers/data_provider.cpp
 	src/data_providers/empty_data_provider.cpp
 	src/data_providers/coordinate_data_provider.cpp
-	src/data_providers/coordinate_diff_data_provider.cpp	
+	src/data_providers/coordinate_diff_data_provider.cpp
+	src/data_providers/cross_coordinate_diff_data_provider.cpp	
 	src/data_providers/plain_data_provider.cpp
 	src/data_providers/edge_pair_data_provider.cpp
 	src/data_providers/face_fan_data_provider.cpp
@@ -27,6 +28,7 @@ file(GLOB SOURCES
 	src/objective_functions/parabolic_objective.cpp
 	src/objective_functions/coordinate_objective.cpp
 	src/objective_functions/coordinate_diff_objective.cpp
+	src/objective_functions/cross_coordinate_diff_objective.cpp
 	src/objective_functions/seamless_objective.cpp
 	src/objective_functions/position/patch_position_objective.cpp
 	src/objective_functions/position/face_position_objective.cpp
@@ -36,6 +38,7 @@ file(GLOB SOURCES
 	src/objective_functions/edge_pair/edge_pair_angle_objective.cpp
 	src/objective_functions/edge_pair/edge_pair_length_objective.cpp
 	src/objective_functions/edge_pair/edge_pair_translation_objective.cpp
+	src/objective_functions/edge_pair/edge_pair_integer_translation_objective.cpp
 	src/objective_functions/singularity/singular_point_position_objective.cpp
 	src/objective_functions/singularity/singular_points_position_objective.cpp
 	src/iterative_methods/iterative_method.cpp
@@ -53,6 +56,7 @@ file(GLOB SOURCES
 	include/data_providers/empty_data_provider.h
 	include/data_providers/coordinate_data_provider.h
 	include/data_providers/coordinate_diff_data_provider.h
+	include/data_providers/cross_coordinate_diff_data_provider.h
 	include/data_providers/plain_data_provider.h
 	include/data_providers/edge_pair_data_provider.h
 	include/data_providers/face_fan_data_provider.h
@@ -70,6 +74,7 @@ file(GLOB SOURCES
 	include/objective_functions/parabolic_objective.h
 	include/objective_functions/coordinate_objective.h
 	include/objective_functions/coordinate_diff_objective.h
+	include/objective_functions/cross_coordinate_diff_objective.h
 	include/objective_functions/seamless_objective.h
 	include/objective_functions/position/patch_position_objective.h
 	include/objective_functions/position/face_position_objective.h
@@ -79,6 +84,7 @@ file(GLOB SOURCES
 	include/objective_functions/edge_pair/edge_pair_angle_objective.h
 	include/objective_functions/edge_pair/edge_pair_length_objective.h
 	include/objective_functions/edge_pair/edge_pair_translation_objective.h
+	include/objective_functions/edge_pair/edge_pair_integer_translation_objective.h
 	include/objective_functions/singularity/singular_point_position_objective.h
 	include/objective_functions/singularity/singular_points_position_objective.h
 	include/iterative_methods/iterative_method.h

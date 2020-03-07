@@ -7,7 +7,7 @@ CoordinateDiffDataProvider::CoordinateDiffDataProvider(const std::shared_ptr<Mes
 	vertex2_index_(vertex2_index),
 	coordinate_type_(coordinate_type)
 {
-	switch(coordinate_type)
+	switch (coordinate_type)
 	{
 	case RDS::CoordinateType::X:
 		sparse_variable1_index_ = mesh_data_provider_->GetXVariableIndex(vertex1_index);
@@ -22,7 +22,7 @@ CoordinateDiffDataProvider::CoordinateDiffDataProvider(const std::shared_ptr<Mes
 
 CoordinateDiffDataProvider::~CoordinateDiffDataProvider()
 {
-	
+
 }
 
 void CoordinateDiffDataProvider::Update(const Eigen::VectorXd& x)
