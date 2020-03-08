@@ -62,6 +62,11 @@ void EdgePairDataProvider::Update(const Eigen::VectorXd& x)
 
 	edge1_quadrupled_norm_ = edge1_squared_norm_ * edge1_squared_norm_;
 	edge2_quadrupled_norm_ = edge2_squared_norm_ * edge2_squared_norm_;
+
+	vertex1_x_diff_ = x(edge1_v1_x_index_) - x(edge2_v1_x_index_);
+	vertex2_x_diff_ = x(edge1_v2_x_index_) - x(edge2_v2_x_index_);
+	vertex1_y_diff_ = x(edge1_v1_y_index_) - x(edge2_v1_y_index_);
+	vertex2_y_diff_ = x(edge1_v2_y_index_) - x(edge2_v2_y_index_);
 }
 
 void EdgePairDataProvider::Update(const Eigen::VectorXd& x, int32_t update_modifiers)

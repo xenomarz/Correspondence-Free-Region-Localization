@@ -62,7 +62,7 @@ const INITIAL_STATE = {
     soupViewVisibility: EnumsExports.Visibility.VISIBLE,
     autocutsWeight: 1,
     delta: 0.5,
-    lambda: 0.2,
+    lambda: 0,
     zeta: 0.95,
     seamlessWeight: 0,
     singularityWeight: 0,

@@ -116,7 +116,7 @@ class PeriodicCoordinateObjectiveFDTest : public FiniteDifferencesTest<Eigen::St
 {
 protected:
 	PeriodicCoordinateObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
 	{
 
 	}
@@ -150,7 +150,7 @@ class PeriodicCoordinateDiffObjectiveFDTest : public FiniteDifferencesTest<Eigen
 {
 protected:
 	PeriodicCoordinateDiffObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
 	{
 
 	}
@@ -162,21 +162,21 @@ protected:
 
 	void CreateDataProvider() override
 	{
-		//data_providers_.push_back(std::make_shared<CoordinateDiffDataProvider>(mesh_wrapper_, 2, 5, RDS::CoordinateType::Y));
+		data_providers_.push_back(std::make_shared<CoordinateDiffDataProvider>(mesh_wrapper_, 2, 5, RDS::CoordinateType::Y));
 	}
 
 	void CreateObjectiveFunction() override
 	{
-		//auto coordinate_diff_objective = std::make_shared<CoordinateDiffObjective<Eigen::StorageOptions::RowMajor>>(
-		//	mesh_wrapper_,
-		//	std::static_pointer_cast<CoordinateDiffDataProvider>(data_providers_[0]));
+		auto coordinate_diff_objective = std::make_shared<CoordinateDiffObjective<Eigen::StorageOptions::RowMajor>>(
+			mesh_wrapper_,
+			std::static_pointer_cast<CoordinateDiffDataProvider>(data_providers_[0]));
 
-		//objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(
-		//	mesh_wrapper_,
-		//	std::make_shared<EmptyDataProvider>(mesh_wrapper_),
-		//	coordinate_diff_objective,
-		//	1,
-		//	false);
+		objective_function_ = std::make_shared<PeriodicObjective<Eigen::StorageOptions::RowMajor>>(
+			mesh_wrapper_,
+			std::make_shared<EmptyDataProvider>(mesh_wrapper_),
+			coordinate_diff_objective,
+			1,
+			false);
 	}
 };
 
@@ -184,7 +184,7 @@ class PeriodicEdgePairAngleObjectiveFDTest : public FiniteDifferencesTest<Eigen:
 {
 protected:
 	PeriodicEdgePairAngleObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
 	{
 
 	}
@@ -219,7 +219,7 @@ class EdgePairLengthObjectiveFDTest : public FiniteDifferencesTest<Eigen::Storag
 {
 protected:
 	EdgePairLengthObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
 	{
 
 	}
@@ -248,7 +248,7 @@ class EdgePairTranslationObjectiveFDTest : public FiniteDifferencesTest<Eigen::S
 {
 protected:
 	EdgePairTranslationObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
 	{
 
 	}
@@ -277,7 +277,7 @@ class SingularPointObjectiveFDTest : public FiniteDifferencesTest<Eigen::Storage
 {
 protected:
 	SingularPointObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
 	{
 
 	}
@@ -307,7 +307,7 @@ class SingularPointsObjectiveFDTest : public FiniteDifferencesTest<Eigen::Storag
 {
 protected:
 	SingularPointsObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/two_triangles_v2.obj")
+		FiniteDifferencesTest("../../../models/obj/two_triangles_v2.obj")
 	{
 
 	}
@@ -345,7 +345,7 @@ class SeamlessObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOptio
 {
 protected:
 	SeamlessObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/three_triangles.obj")
+		FiniteDifferencesTest("../../../models/obj/three_triangles.obj")
 	{
 
 	}
@@ -383,7 +383,7 @@ class SeparationObjectiveFDTest : public FiniteDifferencesTest<Eigen::StorageOpt
 {
 protected:
 	SeparationObjectiveFDTest() :
-		FiniteDifferencesTest("../../models/obj/three_triangles.obj")
+		FiniteDifferencesTest("../../../models/obj/three_triangles.obj")
 	{
 
 	}
