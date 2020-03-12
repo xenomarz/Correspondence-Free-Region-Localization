@@ -44,6 +44,7 @@ public:
 	using EI2FIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
 	using FI2VIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
 	using FI2EIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
+	using FI2FIsMap = std::unordered_map<int64_t, std::vector<int64_t>>;
 	
 	/**
 	 * Constructors and destructor
@@ -158,7 +159,8 @@ private:
 	void GenerateSoupFaces(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out);
 	void FixFlippedFaces(const Eigen::MatrixX3i& f_im, Eigen::MatrixX2d& v_im);
 	void GenerateRandom2DSoup(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out, Eigen::MatrixX2d& v_out);
-
+	void GenerateIsometric2DSoup(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out, Eigen::MatrixX2d& v_out);
+	
 	// Edge descriptor -> edge index map
 	void ComputeEdgeDescriptorMap(const Eigen::MatrixX2i& e, ED2EIMap& ed_2_ei);
 
@@ -178,7 +180,8 @@ private:
 		VI2FIsMap& vi_2_fi,
 		VI2FIsMap& ei_2_fi,
 		VI2FIsMap& fi_2_vi,
-		VI2FIsMap& fi_2_ei);
+		VI2FIsMap& fi_2_ei,
+		FI2FIsMap& fi_2_fi);
 
 	// Image vertices corresponding pairs and image edges corresponding pairs
 	void ComputeCorrespondingPairs();
@@ -243,12 +246,14 @@ private:
 	EI2FIsMap ei_im_2_fi_im_;
 	FI2VIsMap fi_im_2_vi_im_;
 	FI2EIsMap fi_im_2_ei_im_;
-
+	FI2FIsMap fi_im_2_fi_im_;
+	
 	VI2FIsMap vi_dom_2_fi_dom_;
 	EI2FIsMap ei_dom_2_fi_dom_;
 	FI2VIsMap fi_dom_2_vi_dom_;
 	FI2EIsMap fi_dom_2_ei_dom_;
-
+	FI2FIsMap fi_dom_2_fi_dom_;
+	
 	// Boost signals
 	boost::signals2::signal<ModelLoadedCallback> model_loaded_signal_;
 };

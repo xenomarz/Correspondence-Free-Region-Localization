@@ -243,6 +243,14 @@ void MeshWrapper::GenerateRandom2DSoup(const Eigen::MatrixX3i& f_in, Eigen::Matr
 	FixFlippedFaces(f_out, v_out);
 }
 
+void MeshWrapper::GenerateIsometric2DSoup(const Eigen::MatrixX3i& f_in, Eigen::MatrixX3i& f_out, Eigen::MatrixX2d& v_out)
+{
+	srand((unsigned int)time(0));
+	GenerateSoupFaces(f_in, f_out);
+	v_out = Eigen::MatrixX2d::Random(3 * f_out.rows(), 2) * 2.0;
+	FixFlippedFaces(f_out, v_out);
+}
+
 void MeshWrapper::ComputeEdges(const Eigen::MatrixX3i& f, Eigen::MatrixX2i& e)
 {
 	Eigen::SparseMatrix<int> adjacency_matrix;
@@ -382,18 +390,20 @@ void MeshWrapper::ComputeAdjacencyMaps(
 	VI2FIsMap& vi_2_fi,
 	VI2FIsMap& ei_2_fi,
 	VI2FIsMap& fi_2_vi,
-	VI2FIsMap& fi_2_ei)
+	VI2FIsMap& fi_2_ei,
+	FI2FIsMap& fi_2_fi)
 {
 	for (int64_t face_index = 0; face_index < f.rows(); ++face_index)
 	{
 		auto current_face = f.row(face_index);
 		for(int i = 0; i < 3; i++)
 		{
+			int64_t current_vertex_index = current_face(i);
+			int64_t next_vertex_index = current_face((i + 1) % 3);
+			
 			/**
 			 * Vertex to face adjacency
 			 */
-			int64_t current_vertex_index = current_face(i);
-			int64_t next_vertex_index = current_face((i + 1) % 3);
 			if (!vi_2_fi.contains(current_vertex_index))
 			{
 				vi_2_fi[current_vertex_index] = {};
@@ -431,6 +441,32 @@ void MeshWrapper::ComputeAdjacencyMaps(
 			}
 
 			fi_2_ei[face_index].push_back(edge_index);
+		}
+	}
+
+	for (int64_t face_index = 0; face_index < f.rows(); ++face_index)
+	{
+		auto current_face = f.row(face_index);
+		fi_2_fi[face_index] = {};
+		for (int i = 0; i < 3; i++)
+		{
+			int64_t current_vertex_index = current_face(i);
+			int64_t next_vertex_index = current_face((i + 1) % 3);
+			
+			/**
+			 * Face to face adjacency
+			 */
+			int64_t edge_index = ed_2_ei.at(std::make_pair(current_vertex_index, next_vertex_index));
+			if (ei_2_fi.contains(edge_index))
+			{
+				for(RDS::FaceIndex adjacent_face_index : ei_2_fi[edge_index])
+				{
+					if(adjacent_face_index != face_index)
+					{
+						fi_2_fi[face_index].push_back(adjacent_face_index);
+					}
+				}
+			}
 		}
 	}
 }
@@ -634,29 +670,23 @@ MeshWrapper::ModelFileType MeshWrapper::GetModelFileType(const std::string& mode
 void MeshWrapper::Initialize()
 {
 	NormalizeVertices(v_dom_);
-	GenerateRandom2DSoup(f_dom_, f_im_, v_im_);
-
 	ComputeEdges(f_dom_, e_dom_);
-	ComputeEdges(f_im_, e_im_);
-
 	ComputeEdgeDescriptorMap(e_dom_, ed_dom_2_ei_dom_);
+	ComputeAdjacencyMaps(f_dom_, ed_dom_2_ei_dom_, vi_dom_2_fi_dom_, ei_dom_2_fi_dom_, fi_dom_2_vi_dom_, fi_dom_2_ei_dom_, fi_dom_2_fi_dom_);
+		
+	GenerateRandom2DSoup(f_dom_, f_im_, v_im_);
+	ComputeEdges(f_im_, e_im_);
 	ComputeEdgeDescriptorMap(e_im_, ed_im_2_ei_im_);
+	ComputeAdjacencyMaps(f_im_, ed_im_2_ei_im_, vi_im_2_fi_im_, ei_im_2_fi_im_, fi_im_2_vi_im_, fi_im_2_ei_im_, fi_im_2_fi_im_);
 
 	ComputeVertexIndexMaps();
 	ComputeEdgeIndexMaps();
 	ComputeVertexToEdgeIndexMaps();
-
-	ComputeAdjacencyMaps(f_dom_, ed_dom_2_ei_dom_, vi_dom_2_fi_dom_, ei_dom_2_fi_dom_, fi_dom_2_vi_dom_, fi_dom_2_ei_dom_);
-	ComputeAdjacencyMaps(f_im_, ed_im_2_ei_im_, vi_im_2_fi_im_, ei_im_2_fi_im_, fi_im_2_vi_im_, fi_im_2_ei_im_);
-	
 	ComputeCorrespondingPairs();
-
 	ComputeCorrespondingVertexPairsCoefficients();
 	ComputeCorrespondingVertexPairsEdgeLength();
-
 	ComputeVertexNeighbours();
 	ComputeFaceFans();
-
 	ComputeSurfaceGradientPerFace(v_dom_, f_dom_, d1_, d2_);
 }
 
