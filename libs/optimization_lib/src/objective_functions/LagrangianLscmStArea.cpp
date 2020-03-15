@@ -103,6 +103,11 @@ void LagrangianLscmStArea::constrainedGradient(std::vector<int>& I, std::vector<
 	}
 	//we add the indexes of the last element in order to tell the solver the size of the matrix
 	PushTripple(F.rows() - 1, 2 * V.rows() - 1, 0);
+
+	A_k = Utils::BuildMatrix(I, J, S).toDense();
+
+	//std::cout << "A_k matrix is updated!" << std::endl;
+	//std::cout << "A_k: rows=" << A_k.rows() << " cols=" << A_k.cols() << std::endl;
 }
 
 void LagrangianLscmStArea::constrainedHessian(std::vector<std::vector<int>>& Is, std::vector<std::vector<int>>& Js, std::vector < std::vector<double>>& Ss) {

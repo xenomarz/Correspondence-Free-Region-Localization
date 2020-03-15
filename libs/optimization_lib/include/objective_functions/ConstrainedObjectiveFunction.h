@@ -12,6 +12,7 @@ protected:
 	void init_aug_hessian();
 	void AddElementToAugHessian(std::vector<int> ind);
 public:
+	Eigen::MatrixXd A_k, W_k;
 	Eigen::VectorXd lambda;
 
 	ConstrainedObjectiveFunction() {}

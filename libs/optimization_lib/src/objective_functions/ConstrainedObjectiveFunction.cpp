@@ -177,11 +177,84 @@ void ConstrainedObjectiveFunction::hessian()
 		for (double val : Ss[fi])
 			SS.push_back(val * (-lambda(fi)));
 	}
+	
+
+	/////////////////////////////////////////////////////////////////
+	// check point
+	II.push_back(2 * V.rows() - 1);
+	JJ.push_back(2 * V.rows() - 1);
+	SS.push_back(0);
+
+	Eigen::SparseMatrix<double> fullW, upperW =  Utils::BuildMatrix(II, JJ, SS);
+	fullW = upperW.selfadjointView<Eigen::Upper>();
+	W_k = fullW.toDense();
+
+	std::cout << std::endl << std::endl << "---------------before----------------" << std::endl;
+	std::cout << "W_k matrix is updated!" << std::endl;
+	std::cout << "W_k: rows=" << W_k.rows() << " cols=" << W_k.cols() << std::endl;
+
+	std::cout << "W_k: min eig value= " << W_k.eigenvalues().real().minCoeff() << std::endl;
+	std::cout << "W_k: max eig value= " << W_k.eigenvalues().real().maxCoeff() << std::endl;
+	//std::cout << "W_k: eig values= " << W_k.eigenvalues().real() << std::endl;
+	/////////////////////////////////////////////////////////////////
+	
+	
+
 
 	/*
 	* Adding the second part of the hessian => -grad(C(x)).transpose()
 	*/
 	constrainedGradient(I, J, S);
+
+
+	/////////////////////////////////////////////////////////////////
+	// check point
+	Eigen::FullPivLU<Eigen::MatrixXd> lu_decomp(A_k);
+	auto rank = lu_decomp.rank();
+	std::cout << "A_k: rank=" << rank << std::endl;
+
+	Eigen::MatrixXd A_null_space = lu_decomp.kernel();
+	Eigen::MatrixXd Roi = A_null_space.transpose() * W_k * A_null_space;
+	double minEig = Roi.eigenvalues().real().minCoeff();
+	std::cout << "before Roi: eig values= " << minEig << std::endl;
+	std::cout << "A_k: Null space dim: rows=" << A_null_space.rows() << " , cols=" << A_null_space.cols() << std::endl;
+
+	if (minEig < 0) {
+		for (int i = 0; i < 2 * V.rows(); i++) {
+			II.push_back(i);
+			JJ.push_back(i);
+			SS.push_back((1e-4) - (minEig));
+		}
+	}
+	else {
+		for (int i = 0; i < 2 * V.rows(); i++) {
+			II.push_back(i);
+			JJ.push_back(i);
+			SS.push_back((1e-4));
+		}
+	}
+
+	upperW = Utils::BuildMatrix(II, JJ, SS);
+	fullW = upperW.selfadjointView<Eigen::Upper>();
+	W_k = fullW.toDense();
+
+	std::cout << std::endl << std::endl << "---------------after----------------" << std::endl;
+	std::cout << "W_k matrix is updated!" << std::endl;
+	std::cout << "W_k: rows=" << W_k.rows() << " cols=" << W_k.cols() << std::endl;
+
+	std::cout << "W_k: min eig value= " << W_k.eigenvalues().real().minCoeff() << std::endl;
+	std::cout << "W_k: max eig value= " << W_k.eigenvalues().real().maxCoeff() << std::endl;
+	
+	Roi = A_null_space.transpose() * W_k * A_null_space;
+	minEig = Roi.eigenvalues().real().minCoeff();
+	std::cout << "Roi: eig values= " << minEig << std::endl;
+
+
+	/////////////////////////////////////////////////////////////////
+
+
+
+
 	II.insert(II.end(), J.begin(), J.end());
 	for (int i = 0; i < I.size(); i++) {
 		JJ.push_back(I[i] + 2 * V.rows());
@@ -194,6 +267,27 @@ void ConstrainedObjectiveFunction::hessian()
 	II.push_back(2 * V.rows() + F.rows() - 1);
 	JJ.push_back(2 * V.rows() + F.rows() - 1);
 	SS.push_back(0);
+
+
+
+	
+	
+
+	//std::cout << "(A_k * 1).sum=" << (A_k * Eigen::VectorXd::Ones(272)).sum() << std::endl;
+	//std::cout << "1' * W_k * 1=" << Eigen::VectorXd::Ones(272).transpose() * W_k * Eigen::VectorXd::Ones(272) << std::endl;
+
+	//for (int col = 0; col < A_null_space.cols(); col++) {
+	//	Eigen::VectorXd d = A_null_space.col(col);
+	//	std::cout << "Null space: column=" << col << std::endl;
+	//	//std::cout << "Null space vector=" << d << std::endl;
+	//	std::cout << "(A_k * d).sum=" << (A_k * d).sum() << std::endl;
+	//	std::cout << "d' * W_k * d=" << d.transpose() * W_k * d << std::endl;
+
+	//	assert((A_k * d).sum() < 1e-8 && (A_k * d).sum() > -(1e-8));
+	//	assert(d.transpose() * W_k * d > 0);
+	//}
+	/////////////////////////////////////////////////////////////////
+
 
 	//#pragma omp parallel for num_threads(24)
 	//	int index2 = 0;

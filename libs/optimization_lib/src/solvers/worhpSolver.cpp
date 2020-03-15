@@ -440,7 +440,7 @@ void worhpSolver::UserHM(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 void hessian(LagrangianLscmStArea* f, double scale)
 {
 	/*
-	*  Hess(L) = [Hess(f) - lambda*Hess(C)	,	-Grad(C).Transpose	]
+	*  Hess(L) = [Hess(f) + lambda*Hess(C)	,	-Grad(C).Transpose	]
 	*			 [-Grad(C)					,	0					]
 	*
 	*  we build Hess(L) as an upper triangular matrix!
@@ -451,14 +451,14 @@ void hessian(LagrangianLscmStArea* f, double scale)
 	std::vector<std::vector<double>> Ss;
 
 	/*
-	* Adding the first part of the hessian => Hess(f) - lambda*Hess(C)
+	* Adding the first part of the hessian => Hess(f) + lambda*Hess(C)
 	*/
 	// add Hess(f)
 	f->objectiveHessian(f->II, f->JJ, f->SS);
 	for (int i = 0; i < f->SS.size(); i++) {
 		f->SS[i] = f->SS[i] * scale;
 	}
-	// add ( -lambda * Hess(C))
+	// add (lambda * Hess(C))
 	f->constrainedHessian(Is, Js, Ss);
 	for (int fi = 0; fi < f->F.rows(); fi++) {
 		f->II.insert(f->II.end(), Is[fi].begin(), Is[fi].end());
