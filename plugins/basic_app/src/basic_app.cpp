@@ -1243,9 +1243,10 @@ void basic_app::checkGradients()
 			return;
 		}
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
-			objective->checkGradient(Outputs[i].solver->ext_x, Utils::Lagrangian);
-			objective->checkGradient(Outputs[i].solver->ext_x, Utils::AugmentedLagrangian);
-			objective->checkGradient(Outputs[i].solver->ext_x, Utils::LagrangianObjective);
+			objective->checkGradient(
+				Eigen::VectorXd::Random(InputModel().V.size()), 
+				Utils::Lagrangian
+			);
 		}
 	}
 }
@@ -1259,10 +1260,10 @@ void basic_app::checkHessians()
 			return;
 		}
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
-			objective->checkHessian(Outputs[i].solver->ext_x, Utils::Lagrangian);
-			objective->checkHessian(Outputs[i].solver->ext_x, Utils::AugmentedLagrangian);
-			objective->checkHessian(Outputs[i].solver->ext_x, Utils::LagrangianObjective);
-			objective->checkHessian(Outputs[i].solver->ext_x, Utils::LagrangianConstraint);
+			objective->checkHessian(
+				Eigen::VectorXd::Random(InputModel().V.size()), 
+				Utils::Lagrangian
+			);
 		}
 	}
 }

@@ -219,6 +219,12 @@ void ObjectiveFunction::checkHessian(const Eigen::VectorXd& X, const Utils::FDty
 
 	assert(H.size() == FDH.size() && "The size of analytic hessian & FD hessian must be equal!");
 
+	/*std::cout << std::endl << "H = " << std::endl <<
+		H.toDense() << std::endl << "-------------";
+	
+	std::cout << std::endl << "FDH = " << std::endl << 
+		FDH.toDense() << std::endl;*/
+
 	std::cout << name << "(" << str << "): testing hessians...\n";
 	for (int i = 0; i < H.rows(); i++) {
 		for (int j = 0; j < H.cols(); j++) {

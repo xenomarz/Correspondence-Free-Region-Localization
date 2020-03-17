@@ -284,10 +284,6 @@ void BendingEdge::gradient(Eigen::VectorXd& g, const bool update)
 void BendingEdge::hessian() {
 	// constant factors
 	int index = 0;
-	SS.clear();
-	II.clear();
-	JJ.clear();
-	
 	Eigen::VectorXd d_angle = angle - restAngle;
 	Eigen::VectorXd K = 2 * k *restConst;
 	Eigen::VectorXd zeta = K.cwiseProduct(d_angle);// for alternative enrgy: zeta = K*(phi-rest_phi)*(1+psi*psi)
@@ -401,11 +397,9 @@ void BendingEdge::hessian() {
 						else if (j == 3)
 							global_i = x3_index(hi) + (jj*V.rows());
 
-						if (global_i >= global_j) {
+						if (global_i <= global_j) {
 							//hesEntries.push_back(Eigen::Triplet<double>(global_i, global_j, H[i][j](ii, jj)));
-							SS.push_back(H[i][j](ii, jj));
-							II.push_back(global_i);
-							JJ.push_back(global_j);
+							SS[index++] = H[i][j](ii, jj);
 						}	
 					}
 				}
@@ -414,43 +408,43 @@ void BendingEdge::hessian() {
 
 void BendingEdge::init_hessian()
 {
-	//II.clear();
-	//JJ.clear();
-	//
-	//for (int hi = 0; hi < num_hinges; hi++) {
-	//	//Finally, convert to triplets
-	//	for (int i = 0; i < 4; ++i)
-	//		for (int j = 0; j < 4; ++j)
-	//			for (int ii = 0; ii < 3; ++ii) {
-	//				int global_j;
-	//				if (i == 0)
-	//					global_j = x0_index(hi) + (ii*V.rows());
-	//				else if (i == 1)
-	//					global_j = x1_index(hi) + (ii*V.rows());
-	//				else if (i == 2)
-	//					global_j = x2_index(hi) + (ii*V.rows());
-	//				else if (i == 3)
-	//					global_j = x3_index(hi) + (ii*V.rows());
+	II.clear();
+	JJ.clear();
+	
+	for (int hi = 0; hi < num_hinges; hi++) {
+		//Finally, convert to triplets
+		for (int i = 0; i < 4; ++i)
+			for (int j = 0; j < 4; ++j)
+				for (int ii = 0; ii < 3; ++ii) {
+					int global_j;
+					if (i == 0)
+						global_j = x0_index(hi) + (ii*V.rows());
+					else if (i == 1)
+						global_j = x1_index(hi) + (ii*V.rows());
+					else if (i == 2)
+						global_j = x2_index(hi) + (ii*V.rows());
+					else if (i == 3)
+						global_j = x3_index(hi) + (ii*V.rows());
 
-	//				for (int jj = 0; jj < 3; ++jj) {
-	//					int global_i;
+					for (int jj = 0; jj < 3; ++jj) {
+						int global_i;
 
-	//					if (j == 0)
-	//						global_i = x0_index(hi) + (jj*V.rows());
-	//					else if (j == 1)
-	//						global_i = x1_index(hi) + (jj*V.rows());
-	//					else if (j == 2)
-	//						global_i = x2_index(hi) + (jj*V.rows());
-	//					else if (j == 3)
-	//						global_i = x3_index(hi) + (jj*V.rows());
+						if (j == 0)
+							global_i = x0_index(hi) + (jj*V.rows());
+						else if (j == 1)
+							global_i = x1_index(hi) + (jj*V.rows());
+						else if (j == 2)
+							global_i = x2_index(hi) + (jj*V.rows());
+						else if (j == 3)
+							global_i = x3_index(hi) + (jj*V.rows());
 
-	//					if (global_i >= global_j) {
-	//						II.push_back(global_i);
-	//						JJ.push_back(global_j);
-	//					}
-	//				}
-	//			}
-	//}
+						if (global_i <= global_j) {
+							II.push_back(global_i);
+							JJ.push_back(global_j);
+						}
+					}
+				}
+	}
 
-	//SS = std::vector<double>(II.size(), 0.);
+	SS = std::vector<double>(II.size(), 0.);
 }

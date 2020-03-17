@@ -1,6 +1,7 @@
 #include "solvers/EigenSparseSolver.h"
 #include <vector>
 #include <iostream>
+
 using namespace std;
 
 template <typename vectorTypeI, typename vectorTypeS>
@@ -66,6 +67,32 @@ void EigenSparseSolver<vectorTypeI, vectorTypeS>::perpareMatrix(const vectorType
 {
 	UpperTriangular_A = Utils::BuildMatrix(II,JJ,SS);
 	full_A = UpperTriangular_A.selfadjointView<Eigen::Upper>();
+
+	
+
+
+	auto eig = full_A.toDense().eigenvalues();
+	assert(eig.imag().isZero() && "A complex eigenvalue number has been found!");
+	double min_eig_value = eig.real().minCoeff();
+	
+	cout << "before: full min_eig_value = " << min_eig_value << endl;
+	cout << "before: full max_eig_value = " << eig.real().maxCoeff() << endl;
+	cout << "before: upper min_eig_value = " << UpperTriangular_A.toDense().eigenvalues().real().minCoeff()<< endl;
+	cout << "before: upper max_eig_value = " << UpperTriangular_A.toDense().eigenvalues().real().maxCoeff()<< endl;
+	
+	if (min_eig_value < 0) {
+		for (int i = 0; i < full_A.rows(); i++) {
+			full_A.coeffRef(i, i) = full_A.coeff(i, i) + (-min_eig_value + 1e-4);
+		}
+	}
+
+	cout << "after: full min_eig_value = " << full_A.toDense().eigenvalues().real().minCoeff() << endl;
+	cout << "after: full max_eig_value = " << full_A.toDense().eigenvalues().real().maxCoeff() << endl;
+	cout << "after: upper min_eig_value = " << UpperTriangular_A.toDense().eigenvalues().real().minCoeff() << endl;
+	cout << "after: upper max_eig_value = " << UpperTriangular_A.toDense().eigenvalues().real().maxCoeff() << endl;
+
+
+	
 
 	full_A.makeCompressed();
 	UpperTriangular_A.makeCompressed();
