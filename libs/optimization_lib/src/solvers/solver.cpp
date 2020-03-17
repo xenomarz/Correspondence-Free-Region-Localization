@@ -47,27 +47,6 @@ solver::~solver() {
 #endif
 }
 
-Eigen::VectorXd solver::getLambda(const Eigen::VectorXd& vec) {
-	assert(vec.rows() == (2 * V.rows() + F.rows()));
-	return vec.tail(F.rows());
-}
-
-Eigen::VectorXd solver::getXY(const Eigen::VectorXd& vec) {
-	assert(vec.rows() == (2 * V.rows() + F.rows()));
-	return vec.head(2 * V.rows());
-}
-
-void solver::setLambda(Eigen::VectorXd& vec, const Eigen::VectorXd& lambda) {
-	assert(lambda.rows() == F.rows());
-	assert(vec.rows() == (2 * V.rows() + F.rows()));
-	vec.tail(F.rows()) = lambda;
-}
-
-void solver::setXY(Eigen::VectorXd& vec, const Eigen::VectorXd& XY) {
-	assert(XY.rows() == (2 * V.rows()));
-	assert(vec.rows() == (2 * V.rows() + F.rows()));
-	vec.head(2 * V.rows()) = XY;
-}
 
 void solver::init(
 	std::shared_ptr<ObjectiveFunction> objective, 
@@ -80,23 +59,11 @@ void solver::init(
 	this->V = V;
 	this->constant_step = 0.01;
 	this->objective = objective;
-
 	std::cout << "F.rows() = " << F.rows() << std::endl;
 	std::cout << "V.rows() = " << V.rows() << std::endl;
-	assert(X0.rows() == (2*V.rows()) && "X0 should contain the (x,y) coordinates for each vertice");
-	assert(lambda0.rows() == F.rows());
-
-	if (IsConstrObjFunc) { //for constraint objective function
-		X.resize(2 * V.rows() + F.rows());
-		setXY(X,X0);
-		setLambda(X, lambda0);
-		ext_x = X0;
-		ext_lambda = lambda0;
-	}
-	else { //for unconstraint objective function
-		X = X0;
-		ext_x = X;
-	}
+	assert(X0.rows() == (3*V.rows()) && "X0 should contain the (x,y,z) coordinates for each vertice");
+	X = X0;
+	ext_x = X;
 	internal_init();
 }
 
@@ -118,55 +85,6 @@ int solver::run()
 	
 	std::cout << ">> solver " + std::to_string(solverID) + " stopped" << std::endl;
 	return 0;
-}
-
-int solver::aug_run()
-{
-	std::shared_ptr<TotalObjective> total = std::dynamic_pointer_cast<TotalObjective>(objective);
-	assert(total != NULL);
-	std::shared_ptr<LagrangianLscmStArea> aug_function = std::dynamic_pointer_cast<LagrangianLscmStArea>(total->objectiveList[0]);
-	assert(aug_function != NULL);
-
-	is_running = true;
-	halt = false;
-	int steps = 0;
-	double tolerance = 0.1;
-	do {
-		std::cout << ">> one round" << std::endl;
-		int sub_steps = 0;
-		do {
-			std::cout << "     >> sub round = " << g.norm() << std::endl;
-			run_one_aug_iteration(steps, false);
-		} while (g.norm() > tolerance && sub_steps++ < 10);
-		//update lambda
-		objective->updateX(X);
-		setLambda(X,getLambda(X)-aug_function->augmented_value_parameter*aug_function->constrainedValue(true));
-		//update meo
-		if(aug_function->augmented_value_parameter < 100000.0f)
-			aug_function->augmented_value_parameter *= 1.1;
-
-	} while ((a_parameter_was_updated || test_progress()) && !halt && ++steps < num_steps);
-	is_running = false;
-	std::cout << ">> solver " + std::to_string(solverID) + " stopped" << std::endl;
-	return 0;
-}
-
-void solver::run_one_aug_iteration(const int steps, const bool showGraph) {
-	aug_step();
-#if defined SAVE_DATA_IN_CSV || defined SAVE_DATA_IN_MATLAB
-	prepareData();
-#endif
-	aug_gradNorm_linesearch();
-	update_external_data();
-
-#ifdef SAVE_DATA_IN_MATLAB
-	sendDataToMatlab(showGraph);
-#endif 
-#ifdef SAVE_DATA_IN_CSV
-	saveSolverInfo(steps, solverInfo);
-	saveHessianInfo(steps, hessianInfo);
-	saveSearchDirInfo(steps, SearchDirInfo);
-#endif 
 }
 
 void solver::run_one_iteration(const int steps,const bool showGraph) {
@@ -496,39 +414,13 @@ void solver::saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo) {
 
 void solver::value_linesearch()
 {
-	if (/*FlipAvoidingLineSearch*/false)
-	{
-		double min_step_to_singularity;
-		Eigen::MatrixX2d MatX;
-		Eigen::MatrixXd MatP;
-		if (IsConstrObjFunc) {
-			MatX = Eigen::Map<Eigen::MatrixX2d>(getXY(X).data(), V.rows(), 2);
-			MatP = Eigen::Map<const Eigen::MatrixX2d>(getXY(p).data(), V.rows(), 2);
-		}
-		else {
-			MatX = Eigen::Map<Eigen::MatrixX2d>(X.data(), V.rows(), 2);
-			MatP = Eigen::Map<const Eigen::MatrixX2d>(p.data(), V.rows(), 2);
-		}
-		min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(MatX, F, MatP);
-		step_size = std::min(1., min_step_to_singularity*0.8);
-	}
-	else
-		step_size = 1;
-
+	step_size = 1;
 	double new_energy = currentEnergy;
-	
 	cur_iter = 0; int MAX_STEP_SIZE_ITER = 50;
-
 	while (cur_iter++ < MAX_STEP_SIZE_ITER) {
 		Eigen::VectorXd curr_x = X + step_size * p;
-
 		objective->updateX(curr_x);
-
-		if (IsConstrObjFunc) 
-			new_energy = objective->AugmentedValue(false);
-		else
-			new_energy = objective->value(false);
-		
+		new_energy = objective->value(false);
 		if (new_energy >= currentEnergy)
 			step_size /= 2;
 		else {
@@ -573,43 +465,6 @@ void solver::gradNorm_linesearch()
 	}
 }
 
-void solver::aug_gradNorm_linesearch()
-{
-	std::shared_ptr<TotalObjective> total = std::dynamic_pointer_cast<TotalObjective>(objective);
-	assert(total != NULL);
-	std::shared_ptr<LagrangianLscmStArea> aug_function = std::dynamic_pointer_cast<LagrangianLscmStArea>(total->objectiveList[0]);
-	assert(aug_function != NULL);
-
-	step_size = 1;
-	Eigen::VectorXd grad;
-
-	objective->updateX(X);
-	aug_function->AuglagrangGradWRTX(grad, false);
-	double current_GradNrom = grad.norm();
-	double new_GradNrom = current_GradNrom;
-
-	cur_iter = 0; int MAX_STEP_SIZE_ITER = 50;
-
-	while (cur_iter++ < MAX_STEP_SIZE_ITER) {
-		Eigen::VectorXd curr_x(X.size());
-		setXY(curr_x, getXY(X) + step_size * p);
-		setLambda(curr_x, getLambda(X));
-
-		objective->updateX(curr_x);
-		aug_function->AuglagrangGradWRTX(grad, false);
-		new_GradNrom = grad.norm();
-
-		if (new_GradNrom >= current_GradNrom)
-			step_size /= 2;
-		else {
-			X = curr_x;
-			break;
-		}
-	}
-}
-
-
-
 void solver::stop()
 {
 	wait_for_parameter_update_slot();
@@ -621,12 +476,7 @@ void solver::update_external_data()
 {
 	give_parameter_update_slot();
 	std::unique_lock<std::shared_timed_mutex> lock(*data_mutex);
-	if (IsConstrObjFunc) {
-		ext_x = getXY(X);
-		ext_lambda = getLambda(X);
-	}
-	else 
-		ext_x = X;
+	ext_x = X;
 	progressed = true;
 }
 

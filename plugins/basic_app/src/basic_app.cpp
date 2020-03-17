@@ -1243,20 +1243,9 @@ void basic_app::checkGradients()
 			return;
 		}
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
-			if (Outputs[i].solver->IsConstrObjFunc) {
-				Eigen::VectorXd x;
-				x = Eigen::VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
-				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
-				objective->checkGradient(x, Utils::Lagrangian);
-				objective->checkGradient(x, Utils::AugmentedLagrangian);
-				objective->checkGradient(x, Utils::LagrangianObjective);
-			}
-			else {
-				objective->checkGradient(Outputs[i].solver->ext_x, Utils::Lagrangian);
-				objective->checkGradient(Outputs[i].solver->ext_x, Utils::AugmentedLagrangian);
-				objective->checkGradient(Outputs[i].solver->ext_x, Utils::LagrangianObjective);
-			}
-			
+			objective->checkGradient(Outputs[i].solver->ext_x, Utils::Lagrangian);
+			objective->checkGradient(Outputs[i].solver->ext_x, Utils::AugmentedLagrangian);
+			objective->checkGradient(Outputs[i].solver->ext_x, Utils::LagrangianObjective);
 		}
 	}
 }
@@ -1270,21 +1259,10 @@ void basic_app::checkHessians()
 			return;
 		}
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
-			if (Outputs[i].solver->IsConstrObjFunc) {
-				Eigen::VectorXd x;
-				x = Eigen::VectorXd::Random(2 * InputModel().V.rows() + InputModel().F.rows());
-				x.head(2 * InputModel().V.rows()) = Outputs[i].solver->ext_x;
-				objective->checkHessian(x, Utils::Lagrangian);
-				objective->checkHessian(x, Utils::AugmentedLagrangian);
-				objective->checkHessian(x, Utils::LagrangianObjective);
-				objective->checkHessian(x, Utils::LagrangianConstraint);
-			}
-			else {
-				objective->checkHessian(Outputs[i].solver->ext_x, Utils::Lagrangian);
-				objective->checkHessian(Outputs[i].solver->ext_x, Utils::AugmentedLagrangian);
-				objective->checkHessian(Outputs[i].solver->ext_x, Utils::LagrangianObjective);
-				objective->checkHessian(Outputs[i].solver->ext_x, Utils::LagrangianConstraint);
-			}
+			objective->checkHessian(Outputs[i].solver->ext_x, Utils::Lagrangian);
+			objective->checkHessian(Outputs[i].solver->ext_x, Utils::AugmentedLagrangian);
+			objective->checkHessian(Outputs[i].solver->ext_x, Utils::LagrangianObjective);
+			objective->checkHessian(Outputs[i].solver->ext_x, Utils::LagrangianConstraint);
 		}
 	}
 }
@@ -1304,15 +1282,15 @@ void basic_app::update_mesh()
 			Outputs[i].solver->get_data(X[i], lambda);
 			Outputs[i].setLambda(lambda);
 		}
-		V.push_back(Eigen::Map<Eigen::MatrixXd>(X[i].data(), X[i].rows() / 2, 2));
+		V.push_back(Eigen::Map<Eigen::MatrixXd>(X[i].data(), X[i].rows() / 3, 3));
 
 		if (IsTranslate && mouse_mode == app_utils::VERTEX_SELECT) {
-			V[i].row(Translate_Index) = OutputModel(i).V.row(Translate_Index).head(2);
+			V[i].row(Translate_Index) = OutputModel(i).V.row(Translate_Index);
 		}
 		else if(IsTranslate && mouse_mode == app_utils::FACE_SELECT) {
 			Eigen::Vector3i F = OutputModel(i).F.row(Translate_Index);
 			for (int vi = 0; vi < 3; vi++)
-				V[i].row(F[vi]) = OutputModel(i).V.row(F[vi]).head(2);
+				V[i].row(F[vi]) = OutputModel(i).V.row(F[vi]);
 		}
 		update_texture(V[i],i);
 	}
@@ -1338,7 +1316,7 @@ void basic_app::start_solver_thread() {
 		std::cout << ">> A new solver has been started" << std::endl;
 		solver_on = true;
 		//update solver
-		Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(OutputModel(i).V.leftCols(2).data(), OutputModel(i).V.rows() * 2);
+		Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(OutputModel(i).V.data(), OutputModel(i).V.size());
 		Outputs[i].newton->init(Outputs[i].totalObjective, initialguessXX, Outputs[i].getLambda(OutputModel(i).F.rows()),OutputModel(i).F, OutputModel(i).V);
 		Outputs[i].gradient_descent->init(Outputs[i].totalObjective, initialguessXX, Outputs[i].getLambda(OutputModel(i).F.rows()), OutputModel(i).F, OutputModel(i).V);
 		//start solver

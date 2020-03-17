@@ -21,7 +21,7 @@ void PenaltyPositionalConstraints::updateX(const Eigen::VectorXd& X)
 		CurrConstrainedVerticesPos.row(i) <<
 			X(ConstrainedVerticesInd[i] + (0 * numV)),	//X-coordinate
 			X(ConstrainedVerticesInd[i] + (1 * numV)),	//Y-coordinate
-			X(ConstrainedVerticesInd[i] + (3 * numV));	//Z-coordinate
+			X(ConstrainedVerticesInd[i] + (2 * numV));	//Z-coordinate
 	}
 }
 
