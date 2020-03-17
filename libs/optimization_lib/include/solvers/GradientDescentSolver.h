@@ -5,10 +5,18 @@
 class GradientDescentSolver : public solver
 {
 public:
-	GradientDescentSolver(const bool isConstrObjFunc, const int solverID) : solver(isConstrObjFunc,solverID) {}
-	virtual void step() override;
-	virtual void aug_step() override;
-	virtual bool test_progress() override;
-	virtual void internal_init() override;
-	virtual void internal_aug_init() override;
+	GradientDescentSolver(const int solverID) : solver(solverID) {}
+	virtual void step() override {
+		objective->updateX(X);
+		currentEnergy = objective->value(true);
+		objective->gradient(g, true);
+		p = -g;
+	}
+	virtual bool test_progress() override {
+		return true;
+	}
+	virtual void internal_init() override {
+		objective->updateX(X);
+		g.resize(X.size());
+	}
 };

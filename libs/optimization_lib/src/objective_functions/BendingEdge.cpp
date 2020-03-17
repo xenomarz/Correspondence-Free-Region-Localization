@@ -4,6 +4,7 @@
 
 BendingEdge::BendingEdge() {
 	name = "Bending Edge energy";
+	w = 1;
 	std::cout << name << " constructor" << std::endl;
 }
 

@@ -6,17 +6,24 @@ basic_app::basic_app() :
 IGL_INLINE void basic_app::init(igl::opengl::glfw::Viewer *_viewer)
 {
 	ImGuiMenu::init(_viewer);
-
 	if (_viewer)
 	{
 		isLoadNeeded = false;
-		IsMouseDraggingAnyWindow = IsMouseHoveringAnyWindow = 
-			worhp_on = solver_on = Outputs_Settings = Highlighted_face = IsTranslate = model_loaded = false;
-		ZoomAll = step_by_step = solver_settings = show_text = true;
+		IsMouseDraggingAnyWindow = false;
+		IsMouseHoveringAnyWindow = false;
+		worhp_on = false;
+		solver_on = false;
+		Outputs_Settings = false;
+		Highlighted_face = false;
+		IsTranslate = false;
+		model_loaded = false;
+		ZoomAll = true;
+		solver_settings = true;
+		show_text = true;
+		step_by_step = false;
 		distortion_type = app_utils::TOTAL_DISTORTION;
 		solver_type = app_utils::NEWTON;
-		linesearch_type = Utils::GradientNorm;
-		param_type = app_utils::None;
+		linesearch_type = Utils::FunctionValue;
 		mouse_mode = app_utils::VERTEX_SELECT;
 		view = app_utils::Horizontal;
 
@@ -37,7 +44,7 @@ IGL_INLINE void basic_app::init(igl::opengl::glfw::Viewer *_viewer)
 		viewer->core(inputCoreID).lighting_factor = 0.5;
 
 		//Load multiple views
-		Outputs.push_back(Output(viewer,false, solver_type,linesearch_type));
+		Outputs.push_back(Output(viewer, solver_type,linesearch_type));
 		core_size = 1.0 / (Outputs.size() + 1.0);
 		
 		//maximize window
@@ -76,7 +83,7 @@ void basic_app::load_new_model(const std::string modelpath) {
 
 		if (model_loaded) {
 			//add new data
-			add_output(false);
+			add_output();
 		}
 
 		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
@@ -214,9 +221,9 @@ void basic_app::remove_output(const int output_index) {
 	post_resize(frameBufferWidth, frameBufferHeight);
 }
 
-void basic_app::add_output(const bool isConstrObjFunc) {
+void basic_app::add_output() {
 	stop_solver_thread();
-	Outputs.push_back(Output(viewer, isConstrObjFunc, solver_type,linesearch_type));
+	Outputs.push_back(Output(viewer, solver_type,linesearch_type));
 	
 	viewer->load_mesh_from_file(modelPath.c_str());
 	Outputs[Outputs.size() - 1].ModelID = viewer->data_list[Outputs.size()].id;
@@ -556,9 +563,8 @@ void basic_app::Draw_menu_for_Solver() {
 					Outputs[i].solver = Outputs[i].gradient_descent;
 				}
 				Eigen::MatrixX3i F = OutputModel(i).F;
-				Outputs[i].solver->setFlipAvoidingLineSearch(F);
-				Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(OutputModel(i).V.leftCols(2).data(), OutputModel(i).V.leftCols(2).rows() * 2);
-				Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX, Outputs[i].getLambda(F.rows()) ,OutputModel(i).F, OutputModel(i).V);
+				Eigen::VectorXd initialguess = Eigen::Map<const Eigen::VectorXd>(OutputModel(i).V.data(), OutputModel(i).V.size());
+				Outputs[i].solver->init(Outputs[i].totalObjective, initialguess, OutputModel(i).F, OutputModel(i).V);
 			}
 			start_solver_thread();
 		}
@@ -574,63 +580,7 @@ void basic_app::Draw_menu_for_Solver() {
 
 		ImGui::Combo("Dist check", (int *)(&distortion_type), "NO_DISTORTION\0AREA_DISTORTION\0LENGTH_DISTORTION\0ANGLE_DISTORTION\0TOTAL_DISTORTION\0\0");
 		
-		app_utils::Parametrization prev_type = param_type;
-		if (ImGui::Combo("Initial Guess", (int *)(&param_type), "RANDOM\0HARMONIC\0LSCM\0ARAP\0NONE\0\0")) 
-		{
-			stop_solver_thread();
-			Eigen::MatrixXd initialguess;
-			std::vector<Eigen::MatrixX3i> F;
-			for (int i=0;i<Outputs.size();i++)
-				F.push_back(OutputModel(i).F);
-			
-			app_utils::Parametrization temp = param_type;
-			param_type = prev_type;
-			if (temp == app_utils::None) {
-				param_type = app_utils::None;
-			}
-			else if (app_utils::IsMesh2D(InputModel().V)) {
-				if (temp == app_utils::RANDOM) {
-					app_utils::random_param(InputModel().V, initialguess);
-					param_type = temp;
-					for (int i=0;i < Outputs.size();i++)
-						update_texture(initialguess,i);
-					Update_view();
-					Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(initialguess.data(), initialguess.rows() * 2);
-					for (int i = 0; i < Outputs.size(); i++)
-					{
-						Outputs[i].solver->setFlipAvoidingLineSearch(F[i]);
-						Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX, Outputs[i].getLambda(OutputModel(i).F.rows()),OutputModel(i).F, OutputModel(i).V);
-					}
-					
-				}
-			}
-			else {
-				//The mesh is 3D
-				if (temp == app_utils::HARMONIC) {
-					app_utils::harmonic_param(InputModel().V, InputModel().F, initialguess);
-				}
-				if (temp == app_utils::LSCM) {
-					app_utils::lscm_param(InputModel().V, InputModel().F, initialguess);
-				}
-				if (temp == app_utils::ARAP) {
-					app_utils::ARAP_param(InputModel().V, InputModel().F, initialguess);
-				}
-				if (temp == app_utils::RANDOM) {
-					app_utils::random_param(InputModel().V, initialguess);
-				}
-				param_type = temp;
-				for (int i = 0; i < Outputs.size(); i++)
-					update_texture(initialguess, i);
-				Update_view();
-				Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(initialguess.data(), initialguess.rows() * 2);
-				for (int i = 0; i < Outputs.size(); i++)
-				{
-					Outputs[i].solver->setFlipAvoidingLineSearch(F[i]);
-					Outputs[i].solver->init(Outputs[i].totalObjective, initialguessXX, Outputs[i].getLambda(OutputModel(i).F.rows()), OutputModel(i).F, OutputModel(i).V);
-				}
-			}
-			
-		}
+		
 		float w = ImGui::GetContentRegionAvailWidth(), p = ImGui::GetStyle().FramePadding.x;
 		if (ImGui::Button("Check gradients", ImVec2((w - p) / 2.f, 0)))
 		{
@@ -772,34 +722,21 @@ void basic_app::Draw_menu_for_models(igl::opengl::ViewerData& data) {
 void basic_app::Draw_menu_for_solver_settings() {
 	ImGui::SetNextWindowSize(ImVec2(800, 150), ImGuiSetCond_FirstUseEver);
 	ImGui::Begin("solver settings", NULL);
-	
+	ImGui::SetWindowPos(ImVec2(800, 150), ImGuiSetCond_FirstUseEver);
+
 	//add outputs buttons
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
-	if (ImGui::Button("Add Constrained Output"))
-		add_output(true);
-	ImGui::SameLine(0, 10);
-	if (ImGui::Button("Add Unconstrained Output"))
-		add_output(false);
+	if (ImGui::Button("Add Output"))
+		add_output();
 	ImGui::PopStyleColor();
 
-
 	int id = 0;
-	bool stop = false;
-	int firstConstrIndex = -1, firstUnconstrIndex = -1;
-	for (int i = Outputs.size() - 1; i >= 0; i--) {
-		if (Outputs[i].solver->IsConstrObjFunc)
-			firstConstrIndex = i;
-		else
-			firstUnconstrIndex = i;
-	}
-
-
-	if (firstUnconstrIndex != -1) {
+	if (Outputs.size() != 0) {
 		// prepare the first column
-		ImGui::Columns(Outputs[firstUnconstrIndex].totalObjective->objectiveList.size() + 5, "Unconstrained weights table", true);
+		ImGui::Columns(Outputs[0].totalObjective->objectiveList.size() + 5, "Unconstrained weights table", true);
 		ImGui::Separator();
 		ImGui::NextColumn();
-		for (auto & obj : Outputs[firstUnconstrIndex].totalObjective->objectiveList) {
+		for (auto & obj : Outputs[0].totalObjective->objectiveList) {
 			ImGui::Text(obj->name.c_str());
 			ImGui::NextColumn();
 		}
@@ -815,130 +752,53 @@ void basic_app::Draw_menu_for_solver_settings() {
 
 		// fill the table
 		for (int i = 0; i < Outputs.size();i++) {
-			if (!Outputs[i].solver->IsConstrObjFunc) {
-				ImGui::Text(("Output " + std::to_string(Outputs[i].CoreID)).c_str());
-				ImGui::NextColumn();
-				for (auto& obj : Outputs[i].totalObjective->objectiveList) {
-					ImGui::PushID(id++);
-					ImGui::DragFloat("", &(obj->w), 0.05f, 0.0f, 100000.0f);
-					ImGui::NextColumn();
-					ImGui::PopID();
-				}
+			ImGui::Text(("Output " + std::to_string(Outputs[i].CoreID)).c_str());
+			ImGui::NextColumn();
+			for (auto& obj : Outputs[i].totalObjective->objectiveList) {
 				ImGui::PushID(id++);
-				ImGui::DragFloat("", &(Outputs[i].totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
-				ImGui::NextColumn();
-				if (Outputs.size() > 1)
-				{
-					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
-					if (ImGui::Button("Remove")) {
-						remove_output(i);
-						stop = true;
-					}
-					ImGui::PopStyleColor();
-					ImGui::NextColumn();
-					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
-					if (!copy_vertices.size() && ImGui::Button("Copy")) {
-						copy_vertices = OutputModel(i).V;
-					}
-					if (copy_vertices.size() && ImGui::Button("Paste")) {
-						OutputModel(i).set_vertices(copy_vertices);
-						copy_vertices.resize(0,0);
-					}
-					ImGui::PopStyleColor();
-				}
-				else
-					ImGui::NextColumn();
-				ImGui::NextColumn();
-				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
-				if (ImGui::Button("load param")) {
-					viewer->load_mesh_from_file(igl::file_dialog_open().c_str());
-					Eigen::MatrixXd V = viewer->data_list[viewer->data_list.size() - 1].V;
-					viewer->erase_mesh(viewer->data_list.size() - 1);
-					OutputModel(i).set_vertices(V);
-				}
-				ImGui::PopStyleColor();
-
+				ImGui::DragFloat("", &(obj->w), 0.05f, 0.0f, 100000.0f);
 				ImGui::NextColumn();
 				ImGui::PopID();
-				ImGui::Separator();
 			}
+			ImGui::PushID(id++);
+			ImGui::DragFloat("", &(Outputs[i].totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
+			ImGui::NextColumn();
+			if (Outputs.size() > 1)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
+				if (ImGui::Button("Remove"))
+					remove_output(i);
+				ImGui::PopStyleColor();
+				ImGui::NextColumn();
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
+				if (!copy_vertices.size() && ImGui::Button("Copy")) 
+					copy_vertices = OutputModel(i).V;
+				if (copy_vertices.size() && ImGui::Button("Paste")) {
+					OutputModel(i).set_vertices(copy_vertices);
+					copy_vertices.resize(0,0);
+				}
+				ImGui::PopStyleColor();
+			}
+			else
+				ImGui::NextColumn();
+			ImGui::NextColumn();
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
+			if (ImGui::Button("load param")) {
+				viewer->load_mesh_from_file(igl::file_dialog_open().c_str());
+				Eigen::MatrixXd V = viewer->data_list[viewer->data_list.size() - 1].V;
+				viewer->erase_mesh(viewer->data_list.size() - 1);
+				OutputModel(i).set_vertices(V);
+			}
+			ImGui::PopStyleColor();
+
+			ImGui::NextColumn();
+			ImGui::PopID();
+			ImGui::Separator();
 		}
 		ImGui::Columns(1);
 	}
 	
-	ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
-
-	if ((!stop) && (firstConstrIndex != -1)) {
-		// prepare the first column
-		ImGui::Columns(Outputs[firstConstrIndex].totalObjective->objectiveList.size() + 5, "Constrained weights table", true);
-		ImGui::Separator();
-		ImGui::NextColumn();
-		for (auto & obj : Outputs[firstConstrIndex].totalObjective->objectiveList) {
-			ImGui::Text(obj->name.c_str());
-			ImGui::NextColumn();
-		}
-		ImGui::Text("shift eigen values");
-		ImGui::NextColumn();
-		ImGui::Text("Remove output");
-		ImGui::NextColumn();
-		ImGui::Text("copy/paste mesh");
-		ImGui::NextColumn();
-		ImGui::Text("load param");
-		ImGui::NextColumn();
-		ImGui::Separator();
-
-		// fill the table
-		for (int i = 0; i < Outputs.size();i++) {
-			if (Outputs[i].solver->IsConstrObjFunc) {
-				ImGui::Text(("Output " + std::to_string(Outputs[i].CoreID)).c_str());
-				ImGui::NextColumn();
-				for (auto& obj : Outputs[i].totalObjective->objectiveList) {
-					std::shared_ptr<ConstrainedObjectiveFunction> constr = std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
-					ImGui::PushID(id++);
-					ImGui::DragFloat("w", &(constr->w), 0.05f, 0.0f, 100000.0f);
-					ImGui::DragFloat("augmented param.", &(constr)->augmented_value_parameter, 0.05f, 0.0f, 100000.0f);
-					ImGui::NextColumn();
-					ImGui::PopID();
-				}
-				ImGui::PushID(id++);
-				ImGui::DragFloat("", &(Outputs[i].totalObjective->Shift_eigen_values), 0.05f, 0.0f, 100000.0f);
-				ImGui::NextColumn();
-				if (Outputs.size() > 1) {
-					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.0f, 0.0f, 1.0f));
-					if (ImGui::Button("Remove"))
-						remove_output(i);
-					ImGui::PopStyleColor();
-					ImGui::NextColumn();
-					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
-					if (!copy_vertices.size() && ImGui::Button("Copy")) {
-						copy_vertices = OutputModel(i).V;
-					}
-					if (copy_vertices.size() && ImGui::Button("Paste")) {
-						OutputModel(i).set_vertices(copy_vertices);
-						copy_vertices.resize(0,0);
-					}
-					ImGui::PopStyleColor();
-				}
-				else
-					ImGui::NextColumn();
-				ImGui::NextColumn();
-				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.6f, 0.0f, 1.0f));
-				if (ImGui::Button("load param")) {
-					viewer->load_mesh_from_file(igl::file_dialog_open().c_str());
-					Eigen::MatrixXd V = viewer->data_list[viewer->data_list.size() - 1].V;
-					viewer->erase_mesh(viewer->data_list.size() - 1);
-					OutputModel(i).set_vertices(V);
-				}
-				ImGui::PopStyleColor();
-				
-
-				ImGui::NextColumn();
-				ImGui::PopID();
-				ImGui::Separator();
-			}
-		}
-		ImGui::Columns(1);
-	}
+	ImGui::Spacing();
 
 	static bool show = false;
 	if (ImGui::Button("More info")) {
@@ -1002,17 +862,7 @@ void basic_app::Draw_menu_for_text_results() {
 			ImGui::TextColored(c, (std::string(out.totalObjective->name) + std::string(" gradient ") + std::to_string(out.totalObjective->gradient_norm)).c_str());
 			for (auto& obj : out.totalObjective->objectiveList) {
 				ImGui::TextColored(c, (std::string(obj->name) + std::string(" energy ") + std::to_string(obj->energy_value)).c_str());
-				if (out.solver->IsConstrObjFunc) {
-					std::shared_ptr<ConstrainedObjectiveFunction> constr = std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
-					ImGui::TextColored(c, (std::string(constr->name) + std::string(" objective_value ") + std::to_string(constr->objective_value)).c_str());
-					ImGui::TextColored(c, (std::string(constr->name) + std::string(" constraint_value ") + std::to_string(constr->constraint_value)).c_str());
-				}
 				ImGui::TextColored(c, (std::string(obj->name) + std::string(" gradient ") + std::to_string(obj->gradient_norm)).c_str());
-				if (out.solver->IsConstrObjFunc) {
-					std::shared_ptr<ConstrainedObjectiveFunction> constr = std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
-					ImGui::TextColored(c, (std::string(constr->name) + std::string(" objective_gradient ") + std::to_string(constr->objective_gradient_norm)).c_str());
-					ImGui::TextColored(c, (std::string(constr->name) + std::string(" constraint_gradient ") + std::to_string(constr->constraint_gradient_norm)).c_str());
-				}
 			}
 			ImGui::End();
 			ImGui::PopStyleColor();
@@ -1278,16 +1128,17 @@ void basic_app::update_mesh()
 			Outputs[i].worhpsolver->get_data(X[i]);
 			std::cout << ">> Reiceved data from worhp successfully!" << std::endl;
 		}
-		else {
-			Eigen::VectorXd lambda;
-			Outputs[i].solver->get_data(X[i], lambda);
-			Outputs[i].setLambda(lambda);
-		}
-		V.push_back(Eigen::Map<Eigen::MatrixXd>(X[i].data(), X[i].rows() / 3, 3));
+		else
+			Outputs[i].solver->get_data(X[i]);
+		
+		V.push_back(Eigen::Map<Eigen::MatrixXd>(
+			X[i].data(), 
+			InputModel().V.rows(), 
+			InputModel().V.cols())
+		);
 
-		if (IsTranslate && mouse_mode == app_utils::VERTEX_SELECT) {
+		if (IsTranslate && mouse_mode == app_utils::VERTEX_SELECT)
 			V[i].row(Translate_Index) = OutputModel(i).V.row(Translate_Index);
-		}
 		else if(IsTranslate && mouse_mode == app_utils::FACE_SELECT) {
 			Eigen::Vector3i F = OutputModel(i).F.row(Translate_Index);
 			for (int vi = 0; vi < 3; vi++)
@@ -1317,16 +1168,26 @@ void basic_app::start_solver_thread() {
 		std::cout << ">> A new solver has been started" << std::endl;
 		solver_on = true;
 		//update solver
-		Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(OutputModel(i).V.data(), OutputModel(i).V.size());
-		Outputs[i].newton->init(Outputs[i].totalObjective, initialguessXX, Outputs[i].getLambda(OutputModel(i).F.rows()),OutputModel(i).F, OutputModel(i).V);
-		Outputs[i].gradient_descent->init(Outputs[i].totalObjective, initialguessXX, Outputs[i].getLambda(OutputModel(i).F.rows()), OutputModel(i).F, OutputModel(i).V);
+		Eigen::VectorXd init = Eigen::Map<const Eigen::VectorXd>(OutputModel(i).V.data(), OutputModel(i).V.size());
+		Outputs[i].newton->init(
+			Outputs[i].totalObjective, 
+			init,
+			OutputModel(i).F, 
+			OutputModel(i).V
+		);
+		Outputs[i].gradient_descent->init(
+			Outputs[i].totalObjective, 
+			init, 
+			OutputModel(i).F, 
+			OutputModel(i).V
+		);
 		//start solver
 		if (step_by_step) {
 			static int step_counter = 0;
-			solver_thread = std::thread(&solver::run_one_iteration/*run_one_aug_iteration*/, Outputs[i].solver.get(), step_counter++,true);
+			solver_thread = std::thread(&solver::run_one_iteration, Outputs[i].solver.get(), step_counter++,true);
 		}
 		else
-			solver_thread = std::thread(&solver::run/*aug_run*/, Outputs[i].solver.get());
+			solver_thread = std::thread(&solver::run, Outputs[i].solver.get());
 		solver_thread.detach();
 	}
 }
@@ -1371,23 +1232,16 @@ void basic_app::initializeSolver(const int index)
 	Outputs[index].HandlesInd = &constraintsPositional->ConstrainedVerticesInd;
 	Outputs[index].HandlesPosDeformed = &constraintsPositional->ConstrainedVerticesPos;
 
-
 	Outputs[index].totalObjective->objectiveList.clear();
 	Outputs[index].totalObjective->init_mesh(V, F);
-
-	
 	Outputs[index].totalObjective->objectiveList.push_back(move(bendingEdge));
 	Outputs[index].totalObjective->objectiveList.push_back(move(constraintsPositional));
-	
 	Outputs[index].totalObjective->init();
 
 	// initialize the solver
-	
-	Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(V.data(), V.rows() * 3);
-	Outputs[index].newton->setFlipAvoidingLineSearch(F);
-	Outputs[index].newton->init(Outputs[index].totalObjective, initialguessXX, Outputs[index].getLambda(OutputModel(index).F.rows()), OutputModel(index).F, OutputModel(index).V);
-	Outputs[index].gradient_descent->setFlipAvoidingLineSearch(F);
-	Outputs[index].gradient_descent->init(Outputs[index].totalObjective, initialguessXX, Outputs[index].getLambda(OutputModel(index).F.rows()), OutputModel(index).F, OutputModel(index).V);
+	Eigen::VectorXd init = Eigen::Map<const Eigen::VectorXd>(V.data(), V.size());
+	Outputs[index].newton->init(Outputs[index].totalObjective, init, OutputModel(index).F, OutputModel(index).V);
+	Outputs[index].gradient_descent->init(Outputs[index].totalObjective, init, OutputModel(index).F, OutputModel(index).V);
 
 	//update worhp solver
 	Outputs[index].worhpsolver->init(V, F);

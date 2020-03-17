@@ -76,9 +76,9 @@ void EigenSparseSolver<vectorTypeI, vectorTypeS>::perpareMatrix(const vectorType
 	double min_eig_value = eig.real().minCoeff();
 	
 	cout << "before: full min_eig_value = " << min_eig_value << endl;
-	cout << "before: full max_eig_value = " << eig.real().maxCoeff() << endl;
-	cout << "before: upper min_eig_value = " << UpperTriangular_A.toDense().eigenvalues().real().minCoeff()<< endl;
-	cout << "before: upper max_eig_value = " << UpperTriangular_A.toDense().eigenvalues().real().maxCoeff()<< endl;
+	//cout << "before: full max_eig_value = " << eig.real().maxCoeff() << endl;
+	//cout << "before: upper min_eig_value = " << UpperTriangular_A.toDense().eigenvalues().real().minCoeff()<< endl;
+	//cout << "before: upper max_eig_value = " << UpperTriangular_A.toDense().eigenvalues().real().maxCoeff()<< endl;
 	
 	if (min_eig_value < 0) {
 		for (int i = 0; i < full_A.rows(); i++) {
@@ -87,9 +87,9 @@ void EigenSparseSolver<vectorTypeI, vectorTypeS>::perpareMatrix(const vectorType
 	}
 
 	cout << "after: full min_eig_value = " << full_A.toDense().eigenvalues().real().minCoeff() << endl;
-	cout << "after: full max_eig_value = " << full_A.toDense().eigenvalues().real().maxCoeff() << endl;
-	cout << "after: upper min_eig_value = " << UpperTriangular_A.toDense().eigenvalues().real().minCoeff() << endl;
-	cout << "after: upper max_eig_value = " << UpperTriangular_A.toDense().eigenvalues().real().maxCoeff() << endl;
+	//cout << "after: full max_eig_value = " << full_A.toDense().eigenvalues().real().maxCoeff() << endl;
+	//cout << "after: upper min_eig_value = " << UpperTriangular_A.toDense().eigenvalues().real().minCoeff() << endl;
+	//cout << "after: upper max_eig_value = " << UpperTriangular_A.toDense().eigenvalues().real().maxCoeff() << endl;
 
 
 	

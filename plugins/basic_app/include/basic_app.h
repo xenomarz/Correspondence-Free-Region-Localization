@@ -33,7 +33,6 @@ private:
 	float core_size;
 	float texture_scaling_output;
 	bool Highlighted_face, Outputs_Settings;
-	app_utils::Parametrization param_type;
 	std::set<int> selected_faces, selected_vertices;
 	std::vector<Output> Outputs;
 	Eigen::MatrixXd copy_vertices;
@@ -107,7 +106,7 @@ public:
 	void checkHessians();
 
 	//outputs
-	void add_output(const bool isConstrObjFunc);
+	void add_output();
 	void remove_output(const int output_index);
 };
 

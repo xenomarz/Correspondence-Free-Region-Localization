@@ -48,10 +48,7 @@ public:
 		CLEAR 
 	};
 	static enum Parametrization { 
-		RANDOM = 0, 
-		HARMONIC, 
-		LSCM, 
-		ARAP, 
+		RANDOM = 0,  
 		None 
 	};
 	static enum Distortion { 
@@ -295,8 +292,6 @@ public:
 
 class Output
 {
-private:
-	Eigen::VectorXd lambda;
 public:
 	float prev_camera_zoom;
 	std::vector<int> *HandlesInd; //pointer to indices in constraitPositional
@@ -312,20 +307,9 @@ public:
 	std::shared_ptr<TotalObjective> totalObjective;
 	std::shared_ptr<worhpSolver> worhpsolver;
 
-	Eigen::VectorXd getLambda(int numF){
-		if (lambda.rows() != numF)
-			lambda.setZero(numF);
-		return lambda;
-	}
-
-	void setLambda(Eigen::VectorXd l) {
-		lambda = l;
-	}
-
 	//Constructor & initialization
 	Output(
 		igl::opengl::glfw::Viewer* viewer, 
-		const bool isConstrObjFunc,
 		const app_utils::SolverType solver_type,
 		const Utils::LineSearch linesearchType) 
 	{
@@ -338,8 +322,8 @@ public:
 		// Initialize solver thread
 		std::cout << "CoreID = " << CoreID << std::endl;
 		worhpsolver = std::make_shared<worhpSolver>();
-		newton = std::make_shared<NewtonSolver>(isConstrObjFunc, CoreID);
-		gradient_descent = std::make_shared<GradientDescentSolver>(isConstrObjFunc, CoreID);
+		newton = std::make_shared<NewtonSolver>(CoreID);
+		gradient_descent = std::make_shared<GradientDescentSolver>(CoreID);
 		if (solver_type == app_utils::NEWTON) 
 			solver = newton;
 		else 

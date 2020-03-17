@@ -3,7 +3,7 @@
 PenaltyPositionalConstraints::PenaltyPositionalConstraints()
 {
     name = "Positional Constraints";
-	w = 50;
+	w = 10000;
 }
 
 void PenaltyPositionalConstraints::init()

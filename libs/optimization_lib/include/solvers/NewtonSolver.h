@@ -6,13 +6,11 @@
 class NewtonSolver : public solver
 {
 public:
-	NewtonSolver(const bool isConstrObjFunc, const int solverID): solver(isConstrObjFunc,solverID) {}
+	NewtonSolver(const int solverID): solver(solverID) {}
 	virtual void step() override;
-	virtual void aug_step() override;
 	virtual bool test_progress() override;
 	virtual void internal_init() override;
-	virtual void internal_aug_init() override;
-
+	
 	Eigen::SparseMatrix<double> get_Hessian();
 	double get_MSE();
 private:

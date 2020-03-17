@@ -13,21 +13,15 @@
 class solver
 {
 public:
-	solver(const bool IsConstrObjFunc, const int solverID);
+	solver(const int solverID);
 	~solver();
 	int run();
-	int aug_run();
+	
 	void run_one_iteration(const int steps, const bool showGraph);
-	void run_one_aug_iteration(const int steps, const bool showGraph);
 	void stop();
-	void get_data(Eigen::VectorXd& X, Eigen::VectorXd& lambda);
-	void init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0, const Eigen::VectorXd& lambda0, const Eigen::MatrixXi& F, const Eigen::MatrixXd& V);
-	void setFlipAvoidingLineSearch(Eigen::MatrixX3i& F);
-	Eigen::VectorXd getLambda(const Eigen::VectorXd& vec);
-	Eigen::VectorXd solver::getXY(const Eigen::VectorXd& vec);
-	void setLambda(Eigen::VectorXd& vec, const Eigen::VectorXd& lambda);
-	void solver::setXY(Eigen::VectorXd& vec, const Eigen::VectorXd& XY);
-
+	void get_data(Eigen::VectorXd& X);
+	void init(std::shared_ptr<ObjectiveFunction> objective, const Eigen::VectorXd& X0, const Eigen::MatrixXi& F, const Eigen::MatrixXd& V);
+	
 	// Pointer to the energy class
 	std::shared_ptr<ObjectiveFunction> objective;
 
@@ -40,12 +34,11 @@ public:
 	void release_parameter_update_slot();
 
 	// External (interface) and internal working mesh
-	Eigen::VectorXd ext_x, ext_lambda;
+	Eigen::VectorXd ext_x;
 	Eigen::VectorXd X;
 	Eigen::MatrixX3i F;
 	Eigen::MatrixXd V;
 	int num_steps;
-	bool IsConstrObjFunc;
 	Utils::LineSearch lineSearch_type = Utils::GradientNorm;
 	double constant_step;
 protected:
@@ -76,14 +69,11 @@ private:
 	// energy output from the last step
 	
 	virtual void step() = 0;
-	virtual void aug_step() = 0;
 	void value_linesearch();
 	void gradNorm_linesearch();
-	void aug_gradNorm_linesearch();
 	void constant_linesearch();
 	virtual bool test_progress() = 0;
 	virtual void internal_init() = 0;
-	virtual void internal_aug_init() = 0;
 	void prepareData();
 	void saveSearchDirInfo(int numIteration, std::ofstream& SearchDirInfo);
 	void saveSolverInfo(int numIteration, std::ofstream& solverInfo);
@@ -104,5 +94,4 @@ private:
 	// Mutex stuff
 	std::unique_ptr<std::mutex> parameters_mutex;
 	std::unique_ptr<std::condition_variable> param_cv;
-	bool FlipAvoidingLineSearch = false;
 };
