@@ -41,8 +41,8 @@ void worhpSolver::init(const Eigen::MatrixXd& V, const Eigen::MatrixX3i& F) {
 }
 
 worhpSolver::~worhpSolver() {
-	delete this->functionF;
-	delete this->functionG;
+	//delete this->functionF;
+	//delete this->functionG;
 }
 
 void worhpSolver::run(const Eigen::VectorXd& initialPoint)

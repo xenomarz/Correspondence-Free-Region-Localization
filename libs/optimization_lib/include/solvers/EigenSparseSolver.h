@@ -19,7 +19,7 @@ public:
 	~EigenSparseSolver();
 	void set_pattern(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS);
 	void analyze_pattern();
-	bool factorize(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS);
+	void factorize(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS);
 	void perpareMatrix(const vectorTypeI &II, const vectorTypeI &JJ, const vectorTypeS &SS);
 	Eigen::VectorXd solve(Eigen::VectorXd &rhs);
     //Eigen::SparseLU<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> solver;
@@ -30,7 +30,7 @@ public:
 	Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> solver;
 	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;*/
 
-    Eigen::SparseMatrix<double> full_A, UpperTriangular_A;
+    Eigen::SparseMatrix<double> full_A;
 	double MSE;
 };
 
