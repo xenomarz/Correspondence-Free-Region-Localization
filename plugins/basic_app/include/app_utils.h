@@ -13,6 +13,7 @@
 #include "../../libs/optimization_lib/include/solvers/worhpSolver.h"
 
 
+#include "../../libs/optimization_lib/include/objective_functions/BendingEdge.h"
 #include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichlet.h"
 #include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichletCompositeMajorization.h"
 #include "../../libs/optimization_lib/include/objective_functions/AreaDistortion.h"
@@ -299,7 +300,7 @@ private:
 public:
 	float prev_camera_zoom;
 	std::vector<int> *HandlesInd; //pointer to indices in constraitPositional
-	Eigen::MatrixX2d *HandlesPosDeformed; //pointer to positions in constraitPositional
+	Eigen::MatrixX3d *HandlesPosDeformed; //pointer to positions in constraitPositional
 	Eigen::MatrixXd color_per_face, Vertices_output;
 	int ModelID, CoreID;
 	ImVec2 window_position, window_size, text_position;
@@ -332,11 +333,7 @@ public:
 		CoreID = viewer->append_core(Eigen::Vector4f::Zero());
 		viewer->core(CoreID).background_color = Eigen::Vector4f(0.9, 0.9, 0.9, 0);
 		viewer->core(CoreID).is_animating = true;
-		viewer->core(CoreID).lighting_factor = 0;
-		//set rotation type to 2D mode
-		viewer->core(CoreID).trackball_angle = Eigen::Quaternionf::Identity();
-		viewer->core(CoreID).orthographic = true;
-		viewer->core(CoreID).set_rotation_type(igl::opengl::ViewerCore::RotationType(2));
+		viewer->core(CoreID).lighting_factor = 0.5;
 		
 		// Initialize solver thread
 		std::cout << "CoreID = " << CoreID << std::endl;

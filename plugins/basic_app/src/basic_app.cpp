@@ -34,10 +34,10 @@ IGL_INLINE void basic_app::init(igl::opengl::glfw::Viewer *_viewer)
 		inputCoreID = viewer->core_list[0].id;
 		viewer->core(inputCoreID).background_color = Eigen::Vector4f(0.9, 0.9, 0.9, 0);
 		viewer->core(inputCoreID).is_animating = true;
-		viewer->core(inputCoreID).lighting_factor = 0.2;
+		viewer->core(inputCoreID).lighting_factor = 0.5;
 
 		//Load multiple views
-		Outputs.push_back(Output(viewer,true, solver_type,linesearch_type));
+		Outputs.push_back(Output(viewer,false, solver_type,linesearch_type));
 		core_size = 1.0 / (Outputs.size() + 1.0);
 		
 		//maximize window
@@ -76,7 +76,7 @@ void basic_app::load_new_model(const std::string modelpath) {
 
 		if (model_loaded) {
 			//add new data
-			add_output(true);
+			add_output(false);
 		}
 
 		viewer->core(inputCoreID).align_camera_center(InputModel().V, InputModel().F);
@@ -84,18 +84,10 @@ void basic_app::load_new_model(const std::string modelpath) {
 			viewer->core(Outputs[i].CoreID).align_camera_center(OutputModel(i).V, OutputModel(i).F);
 		model_loaded = true;
 
-		if (app_utils::IsMesh2D(InputModel().V)) {
-			//set rotation type to 2D mode
-			viewer->core(inputCoreID).trackball_angle = Eigen::Quaternionf::Identity();
-			viewer->core(inputCoreID).orthographic = true;
-			viewer->core(inputCoreID).set_rotation_type(igl::opengl::ViewerCore::RotationType(2));
-		}
-		else {
-			//set rotation type to 3D mode
-			viewer->core(inputCoreID).trackball_angle = Eigen::Quaternionf::Identity();
-			viewer->core(inputCoreID).orthographic = false;
-			viewer->core(inputCoreID).set_rotation_type(igl::opengl::ViewerCore::RotationType(1));
-		}
+		//set rotation type to 3D mode
+		viewer->core(inputCoreID).trackball_angle = Eigen::Quaternionf::Identity();
+		viewer->core(inputCoreID).orthographic = false;
+		viewer->core(inputCoreID).set_rotation_type(igl::opengl::ViewerCore::RotationType(1));
 	}
 }
 
@@ -1030,7 +1022,7 @@ void basic_app::Draw_menu_for_text_results() {
 
 void basic_app::UpdateHandles() {
 	std::vector<int> CurrHandlesInd;
-	std::vector<Eigen::MatrixX2d> CurrHandlesPosDeformed;
+	std::vector<Eigen::MatrixX3d> CurrHandlesPosDeformed;
 	CurrHandlesInd.clear();
 
 	//First, we push each vertices index to the handles
@@ -1054,12 +1046,12 @@ void basic_app::UpdateHandles() {
 	}	
 	//Here we update the positions for each handle
 	for (auto& out :Outputs)
-		CurrHandlesPosDeformed.push_back(Eigen::MatrixX2d::Zero(CurrHandlesInd.size(),2));
+		CurrHandlesPosDeformed.push_back(Eigen::MatrixX3d::Zero(CurrHandlesInd.size(),3));
 	
 	for (int i = 0; i < Outputs.size(); i++){
 		int idx = 0;
 		for (auto hi : CurrHandlesInd)
-			CurrHandlesPosDeformed[i].row(idx++) << OutputModel(i).V(hi, 0), OutputModel(i).V(hi, 1);
+			CurrHandlesPosDeformed[i].row(idx++) << OutputModel(i).V(hi, 0), OutputModel(i).V(hi, 1), OutputModel(i).V(hi, 2);
 		//Update texture
 		update_texture(OutputModel(i).V, i);
 	}
@@ -1390,25 +1382,10 @@ void basic_app::initializeSolver(const int index)
 		return;
 
 	// initialize the energy
-	auto areapreservingOneRing = std::make_unique<AreaDistortionOneRing>();
-	areapreservingOneRing->init_mesh(V, F);
-	areapreservingOneRing->init();
-	auto lagrangianLscmStArea = std::make_unique<LagrangianLscmStArea>();
-	lagrangianLscmStArea->init_mesh(V, F);
-	lagrangianLscmStArea->init();
-	/*auto lagrangianAreaStLscm = std::make_unique<LagrangianAreaStLscm>();
-	lagrangianAreaStLscm->init_mesh(V, F);
-	lagrangianAreaStLscm->init();*/
-	auto symDirichlet = std::make_unique<SymmetricDirichlet>();
-	symDirichlet->init_mesh(V, F);
-	symDirichlet->init();
-	auto areaPreserving = std::make_unique<AreaDistortion>();
-	areaPreserving->init_mesh(V, F);
-	areaPreserving->init();
-	auto anglePreserving = std::make_unique<LeastSquaresConformal>();
-	anglePreserving->init_mesh(V, F);
-	anglePreserving->init();
-	auto constraintsPositional = std::make_shared<PenaltyPositionalConstraints>(Outputs[index].solver->IsConstrObjFunc);
+	auto bendingEdge = std::make_unique<BendingEdge>();
+	bendingEdge->init_mesh(V, F);
+	bendingEdge->init();
+	auto constraintsPositional = std::make_shared<PenaltyPositionalConstraints>();
 	constraintsPositional->numV = V.rows();
 	constraintsPositional->numF = F.rows();
 	constraintsPositional->init();
@@ -1419,34 +1396,15 @@ void basic_app::initializeSolver(const int index)
 	Outputs[index].totalObjective->objectiveList.clear();
 	Outputs[index].totalObjective->init_mesh(V, F);
 
-	if (Outputs[index].solver->IsConstrObjFunc) {
-		Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianLscmStArea));
-		//Outputs[index].totalObjective->objectiveList.push_back(move(lagrangianAreaStLscm));
-		Outputs[index].totalObjective->objectiveList.push_back(move(constraintsPositional));
-	}
-	else {
-		Outputs[index].totalObjective->objectiveList.push_back(move(areapreservingOneRing));
-		Outputs[index].totalObjective->objectiveList.push_back(move(areaPreserving));
-		Outputs[index].totalObjective->objectiveList.push_back(move(anglePreserving));
-		Outputs[index].totalObjective->objectiveList.push_back(move(symDirichlet));
-		Outputs[index].totalObjective->objectiveList.push_back(move(constraintsPositional));
-	}
+	
+	Outputs[index].totalObjective->objectiveList.push_back(move(bendingEdge));
+	Outputs[index].totalObjective->objectiveList.push_back(move(constraintsPositional));
+	
 	Outputs[index].totalObjective->init();
 
 	// initialize the solver
-	Eigen::MatrixXd initialguess;
-	if (app_utils::IsMesh2D(InputModel().V)) {
-		//the mesh is 2D
-		initialguess = V;
-	}
-	else {
-		//the mesh is 3D
-		app_utils::harmonic_param(InputModel().V, InputModel().F, initialguess);
-		param_type = app_utils::HARMONIC;
-		update_texture(initialguess, index);
-		Update_view();
-	}
-	Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(initialguess.data(), initialguess.rows() * 2);
+	
+	Eigen::VectorXd initialguessXX = Eigen::Map<const Eigen::VectorXd>(V.data(), V.rows() * 3);
 	Outputs[index].newton->setFlipAvoidingLineSearch(F);
 	Outputs[index].newton->init(Outputs[index].totalObjective, initialguessXX, Outputs[index].getLambda(OutputModel(index).F.rows()), OutputModel(index).F, OutputModel(index).V);
 	Outputs[index].gradient_descent->setFlipAvoidingLineSearch(F);

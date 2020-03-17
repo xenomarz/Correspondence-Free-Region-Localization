@@ -34,27 +34,28 @@ void BendingEdge::init()
 
 void BendingEdge::updateX(const Eigen::VectorXd& X)
 {
-	for (int i = 0; i < num_hinges; i++) {
+	assert(X.rows() == (3 * V.rows()));
+	for (int hi = 0; hi < num_hinges; hi++) {
 		//X = [x,x, ... ,x,y,y, ... ,y,z,z, ... ,z]
-		x0.row(i) = Eigen::Vector3d(
-			X(x0_index(i) + (0 * num_hinges)),	//x-coordinate
-			X(x0_index(i) + (1 * num_hinges)),	//Y-coordinate
-			X(x0_index(i) + (2 * num_hinges))	//Z-coordinate
+		x0.row(hi) = Eigen::Vector3d(
+			X(x0_index(hi) + (0 * V.rows())),	//x-coordinate
+			X(x0_index(hi) + (1 * V.rows())),	//Y-coordinate
+			X(x0_index(hi) + (2 * V.rows()))	//Z-coordinate
 		); 
-		x1.row(i) = Eigen::Vector3d(
-			X(x1_index(i) + (0 * num_hinges)),	//x-coordinate
-			X(x1_index(i) + (1 * num_hinges)),	//Y-coordinate
-			X(x1_index(i) + (2 * num_hinges))	//Z-coordinate
+		x1.row(hi) = Eigen::Vector3d(
+			X(x1_index(hi) + (0 * V.rows())),	//x-coordinate
+			X(x1_index(hi) + (1 * V.rows())),	//Y-coordinate
+			X(x1_index(hi) + (2 * V.rows()))	//Z-coordinate
 		);
-		x2.row(i) = Eigen::Vector3d(
-			X(x2_index(i) + (0 * num_hinges)),	//x-coordinate
-			X(x2_index(i) + (1 * num_hinges)),	//Y-coordinate
-			X(x2_index(i) + (2 * num_hinges))	//Z-coordinate
+		x2.row(hi) = Eigen::Vector3d(
+			X(x2_index(hi) + (0 * V.rows())),	//x-coordinate
+			X(x2_index(hi) + (1 * V.rows())),	//Y-coordinate
+			X(x2_index(hi) + (2 * V.rows()))	//Z-coordinate
 		);
-		x3.row(i) = Eigen::Vector3d(
-			X(x3_index(i) + (0 * num_hinges)),	//x-coordinate
-			X(x3_index(i) + (1 * num_hinges)),	//Y-coordinate
-			X(x3_index(i) + (2 * num_hinges))	//Z-coordinate
+		x3.row(hi) = Eigen::Vector3d(
+			X(x3_index(hi) + (0 * V.rows())),	//x-coordinate
+			X(x3_index(hi) + (1 * V.rows())),	//Y-coordinate
+			X(x3_index(hi) + (2 * V.rows()))	//Z-coordinate
 		);
 	}
 	getAngle();
@@ -108,15 +109,15 @@ void BendingEdge::calculateHinges() {
 	x2_index.resize(num_hinges);
 	x3_index.resize(num_hinges);
 	
-	for (int i = 0; i < num_hinges; i++) {
+	for (int hi = 0; hi < num_hinges; hi++) {
 		//first triangle vertices
-		int v1 = F(hinges[i](0), 0);
-		int v2 = F(hinges[i](0), 1);
-		int v3 = F(hinges[i](0), 2);
+		int v1 = F(hinges[hi](0), 0);
+		int v2 = F(hinges[hi](0), 1);
+		int v3 = F(hinges[hi](0), 2);
 		//second triangle vertices
-		int V1 = F(hinges[i](1), 0);
-		int V2 = F(hinges[i](1), 1);
-		int V3 = F(hinges[i](1), 2);
+		int V1 = F(hinges[hi](1), 0);
+		int V2 = F(hinges[hi](1), 1);
+		int V3 = F(hinges[hi](1), 2);
 
 		/*
 		* Here we should find x0,x1,x2,x3
@@ -128,61 +129,50 @@ void BendingEdge::calculateHinges() {
 		*
 		*/
 		if (v1 != V1 && v1 != V2 && v1 != V3) {
-			x2_index(i) = v1;
-			x0_index(i) = v2;
-			x1_index(i) = v3;
+			x2_index(hi) = v1;
+			x0_index(hi) = v2;
+			x1_index(hi) = v3;
 
 			if (V1 != v1 && V1 != v2 && V1 != v3)
-				x3_index(i) = V1;
+				x3_index(hi) = V1;
 			else if (V2 != v1 && V2 != v2 && V2 != v3)
-				x3_index(i) = V2;
+				x3_index(hi) = V2;
 			else
-				x3_index(i) = V3;
+				x3_index(hi) = V3;
 		}
 		else if (v2 != V1 && v2 != V2 && v2 != V3) {
-			x2_index(i) = v2;
-			x0_index(i) = v1;
-			x1_index(i) = v3;
+			x2_index(hi) = v2;
+			x0_index(hi) = v1;
+			x1_index(hi) = v3;
 
 			if (V1 != v1 && V1 != v2 && V1 != v3)
-				x3_index(i) = V1;
+				x3_index(hi) = V1;
 			else if (V2 != v1 && V2 != v2 && V2 != v3)
-				x3_index(i) = V2;
+				x3_index(hi) = V2;
 			else
-				x3_index(i) = V3;
+				x3_index(hi) = V3;
 		}
 		else {
-			x2_index(i) = v3;
-			x0_index(i) = v1;
-			x1_index(i) = v2;
+			x2_index(hi) = v3;
+			x0_index(hi) = v1;
+			x1_index(hi) = v2;
 
 			if (V1 != v1 && V1 != v2 && V1 != v3)
-				x3_index(i) = V1;
+				x3_index(hi) = V1;
 			else if (V2 != v1 && V2 != v2 && V2 != v3)
-				x3_index(i) = V2;
+				x3_index(hi) = V2;
 			else
-				x3_index(i) = V3;
+				x3_index(hi) = V3;
 		}
-	}
-	/////////////////////////////////////////////////////////////
-
-	//checkpoint - you can remove
-	for (int i = 0; i < x0_index.rows(); i++) {
-		std::cout << std::endl
-			<< "x0 = " << x0_index(i)
-			<< " , x1 = " << x1_index(i)
-			<< " , x2 = " << x2_index(i)
-			<< " , x3 = " << x3_index(i);
-
 	}
 }
 
 void BendingEdge::setRestShapeFromCurrentConfiguration() {
-	for (int i = 0; i < num_hinges; i++) {
-		Eigen::Vector3d x0 = V.row(x0_index(i));// = n[0]->getWorldPosition();
-		Eigen::Vector3d x1 = V.row(x1_index(i));// = n[1]->getWorldPosition();
-		Eigen::Vector3d x2 = V.row(x2_index(i));// = n[2]->getWorldPosition();
-		Eigen::Vector3d x3 = V.row(x3_index(i));// = n[3]->getWorldPosition();
+	for (int hi = 0; hi < num_hinges; hi++) {
+		Eigen::Vector3d x0 = V.row(x0_index(hi));// = n[0]->getWorldPosition();
+		Eigen::Vector3d x1 = V.row(x1_index(hi));// = n[1]->getWorldPosition();
+		Eigen::Vector3d x2 = V.row(x2_index(hi));// = n[2]->getWorldPosition();
+		Eigen::Vector3d x3 = V.row(x3_index(hi));// = n[3]->getWorldPosition();
 		Eigen::Vector3d e0 = x1 - x0;
 		Eigen::Vector3d n1 = e0.cross(x2 - x0);
 		Eigen::Vector3d n2 = (x3 - x0).cross(e0);
@@ -191,21 +181,21 @@ void BendingEdge::setRestShapeFromCurrentConfiguration() {
 		double l_n2 = n2.norm();
 
 		//update rest variables
-		restAngle(i) = acos(n1.dot(n2) / (l_n1*l_n2))*sign;
-		restEdgeLength(i) = e0.norm();
-		restArea(i) = 0.5 * (l_n1 + l_n2);
+		restAngle(hi) = acos(n1.dot(n2) / (l_n1*l_n2))*sign;
+		restEdgeLength(hi) = e0.norm();
+		restArea(hi) = 0.5 * (l_n1 + l_n2);
 	}
 	restConst = 3 * restEdgeLength.cwiseProduct(restEdgeLength).cwiseProduct(restArea.cwiseInverse());
 }
 
 void BendingEdge::getAngle() {
-	for (int i = 0; i < num_hinges; i++) {
-		Eigen::Vector3d e0 = x1.row(i) - x0.row(i);
-		Eigen::Vector3d n1 = e0.cross(x2.row(i) - x0.row(i));
-		Eigen::Vector3d n2 = (x3.row(i) - x0.row(i)).cross(e0);
+	for (int hi = 0; hi < num_hinges; hi++) {
+		Eigen::Vector3d e0 = x1.row(hi) - x0.row(hi);
+		Eigen::Vector3d n1 = e0.cross(x2.row(hi) - x0.row(hi));
+		Eigen::Vector3d n2 = (x3.row(hi) - x0.row(hi)).cross(e0);
 		int sign = SGN(n1.cross(n2).dot(e0));
 		double ratio = std::max(std::min(n1.dot(n2) / (n1.norm()*n2.norm()), 1.0), -1.0);
-		angle(i) = acos(ratio)*sign;
+		angle(hi) = acos(ratio)*sign;
 	}
 }
 
@@ -269,22 +259,22 @@ void BendingEdge::gradient(Eigen::VectorXd& g, const bool update)
 		// dE/dx0
 		component = (n1*cos(angle_3) / h_3 + n2 * cos(angle_4) / h_4)*zeta(hi);
 		for (int i = 0; i < 3; ++i)
-			g[x0_index(hi) + (i*num_hinges)] += component[i];
+			g[x0_index(hi) + (i*V.rows())] += component[i];
 
 		// dE/dx1
 		component = (n1*cos(angle_1) / h_1 + n2 * cos(angle_2) / h_2)*zeta(hi);
 		for (int i = 0; i < 3; ++i)
-			g[x1_index(hi) + (i*num_hinges)] += component[i];
+			g[x1_index(hi) + (i*V.rows())] += component[i];
 
 		// dE/dx2
 		component = n1 * (-zeta(hi)) / h_01;
 		for (int i = 0; i < 3; ++i)
-			g[x2_index(hi) + (i*num_hinges)] += component[i];
+			g[x2_index(hi) + (i*V.rows())] += component[i];
 
 		// dE/dx3
 		component = n2 * (-zeta(hi)) / h_02;
 		for (int i = 0; i < 3; ++i)
-			g[x3_index(hi) + (i*num_hinges)] += component[i];
+			g[x3_index(hi) + (i*V.rows())] += component[i];
 	}
 
 	if (update)
@@ -387,25 +377,25 @@ void BendingEdge::hessian() {
 				for (int ii = 0; ii < 3; ++ii) {
 					int global_j;
 					if (i == 0)
-						global_j = x0_index(hi) + (ii*num_hinges);
+						global_j = x0_index(hi) + (ii*V.rows());
 					else if (i == 1)
-						global_j = x1_index(hi) + (ii*num_hinges);
+						global_j = x1_index(hi) + (ii*V.rows());
 					else if (i == 2)
-						global_j = x2_index(hi) + (ii*num_hinges);
+						global_j = x2_index(hi) + (ii*V.rows());
 					else if (i == 3)
-						global_j = x3_index(hi) + (ii*num_hinges);
+						global_j = x3_index(hi) + (ii*V.rows());
 
 					for (int jj = 0; jj < 3; ++jj) {
 						int global_i;
 
 						if (j == 0)
-							global_i = x0_index(hi) + (jj*num_hinges);
+							global_i = x0_index(hi) + (jj*V.rows());
 						else if (j == 1)
-							global_i = x1_index(hi) + (jj*num_hinges);
+							global_i = x1_index(hi) + (jj*V.rows());
 						else if (j == 2)
-							global_i = x2_index(hi) + (jj*num_hinges);
+							global_i = x2_index(hi) + (jj*V.rows());
 						else if (j == 3)
-							global_i = x3_index(hi) + (jj*num_hinges);
+							global_i = x3_index(hi) + (jj*V.rows());
 
 						if (global_i >= global_j) {
 							//hesEntries.push_back(Eigen::Triplet<double>(global_i, global_j, H[i][j](ii, jj)));
@@ -428,25 +418,25 @@ void BendingEdge::init_hessian()
 				for (int ii = 0; ii < 3; ++ii) {
 					int global_j;
 					if (i == 0)
-						global_j = x0_index(hi) + (ii*num_hinges);
+						global_j = x0_index(hi) + (ii*V.rows());
 					else if (i == 1)
-						global_j = x1_index(hi) + (ii*num_hinges);
+						global_j = x1_index(hi) + (ii*V.rows());
 					else if (i == 2)
-						global_j = x2_index(hi) + (ii*num_hinges);
+						global_j = x2_index(hi) + (ii*V.rows());
 					else if (i == 3)
-						global_j = x3_index(hi) + (ii*num_hinges);
+						global_j = x3_index(hi) + (ii*V.rows());
 
 					for (int jj = 0; jj < 3; ++jj) {
 						int global_i;
 
 						if (j == 0)
-							global_i = x0_index(hi) + (jj*num_hinges);
+							global_i = x0_index(hi) + (jj*V.rows());
 						else if (j == 1)
-							global_i = x1_index(hi) + (jj*num_hinges);
+							global_i = x1_index(hi) + (jj*V.rows());
 						else if (j == 2)
-							global_i = x2_index(hi) + (jj*num_hinges);
+							global_i = x2_index(hi) + (jj*V.rows());
 						else if (j == 3)
-							global_i = x3_index(hi) + (jj*num_hinges);
+							global_i = x3_index(hi) + (jj*V.rows());
 
 						if (global_i >= global_j) {
 							//hesEntries.push_back(Eigen::Triplet<double>(global_i, global_j, H[i][j](ii, jj)));
