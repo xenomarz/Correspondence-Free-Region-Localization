@@ -12,16 +12,8 @@
 #include "../../libs/optimization_lib/include/solvers/GradientDescentSolver.h"
 #include "../../libs/optimization_lib/include/solvers/worhpSolver.h"
 
-
 #include "../../libs/optimization_lib/include/objective_functions/BendingEdge.h"
-#include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichlet.h"
-#include "../../libs/optimization_lib/include/objective_functions/SymmetricDirichletCompositeMajorization.h"
-#include "../../libs/optimization_lib/include/objective_functions/AreaDistortion.h"
-#include "../../libs/optimization_lib/include/objective_functions/AreaDistortionOneRing.h"
-#include "../../libs/optimization_lib/include/objective_functions/LeastSquaresConformal.h"
 #include "../../libs/optimization_lib/include/objective_functions/PenaltyPositionalConstraints.h"
-#include "../../libs/optimization_lib/include/objective_functions/LagrangianLscmStArea.h"
-
 
 #define RED_COLOR Eigen::Vector3f(1, 0, 0)
 #define BLUE_COLOR Eigen::Vector3f(0, 0, 1)

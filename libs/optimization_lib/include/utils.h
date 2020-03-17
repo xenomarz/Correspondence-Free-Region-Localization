@@ -11,13 +11,6 @@
 class Utils
 {
 public:
-	static enum FDtype {
-		Lagrangian = 0,
-		AugmentedLagrangian = 1,
-		LagrangianObjective = 2,
-		LagrangianConstraint = 3
-	};
-
 	static enum LineSearch {
 		GradientNorm = 0,
 		FunctionValue = 1,

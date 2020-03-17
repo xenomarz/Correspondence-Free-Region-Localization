@@ -1,5 +1,4 @@
 #include "objective_functions/ObjectiveFunction.h"
-#include "objective_functions/LagrangianLscmStArea.h"
 
 void ObjectiveFunction::init_mesh(const Eigen::MatrixXd& V, const Eigen::MatrixX3i& F) {
 	Eigen::MatrixX3d V3d(V.rows(), 3);
@@ -14,42 +13,24 @@ void ObjectiveFunction::init_mesh(const Eigen::MatrixXd& V, const Eigen::MatrixX
 	this->F = F;
 }
 
-Eigen::VectorXd ObjectiveFunction::FDGradient(const Eigen::VectorXd& X,const Utils::FDtype type)
+Eigen::VectorXd ObjectiveFunction::FDGradient(const Eigen::VectorXd& X)
 {
-	auto test_value = [&]() { 
-		LagrangianLscmStArea* c = dynamic_cast<LagrangianLscmStArea*>(this);
-		if (type == Utils::Lagrangian)
-			return value(false);
-		else if (type == Utils::AugmentedLagrangian)
-			return AugmentedValue(false);
-		else if(type == Utils::LagrangianObjective)
-			return c->objectiveValue(false);
-	};
-
 	Eigen::VectorXd g,Xd = X;
-
-	if(type == Utils::Lagrangian)
-		g.resize(X.rows());
-	else if (type == Utils::AugmentedLagrangian)
-		g.resize(2 * V.rows());
-	else if (type == Utils::LagrangianObjective)
-		g.resize(2 * V.rows());
-
+	g.resize(X.rows());
     updateX(Xd);
     double dX = 1e-9; //10e-6;
-
     double f_P, f_M;
+
     //this is a very slow method that evaluates the gradient of the objective function through FD...
     for (int i = 0; i < g.size(); i++) {
         double tmpVal = X(i);
         Xd(i) = tmpVal + dX;
         updateX(Xd);
-	
-        f_P = test_value();
+        f_P = value(false);
 
         Xd(i) = tmpVal - dX;
         updateX(Xd);
-        f_M = test_value();
+        f_M = value(false);
 
         //now reset the ith param value
         Xd(i) = tmpVal;
@@ -60,46 +41,17 @@ Eigen::VectorXd ObjectiveFunction::FDGradient(const Eigen::VectorXd& X,const Uti
 	return g;
 }
 
-void ObjectiveFunction::FDHessian(const Eigen::VectorXd& X, const Utils::FDtype type, std::vector<int>& I, std::vector<int>& J, std::vector<double>& S)
+void ObjectiveFunction::FDHessian(const Eigen::VectorXd& X, std::vector<int>& I, std::vector<int>& J, std::vector<double>& S)
 {
-	auto test_gradient = [&](Eigen::VectorXd& grad) {
-		LagrangianLscmStArea* c = dynamic_cast<LagrangianLscmStArea*>(this);
-		if (type == Utils::Lagrangian)
-			gradient(grad, false);
-		else if (type == Utils::AugmentedLagrangian)
-			c->AuglagrangGradWRTX(grad, false);
-		else if (type == Utils::LagrangianObjective)
-			grad = c->objectiveGradient(false);
-		else if (type == Utils::LagrangianConstraint)
-			grad = c->constrainedValue(false);
-	};
-
 	I.clear(); J.clear(); S.clear();
 	int rows,columns;
 	Eigen::VectorXd gp, gm, Hi;
-	if (type == Utils::Lagrangian) {
-		rows = columns = X.rows();
-		gp.resize(X.rows());
-		gm.resize(X.rows());
-		I.push_back(X.rows()-1); J.push_back(X.rows()-1); S.push_back(0.);
-	} else if (type == Utils::AugmentedLagrangian) {
-		rows = columns = 2 * V.rows();
-		gp.resize(2 * V.rows());
-		gm.resize(2 * V.rows());
-		I.push_back(2 * V.rows() - 1); J.push_back(2 * V.rows() - 1); S.push_back(0.);
-	} else if (type == Utils::LagrangianObjective) {
-		rows = columns = 2 * V.rows();
-		gp.resize(2 * V.rows());
-		gm.resize(2 * V.rows());
-		I.push_back(2 * V.rows() - 1); J.push_back(2 * V.rows() - 1); S.push_back(0.);
-	} else if (type == Utils::LagrangianConstraint) {
-		columns = F.rows();
-		rows = 2 * V.rows();
-		gp.resize(F.rows());
-		gm.resize(F.rows());
-		I.push_back(rows-1); J.push_back(columns - 1); S.push_back(0.);
-	}
-
+	
+	rows = columns = X.rows();
+	gp.resize(X.rows());
+	gm.resize(X.rows());
+	I.push_back(X.rows()-1); J.push_back(X.rows()-1); S.push_back(0.);
+	
 	Eigen::VectorXd Xd = X;
 	updateX(Xd);
     double dX = 10e-9;
@@ -108,20 +60,17 @@ void ObjectiveFunction::FDHessian(const Eigen::VectorXd& X, const Utils::FDtype 
         double tmpVal = X(i);
         Xd(i) = tmpVal + dX;
         updateX(Xd);
-		test_gradient(gp);
+		gradient(gp, false);
   
         Xd(i) = tmpVal - dX;
         updateX(Xd);
-		test_gradient(gm);
+		gradient(gm, false);
         //now reset the ith param value
         Xd(i) = tmpVal;
         //and compute the row of the hessian
         Hi = (gp - gm) / (2 * dX);
         //each vector is a column vector of the hessian, so copy it in place...
-		int start = i;
-		if (type == Utils::LagrangianConstraint)
-			start = 0;
-		for (int j = start; j < columns; j++)
+		for (int j = i; j < columns; j++)
         {
             if (abs(Hi[j]) > 1e-8)
             {
@@ -133,40 +82,18 @@ void ObjectiveFunction::FDHessian(const Eigen::VectorXd& X, const Utils::FDtype 
     }
 }
 
-void ObjectiveFunction::checkGradient(const Eigen::VectorXd& X, const Utils::FDtype type)
+void ObjectiveFunction::checkGradient(const Eigen::VectorXd& X)
 {
-	LagrangianLscmStArea* constrained_function = dynamic_cast<LagrangianLscmStArea*>(this);
-	if (constrained_function == NULL && type != Utils::Lagrangian) {
-		std::cout << name << ": is not a contrained function" << std::endl;
-		return;
-	}
-
-	std::string str;
 	Eigen::VectorXd FD_gradient, Analytic_gradient;
 	updateX(X);
-	if (type == Utils::Lagrangian) {
-		str = "Lagrangian";
-		Analytic_gradient.resize(X.size());
-		gradient(Analytic_gradient, false);
-	}
-	else if (type == Utils::AugmentedLagrangian) {
-		str = "Augmented Lagrangian";
-		Analytic_gradient.resize(2 * V.rows());
-		constrained_function->AuglagrangGradWRTX(Analytic_gradient, false);
-	}
-	else if (type == Utils::LagrangianObjective) {
-		str = "Lagrangian Objective";
-		Analytic_gradient = constrained_function->objectiveGradient(false);
-	}
-
-	FD_gradient = FDGradient(X, type);
-
+	Analytic_gradient.resize(X.size());
+	gradient(Analytic_gradient, false);
+	FD_gradient = FDGradient(X);
 	assert(FD_gradient.rows() == Analytic_gradient.rows() && "The size of analytic gradient & FD gradient must be equal!");
 	double tol = 1e-4;
 	double eps = 1e-10;
 
-	std::cout << name << "(" << str << "): g.norm() = " << Analytic_gradient.norm() << "(analytic) , " << FD_gradient.norm() << "(FD)" << std::endl;
-	
+	std::cout << name << ": g.norm() = " << Analytic_gradient.norm() << "(analytic) , " << FD_gradient.norm() << "(FD)" << std::endl;
 	for (int i = 0; i < Analytic_gradient.size(); i++) {
         double absErr = abs(FD_gradient[i] - Analytic_gradient[i]);
         double relError = 2 * absErr / (eps + Analytic_gradient[i] + FD_gradient[i]);
@@ -176,15 +103,8 @@ void ObjectiveFunction::checkGradient(const Eigen::VectorXd& X, const Utils::FDt
     }
 }
 
-void ObjectiveFunction::checkHessian(const Eigen::VectorXd& X, const Utils::FDtype type)
+void ObjectiveFunction::checkHessian(const Eigen::VectorXd& X)
 {
-	LagrangianLscmStArea* constrained_function = dynamic_cast<LagrangianLscmStArea*>(this);
-	if (constrained_function == NULL && type != Utils::Lagrangian) {
-		std::cout << name << ": is not a contrained function" << std::endl;
-		return;
-	}
-	std::string str;
-
 	double tol = 1e-4;
 	double eps = 1e-10;
 	std::vector<int> I, J;
@@ -193,39 +113,21 @@ void ObjectiveFunction::checkHessian(const Eigen::VectorXd& X, const Utils::FDty
 		
 	init();
 	updateX(X);
-	if (type == Utils::Lagrangian) {
-		str = "Lagrangian";
-		hessian();
-		H = Utils::BuildMatrix(II, JJ, SS);
-	}
-	else if (type == Utils::AugmentedLagrangian) {
-		str = "Augmented Lagrangian";
-		constrained_function->aughessian();
-		H = Utils::BuildMatrix(constrained_function->II_aug, constrained_function->JJ_aug, constrained_function->SS_aug);
-	} else if (type == Utils::LagrangianObjective) {
-		str = "Lagrangian Objective";
-		constrained_function->objectiveHessian(I,J,S);
-		H = Utils::BuildMatrix(I, J, S);
-	} else if (type == Utils::LagrangianConstraint) {
-		str = "Lagrangian Constraint";
-		constrained_function->constrainedGradient(I, J, S);
-		H = Utils::BuildMatrix(I, J, S);
-	}
-
-	FDHessian(X, type, I, J, S);
+	
+	hessian();
+	H = Utils::BuildMatrix(II, JJ, SS);
+	
+	FDHessian(X, I, J, S);
 	FDH = Utils::BuildMatrix(I, J, S);
-	if (type == Utils::LagrangianConstraint)
-		FDH = FDH.transpose();
-
+	
 	assert(H.size() == FDH.size() && "The size of analytic hessian & FD hessian must be equal!");
-
 	/*std::cout << std::endl << "H = " << std::endl <<
 		H.toDense() << std::endl << "-------------";
 	
 	std::cout << std::endl << "FDH = " << std::endl << 
 		FDH.toDense() << std::endl;*/
 
-	std::cout << name << "(" << str << "): testing hessians...\n";
+	std::cout << name << ": testing hessians...\n";
 	for (int i = 0; i < H.rows(); i++) {
 		for (int j = 0; j < H.cols(); j++) {
 			double absErr = std::abs(FDH.coeff(i, j) - H.coeff(i, j));

@@ -2,7 +2,6 @@
 
 #include "libs/optimization_lib/include/utils.h"
 #include "libs/optimization_lib/include/objective_functions/ObjectiveFunction.h"
-#include "libs/optimization_lib/include/objective_functions/LagrangianLscmStArea.h"
 #include "ext/worhp/worhp/worhp.h"
 
 class worhpSolver
@@ -17,8 +16,8 @@ public:
 
 private:
 	Eigen::VectorXd lastX;
-	LagrangianLscmStArea* functionF;
-	LagrangianLscmStArea* functionG;
+	ObjectiveFunction* functionF;
+	ObjectiveFunction* functionG;
 	void update_data(OptVar* opt);
 
 	// mesh vertices and faces

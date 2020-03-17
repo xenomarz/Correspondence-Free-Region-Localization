@@ -18,7 +18,6 @@ solver::solver(const int solverID)
 {
 	lineSearch_alfa.resize(ARRAY_OUTPUT_SIZE, 1);
 	lineSearch_value.resize(ARRAY_OUTPUT_SIZE, 1);
-	lineSearch_augmentedValue.resize(ARRAY_OUTPUT_SIZE, 1);
 	lineSearch_gradientNorm.resize(ARRAY_OUTPUT_SIZE, 1);
 #ifdef SAVE_DATA_IN_MATLAB
 	// Launch MATLAB
@@ -139,7 +138,6 @@ void solver::prepareData() {
 		objective->gradient(grad, false);
 		lineSearch_alfa(counter, 0) = alpha;
 		lineSearch_value(counter, 0) = objective->value(false);
-		lineSearch_augmentedValue(counter, 0) = objective->AugmentedValue(false);
 		lineSearch_gradientNorm(counter, 0) = grad.norm();
 	}
 	objective->updateX(X);
@@ -168,7 +166,6 @@ void solver::sendDataToMatlab(const bool show_graph) {
 	igl::matlab::mlsetmatrix(&engine, N("X_After"), Eigen::MatrixXd(X));
 	igl::matlab::mlsetmatrix(&engine, N("lineSearch_alfa"), Eigen::MatrixXd(lineSearch_alfa));
 	igl::matlab::mlsetmatrix(&engine, N("lineSearch_value"), Eigen::MatrixXd(lineSearch_value));
-	igl::matlab::mlsetmatrix(&engine, N("lineSearch_augmentedValue"), Eigen::MatrixXd(lineSearch_augmentedValue));
 	igl::matlab::mlsetmatrix(&engine, N("lineSearch_gradientNorm"), Eigen::MatrixXd(lineSearch_gradientNorm));
 	igl::matlab::mlsetscalar(&engine, N("chosen_alfa"), step_size);
 	igl::matlab::mlsetscalar(&engine, N("line_search_iter"), cur_iter);

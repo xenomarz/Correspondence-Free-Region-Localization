@@ -1,6 +1,6 @@
 #include "solvers/worhpSolver.h"
 
-void hessian(LagrangianLscmStArea* f, double scale);
+
 /*-----------------------------------------------------------------------
  *
  * Minimise    f
@@ -25,18 +25,18 @@ void hessian(LagrangianLscmStArea* f, double scale);
  *
  *-----------------------------------------------------------------------*/
 worhpSolver::worhpSolver() {
-	this->functionF = new LagrangianLscmStArea();
-	this->functionG = new LagrangianLscmStArea();
+	this->functionF;// = new ObjectiveFunction();
+	this->functionG;// = new ObjectiveFunction();
 	IsDataReady = false;
 }
 
 void worhpSolver::init(const Eigen::MatrixXd& V, const Eigen::MatrixX3i& F) {
 	this->V = V;
 	this->F = F;
-	this->functionF->init_mesh(V, F);
-	this->functionG->init_mesh(V, F);
-	this->functionF->init();
-	this->functionG->init();
+	//this->functionF->init_mesh(V, F);
+	//this->functionG->init_mesh(V, F);
+	//this->functionF->init();
+	//this->functionG->init();
 	IsDataReady = false;
 }
 
@@ -360,128 +360,27 @@ int worhpSolver::get_data(Eigen::VectorXd& data) {
 
 void worhpSolver::UserF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	Eigen::VectorXd X = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
-	LagrangianLscmStArea f = *this->functionF;
-	f.updateX(X);
-	opt->F = wsp->ScaleObj * f.objectiveValue(false);
+	
 }
 
 void worhpSolver::UserG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	Eigen::VectorXd X = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
-	LagrangianLscmStArea f = *this->functionG;
-	f.updateX(X);
-	Eigen::VectorXd constraints = f.constrainedValue(false);
-	for (int i = 0; i < opt->m; i++) {
-		opt->G[i] = constraints(i);
-	}
+	
 }
 
 void worhpSolver::UserDF(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	std::cout << "-------------UserDF" << std::endl;
-	Eigen::VectorXd X = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
-	LagrangianLscmStArea f = *this->functionF;
-	f.updateX(X);
-	Eigen::VectorXd objGrad = f.objectiveGradient(false);
-	for (int i = 0; i < opt->n; i++) {
-		wsp->DF.val[i] = wsp->ScaleObj * objGrad(i);
-	}
+	
 }
 
 void worhpSolver::UserDG(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	std::cout << "-------------UserDG" << std::endl;
-	Eigen::VectorXd X = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
-	LagrangianLscmStArea f = *this->functionG;
-	f.updateX(X);
-	std::vector<int> I, J;
-	std::vector<double> S;
-	f.constrainedGradient(I,J,S);
-	Eigen::SparseMatrix<double> DG = Utils::BuildMatrix(I, J, S);
 	
-	for (int col = 0; col < opt->n; col++) {
-		for (int row = 0; row < opt->m; row++) {
-			wsp->DG.val[row + col*opt->m] = DG.coeff(row, col);
-		}
-	}
 }
 
 void worhpSolver::UserHM(OptVar* opt, Workspace* wsp, Params* par, Control* cnt)
 {
-	std::cout << "-------------UserHM" << std::endl;
-	Eigen::VectorXd X = Eigen::Map<Eigen::VectorXd>(opt->X, opt->n);
-	LagrangianLscmStArea f = *this->functionG;
-	f.updateX(X);
-
-	for (int i = 0; i < opt->m; i++) {
-		f.lambda(i) = opt->Mu[i];
-	}
-	hessian(&f, wsp->ScaleObj);
-
-	Eigen::SparseMatrix<double> Upper_HM = Utils::BuildMatrix(f.II, f.JJ, f.SS);
-	Eigen::SparseMatrix<double> HM = Upper_HM.selfadjointView<Eigen::Upper>();
-
-	int count = 0;
-	for (int col = 0; col < opt->n; col++) {
-		for (int row = 0; row < opt->n; row++) {
-			if (row > col) {
-				wsp->HM.val[count] = HM.coeff(row, col);
-				count++;
-			}
-		}
-	}
-	for (int diag = 0; diag < opt->n; diag++) {
-		wsp->HM.val[count] = HM.coeff(diag, diag);
-		count++;
-	}
+	
 }
 
-void hessian(LagrangianLscmStArea* f, double scale)
-{
-	/*
-	*  Hess(L) = [Hess(f) + lambda*Hess(C)	,	-Grad(C).Transpose	]
-	*			 [-Grad(C)					,	0					]
-	*
-	*  we build Hess(L) as an upper triangular matrix!
-	*/
-	std::vector<int> I, J;
-	std::vector<double> S;
-	std::vector<std::vector<int>> Is, Js;
-	std::vector<std::vector<double>> Ss;
-
-	/*
-	* Adding the first part of the hessian => Hess(f) + lambda*Hess(C)
-	*/
-	// add Hess(f)
-	f->objectiveHessian(f->II, f->JJ, f->SS);
-	for (int i = 0; i < f->SS.size(); i++) {
-		f->SS[i] = f->SS[i] * scale;
-	}
-	// add (lambda * Hess(C))
-	f->constrainedHessian(Is, Js, Ss);
-	for (int fi = 0; fi < f->F.rows(); fi++) {
-		f->II.insert(f->II.end(), Is[fi].begin(), Is[fi].end());
-		f->JJ.insert(f->JJ.end(), Js[fi].begin(), Js[fi].end());
-		for (double val : Ss[fi])
-			f->SS.push_back(val * f->lambda(fi));
-	}
-
-	/*
-	* Adding the second part of the hessian => -grad(C(x)).transpose()
-	*/
-	f->constrainedGradient(I, J, S);
-	f->II.insert(f->II.end(), J.begin(), J.end());
-	for (int i = 0; i < I.size(); i++) {
-		f->JJ.push_back(I[i] + 2 * f->V.rows());
-		f->SS.push_back(-S[i]);
-	}
-
-	/*
-	* Tell the solver the size of the matrix
-	*/
-	f->II.push_back(2 * f->V.rows() + f->F.rows() - 1);
-	f->JJ.push_back(2 * f->V.rows() + f->F.rows() - 1);
-	f->SS.push_back(0);
-}
 

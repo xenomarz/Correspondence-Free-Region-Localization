@@ -1094,8 +1094,7 @@ void basic_app::checkGradients()
 		}
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
 			objective->checkGradient(
-				Eigen::VectorXd::Random(InputModel().V.size()), 
-				Utils::Lagrangian
+				Eigen::VectorXd::Random(InputModel().V.size())
 			);
 		}
 	}
@@ -1111,8 +1110,7 @@ void basic_app::checkHessians()
 		}
 		for (auto const &objective : Outputs[i].totalObjective->objectiveList) {
 			objective->checkHessian(
-				Eigen::VectorXd::Random(InputModel().V.size()), 
-				Utils::Lagrangian
+				Eigen::VectorXd::Random(InputModel().V.size())
 			);
 		}
 	}

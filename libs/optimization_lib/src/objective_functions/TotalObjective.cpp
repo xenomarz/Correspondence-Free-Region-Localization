@@ -23,37 +23,12 @@ void TotalObjective::updateX(const Eigen::VectorXd& X)
 double TotalObjective::value(const bool update)
 {
 	double f=0;
-	double Cconstraint_value = 0;
-	double Cobjective_value = 0;
-	for (auto &obj : objectiveList) {
-		if (obj->w != 0) {
-			std::shared_ptr<ConstrainedObjectiveFunction> constr = std::dynamic_pointer_cast<ConstrainedObjectiveFunction>(obj);
+	for (auto &obj : objectiveList)
+		if (obj->w != 0)
 			f += obj->w * obj->value(update);
-			
-			if (constr != NULL) {
-				Cconstraint_value += constr->w * constr->constraint_value;
-				Cobjective_value += constr->w * constr->objective_value;
-			}
-		}
-	}
-		
-	if (update) {
-		energy_value = f;
-		constraint_value = Cconstraint_value;
-		objective_value = Cobjective_value;
-	}
-	return f;
-}
 
-double TotalObjective::AugmentedValue(const bool update) {
-	//Just for updating the data
 	if (update)
-		value(update);
-	//augmented_value calculation...
-	double f = 0;
-	for (auto &objective : objectiveList)
-		if (objective->w != 0)
-			f += objective->w*objective->AugmentedValue(update);
+		energy_value = f;
 	return f;
 }
 
@@ -73,13 +48,8 @@ void TotalObjective::gradient(Eigen::VectorXd& g, const bool update)
 		}
 	}
 
-	if(update){
+	if(update)
 		gradient_norm = g.norm();
-		if (g.rows() == (F.rows() + 2 * V.rows())) {
-			objective_gradient_norm = g.head(2 * V.rows()).norm();
-			constraint_gradient_norm = g.tail(F.rows()).norm();
-		}
-	}
 }
 
 void TotalObjective::hessian()
@@ -135,32 +105,5 @@ void TotalObjective::init_hessian()
 	SS.insert(SS.end(), SSi.begin(), SSi.end());
 	II.insert(II.end(), IIi.begin(), IIi.end());
 	JJ.insert(JJ.end(), JJi.begin(), JJi.end());
-}
-
-double TotalObjective::objectiveValue(const bool update) {
-	double w;
-	return w;
-}
-
-Eigen::VectorXd TotalObjective::objectiveGradient(const bool update) {
-	Eigen::VectorXd w;
-	return w;
-}
-
-void TotalObjective::objectiveHessian(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
-	
-}
-
-Eigen::VectorXd TotalObjective::constrainedValue(const bool update) {
-	Eigen::VectorXd w;
-	return w;
-}
-
-void TotalObjective::constrainedGradient(std::vector<int>& I, std::vector<int>& J, std::vector<double>& S) {
-	
-}
-
-void TotalObjective::constrainedHessian(std::vector<std::vector<int>>& Is, std::vector < std::vector<int>>& Js, std::vector < std::vector<double>>& Ss) {
-	
 }
 
