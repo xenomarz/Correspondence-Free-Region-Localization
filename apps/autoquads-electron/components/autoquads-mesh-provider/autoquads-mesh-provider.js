@@ -14,8 +14,8 @@ export class AutoquadsMeshProvider extends MeshProvider {
         this._engine = engine;
 
         // Set faces
-        this._bufferedFaces = this._engine.getDomainBufferedFaces();
-        this._bufferedFacesCount = this._bufferedFaces.length;
+        // this._bufferedFaces = this._engine.getDomainBufferedFaces();
+        // this._bufferedFacesCount = this._bufferedFaces.length;
 
         this.meshColor = meshColor;
     }
@@ -39,7 +39,7 @@ export class AutoquadsMeshProvider extends MeshProvider {
     }
 
     getBufferedVertexColors() {
-        return this.getBufferedColors(this._bufferedFacesCount, 1, EnumsExports.PropertyEffectType.VERTEX_COLOR, this._associatedView, new THREE.Color(1, 1, 1));
+        return this.getBufferedColors(this._bufferedFacesCount, 1, EnumsExports.PropertyEffectType.VERTEX_COLOR, this._associatedView, this._meshColor);
     }
 
     getBufferedEdgeColors() {
@@ -47,7 +47,7 @@ export class AutoquadsMeshProvider extends MeshProvider {
     }
 
     getBufferedUvs() {
-        return []];
+        return [];
     }
 
     set meshColor(value) {

@@ -3,16 +3,16 @@ import * as Enums from './enums.js';
 
 export const CHANGE_ALGORITHM_TYPE = 'CHANGE_ALGORITHM_TYPE';
 export const CHANGE_SPLIT_ORIENTATION = 'CHANGE_SPLIT_ORIENTATION';
-export const CHANGE_MODEL_VIEWPORT_COLOR = 'CHANGE_MODEL_VIEWPORT_COLOR';
-export const CHANGE_SOUP_VIEWPORT_COLOR = 'CHANGE_SOUP_VIEWPORT_COLOR';
-export const CHANGE_MODEL_COLOR = 'CHANGE_MODEL_COLOR';
-export const CHANGE_SOUP_COLOR = 'CHANGE_SOUP_COLOR';
-export const CHANGE_MODEL_WIREFRAME_VISIBILITY = 'CHANGE_MODEL_WIREFRAME_VISIBILITY';
-export const CHANGE_SOUP_WIREFRAME_VISIBILITY = 'CHANGE_SOUP_WIREFRAME_VISIBILITY';
-export const CHANGE_MODEL_FAT_WIREFRAME_VISIBILITY = 'CHANGE_MODEL_FAT_WIREFRAME_VISIBILITY';
-export const CHANGE_SOUP_FAT_WIREFRAME_VISIBILITY = 'CHANGE_SOUP_FAT_WIREFRAME_VISIBILITY';
-export const CHANGE_MODEL_VIEW_VISIBILITY = 'CHANGE_MODEL_VIEW_VISIBILITY';
-export const CHANGE_SOUP_VIEW_VISIBILITY = 'CHANGE_SOUP_VIEW_VISIBILITY';
+export const CHANGE_SHAPE_VIEWPORT_COLOR = 'CHANGE_SHAPE_VIEWPORT_COLOR';
+export const CHANGE_PARTIAL_VIEWPORT_COLOR = 'CHANGE_PARTIAL_VIEWPORT_COLOR';
+export const CHANGE_SHAPE_COLOR = 'CHANGE_SHAPE_COLOR';
+export const CHANGE_PARTIAL_COLOR = 'CHANGE_PARTIAL_COLOR';
+export const CHANGE_SHAPE_WIREFRAME_VISIBILITY = 'CHANGE_SHAPE_WIREFRAME_VISIBILITY';
+export const CHANGE_PARTIAL_WIREFRAME_VISIBILITY = 'CHANGE_PARTIAL_WIREFRAME_VISIBILITY';
+export const CHANGE_SHAPE_FAT_WIREFRAME_VISIBILITY = 'CHANGE_SHAPE_FAT_WIREFRAME_VISIBILITY';
+export const CHANGE_PARTIAL_FAT_WIREFRAME_VISIBILITY = 'CHANGE_PARTIAL_FAT_WIREFRAME_VISIBILITY';
+export const CHANGE_SHAPE_VIEW_VISIBILITY = 'CHANGE_SHAPE_VIEW_VISIBILITY';
+export const CHANGE_PARTIAL_VIEW_VISIBILITY = 'CHANGE_PARTIAL_VIEW_VISIBILITY';
 export const CHANGE_AUTOCUTS_WEIGHT = 'CHANGE_AUTOCUTS_WEIGHT';
 export const CHANGE_DELTA = 'CHANGE_DELTA';
 export const CHANGE_LAMBDA = 'CHANGE_LAMBDA';
@@ -37,13 +37,14 @@ export const CHANGE_GRID_SIZE = 'CHANGE_GRID_SIZE';
 export const CHANGE_GRID_TEXTURE_SIZE = 'CHANGE_GRID_TEXTURE_SIZE';
 export const CHANGE_GRID_LINE_WIDTH = 'CHANGE_GRID_LINE_WIDTH';
 export const CHANGE_UNIT_GRID_VISIBILITY = 'CHANGE_UNIT_GRID_VISIBILITY';
-export const CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY = 'CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY';
+export const CHANGE_PARTIAL_VIEW_GRID_TEXTURE_VISIBILITY = 'CHANGE_PARTIAL_VIEW_GRID_TEXTURE_VISIBILITY';
 export const CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY = 'CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY';
 export const CHANGE_SOLVER_STATE = 'CHANGE_SOLVER_STATE';
-export const CHANGE_MODEL_FILENAME = 'CHANGE_MODEL_FILENAME';
+export const CHANGE_SHAPE_FILENAME = 'CHANGE_SHAPE_FILENAME';
 export const CHANGE_PARTIAL_FILENAME = 'CHANGE_PARTIAL_FILENAME';
 export const CHANGE_MODULE_FILENAME = 'CHANGE_MODULE_FILENAME';
-export const CHANGE_MODEL_STATE = 'CHANGE_MODEL_STATE';
+export const CHANGE_SHAPE_STATE = 'CHANGE_SHAPE_STATE';
+export const CHANGE_PARTIAL_STATE = 'CHANGE_PARTIAL_STATE';
 export const CHANGE_MODULE_STATE = 'CHANGE_MODULE_STATE';
 export const CHANGE_OBJECTIVE_FUNCTION_PROPERTY_COLOR = 'CHANGE_OBJECTIVE_FUNCTION_PROPERTY_COLOR';
 export const CHANGE_OBJECTIVE_FUNCTION_PROPERTY_VISIBILITY = 'CHANGE_OBJECTIVE_FUNCTION_PROPERTY_VISIBILITY';
@@ -62,114 +63,114 @@ export const setSplitOrientation = orientation => {
     };
 };
 
-export const setModelViewportColor = color => {
+export const setShapeViewportColor = color => {
     return {
-        type: CHANGE_MODEL_VIEWPORT_COLOR,
+        type: CHANGE_SHAPE_VIEWPORT_COLOR,
         color: color
     };
 };
 
-export const setSoupViewportColor = color => {
+export const setPartialViewportColor = color => {
     return {
-        type: CHANGE_SOUP_VIEWPORT_COLOR,
+        type: CHANGE_PARTIAL_VIEWPORT_COLOR,
         color: color
     };
 };
 
-export const setModelColor = color => {
+export const setShapeColor = color => {
     return {
-        type: CHANGE_MODEL_COLOR,
+        type: CHANGE_SHAPE_COLOR,
         color: color
     };
 };
 
-export const setSoupColor = color => {
+export const setPartialColor = color => {
     return {
-        type: CHANGE_SOUP_COLOR,
+        type: CHANGE_PARTIAL_COLOR,
         color: color
     };
 };
 
-export const showModelWireframe = () => {
+export const showShapeWireframe = () => {
     return {
-        type: CHANGE_MODEL_WIREFRAME_VISIBILITY,
+        type: CHANGE_SHAPE_WIREFRAME_VISIBILITY,
         visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const hideModelWireframe = () => {
+export const hideShapeWireframe = () => {
     return {
-        type: CHANGE_MODEL_WIREFRAME_VISIBILITY,
+        type: CHANGE_SHAPE_WIREFRAME_VISIBILITY,
         visibility: Enums.Visibility.HIDDEN
     };
 };
 
-export const showSoupWireframe = () => {
+export const showPartialWireframe = () => {
     return {
-        type: CHANGE_SOUP_WIREFRAME_VISIBILITY,
+        type: CHANGE_PARTIAL_WIREFRAME_VISIBILITY,
         visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const hideSoupWireframe = () => {
+export const hidePartialWireframe = () => {
     return {
-        type: CHANGE_SOUP_WIREFRAME_VISIBILITY,
+        type: CHANGE_PARTIAL_WIREFRAME_VISIBILITY,
         visibility: Enums.Visibility.HIDDEN
     };
 };
 
-export const showModelFatWireframe = () => {
+export const showShapeFatWireframe = () => {
     return {
-        type: CHANGE_MODEL_FAT_WIREFRAME_VISIBILITY,
+        type: CHANGE_SHAPE_FAT_WIREFRAME_VISIBILITY,
         visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const hideModelFatWireframe = () => {
+export const hideShapeFatWireframe = () => {
     return {
-        type: CHANGE_MODEL_FAT_WIREFRAME_VISIBILITY,
+        type: CHANGE_SHAPE_FAT_WIREFRAME_VISIBILITY,
         visibility: Enums.Visibility.HIDDEN
     };
 };
 
-export const showSoupFatWireframe = () => {
+export const showPartialFatWireframe = () => {
     return {
-        type: CHANGE_SOUP_FAT_WIREFRAME_VISIBILITY,
+        type: CHANGE_PARTIAL_FAT_WIREFRAME_VISIBILITY,
         visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const hideSoupFatWireframe = () => {
+export const hidePartialFatWireframe = () => {
     return {
-        type: CHANGE_SOUP_FAT_WIREFRAME_VISIBILITY,
+        type: CHANGE_PARTIAL_FAT_WIREFRAME_VISIBILITY,
         visibility: Enums.Visibility.HIDDEN
     };
 };
 
-export const showModelView = () => {
+export const showShapeView = () => {
     return {
-        type: CHANGE_MODEL_VIEW_VISIBILITY,
+        type: CHANGE_SHAPE_VIEW_VISIBILITY,
         visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const hideModelView = () => {
+export const hideShapeView = () => {
     return {
-        type: CHANGE_MODEL_VIEW_VISIBILITY,
+        type: CHANGE_SHAPE_VIEW_VISIBILITY,
         visibility: Enums.Visibility.HIDDEN
     };
 };
 
-export const showSoupView = () => {
+export const showPartialView = () => {
     return {
-        type: CHANGE_SOUP_VIEW_VISIBILITY,
+        type: CHANGE_PARTIAL_VIEW_VISIBILITY,
         visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const hideSoupView = () => {
+export const hidePartialView = () => {
     return {
-        type: CHANGE_SOUP_VIEW_VISIBILITY,
+        type: CHANGE_PARTIAL_VIEW_VISIBILITY,
         visibility: Enums.Visibility.HIDDEN
     };
 };
@@ -342,16 +343,16 @@ export const hideUnitGrid = () => {
     };
 };
 
-export const showSoupViewGridTexture = () => {
+export const showPartialViewGridTexture = () => {
     return {
-        type: CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY,
+        type: CHANGE_PARTIAL_VIEW_GRID_TEXTURE_VISIBILITY,
         visibility: Enums.Visibility.VISIBLE
     };
 };
 
-export const hideSoupViewGridTexture = () => {
+export const hidePartialViewGridTexture = () => {
     return {
-        type: CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY,
+        type: CHANGE_PARTIAL_VIEW_GRID_TEXTURE_VISIBILITY,
         visibility: Enums.Visibility.HIDDEN
     };
 };
@@ -384,9 +385,9 @@ export const pauseSolver = () => {
     };
 };
 
-export const loadModelFile = filename => {
+export const loadShapeFile = filename => {
     return {
-        type: CHANGE_MODEL_FILENAME,
+        type: CHANGE_SHAPE_FILENAME,
         filename: filename
     };
 };
@@ -405,9 +406,16 @@ export const loadModuleFile = filename => {
     };
 };
 
-export const setModelState = state => {
+export const setShapeState = state => {
     return {
-        type: CHANGE_MODEL_STATE,
+        type: CHANGE_SHAPE_STATE,
+        state: state
+    };
+};
+
+export const setPartialState = state => {
+    return {
+        type: CHANGE_PARTIAL_STATE,
         state: state
     };
 };

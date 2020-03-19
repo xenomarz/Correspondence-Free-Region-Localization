@@ -86,7 +86,7 @@ void main()
 	//	newton_method_->Start();
 	//});
 
-	//mesh_wrapper_->LoadModel("C:\\Users\\Roy\\Documents\\GitHub\\RDS\\models\\obj\\cow.obj");
+	//mesh_wrapper_->LoadShape("C:\\Users\\Roy\\Documents\\GitHub\\RDS\\models\\obj\\cow.obj");
 
 	//std::this_thread::sleep_for(std::chrono::milliseconds(60000));
 }

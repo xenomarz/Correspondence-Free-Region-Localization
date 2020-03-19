@@ -10,6 +10,8 @@ import * as HelpersExports from '../../redux/helpers.js';
 export class AutoquadsShapeMeshProvider extends AutoquadsMeshProvider {
     constructor(engine, meshColor) {
         super(engine, meshColor);
+        this._bufferedFaces = this._engine.getShapeBufferedFaces();
+        this._bufferedFacesCount = this._bufferedFaces.length;
     }
 
     // getFaces() {

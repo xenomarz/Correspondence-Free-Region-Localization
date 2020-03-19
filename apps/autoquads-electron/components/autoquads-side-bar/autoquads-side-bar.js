@@ -65,41 +65,29 @@ export class AutoquadsSideBar extends SideBar {
     render() {
         return html`
             <side-bar-collapsable-section
-                caption="Model Options">
+                caption="Shape Options">
                 <vaadin-button
                     theme="contrast primary"
-                    @click="${this._loadModel}">
+                    @click="${this._loadShape}">
                     <span>Load Shape...</span>
                 </vaadin-button>
                 <vaadin-button
                     theme="contrast primary"
-                    @click="${this._loadModel}">
+                    @click="${this._loadPartial}">
                     <span>Load Partial...</span>
                 </vaadin-button>
                 <vaadin-checkbox
-                    ?checked=${HelpersExports.isVisible(this._modelWireframeVisibility)}
-                    @change="${this._modelWireframeVisibilityInputChanged}"
+                    ?checked=${HelpersExports.isVisible(this._shapeWireframeVisibility)}
+                    @change="${this._shapeWireframeVisibilityInputChanged}"
                     checked>
-                    <span>Show Model Wireframe</span>
+                    <span>Show Shape Wireframe</span>
                 </vaadin-checkbox>
                 <vaadin-checkbox
-                    ?checked=${HelpersExports.isVisible(this._soupWireframeVisibility)}
-                    @change="${this._soupWireframeVisibilityInputChanged}"
+                    ?checked=${HelpersExports.isVisible(this._partialWireframeVisibility)}
+                    @change="${this._partialWireframeVisibilityInputChanged}"
                     checked>
-                    <span>Show Soup Wireframe</span>
-                </vaadin-checkbox>
-                <vaadin-checkbox
-                    ?checked=${HelpersExports.isVisible(this._modelFatWireframeVisibility)}
-                    @change="${this._modelFatWireframeVisibilityInputChanged}"
-                    checked>
-                    <span>Show Model Fat Wireframe</span>
-                </vaadin-checkbox>
-                <vaadin-checkbox
-                    ?checked=${HelpersExports.isVisible(this._soupFatWireframeVisibility)}
-                    @change="${this._soupFatWireframeVisibilityInputChanged}"
-                    checked>
-                    <span>Show Soup Fat Wireframe</span>
-                </vaadin-checkbox>             
+                    <span>Show Partial Wireframe</span>
+                </vaadin-checkbox>            
             </side-bar-collapsable-section>         
             <side-bar-collapsable-section
                 caption="Viewports">
@@ -121,44 +109,34 @@ export class AutoquadsSideBar extends SideBar {
                     </template>
                 </vaadin-dropdown-menu>
                 <side-bar-color-picker
-                    caption="Model Viewport Color"
-                    color="${this._modelViewportColor}"
-                    @color-changed="${this._modelViewportColorInputChanged}">
+                    caption="Shape Viewport Color"
+                    color="${this._shapeViewportColor}"
+                    @color-changed="${this._shapeViewportColorInputChanged}">
                 </side-bar-color-picker>
                 <side-bar-color-picker
-                    caption="Soup Viewport Color"
-                    color="${this._soupViewportColor}"
-                    @color-changed="${this._soupViewportColorInputChanged}">
+                    caption="Partial Viewport Color"
+                    color="${this._partialViewportColor}"
+                    @color-changed="${this._partialViewportColorInputChanged}">
                 </side-bar-color-picker>
                 <side-bar-color-picker
-                    caption="Model Color"
-                    color="${this._modelColor}"
-                    @color-changed="${this._modelColorInputChanged}">
+                    caption="Shape Color"
+                    color="${this._shapeColor}"
+                    @color-changed="${this._shapeColorInputChanged}">
                 </side-bar-color-picker>
                 <side-bar-color-picker
-                    caption="Soup Color"
-                    color="${this._soupColor}"
-                    @color-changed="${this._soupColorInputChanged}">
+                    caption="Partial Color"
+                    color="${this._partialColor}"
+                    @color-changed="${this._partialColorInputChanged}">
                 </side-bar-color-picker>
                 <vaadin-checkbox
-                    ?checked=${HelpersExports.isVisible(this._modelViewVisibility)}
-                    @change="${this._modelViewVisibilityInputChanged}">
-                    <span>Show Model View</span>
+                    ?checked=${HelpersExports.isVisible(this._shapeViewVisibility)}
+                    @change="${this._shapeViewVisibilityInputChanged}">
+                    <span>Show Shape View</span>
                 </vaadin-checkbox>
                 <vaadin-checkbox
-                    ?checked=${HelpersExports.isVisible(this._soupViewVisibility)}
-                    @change="${this._soupViewVisibilityInputChanged}">
-                    <span>Show Soup View</span>
-                </vaadin-checkbox>
-                <vaadin-checkbox
-                    ?checked=${HelpersExports.isVisible(this._unitGridVisibility)}
-                    @change="${this._unitGridVisibilityInputChanged}">
-                    <span>Show Unit Grid</span>
-                </vaadin-checkbox>
-                <vaadin-checkbox
-                    ?checked=${HelpersExports.isVisible(this._optimizationDataMonitorVisibility)}
-                    @change="${this._optimizationDataMonitorVisibilityInputChanged}">
-                    <span>Show Optimization Data Monitor</span>
+                    ?checked=${HelpersExports.isVisible(this._partialViewVisibility)}
+                    @change="${this._partialViewVisibilityInputChanged}">
+                    <span>Show Partial View</span>
                 </vaadin-checkbox>
             </side-bar-collapsable-section>
         `;
@@ -174,45 +152,45 @@ export class AutoquadsSideBar extends SideBar {
                 type: String,
                 attribute: 'split-orientation'
             },
-            modelViewportColor: {
+            shapeViewportColor: {
                 type: String,
-                attribute: 'model-viewport-color'
+                attribute: 'shape-viewport-color'
             },
-            soupViewportColor: {
+            partialViewportColor: {
                 type: String,
-                attribute: 'soup-viewport-color'
+                attribute: 'partial-viewport-color'
             },
-            modelColor: {
+            shapeColor: {
                 type: String,
-                attribute: 'model-color'
+                attribute: 'shape-color'
             },
-            soupColor: {
+            partialColor: {
                 type: String,
-                attribute: 'soup-color'
+                attribute: 'partial-color'
             },
-            modelWireframeVisibility: {
+            shapeWireframeVisibility: {
                 type: String,
-                attribute: 'model-wireframe-visibility'
+                attribute: 'shape-wireframe-visibility'
             },
-            soupWireframeVisibility: {
+            partialWireframeVisibility: {
                 type: String,
-                attribute: 'soup-wireframe-visibility'
+                attribute: 'partial-wireframe-visibility'
             },
-            modelFatWireframeVisibility: {
+            shapeFatWireframeVisibility: {
                 type: String,
-                attribute: 'model-fat-wireframe-visibility'
+                attribute: 'shape-fat-wireframe-visibility'
             },
-            soupFatWireframeVisibility: {
+            partialFatWireframeVisibility: {
                 type: String,
-                attribute: 'soup-fat-wireframe-visibility'
+                attribute: 'partial-fat-wireframe-visibility'
             },         
-            modelViewVisibility: {
+            shapeViewVisibility: {
                 type: String,
-                attribute: 'model-view-visibility'
+                attribute: 'shape-view-visibility'
             },
-            soupViewVisibility: {
+            partialViewVisibility: {
                 type: String,
-                attribute: 'soup-view-visibility'
+                attribute: 'partial-view-visibility'
             },
             autocutsWeight: {
                 type: Number,
@@ -306,9 +284,9 @@ export class AutoquadsSideBar extends SideBar {
                 type: String,
                 attribute: 'unit-grid-visibility'
             },
-            soupViewGridTextureVisibility: {
+            partialViewGridTextureVisibility: {
                 type: String,
-                attribute: 'soup-view-grid-texture-visibility'
+                attribute: 'partial-view-grid-texture-visibility'
             },
             optimizationDataMonitorVisibility: {
                 type: String,
@@ -317,10 +295,6 @@ export class AutoquadsSideBar extends SideBar {
             solverState: {
                 type: String,
                 attribute: 'solver-state'
-            },  
-            model: {
-                type: Object,
-                attribute: 'model'
             },  
             module: {
                 type: Object,
@@ -374,104 +348,104 @@ export class AutoquadsSideBar extends SideBar {
         return this._splitOrientation;
     }
     
-    set modelViewportColor(value) {
-        const oldValue = this._modelViewportColor;
-        this._modelViewportColor = value;
-        this.requestUpdate('modelViewportColor', oldValue);
+    set shapeViewportColor(value) {
+        const oldValue = this._shapeViewportColor;
+        this._shapeViewportColor = value;
+        this.requestUpdate('shapeViewportColor', oldValue);
     }
 
-    get modelViewportColor() {
-        return this._modelViewportColor;
+    get shapeViewportColor() {
+        return this._shapeViewportColor;
     }
 
-    set soupViewportColor(value) {
-        const oldValue = this._soupViewportColor;
-        this._soupViewportColor = value;
-        this.requestUpdate('soupViewportColor', oldValue);
+    set partialViewportColor(value) {
+        const oldValue = this._partialViewportColor;
+        this._partialViewportColor = value;
+        this.requestUpdate('partialViewportColor', oldValue);
     }
 
-    get soupViewportColor() {
-        return this._soupViewportColor;
+    get partialViewportColor() {
+        return this._partialViewportColor;
     }
 
-    set modelColor(value) {
-        const oldValue = this._modelColor;
-        this._modelColor = value;
-        this.requestUpdate('modelColor', oldValue);
+    set shapeColor(value) {
+        const oldValue = this._shapeColor;
+        this._shapeColor = value;
+        this.requestUpdate('shapeColor', oldValue);
     }
 
-    get modelColor() {
-        return this._modelColor;
+    get shapeColor() {
+        return this._shapeColor;
     }
 
-    set soupColor(value) {
-        const oldValue = this._soupColor;
-        this._soupColor = value;
-        this.requestUpdate('soupColor', oldValue);
+    set partialColor(value) {
+        const oldValue = this._partialColor;
+        this._partialColor = value;
+        this.requestUpdate('partialColor', oldValue);
     }
 
-    get soupColor() {
-        return this._soupColor;
+    get partialColor() {
+        return this._partialColor;
     }
 
-    set modelWireframeVisibility(value) {
-        const oldValue = this._modelWireframeVisibility;
-        this._modelWireframeVisibility = value;
-        this.requestUpdate('modelWireframeVisibility', oldValue);
+    set shapeWireframeVisibility(value) {
+        const oldValue = this._shapeWireframeVisibility;
+        this._shapeWireframeVisibility = value;
+        this.requestUpdate('shapeWireframeVisibility', oldValue);
     }
 
-    get modelWireframeVisibility() {
-        return this._modelWireframeVisibility;        
+    get shapeWireframeVisibility() {
+        return this._shapeWireframeVisibility;        
     }
 
-    set soupWireframeVisibility(value) {
-        const oldValue = this._soupWireframeVisibility;
-        this._soupWireframeVisibility = value;
-        this.requestUpdate('soupWireframeVisibility', oldValue);
+    set partialWireframeVisibility(value) {
+        const oldValue = this._partialWireframeVisibility;
+        this._partialWireframeVisibility = value;
+        this.requestUpdate('partialWireframeVisibility', oldValue);
     }
 
-    get soupWireframeVisibility() {
-        return this._soupWireframeVisibility;        
+    get partialWireframeVisibility() {
+        return this._partialWireframeVisibility;        
     }
 
-    set modelFatWireframeVisibility(value) {
-        const oldValue = this._modelFatWireframeVisibility;
-        this._modelFatWireframeVisibility = value;
-        this.requestUpdate('modelFatWireframeVisibility', oldValue);
+    set shapeFatWireframeVisibility(value) {
+        const oldValue = this._shapeFatWireframeVisibility;
+        this._shapeFatWireframeVisibility = value;
+        this.requestUpdate('shapeFatWireframeVisibility', oldValue);
     }
 
-    get modelFatWireframeVisibility() {
-        return this._modelFatWireframeVisibility;        
+    get shapeFatWireframeVisibility() {
+        return this._shapeFatWireframeVisibility;        
     }
 
-    set soupFatWireframeVisibility(value) {
-        const oldValue = this._soupFatWireframeVisibility;
-        this._soupFatWireframeVisibility = value;
-        this.requestUpdate('soupFatWireframeVisibility', oldValue);
+    set partialFatWireframeVisibility(value) {
+        const oldValue = this._partialFatWireframeVisibility;
+        this._partialFatWireframeVisibility = value;
+        this.requestUpdate('partialFatWireframeVisibility', oldValue);
     }
 
-    get soupFatWireframeVisibility() {
-        return this._soupFatWireframeVisibility;        
+    get partialFatWireframeVisibility() {
+        return this._partialFatWireframeVisibility;        
     }  
 
-    set modelViewVisibility(value) {
-        const oldValue = this._modelViewVisibility;
-        this._modelViewVisibility = value;
-        this.requestUpdate('modelViewVisibility', oldValue);
+    set shapeViewVisibility(value) {
+        const oldValue = this._shapeViewVisibility;
+        this._shapeViewVisibility = value;
+        this.requestUpdate('shapeViewVisibility', oldValue);
     }
 
-    get modelViewVisibility() {
-        return this._modelViewVisibility;
+    get shapeViewVisibility() {
+        return this._shapeViewVisibility;
     }
 
-    set soupViewVisibility(value) {
-        const oldValue = this._soupViewVisibility;
-        this._soupViewVisibility = value;
-        this.requestUpdate('soupViewVisibility', oldValue);        
+    set partialViewVisibility(value) {
+        const oldValue = this._partialViewVisibility;
+        this._partialViewVisibility = value;
+        this.requestUpdate('partialViewVisibility', oldValue);        
     }
 
-    get soupViewVisibility() {
-        return this._soupViewVisibility;
+    get partialViewVisibility() {
+        return this._partialViewVisibility;
     }
 
     set autocutsWeight(value) {
@@ -704,14 +678,14 @@ export class AutoquadsSideBar extends SideBar {
         return this._unitGridVisibility;
     } 
     
-    set soupViewGridTextureVisibility(value) {
-        const oldValue = this._soupViewGridTextureVisibility;
-        this._soupViewGridTextureVisibility = value;
-        this.requestUpdate('soupViewGridTextureVisibility', oldValue);
+    set partialViewGridTextureVisibility(value) {
+        const oldValue = this._partialViewGridTextureVisibility;
+        this._partialViewGridTextureVisibility = value;
+        this.requestUpdate('partialViewGridTextureVisibility', oldValue);
     }
 
-    get soupViewGridTextureVisibility() {
-        return this._soupViewGridTextureVisibility;
+    get partialViewGridTextureVisibility() {
+        return this._partialViewGridTextureVisibility;
     } 
 
     set optimizationDataMonitorVisibility(value) {
@@ -734,14 +708,14 @@ export class AutoquadsSideBar extends SideBar {
         return this._solverState;
     }
 
-    set modelFilename(value) {
-        const oldValue = this._modelFilename;
-        this._modelFilename = value;
-        this.requestUpdate('modelFilename', oldValue);
+    set shapeFilename(value) {
+        const oldValue = this._shapeFilename;
+        this._shapeFilename = value;
+        this.requestUpdate('shapeFilename', oldValue);
     }
 
-    get modelFilename() {
-        return this._modelFilename;
+    get shapeFilename() {
+        return this._shapeFilename;
     }
 
     set partialFilename(value) {
@@ -754,14 +728,14 @@ export class AutoquadsSideBar extends SideBar {
         return this._partialFilename;
     }
 
-    set modelState(value) {
-        const oldValue = this._modelState;
-        this._modelState = value;
-        this.requestUpdate('modelState', oldValue);
+    set shapeState(value) {
+        const oldValue = this._shapeState;
+        this._shapeState = value;
+        this.requestUpdate('shapeState', oldValue);
     }
 
-    get modelState() {
-        return this._modelState;
+    get shapeState() {
+        return this._shapeState;
     }
 
     set moduleFilename(value) {
@@ -851,7 +825,7 @@ export class AutoquadsSideBar extends SideBar {
         }
     }
 
-    _loadModel() {
+    _loadShape() {
         const { dialog } = require('electron').remote;
         let files = dialog.showOpenDialogSync({
             properties: ['openFile'],
@@ -867,7 +841,7 @@ export class AutoquadsSideBar extends SideBar {
             ]
         });
 
-        store.dispatch(ActionsExports.loadModelFile(files[0])); 
+        store.dispatch(ActionsExports.loadShapeFile(files[0])); 
     }
 
     _loadPartial() {
@@ -893,20 +867,20 @@ export class AutoquadsSideBar extends SideBar {
         store.dispatch(ActionsExports.setSplitOrientation(e.srcElement.value));    
     }
 
-    _modelViewportColorInputChanged(e) {
-        store.dispatch(ActionsExports.setModelViewportColor(e.detail.color));
+    _shapeViewportColorInputChanged(e) {
+        store.dispatch(ActionsExports.setShapeViewportColor(e.detail.color));
     }
 
-    _soupViewportColorInputChanged(e) {
-        store.dispatch(ActionsExports.setSoupViewportColor(e.detail.color));
+    _partialViewportColorInputChanged(e) {
+        store.dispatch(ActionsExports.setPartialViewportColor(e.detail.color));
     }
 
-    _modelColorInputChanged(e) {
-        store.dispatch(ActionsExports.setModelColor(e.detail.color));
+    _shapeColorInputChanged(e) {
+        store.dispatch(ActionsExports.setShapeColor(e.detail.color));
     }
 
-    _soupColorInputChanged(e) {
-        store.dispatch(ActionsExports.setSoupColor(e.detail.color));
+    _partialColorInputChanged(e) {
+        store.dispatch(ActionsExports.setPartialColor(e.detail.color));
     }
 
     _highlightedFaceColorInputChanged(e) {
@@ -937,51 +911,51 @@ export class AutoquadsSideBar extends SideBar {
         }
     }
 
-    _modelWireframeVisibilityInputChanged(e) {
+    _shapeWireframeVisibilityInputChanged(e) {
         if(e.srcElement.checked) {
-            store.dispatch(ActionsExports.showModelWireframe());
+            store.dispatch(ActionsExports.showShapeWireframe());
         } else {
-            store.dispatch(ActionsExports.hideModelWireframe());
+            store.dispatch(ActionsExports.hideShapeWireframe());
         }
     }
 
-    _soupWireframeVisibilityInputChanged(e) {
+    _partialWireframeVisibilityInputChanged(e) {
         if(e.srcElement.checked) {
-            store.dispatch(ActionsExports.showSoupWireframe());
+            store.dispatch(ActionsExports.showPartialWireframe());
         } else {
-            store.dispatch(ActionsExports.hideSoupWireframe());
+            store.dispatch(ActionsExports.hidePartialWireframe());
         }
     }
 
-    _modelFatWireframeVisibilityInputChanged(e) {
+    _shapeFatWireframeVisibilityInputChanged(e) {
         if(e.srcElement.checked) {
-            store.dispatch(ActionsExports.showModelFatWireframe());
+            store.dispatch(ActionsExports.showShapeFatWireframe());
         } else {
-            store.dispatch(ActionsExports.hideModelFatWireframe());
+            store.dispatch(ActionsExports.hideShapeFatWireframe());
         }
     }
 
-    _soupFatWireframeVisibilityInputChanged(e) {
+    _partialFatWireframeVisibilityInputChanged(e) {
         if(e.srcElement.checked) {
-            store.dispatch(ActionsExports.showSoupFatWireframe());
+            store.dispatch(ActionsExports.showPartialFatWireframe());
         } else {
-            store.dispatch(ActionsExports.hideSoupFatWireframe());
+            store.dispatch(ActionsExports.hidePartialFatWireframe());
         }
     }   
 
-    _modelViewVisibilityInputChanged(e) {
+    _shapeViewVisibilityInputChanged(e) {
         if(e.srcElement.checked) {
-            store.dispatch(ActionsExports.showModelView());
+            store.dispatch(ActionsExports.showShapeView());
         } else {
-            store.dispatch(ActionsExports.hideModelView());
+            store.dispatch(ActionsExports.hideShapeView());
         }  
     }
 
-    _soupViewVisibilityInputChanged(e) {
+    _partialViewVisibilityInputChanged(e) {
         if(e.srcElement.checked) {
-            store.dispatch(ActionsExports.showSoupView());
+            store.dispatch(ActionsExports.showPartialView());
         } else {
-            store.dispatch(ActionsExports.hideSoupView());
+            store.dispatch(ActionsExports.hidePartialView());
         }
     }
 

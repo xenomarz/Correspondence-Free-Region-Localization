@@ -131,7 +131,7 @@ private:
 	Napi::Value Engine::GetImageEdgeFaceAdjacency(const Napi::CallbackInfo& info);
 	Napi::Value GetObjectiveFunctionProperty(const Napi::CallbackInfo& info);
 	Napi::Value SetObjectiveFunctionProperty(const Napi::CallbackInfo& info);
-	Napi::Value LoadModel(const Napi::CallbackInfo& info);
+	Napi::Value LoadShape(const Napi::CallbackInfo& info);
 	Napi::Value LoadPartial(const Napi::CallbackInfo& info);
 	Napi::Value ResumeSolver(const Napi::CallbackInfo& info);
 	Napi::Value PauseSolver(const Napi::CallbackInfo& info);
@@ -141,12 +141,10 @@ private:
 	Napi::Value UnconstrainFacePosition(const Napi::CallbackInfo& info);
 	Napi::Value ReconstrainFacePosition(const Napi::CallbackInfo& info);
 
-
-
 	Napi::Value GetShapeBufferedVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetPartialBufferedVertices(const Napi::CallbackInfo& info);
-
-	
+	Napi::Value GetShapeBufferedFaces(const Napi::CallbackInfo& info);
+	Napi::Value GetPartialBufferedFaces(const Napi::CallbackInfo& info);
 
 	/**
 	 * Regular private instance methods

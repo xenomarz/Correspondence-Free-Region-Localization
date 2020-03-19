@@ -1,16 +1,16 @@
 import {
     CHANGE_ALGORITHM_TYPE,
     CHANGE_SPLIT_ORIENTATION,
-    CHANGE_MODEL_VIEWPORT_COLOR,
-    CHANGE_SOUP_VIEWPORT_COLOR,
-    CHANGE_MODEL_COLOR,
-    CHANGE_SOUP_COLOR,
-    CHANGE_MODEL_WIREFRAME_VISIBILITY,
-    CHANGE_SOUP_WIREFRAME_VISIBILITY,
-    CHANGE_MODEL_FAT_WIREFRAME_VISIBILITY,
-    CHANGE_SOUP_FAT_WIREFRAME_VISIBILITY,
-    CHANGE_MODEL_VIEW_VISIBILITY,
-    CHANGE_SOUP_VIEW_VISIBILITY,
+    CHANGE_SHAPE_VIEWPORT_COLOR,
+    CHANGE_PARTIAL_VIEWPORT_COLOR,
+    CHANGE_SHAPE_COLOR,
+    CHANGE_PARTIAL_COLOR,
+    CHANGE_SHAPE_WIREFRAME_VISIBILITY,
+    CHANGE_PARTIAL_WIREFRAME_VISIBILITY,
+    CHANGE_SHAPE_FAT_WIREFRAME_VISIBILITY,
+    CHANGE_PARTIAL_FAT_WIREFRAME_VISIBILITY,
+    CHANGE_SHAPE_VIEW_VISIBILITY,
+    CHANGE_PARTIAL_VIEW_VISIBILITY,
     CHANGE_AUTOCUTS_WEIGHT,    
     CHANGE_DELTA,
     CHANGE_LAMBDA,
@@ -34,13 +34,14 @@ import {
     CHANGE_GRID_TEXTURE_SIZE,
     CHANGE_GRID_LINE_WIDTH,
     CHANGE_UNIT_GRID_VISIBILITY,
-    CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY,
+    CHANGE_PARTIAL_VIEW_GRID_TEXTURE_VISIBILITY,
     CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY,
     CHANGE_SOLVER_STATE,
-    CHANGE_MODEL_FILENAME,
+    CHANGE_SHAPE_FILENAME,
     CHANGE_PARTIAL_FILENAME,
     CHANGE_MODULE_FILENAME,
-    CHANGE_MODEL_STATE,
+    CHANGE_SHAPE_STATE,
+    CHANGE_PARTIAL_STATE,    
     CHANGE_MODULE_STATE,
     CHANGE_OBJECTIVE_FUNCTION_PROPERTY_COLOR,
     CHANGE_OBJECTIVE_FUNCTION_PROPERTY_VISIBILITY
@@ -51,16 +52,16 @@ import * as EnumsExports from './enums.js';
 const INITIAL_STATE = {
     algorithmType: 'autocuts',
     splitOrientation: EnumsExports.SplitOrientation.HORIZONTAL,
-    modelViewportColor: 'rgb(200,200,200)',
-    soupViewportColor: 'rgb(200,200,200)',
-    modelColor: 'rgb(255, 255, 255)',
-    soupColor: 'rgb(255, 255, 255)',
-    modelWireframeVisibility: EnumsExports.Visibility.HIDDEN,
-    soupWireframeVisibility: EnumsExports.Visibility.VISIBLE,
-    modelFatWireframeVisibility: EnumsExports.Visibility.VISIBLE,
-    soupFatWireframeVisibility: EnumsExports.Visibility.HIDDEN,
-    modelViewVisibility: EnumsExports.Visibility.VISIBLE,
-    soupViewVisibility: EnumsExports.Visibility.VISIBLE,
+    shapeViewportColor: 'rgb(200,200,200)',
+    partialViewportColor: 'rgb(200,200,200)',
+    shapeColor: 'rgb(220, 220, 220)',
+    partialColor: 'rgb(220, 220, 220)',
+    shapeWireframeVisibility: EnumsExports.Visibility.VISIBLE,
+    partialWireframeVisibility: EnumsExports.Visibility.VISIBLE,
+    shapeFatWireframeVisibility: EnumsExports.Visibility.VISIBLE,
+    partialFatWireframeVisibility: EnumsExports.Visibility.HIDDEN,
+    shapeViewVisibility: EnumsExports.Visibility.VISIBLE,
+    partialViewVisibility: EnumsExports.Visibility.VISIBLE,
     autocutsWeight: 1,
     delta: 0.5,
     lambda: 0,
@@ -82,13 +83,14 @@ const INITIAL_STATE = {
     gridTextureSize: 8,
     gridLineWidth: 4,
     unitGridVisibility: EnumsExports.Visibility.HIDDEN,
-    soupViewGridTextureVisibility: EnumsExports.Visibility.HIDDEN,
+    partialViewGridTextureVisibility: EnumsExports.Visibility.HIDDEN,
     optimizationDataMonitorVisibility: EnumsExports.Visibility.VISIBLE,
     solverState: EnumsExports.SolverState.OFF,
-    modelFilename: '',
+    shapeFilename: '',
     partialFilename: '',
     moduleFilename: require('path').join(appRoot, 'node-addon.node'),
-    modelState: EnumsExports.LoadState.UNLOADED,
+    shapeState: EnumsExports.LoadState.UNLOADED,
+    partialState: EnumsExports.LoadState.UNLOADED,
     moduleState: EnumsExports.LoadState.UNLOADED,
     objectiveFunctionsProperties: [
         {
@@ -216,55 +218,55 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 splitOrientation: action.orientation
             };
-        case CHANGE_MODEL_VIEWPORT_COLOR:
+        case CHANGE_SHAPE_VIEWPORT_COLOR:
             return {
                 ...state,
-                modelViewportColor: action.color
+                shapeViewportColor: action.color
             };
-        case CHANGE_SOUP_VIEWPORT_COLOR:
+        case CHANGE_PARTIAL_VIEWPORT_COLOR:
             return {
                 ...state,
-                soupViewportColor: action.color
+                partialViewportColor: action.color
             };
-        case CHANGE_MODEL_COLOR:
+        case CHANGE_SHAPE_COLOR:
             return {
                 ...state,
-                modelColor: action.color
+                shapeColor: action.color
             };
-        case CHANGE_SOUP_COLOR:
+        case CHANGE_PARTIAL_COLOR:
             return {
                 ...state,
-                soupColor: action.color
+                partialColor: action.color
             };
-        case CHANGE_MODEL_WIREFRAME_VISIBILITY:
+        case CHANGE_SHAPE_WIREFRAME_VISIBILITY:
             return {
                 ...state,
-                modelWireframeVisibility: action.visibility
+                shapeWireframeVisibility: action.visibility
             };
-        case CHANGE_SOUP_WIREFRAME_VISIBILITY:
+        case CHANGE_PARTIAL_WIREFRAME_VISIBILITY:
             return {
                 ...state,
-                soupWireframeVisibility: action.visibility
+                partialWireframeVisibility: action.visibility
             };
-        case CHANGE_MODEL_FAT_WIREFRAME_VISIBILITY:
+        case CHANGE_SHAPE_FAT_WIREFRAME_VISIBILITY:
             return {
                 ...state,
-                modelFatWireframeVisibility: action.visibility
+                shapeFatWireframeVisibility: action.visibility
             };
-        case CHANGE_SOUP_FAT_WIREFRAME_VISIBILITY:
+        case CHANGE_PARTIAL_FAT_WIREFRAME_VISIBILITY:
             return {
                 ...state,
-                soupFatWireframeVisibility: action.visibility
+                partialFatWireframeVisibility: action.visibility
             };
-        case CHANGE_MODEL_VIEW_VISIBILITY:
+        case CHANGE_SHAPE_VIEW_VISIBILITY:
             return {
                 ...state,
-                modelViewVisibility: action.visibility
+                shapeViewVisibility: action.visibility
             };
-        case CHANGE_SOUP_VIEW_VISIBILITY:
+        case CHANGE_PARTIAL_VIEW_VISIBILITY:
             return {
                 ...state,
-                soupViewVisibility: action.visibility
+                partialViewVisibility: action.visibility
             };
         case CHANGE_AUTOCUTS_WEIGHT:
             return {
@@ -381,10 +383,10 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 unitGridVisibility: action.visibility
             };    
-        case CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY:
+        case CHANGE_PARTIAL_VIEW_GRID_TEXTURE_VISIBILITY:
             return {
                 ...state,
-                soupViewGridTextureVisibility: action.visibility
+                partialViewGridTextureVisibility: action.visibility
             }; 
         case CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY:
             return {
@@ -396,10 +398,10 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 solverState: action.state
             };
-        case CHANGE_MODEL_FILENAME:
+        case CHANGE_SHAPE_FILENAME:
             return {
                 ...state,
-                modelFilename: action.filename
+                shapeFilename: action.filename
             };
         case CHANGE_PARTIAL_FILENAME:
             return {
@@ -411,10 +413,15 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 moduleFilename: action.filename
             };
-        case CHANGE_MODEL_STATE:
+        case CHANGE_SHAPE_STATE:
             return {
                 ...state,
-                modelState: action.state
+                shapeState: action.state
+            };
+        case CHANGE_PARTIAL_STATE:
+            return {
+                ...state,
+                partialState: action.state
             };
         case CHANGE_MODULE_STATE:
             return {

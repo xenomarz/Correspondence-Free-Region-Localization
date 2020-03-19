@@ -8,8 +8,12 @@ export const isSolverOn = (solverState) => {
     return solverState === EnumsExports.SolverState.ON;
 };
 
-export const isModelLoaded = (modelState) => {
-    return modelState === EnumsExports.LoadState.LOADED;
+export const isShapeLoaded = (shapeState) => {
+    return shapeState === EnumsExports.LoadState.LOADED;
+};
+
+export const isPartialLoaded = (partialState) => {
+    return partialState === EnumsExports.LoadState.LOADED;
 };
 
 export const isModuleLoaded = (moduleState) => {

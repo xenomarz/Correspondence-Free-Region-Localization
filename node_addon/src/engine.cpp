@@ -23,10 +23,12 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 	Napi::HandleScope scope(env);
 
 	Napi::Function func = DefineClass(env, "Engine", {
-		InstanceMethod("loadModel", &Engine::LoadModel),
+		InstanceMethod("loadShape", &Engine::LoadShape),
 		InstanceMethod("loadPartial", &Engine::LoadPartial),
 		InstanceMethod("getShapeBufferedVertices", &Engine::GetShapeBufferedVertices),
 		InstanceMethod("getPartialBufferedVertices", &Engine::GetPartialBufferedVertices),
+		InstanceMethod("getShapeBufferedFaces", &Engine::GetShapeBufferedFaces),
+		InstanceMethod("getPartialBufferedFaces", &Engine::GetPartialBufferedFaces),
 	});
 
 	constructor = Napi::Persistent(func);
@@ -193,13 +195,27 @@ Napi::Value Engine::GetShapeBufferedVertices(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
-	return CreateBufferedVerticesArray(env, mesh_wrapper_shape_->GetDomainVertices());
+	return CreateBufferedVerticesArray(env, mesh_wrapper_shape_->GetDomainVertices(), mesh_wrapper_shape_->GetDomainFaces());
 }
 Napi::Value Engine::GetPartialBufferedVertices(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
-	return CreateBufferedVerticesArray(env, mesh_wrapper_partial_->GetDomainVertices());
+	return CreateBufferedVerticesArray(env, mesh_wrapper_partial_->GetDomainVertices(), mesh_wrapper_partial_->GetDomainFaces());
+}
+
+Napi::Value Engine::GetShapeBufferedFaces(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+	return CreateBufferedFacesArray(env, mesh_wrapper_shape_->GetDomainFaces());
+}
+
+Napi::Value Engine::GetPartialBufferedFaces(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+	return CreateBufferedFacesArray(env, mesh_wrapper_partial_->GetDomainFaces());
 }
 
 Napi::Value Engine::GetDomainBufferedUvs(const Napi::CallbackInfo& info)
@@ -889,7 +905,7 @@ Napi::Value Engine::GetObjectiveFunctionsData(const Napi::CallbackInfo& info)
 	return objective_functions_data_array;
 }
 
-Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
+Napi::Value Engine::LoadShape(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);

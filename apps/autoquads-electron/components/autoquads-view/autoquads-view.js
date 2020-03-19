@@ -82,9 +82,11 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         show-grid-texture>
                     </mesh-view>
                     <mesh-view 
-                        id="soup-mesh-view"
-                        class="${classMap(this._soupMeshViewClasses)}"
-                        enable-face-dragging caption="Soup View"
+                        id="partial-mesh-view"
+                        class="${classMap(this._partialMeshViewClasses)}"
+                        use-lights
+                        enable-mesh-rotation
+                        enable-face-dragging caption="Partial View"
                         ?show-unit-grid="${HelpersExports.isVisible(this.unitGridVisibility)}"
                         grid-horizontal-color="${this.gridHorizontalColor}"
                         grid-vertical-color="${this.gridVerticalColor}"
@@ -93,10 +95,10 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         grid-size="${this.gridSize}"
                         grid-texture-size="${this.gridTextureSize}"
                         grid-line-width="${this.gridLineWidth}"
-                        ?show-wireframe="${HelpersExports.isVisible(this.soupWireframeVisibility)}"
-                        ?show-fat-wireframe="${HelpersExports.isVisible(this.soupFatWireframeVisibility)}"
-                        background-color="${this.soupViewportColor}"
-                        mesh-color="${this.soupColor}"
+                        ?show-wireframe="${HelpersExports.isVisible(this.partialWireframeVisibility)}"
+                        ?show-fat-wireframe="${HelpersExports.isVisible(this.partialFatWireframeVisibility)}"
+                        background-color="${this.partialViewportColor}"
+                        mesh-color="${this.partialColor}"
                         .meshProvider="${this._partialMeshProvider}"
                         mesh-interaction="${this.meshInteraction}"
                         highlighted-face-color="${this.highlightedFaceColor}"
@@ -105,7 +107,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         selected-face-color="${this.fixedFaceColor}"
                         selected-edge-color="${this.editedEdgeColor}"
                         ?show-debug-data="${HelpersExports.isVisible(this.optimizationDataMonitorVisibility)}"
-                        show-grid-texture="${this.showGridTextureInSoupView}">
+                        show-grid-texture="${this.showGridTextureInPartialView}">
                     </mesh-view>
                 </vaadin-split-layout>
             </vaadin-split-layout>
@@ -126,9 +128,9 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: String,
                 attribute: 'shape-viewport-color'
             },
-            soupViewportColor: {
+            partialViewportColor: {
                 type: String,
-                attribute: 'soup-viewport-color'
+                attribute: 'partial-viewport-color'
             },
             shapeColor: {
                 type: String,
@@ -142,25 +144,25 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: String,
                 attribute: 'shape-wireframe-visibility'
             },
-            soupWireframeVisibility: {
+            partialWireframeVisibility: {
                 type: String,
-                attribute: 'soup-wireframe-visibility'
+                attribute: 'partial-wireframe-visibility'
             },
             shapeFatWireframeVisibility: {
                 type: String,
                 attribute: 'shape-fat-wireframe-visibility'
             },
-            soupFatWireframeVisibility: {
+            partialFatWireframeVisibility: {
                 type: String,
-                attribute: 'soup-fat-wireframe-visibility'
+                attribute: 'partial-fat-wireframe-visibility'
             },            
             shapeViewVisibility: {
                 type: String,
                 attribute: 'shape-view-visibility'
             },
-            soupViewVisibility: {
+            partialViewVisibility: {
                 type: String,
-                attribute: 'soup-view-visibility'
+                attribute: 'partial-view-visibility'
             },
             autocutsWeight: {
                 type: Number,
@@ -254,9 +256,9 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: String,
                 attribute: 'unit-grid-visibility'
             },
-            soupViewGridTextureVisibility: {
+            partialViewGridTextureVisibility: {
                 type: String,
-                attribute: 'soup-view-grid-texture-visibility'
+                attribute: 'partial-view-grid-texture-visibility'
             },
             optimizationDataMonitorVisibility: {
                 type: String,
@@ -265,10 +267,6 @@ export class AutoquadsView extends connect(store)(LitElement) {
             solverState: {
                 type: String,
                 attribute: 'solver-state'
-            },  
-            model: {
-                type: Object,
-                attribute: 'model'
             },  
             module: {
                 type: Object,
@@ -361,7 +359,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
     set partialColor(value) {
         const oldValue = this._partialColor;
         this._partialColor = value;
-        this._partialColorMeshProvider.meshColor = this._partialColor;
+        this._partialMeshProvider.meshColor = this._partialColor;
         this.requestUpdate('partialColor', oldValue);
     }
 
@@ -379,14 +377,14 @@ export class AutoquadsView extends connect(store)(LitElement) {
         return this._shapeWireframeVisibility;        
     }
 
-    set soupWireframeVisibility(value) {
-        const oldValue = this._soupWireframeVisibility;
-        this._soupWireframeVisibility = value;
-        this.requestUpdate('soupWireframeVisibility', oldValue);
+    set partialWireframeVisibility(value) {
+        const oldValue = this._partialWireframeVisibility;
+        this._partialWireframeVisibility = value;
+        this.requestUpdate('partialWireframeVisibility', oldValue);
     }
 
-    get soupWireframeVisibility() {
-        return this._soupWireframeVisibility;        
+    get partialWireframeVisibility() {
+        return this._partialWireframeVisibility;        
     }
 
     set optimizationDataMonitorVisibility(value) {
@@ -412,27 +410,27 @@ export class AutoquadsView extends connect(store)(LitElement) {
         return this._shapeViewVisibility;
     }
 
-    set soupViewVisibility(value) {
-        const oldValue = this._soupViewVisibility;
-        this._soupViewVisibility = value;
-        this._soupMeshViewClasses = {
+    set partialViewVisibility(value) {
+        const oldValue = this._partialViewVisibility;
+        this._partialViewVisibility = value;
+        this._partialMeshViewClasses = {
             hidden: !HelpersExports.isVisible(value)
         }
-        this.requestUpdate('soupViewVisibility', oldValue);        
+        this.requestUpdate('partialViewVisibility', oldValue);        
     }
 
-    get soupViewVisibility() {
-        return this._soupViewVisibility;
+    get partialViewVisibility() {
+        return this._partialViewVisibility;
     }
 
     set autocutsWeight(value) {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            const oldValue = this._autocutsWeight;
-            this._autocutsWeight = value;
-            this._engine.setObjectiveFunctionProperty('Separation', 'weight', '', this.autocutsWeight * this.lambda);
-            this._engine.setObjectiveFunctionProperty('Symmetric Dirichlet', 'weight', '', this.autocutsWeight * (1 - this.lambda));
-            this.requestUpdate('autocutsWeight', oldValue);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     const oldValue = this._autocutsWeight;
+        //     this._autocutsWeight = value;
+        //     this._engine.setObjectiveFunctionProperty('Separation', 'weight', '', this.autocutsWeight * this.lambda);
+        //     this._engine.setObjectiveFunctionProperty('Symmetric Dirichlet', 'weight', '', this.autocutsWeight * (1 - this.lambda));
+        //     this.requestUpdate('autocutsWeight', oldValue);
+        // }
     }
 
     get autocutsWeight() {
@@ -440,138 +438,138 @@ export class AutoquadsView extends connect(store)(LitElement) {
     }   
 
     set delta(value) {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            const oldValue = this._delta;
-            this._delta = value;
-            this._engine.setObjectiveFunctionProperty('Separation', 'delta', '', value);
-            this.requestUpdate('delta', oldValue);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     const oldValue = this._delta;
+        //     this._delta = value;
+        //     this._engine.setObjectiveFunctionProperty('Separation', 'delta', '', value);
+        //     this.requestUpdate('delta', oldValue);
+        // }
     }
 
     get delta() {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Separation', 'delta', 'none', '');
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     return this._engine.getObjectiveFunctionProperty('Separation', 'delta', 'none', '');
+        // }
     }
 
     set lambda(value) {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            const oldValue = this._lambda;
-            this._lambda = value;
-            this._engine.setObjectiveFunctionProperty('Separation', 'weight', '', this.autocutsWeight * value);
-            this._engine.setObjectiveFunctionProperty('Symmetric Dirichlet', 'weight', '', this.autocutsWeight * (1 - value));
-            this.requestUpdate('lambda', oldValue);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     const oldValue = this._lambda;
+        //     this._lambda = value;
+        //     this._engine.setObjectiveFunctionProperty('Separation', 'weight', '', this.autocutsWeight * value);
+        //     this._engine.setObjectiveFunctionProperty('Symmetric Dirichlet', 'weight', '', this.autocutsWeight * (1 - value));
+        //     this.requestUpdate('lambda', oldValue);
+        // }
     }
 
     get lambda() {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Separation', 'weight', 'none', '');
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     return this._engine.getObjectiveFunctionProperty('Separation', 'weight', 'none', '');
+        // }
     }
 
     set zeta(value) {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            const oldValue = this._zeta;
-            this._zeta = value;
-            this._engine.setObjectiveFunctionProperty('Seamless', 'zeta', '', value);
-            this.requestUpdate('zeta', oldValue);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     const oldValue = this._zeta;
+        //     this._zeta = value;
+        //     this._engine.setObjectiveFunctionProperty('Seamless', 'zeta', '', value);
+        //     this.requestUpdate('zeta', oldValue);
+        // }
     }
 
     get zeta() {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Seamless', 'zeta', 'none', '');
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     return this._engine.getObjectiveFunctionProperty('Seamless', 'zeta', 'none', '');
+        // }
     }    
 
     set seamlessWeight(value) {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            const oldValue = this._seamlessWeight;
-            this._seamlessWeight = value;
-            this._engine.setObjectiveFunctionProperty('Seamless', 'weight', '', value);
-            this.requestUpdate('seamlessWeight', oldValue);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     const oldValue = this._seamlessWeight;
+        //     this._seamlessWeight = value;
+        //     this._engine.setObjectiveFunctionProperty('Seamless', 'weight', '', value);
+        //     this.requestUpdate('seamlessWeight', oldValue);
+        // }
     }
 
     get seamlessWeight() {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Seamless', 'weight', 'none', '');
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     return this._engine.getObjectiveFunctionProperty('Seamless', 'weight', 'none', '');
+        // }
     }
 
     set selectedEdgeSeamlessAngleWeight(value) {
-        if(HelpersExports.isModuleLoaded(this.moduleState) && this._selectedEdge !== null) {
-            const oldValue = this._selectedEdgeSeamlessAngleWeight;
-            this._selectedEdgeSeamlessAngleWeight = value;
-            this._engine.setObjectiveFunctionProperty('Seamless', 'edge_angle_weight', this._selectedEdge.id, value);
-            this.requestUpdate('selectedEdgeSeamlessAngleWeight', oldValue);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState) && this._selectedEdge !== null) {
+        //     const oldValue = this._selectedEdgeSeamlessAngleWeight;
+        //     this._selectedEdgeSeamlessAngleWeight = value;
+        //     this._engine.setObjectiveFunctionProperty('Seamless', 'edge_angle_weight', this._selectedEdge.id, value);
+        //     this.requestUpdate('selectedEdgeSeamlessAngleWeight', oldValue);
+        // }
     }
 
     get selectedEdgeSeamlessAngleWeight() {
-        if(HelpersExports.isModuleLoaded(this.moduleState) && this._selectedEdge !== null) {
-            return this._engine.getObjectiveFunctionProperty('Seamless', 'edge_angle_weight', 'none', this._selectedEdge.id);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState) && this._selectedEdge !== null) {
+        //     return this._engine.getObjectiveFunctionProperty('Seamless', 'edge_angle_weight', 'none', this._selectedEdge.id);
+        // }
     }
 
     set selectedEdgeSeamlessLengthWeight(value) {
-        if(HelpersExports.isModuleLoaded(this.moduleState) && this._selectedEdge !== null) {
-            const oldValue = this._selectedEdgeSeamlessLengthWeight;
-            this._selectedEdgeSeamlessLengthWeight = value;
-            this._engine.setObjectiveFunctionProperty('Seamless', 'edge_length_weight', this._selectedEdge.id, value);
-            this.requestUpdate('selectedEdgeSeamlessLengthWeight', oldValue);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState) && this._selectedEdge !== null) {
+        //     const oldValue = this._selectedEdgeSeamlessLengthWeight;
+        //     this._selectedEdgeSeamlessLengthWeight = value;
+        //     this._engine.setObjectiveFunctionProperty('Seamless', 'edge_length_weight', this._selectedEdge.id, value);
+        //     this.requestUpdate('selectedEdgeSeamlessLengthWeight', oldValue);
+        // }
     }
 
     get selectedEdgeSeamlessLengthWeight() {
-        if(HelpersExports.isModuleLoaded(this.moduleState) && this._selectedEdge !== null) {
-            return this._engine.getObjectiveFunctionProperty('Seamless', 'edge_length_weight', 'none', this._selectedEdge.id);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState) && this._selectedEdge !== null) {
+        //     return this._engine.getObjectiveFunctionProperty('Seamless', 'edge_length_weight', 'none', this._selectedEdge.id);
+        // }
     }
 
     set singularityWeight(value) {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            const oldValue = this._singularityWeight;
-            this._singularityWeight = value;
-            this._engine.setObjectiveFunctionProperty('Singular Points Position', 'weight', '', value / 2);
-            this.requestUpdate('singularityWeight', oldValue);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     const oldValue = this._singularityWeight;
+        //     this._singularityWeight = value;
+        //     this._engine.setObjectiveFunctionProperty('Singular Points Position', 'weight', '', value / 2);
+        //     this.requestUpdate('singularityWeight', oldValue);
+        // }
     }
 
     get singularityWeight() {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Singular Points Position', 'weight', 'none', '');
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     return this._engine.getObjectiveFunctionProperty('Singular Points Position', 'weight', 'none', '');
+        // }
     }
 
     set singularityInterval(value) {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            const oldValue = this._singularityInterval;
-            this._singularityInterval = value;
-            this._engine.setObjectiveFunctionProperty('Singular Points Position', 'interval', '', value);
-            this._engine.setObjectiveFunctionProperty('Seamless', 'translation_interval', '', value);
-            this.requestUpdate('singularityInterval', oldValue);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     const oldValue = this._singularityInterval;
+        //     this._singularityInterval = value;
+        //     this._engine.setObjectiveFunctionProperty('Singular Points Position', 'interval', '', value);
+        //     this._engine.setObjectiveFunctionProperty('Seamless', 'translation_interval', '', value);
+        //     this.requestUpdate('singularityInterval', oldValue);
+        // }
     }
 
     get singularityInterval() {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            return this._engine.getObjectiveFunctionProperty('Singular Points Position', 'interval', 'none', '');
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     return this._engine.getObjectiveFunctionProperty('Singular Points Position', 'interval', 'none', '');
+        // }
     }
 
     set positionWeight(value) {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            const oldValue = this._positionWeight;
-            this._positionWeight = value;
-            this._engine.positionWeight = value;
-            this.requestUpdate('positionWeight', oldValue);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     const oldValue = this._positionWeight;
+        //     this._positionWeight = value;
+        //     this._engine.positionWeight = value;
+        //     this.requestUpdate('positionWeight', oldValue);
+        // }
     }
 
     get positionWeight() {
-        return this._positionWeight;
+        // return this._positionWeight;
     }
 
     set gridHorizontalColor(value) {
@@ -704,14 +702,14 @@ export class AutoquadsView extends connect(store)(LitElement) {
         return this._unitGridVisibility;
     } 
     
-    set soupViewGridTextureVisibility(value) {
-        const oldValue = this._soupViewGridTextureVisibility;
-        this._soupViewGridTextureVisibility = value;
-        this.requestUpdate('soupViewGridTextureVisibility', oldValue);
+    set partialViewGridTextureVisibility(value) {
+        const oldValue = this._partialViewGridTextureVisibility;
+        this._partialViewGridTextureVisibility = value;
+        this.requestUpdate('partialViewGridTextureVisibility', oldValue);
     }
 
-    get soupViewGridTextureVisibility() {
-        return this._soupViewGridTextureVisibility;
+    get partialViewGridTextureVisibility() {
+        return this._partialViewGridTextureVisibility;
     } 
 
     set optimizationDataMonitorVisibility(value) {
@@ -725,23 +723,23 @@ export class AutoquadsView extends connect(store)(LitElement) {
     } 
 
     set solverState(value) {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            const oldValue = this._solverState;
-            this._solverState = value;
-            switch(this._solverState) {
-                case EnumsExports.SolverState.ON:
-                    this._engine.resumeSolver();
-                    break;
-                case EnumsExports.SolverState.OFF:
-                    this._engine.pauseSolver();
-                    break;                
-            }
-            this.requestUpdate('solverState', oldValue);
-        }
+        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
+        //     const oldValue = this._solverState;
+        //     this._solverState = value;
+        //     switch(this._solverState) {
+        //         case EnumsExports.SolverState.ON:
+        //             this._engine.resumeSolver();
+        //             break;
+        //         case EnumsExports.SolverState.OFF:
+        //             this._engine.pauseSolver();
+        //             break;                
+        //     }
+        //     this.requestUpdate('solverState', oldValue);
+        // }
     }
 
     get solverState() {
-        return this._solverState;
+        // return this._solverState;
     }
 
     set shapeFilename(value) {
@@ -833,7 +831,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             store.dispatch(ActionsExports.setShapeState(EnumsExports.LoadState.LOADING));
             try {
-                this._engine.loadModel(shapeFilename);
+                this._engine.loadShape(shapeFilename);
                 this._shapeMeshProvider = new AutoquadsShapeMeshProvider(this._engine, this.shapeColor); 
                 console.log("Shape loaded: " + shapeFilename);
                 store.dispatch(ActionsExports.setShapeState(EnumsExports.LoadState.LOADED));
@@ -851,7 +849,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
             store.dispatch(ActionsExports.setPartialState(EnumsExports.LoadState.LOADING));
             try {
-                this._engine.loadModel(partialFilename);
+                this._engine.loadPartial(partialFilename);
                 this._partialMeshProvider = new AutoquadsPartialMeshProvider(this._engine, this.partialColor);
                 console.log("Partial loaded: " + partialFilename);
                 store.dispatch(ActionsExports.setPartialState(EnumsExports.LoadState.LOADED));

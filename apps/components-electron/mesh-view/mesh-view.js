@@ -99,7 +99,7 @@ export class MeshView extends LitElement {
                         <span>${this.caption}</span>
                     </div>
                     <!-- TODO: extract the debug-data markup into an external custom element -->
-                    ${this.showDebugData ? html`
+                    <!-- ${this.showDebugData ? html`
                         <div class="debug-data">
                             ${this.debugData.map(item => html`
                                 <div class="debug-data-item">
@@ -119,7 +119,7 @@ export class MeshView extends LitElement {
                                 </div>
                             `)}
                         </div>
-                    `: ''}
+                    `: ''} -->
                 </div>
             </div>
         `;
@@ -277,8 +277,8 @@ export class MeshView extends LitElement {
         this._createMaterials();
         this._createScene();
         this._createOrbitControl();
-        this._createRaycaster();
-        this._createGrid();
+        // this._createRaycaster();
+        // this._createGrid();
     }
 
     /**
@@ -289,13 +289,13 @@ export class MeshView extends LitElement {
         if(oldValue !== value) {
             this._meshProvider = value;
             this._clearSceneSubtree(this._scene);
-            this._initializeTextures();
+            // this._initializeTextures();
             this._initializeLights();
             this._initializeMesh();
-            this._initializeMeshEdges();
+            // this._initializeMeshEdges();
             this._initializeMeshWireframe();
-            this._initializePointcloud();
-            this._initializeGrid();
+            // this._initializePointcloud();
+            // this._initializeGrid();
             this.requestUpdate('meshProvider', oldValue);
         }
     }
@@ -628,7 +628,7 @@ export class MeshView extends LitElement {
         let geometry = new THREE.BufferGeometry();
 
         geometry.addAttribute('position', new THREE.BufferAttribute(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.TRIANGLE), 3));
-        geometry.addAttribute('uv', new THREE.BufferAttribute(this.meshProvider.getBufferedUvs(), 2));
+        // geometry.addAttribute('uv', new THREE.BufferAttribute(this.meshProvider.getBufferedUvs(), 2));
         geometry.addAttribute('color', new THREE.BufferAttribute(this.meshProvider.getBufferedVertexColors(), 3, true));
 
         let material;
@@ -644,9 +644,9 @@ export class MeshView extends LitElement {
 
         material.color = this.meshProvider.meshColor;
 
-        if (this.showGridTexture) {
-            material.map = this._gridTexture;
-        }
+        // if (this.showGridTexture) {
+        //     material.map = this._gridTexture;
+        // }
 
         geometry.computeVertexNormals();
 
@@ -845,114 +845,114 @@ export class MeshView extends LitElement {
      * Mouse & keyboard handlers
      */
     _mouseDownHandler(e) {
-        e.preventDefault();
-        if (e.button === 0) {
-            if (this._interactionService.state.value === 'idle' && this.enableFaceDragging) {
-                if (this._faceIntersection) {
-                    this._publishFaceMessage('mesh-view-face-down', this._faceIntersection.face);  
-                }
-            }
-        }
+        // e.preventDefault();
+        // if (e.button === 0) {
+        //     if (this._interactionService.state.value === 'idle' && this.enableFaceDragging) {
+        //         if (this._faceIntersection) {
+        //             this._publishFaceMessage('mesh-view-face-down', this._faceIntersection.face);  
+        //         }
+        //     }
+        // }
     }     
 
     _mouseEnterHandler(e) {
-        e.preventDefault();
-        this._mouseInCanvas = true;
+        // e.preventDefault();
+        // this._mouseInCanvas = true;
     }
 
     _mouseLeaveHandler(e) {
-        e.preventDefault();
-        switch (this._interactionService.state.value) {
-            case 'faceDragging':
-                this._interactionService.send('END_FACE_DRAGGING');
-                break;
-        }
+        // e.preventDefault();
+        // switch (this._interactionService.state.value) {
+        //     case 'faceDragging':
+        //         this._interactionService.send('END_FACE_DRAGGING');
+        //         break;
+        // }
 
-        this._mouseInCanvas = false;
-        if (this._faceIntersection) {
-            this._resetHighlightedFace();
-            this._publishFaceMessage('mesh-view-face-unhighlighted');  
-        }
+        // this._mouseInCanvas = false;
+        // if (this._faceIntersection) {
+        //     this._resetHighlightedFace();
+        //     this._publishFaceMessage('mesh-view-face-unhighlighted');  
+        // }
 
-        this._faceIntersection = null;
-        this._vertexIntersection = null;
+        // this._faceIntersection = null;
+        // this._vertexIntersection = null;
     }
 
     _mouseMoveHandler(e) {
-        e.preventDefault();
-        this._setRaycasterWithPixel(e.offsetX, e.offsetY);
-        if (this._interactionService.state.value === 'idle') {
-            if (this._faceIntersection) {
-                if (e.buttons === 1 && this.enableFaceDragging) {
-                    this._draggedFace = this._faceIntersection.face;
-                    this._interactionService.send('BEGIN_FACE_DRAGGING');
-                }
-            }
-        } else if (this._interactionService.state.value === 'faceDragging') {
-            this._updateDragOffset();
-        }
+        // e.preventDefault();
+        // this._setRaycasterWithPixel(e.offsetX, e.offsetY);
+        // if (this._interactionService.state.value === 'idle') {
+        //     if (this._faceIntersection) {
+        //         if (e.buttons === 1 && this.enableFaceDragging) {
+        //             this._draggedFace = this._faceIntersection.face;
+        //             this._interactionService.send('BEGIN_FACE_DRAGGING');
+        //         }
+        //     }
+        // } else if (this._interactionService.state.value === 'faceDragging') {
+        //     this._updateDragOffset();
+        // }
     }
 
     _mouseUpHandler(e) {
-        e.preventDefault();
-        this._setRaycasterWithPixel(e.offsetX, e.offsetY);
-        if (e.button === 0) {
-            switch (this._interactionService.state.value) {
-                case 'faceDragging':
-                    this._interactionService.send('END_FACE_DRAGGING');
-                    break;
-            }
-        }
+        // e.preventDefault();
+        // this._setRaycasterWithPixel(e.offsetX, e.offsetY);
+        // if (e.button === 0) {
+        //     switch (this._interactionService.state.value) {
+        //         case 'faceDragging':
+        //             this._interactionService.send('END_FACE_DRAGGING');
+        //             break;
+        //     }
+        // }
     }     
 
     _mouseClickHandler(e) {
-        e.preventDefault();
-        if (this._interactionService.state.value === 'vertexSelection') {
-            if (this._vertexIntersection) {
-                if (this._selectedVerticesPoints[this._vertexIntersection.vertexId]) {
-                    this._unselectVertex(this._vertexIntersection.vertexId);
-                    PubSub.publish('mesh-view-vertex-unselected', {
-                        vertexId: this._vertexIntersection.vertexId,
-                        meshViewId: this.id
-                    });
-                } else {
-                    this._selectVertex(this._vertexIntersection.vertexId, this._vertexIntersection.vertex);
-                    PubSub.publish('mesh-view-vertex-selected', {
-                        vertexId: this._vertexIntersection.vertexId,
-                        meshViewId: this.id
-                    });
-                }
-            }
-        } else if (this._interactionService.state.value === 'elementSelection') {
-            if(this._edgeIntersection) {
-                if (this._selectedEdges[this._edgeIntersection.edge.id]) {
-                    this._unselectEdge(this._edgeIntersection.edge);
-                    this._publishEdgeMessage('mesh-view-edge-unselected', this._edgeIntersection.edge);  
-                } else {
-                    this._selectEdge(this._edgeIntersection.edge);
-                    this._publishEdgeMessage('mesh-view-edge-selected', this._edgeIntersection.edge);  
-                }
-            } else if (this._faceIntersection) {
-                if (this._selectedFaces[this._faceIntersection.face.id]) {
-                    this._unselectFace(this._faceIntersection.face);
-                    this._publishFaceMessage('mesh-view-face-unselected', this._faceIntersection.face);  
-                } else {
-                    this._selectFace(this._faceIntersection.face);
-                    this._publishFaceMessage('mesh-view-face-selected', this._faceIntersection.face);  
-                }
-            }
-        }
+        // e.preventDefault();
+        // if (this._interactionService.state.value === 'vertexSelection') {
+        //     if (this._vertexIntersection) {
+        //         if (this._selectedVerticesPoints[this._vertexIntersection.vertexId]) {
+        //             this._unselectVertex(this._vertexIntersection.vertexId);
+        //             PubSub.publish('mesh-view-vertex-unselected', {
+        //                 vertexId: this._vertexIntersection.vertexId,
+        //                 meshViewId: this.id
+        //             });
+        //         } else {
+        //             this._selectVertex(this._vertexIntersection.vertexId, this._vertexIntersection.vertex);
+        //             PubSub.publish('mesh-view-vertex-selected', {
+        //                 vertexId: this._vertexIntersection.vertexId,
+        //                 meshViewId: this.id
+        //             });
+        //         }
+        //     }
+        // } else if (this._interactionService.state.value === 'elementSelection') {
+        //     if(this._edgeIntersection) {
+        //         if (this._selectedEdges[this._edgeIntersection.edge.id]) {
+        //             this._unselectEdge(this._edgeIntersection.edge);
+        //             this._publishEdgeMessage('mesh-view-edge-unselected', this._edgeIntersection.edge);  
+        //         } else {
+        //             this._selectEdge(this._edgeIntersection.edge);
+        //             this._publishEdgeMessage('mesh-view-edge-selected', this._edgeIntersection.edge);  
+        //         }
+        //     } else if (this._faceIntersection) {
+        //         if (this._selectedFaces[this._faceIntersection.face.id]) {
+        //             this._unselectFace(this._faceIntersection.face);
+        //             this._publishFaceMessage('mesh-view-face-unselected', this._faceIntersection.face);  
+        //         } else {
+        //             this._selectFace(this._faceIntersection.face);
+        //             this._publishFaceMessage('mesh-view-face-selected', this._faceIntersection.face);  
+        //         }
+        //     }
+        // }
     }
 
     _contextMenuHandler(e) {
-        e.preventDefault();
-        if (this._interactionService.state.value === 'faceDragging') {
-            this._selectFace(this._faceIntersection.face);
-            this._publishFaceMessage('mesh-view-face-selected', this._faceIntersection.face);  
-            setTimeout(0, () => {
-                this._interactionService.send('END_FACE_DRAGGING');
-            });
-        }
+        // e.preventDefault();
+        // if (this._interactionService.state.value === 'faceDragging') {
+        //     this._selectFace(this._faceIntersection.face);
+        //     this._publishFaceMessage('mesh-view-face-selected', this._faceIntersection.face);  
+        //     setTimeout(0, () => {
+        //         this._interactionService.send('END_FACE_DRAGGING');
+        //     });
+        // }
     }
 
     _keyDownHandler(e) {
@@ -1384,7 +1384,7 @@ export class MeshView extends LitElement {
         /**
          * Update debug data
          */
-        this._updateDebugData();
+        // this._updateDebugData();
 
         /**
          * Handle window reesize
@@ -1402,63 +1402,63 @@ export class MeshView extends LitElement {
         /**
          * Handle intersections
          */
-        if (this._interactionService.state.value !== 'faceDragging' && this._mouseInCanvas) {
-            this._faceIntersection = this._getFaceIntersection();
-            this._edgeIntersection = null;
-            this._edgeIntersections = this._getEdgeIntersections();
-            this._vertexIntersection = this._getVertexIntersection();
+        // if (this._interactionService.state.value !== 'faceDragging' && this._mouseInCanvas) {
+        //     this._faceIntersection = this._getFaceIntersection();
+        //     this._edgeIntersection = null;
+        //     this._edgeIntersections = this._getEdgeIntersections();
+        //     this._vertexIntersection = this._getVertexIntersection();
 
-            // Give priority to edge intersections
-            if(this._edgeIntersections.length > 0) {
-                let adjacencyList;
-                if(this._faceIntersection) {
-                    let faceIndex = this._faceIntersection.faceIndex;
-                    adjacencyList = this.meshProvider.faceEdgeAdjacency[faceIndex];
-                }
-                else {
-                    let edgeIntersection = this._edgeIntersections[0];
-                    let intersectedEdgeIndex = edgeIntersection.index / 2;
-                    adjacencyList = [intersectedEdgeIndex];
-                }
+        //     // Give priority to edge intersections
+        //     if(this._edgeIntersections.length > 0) {
+        //         let adjacencyList;
+        //         if(this._faceIntersection) {
+        //             let faceIndex = this._faceIntersection.faceIndex;
+        //             adjacencyList = this.meshProvider.faceEdgeAdjacency[faceIndex];
+        //         }
+        //         else {
+        //             let edgeIntersection = this._edgeIntersections[0];
+        //             let intersectedEdgeIndex = edgeIntersection.index / 2;
+        //             adjacencyList = [intersectedEdgeIndex];
+        //         }
        
-                if(adjacencyList) {
-                    for(let i = 0; i < this._edgeIntersections.length; i++) {
-                        let edgeIntersection = this._edgeIntersections[i];
-                        let intersectedEdgeIndex = edgeIntersection.index / 2;
-                        let baseEntryIndex = 2 * intersectedEdgeIndex;
-                        let intersectedEdge = {
-                            id: intersectedEdgeIndex,
-                            a: baseEntryIndex,
-                            b: baseEntryIndex + 1
-                        };
+        //         if(adjacencyList) {
+        //             for(let i = 0; i < this._edgeIntersections.length; i++) {
+        //                 let edgeIntersection = this._edgeIntersections[i];
+        //                 let intersectedEdgeIndex = edgeIntersection.index / 2;
+        //                 let baseEntryIndex = 2 * intersectedEdgeIndex;
+        //                 let intersectedEdge = {
+        //                     id: intersectedEdgeIndex,
+        //                     a: baseEntryIndex,
+        //                     b: baseEntryIndex + 1
+        //                 };
 
-                        if(adjacencyList.includes(intersectedEdgeIndex)) {
-                            this._resetHighlightedFace();
-                            this._setHighlightedEdge(intersectedEdge);
-                            this._edgeIntersection = {
-                                edge: intersectedEdge
-                            };
-                            break;
-                        }
-                    }
-                }
-            }
-            else if (this._faceIntersection) {
-                this._resetHighlightedEdge();
-                this._setHighlightedFace(this._faceIntersection.face);
-                this._publishFaceMessage('mesh-view-face-highlighted', this._faceIntersection.face);  
-            } else {
-                this._resetHighlightedFace();
-                this._resetHighlightedEdge();
-                this._publishFaceMessage('mesh-view-face-unhighlighted');        
-            }
-        }
+        //                 if(adjacencyList.includes(intersectedEdgeIndex)) {
+        //                     this._resetHighlightedFace();
+        //                     this._setHighlightedEdge(intersectedEdge);
+        //                     this._edgeIntersection = {
+        //                         edge: intersectedEdge
+        //                     };
+        //                     break;
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     else if (this._faceIntersection) {
+        //         this._resetHighlightedEdge();
+        //         this._setHighlightedFace(this._faceIntersection.face);
+        //         this._publishFaceMessage('mesh-view-face-highlighted', this._faceIntersection.face);  
+        //     } else {
+        //         this._resetHighlightedFace();
+        //         this._resetHighlightedEdge();
+        //         this._publishFaceMessage('mesh-view-face-unhighlighted');        
+        //     }
+        // }
 
         /**
          * Update mesh attributes (position, uv, color)
          */
         this._mesh.geometry.attributes.position.array = this.meshProvider.getBufferedVertices(BufferedPrimitiveType.TRIANGLE);
-        this._mesh.geometry.attributes.uv.array = this.meshProvider.getBufferedUvs();
+        // this._mesh.geometry.attributes.uv.array = this.meshProvider.getBufferedUvs();
         let bufferedVertexColors = this.meshProvider.getBufferedVertexColors();
         this._updateVertexColors();
         this._overrideAttributeArray(this._vertexColors, bufferedVertexColors);
@@ -1467,49 +1467,49 @@ export class MeshView extends LitElement {
         /**
          * Update mesh edges attributes
          */
-        this._meshEdges.geometry.setPositions(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE));
-        let bufferedEdgeColors = this.meshProvider.getBufferedEdgeColors();
-        this._updateEdgeColors();
-        this._overrideAttributeArray(this._edgeColors, bufferedEdgeColors);
-        this._meshEdges.geometry.setColors(bufferedEdgeColors);
-        this._meshEdgesHidden.geometry.attributes.position.array = this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE);
+        // this._meshEdges.geometry.setPositions(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE));
+        // let bufferedEdgeColors = this.meshProvider.getBufferedEdgeColors();
+        // this._updateEdgeColors();
+        // this._overrideAttributeArray(this._edgeColors, bufferedEdgeColors);
+        // this._meshEdges.geometry.setColors(bufferedEdgeColors);
+        // this._meshEdgesHidden.geometry.attributes.position.array = this.meshProvider.getBufferedVertices(BufferedPrimitiveType.EDGE);
 
         /**
          * Apply transformations to underlying geometry
          */
         this._mesh.geometry.applyMatrix(this._mesh.matrix);
-        this._meshEdges.geometry.applyMatrix(this._mesh.matrix);
-        this._meshEdgesHidden.geometry.applyMatrix(this._mesh.matrix);
-        this._pointcloud.geometry.applyMatrix(this._pointcloud.matrix);
+        // this._meshEdges.geometry.applyMatrix(this._mesh.matrix);
+        // this._meshEdgesHidden.geometry.applyMatrix(this._mesh.matrix);
+        // this._pointcloud.geometry.applyMatrix(this._pointcloud.matrix);
 
         /**
          * Set needsUpdate flag
          */
         this._mesh.geometry.attributes.position.needsUpdate = true;
-        this._mesh.geometry.attributes.uv.needsUpdate = true;
+        // this._mesh.geometry.attributes.uv.needsUpdate = true;
         this._mesh.geometry.attributes.color.needsUpdate = true;
-        this._meshEdges.geometry.attributes.position.needsUpdate = true;
-        this._meshEdges.geometry.attributes.instanceColorStart.needsUpdate = true;
-        this._meshEdges.geometry.attributes.instanceColorEnd.needsUpdate = true;
-        this._meshEdgesHidden.geometry.attributes.position.needsUpdate = true;
-        this._pointcloud.geometry.attributes.position.needsUpdate = true;
+        // this._meshEdges.geometry.attributes.position.needsUpdate = true;
+        // this._meshEdges.geometry.attributes.instanceColorStart.needsUpdate = true;
+        // this._meshEdges.geometry.attributes.instanceColorEnd.needsUpdate = true;
+        // this._meshEdgesHidden.geometry.attributes.position.needsUpdate = true;
+        // this._pointcloud.geometry.attributes.position.needsUpdate = true;
         
         /**
          * Remove additional scene objects
          */
-        if(this._additionalSceneObjects) {
-            for(let i = 0; i < this._additionalSceneObjects.length; i++) {
-                this._scene.remove(this._additionalSceneObjects[i]);
-            }
-        }
+        // if(this._additionalSceneObjects) {
+        //     for(let i = 0; i < this._additionalSceneObjects.length; i++) {
+        //         this._scene.remove(this._additionalSceneObjects[i]);
+        //     }
+        // }
 
         /**
          * Add additional scene objects
          */
-        this._additionalSceneObjects = this._meshProvider.getAdditionalSceneObjects();
-        for(let i = 0; i < this._additionalSceneObjects.length; i++) {
-            this._scene.add(this._additionalSceneObjects[i]);
-        }        
+        // this._additionalSceneObjects = this._meshProvider.getAdditionalSceneObjects();
+        // for(let i = 0; i < this._additionalSceneObjects.length; i++) {
+        //     this._scene.add(this._additionalSceneObjects[i]);
+        // }        
 
         /**
          * Render scene and request another animation frame
