@@ -41,6 +41,7 @@ export const CHANGE_SOUP_VIEW_GRID_TEXTURE_VISIBILITY = 'CHANGE_SOUP_VIEW_GRID_T
 export const CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY = 'CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY';
 export const CHANGE_SOLVER_STATE = 'CHANGE_SOLVER_STATE';
 export const CHANGE_MODEL_FILENAME = 'CHANGE_MODEL_FILENAME';
+export const CHANGE_PARTIAL_FILENAME = 'CHANGE_PARTIAL_FILENAME';
 export const CHANGE_MODULE_FILENAME = 'CHANGE_MODULE_FILENAME';
 export const CHANGE_MODEL_STATE = 'CHANGE_MODEL_STATE';
 export const CHANGE_MODULE_STATE = 'CHANGE_MODULE_STATE';
@@ -386,6 +387,13 @@ export const pauseSolver = () => {
 export const loadModelFile = filename => {
     return {
         type: CHANGE_MODEL_FILENAME,
+        filename: filename
+    };
+};
+
+export const loadPartialFile = filename => {
+    return {
+        type: CHANGE_PARTIAL_FILENAME,
         filename: filename
     };
 };

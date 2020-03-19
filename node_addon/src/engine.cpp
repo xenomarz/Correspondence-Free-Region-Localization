@@ -24,43 +24,9 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 
 	Napi::Function func = DefineClass(env, "Engine", {
 		InstanceMethod("loadModel", &Engine::LoadModel),
-		InstanceMethod("resumeSolver", &Engine::ResumeSolver),
-		InstanceMethod("pauseSolver", &Engine::PauseSolver),
-		InstanceMethod("constrainFacePosition", &Engine::ConstrainFacePosition),
-		InstanceMethod("updateConstrainedFacePosition", &Engine::UpdateConstrainedFacePosition),
-		InstanceMethod("unconstrainFacePosition", &Engine::UnconstrainFacePosition),
-		InstanceMethod("getDomainFacesCount", &Engine::GetDomainFacesCount),
-		InstanceMethod("getImageFacesCount", &Engine::GetImageFacesCount),
-		InstanceMethod("getDomainEdgesCount", &Engine::GetDomainEdgesCount),
-		InstanceMethod("getImageEdgesCount", &Engine::GetImageEdgesCount),
-		InstanceMethod("getDomainVerticesCount", &Engine::GetDomainVerticesCount),
-		InstanceMethod("getImageVerticesCount", &Engine::GetImageVerticesCount),
-		InstanceMethod("getDomainFaces", &Engine::GetDomainFaces),
-		InstanceMethod("getImageFaces", &Engine::GetImageFaces),
-		InstanceMethod("getDomainEdges", &Engine::GetDomainEdges),
-		InstanceMethod("getImageEdges", &Engine::GetImageEdges),
-		InstanceMethod("getDomainVertices", &Engine::GetDomainVertices),
-		InstanceMethod("getImageVertices", &Engine::GetImageVertices),
-		InstanceMethod("getDomainBufferedFaces", &Engine::GetDomainBufferedFaces),
-		InstanceMethod("getImageBufferedFaces", &Engine::GetImageBufferedFaces),
-		InstanceMethod("getDomainBufferedEdges", &Engine::GetDomainBufferedEdges),
-		InstanceMethod("getImageBufferedEdges", &Engine::GetImageBufferedEdges),
-		InstanceMethod("getDomainBufferedVertices", &Engine::GetDomainBufferedVertices),
-		InstanceMethod("getImageBufferedVertices", &Engine::GetImageBufferedVertices),
-		InstanceMethod("getDomainBufferedUvs", &Engine::GetDomainBufferedUvs),
-		InstanceMethod("getImageBufferedUvs", &Engine::GetImageBufferedUvs),
-		InstanceMethod("getDomainFaceEdgeAdjacency", &Engine::GetDomainFaceEdgeAdjacency),
-		InstanceMethod("getDomainEdgeFaceAdjacency", &Engine::GetDomainEdgeFaceAdjacency),
-		InstanceMethod("getImageFaceEdgeAdjacency", &Engine::GetImageFaceEdgeAdjacency),
-		InstanceMethod("getImageEdgeFaceAdjacency", &Engine::GetImageEdgeFaceAdjacency),	
-		InstanceMethod("getObjectiveFunctionProperty", &Engine::GetObjectiveFunctionProperty),
-		InstanceMethod("setObjectiveFunctionProperty", &Engine::SetObjectiveFunctionProperty),
-		InstanceMethod("setAlgorithmType", &Engine::SetAlgorithmType),
-		InstanceAccessor("positionWeight", &Engine::GetPositionWeight, &Engine::SetPositionWeight),
-		InstanceAccessor("seamlessWeight", &Engine::GetSeamlessWeight, &Engine::SetSeamlessWeight),
-		InstanceAccessor("lambda", &Engine::GetLambda, &Engine::SetLambda),
-		InstanceAccessor("delta", &Engine::GetDelta, &Engine::SetDelta),
-		InstanceAccessor("objectiveFunctionsData", &Engine::GetObjectiveFunctionsData, nullptr)
+		InstanceMethod("loadPartial", &Engine::LoadPartial),
+		InstanceMethod("getShapeBufferedVertices", &Engine::GetShapeBufferedVertices),
+		InstanceMethod("getPartialBufferedVertices", &Engine::GetPartialBufferedVertices),
 	});
 
 	constructor = Napi::Persistent(func);
@@ -72,121 +38,15 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 
 Engine::Engine(const Napi::CallbackInfo& info) : 
 	Napi::ObjectWrap<Engine>(info),
-	mesh_wrapper_(std::make_shared<MeshWrapper>())
+	mesh_wrapper_shape_(std::make_shared<MeshWrapper>()),
+	mesh_wrapper_partial_(std::make_shared<MeshWrapper>())
 {
-	properties_map_.insert({ "value", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Value) });
-	properties_map_.insert({ "value_per_vertex", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::ValuePerVertex) });
-	properties_map_.insert({ "value_per_edge", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::ValuePerEdge) });
-	properties_map_.insert({ "gradient", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Gradient) });
-	properties_map_.insert({ "gradient_norm", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::GradientNorm) });
-	properties_map_.insert({ "hessian", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Hessian) });
-	properties_map_.insert({ "weight", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Weight) });
-	properties_map_.insert({ "name", static_cast<uint32_t>(ObjectiveFunctionBase::Properties::Name) });
-	properties_map_.insert({ "delta", static_cast<uint32_t>(Separation<Eigen::StorageOptions::RowMajor>::Properties::Delta) });
-	properties_map_.insert({ "zeta", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::Zeta) });
-	properties_map_.insert({ "angle_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::AngleValuePerEdge) });
-	properties_map_.insert({ "length_value_per_edge", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::LengthValuePerEdge) });
-	properties_map_.insert({ "edge_angle_weight", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::EdgeAngleWeight) });
-	properties_map_.insert({ "edge_length_weight", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::EdgeLengthWeight) });
-	properties_map_.insert({ "translation_interval", static_cast<uint32_t>(SeamlessObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
-	properties_map_.insert({ "interval", static_cast<uint32_t>(SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>::Properties::Interval) });
-	properties_map_.insert({ "singularity_weight_per_vertex", static_cast<uint32_t>(SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>::Properties::SingularityWeightPerVertex) });
-	properties_map_.insert({ "negative_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>::Properties::NegativeAngularDefectSingularitiesIndices) });
-	properties_map_.insert({ "positive_angular_defect_singularities_indices", static_cast<uint32_t>(SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>::Properties::PositiveAngularDefectSingularitiesIndices) });
+	mesh_wrapper_shape_->RegisterModelLoadedCallback([this]() {
 
-	property_modifiers_map_.insert({ "none", static_cast<uint32_t>(ObjectiveFunctionBase::PropertyModifiers::None) });
-	property_modifiers_map_.insert({ "domain", static_cast<uint32_t>(ObjectiveFunctionBase::PropertyModifiers::Domain) });
-	property_modifiers_map_.insert({ "image", static_cast<uint32_t>(ObjectiveFunctionBase::PropertyModifiers::Image) });
-	
-	empty_data_provider_ = std::make_shared<EmptyDataProvider>(mesh_wrapper_);
-	plain_data_provider_ = std::make_shared<PlainDataProvider>(mesh_wrapper_);
-	
-	// TODO: Expose interface for addition and removal of objective function
-	separation_ = std::make_shared<Separation<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_);
-	symmetric_dirichlet_ = std::make_shared<SymmetricDirichlet<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_);
-	seamless_ = std::make_shared<SeamlessObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_);
-	singular_points_ = std::make_shared<SingularPointsPositionObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_, empty_data_provider_, 1);
-  	position_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, std::string("Position"));
+	});
 
-	objective_functions_.push_back(separation_);
-	objective_functions_.push_back(symmetric_dirichlet_);
-	objective_functions_.push_back(seamless_);
-	objective_functions_.push_back(singular_points_);
-	objective_functions_.push_back(position_);
-	
-	autoquads_objective_functions_.push_back(separation_);
-	autoquads_objective_functions_.push_back(symmetric_dirichlet_);
-	autoquads_objective_functions_.push_back(seamless_);
-	autoquads_objective_functions_.push_back(singular_points_);
+	mesh_wrapper_partial_->RegisterModelLoadedCallback([this]() {
 
-	//autocuts_objective_functions_.push_back(separation_);
-	autocuts_objective_functions_.push_back(symmetric_dirichlet_);
-	autocuts_objective_functions_.push_back(seamless_);
-	autocuts_objective_functions_.push_back(singular_points_);
-	autocuts_objective_functions_.push_back(position_);
-	
-	autocuts_summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, autocuts_objective_functions_, false);
-	autoquads_summation_objective_ = std::make_shared<SummationObjective<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>, Eigen::VectorXd>>(mesh_wrapper_, empty_data_provider_, autoquads_objective_functions_, false);
-	summation_objectives_.push_back(autocuts_summation_objective_);
-	summation_objectives_.push_back(autoquads_summation_objective_);
-	
-	summation_objective_ = autocuts_summation_objective_;
-	
-	mesh_wrapper_->RegisterModelLoadedCallback([this]() {
-		/**
-		 * Initialize objective functions
-		 */
-		face_data_providers_.clear();
-		face_to_face_data_provider_map_.clear();
-		for (auto& face : mesh_wrapper_->GetImageFacesSTL())
-		{
-			auto face_data_provider = std::make_shared<FaceDataProvider>(mesh_wrapper_, face);
-			face_data_providers_.push_back(face_data_provider);
-			face_to_face_data_provider_map_.insert(std::make_pair(face, face_data_provider));
-		}
-
-		const auto edge_pair_descriptors = mesh_wrapper_->GetEdgePairDescriptors();
-		edge_pair_data_providers_.resize(edge_pair_descriptors.size());
-		#pragma omp parallel for
-		for (int64_t i = 0; i < edge_pair_descriptors.size(); i++)
-		{
-			auto edge_pair_descriptor = edge_pair_descriptors[i];
-			const auto edge_pair_data_provider = std::make_shared<EdgePairDataProvider>(mesh_wrapper_, edge_pair_descriptor);
-			edge_pair_data_providers_[i] = edge_pair_data_provider;
-		}
-
-		const auto face_fans = mesh_wrapper_->GetFaceFans();
-		face_fan_data_providers_.resize(face_fans.size());
-		#pragma omp parallel for
-		for (int64_t i = 0; i < face_fans.size(); i++)
-		{
-			auto face_fan = face_fans[i];
-			const auto face_fan_data_provider = std::make_shared<FaceFanDataProvider>(mesh_wrapper_, face_fan);
-			face_fan_data_providers_[i] = face_fan_data_provider;
-		}
-
-		#pragma omp parallel for
-		for (int64_t i = 0; i < edge_pair_data_providers_.size(); i++)
-		{
-			seamless_->AddEdgePairObjectives(edge_pair_data_providers_[i]);
-		}
-
-		#pragma omp parallel for
-		for (int64_t i = 0; i < face_fan_data_providers_.size(); i++)
-		{
-			singular_points_->AddSingularPointObjective(face_fan_data_providers_[i]);
-		}
-
-		autocuts_summation_objective_->Initialize();
-		autoquads_summation_objective_->Initialize();
-		
-		/**
-		 * Create newton method iterator
-		 */
-		auto image_vertices = mesh_wrapper_->GetImageVertices();
-		auto x0 = Eigen::Map<const Eigen::VectorXd>(image_vertices.data(), image_vertices.cols() * image_vertices.rows());
-		newton_method_ = std::make_unique<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>>(summation_objective_, x0);
-		newton_method_->EnableFlipAvoidingLineSearch(mesh_wrapper_->GetImageFaces());
 	});
 }
 
@@ -296,8 +156,6 @@ Napi::Value Engine::GetImageVertices(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	TryUpdateImageVertices();
-
 	return CreateVerticesArray(env, mesh_wrapper_->GetImageVertices());
 }
 
@@ -323,22 +181,31 @@ Napi::Value Engine::GetImageBufferedEdges(const Napi::CallbackInfo& info)
 
 Napi::Value Engine::GetDomainBufferedVertices(const Napi::CallbackInfo& info)
 {
-	TryUpdateImageVertices();
 	return GetBufferedVertices(info, VerticesSource::DOMAIN_VERTICES);
 }
 
 Napi::Value Engine::GetImageBufferedVertices(const Napi::CallbackInfo& info)
 {
-	TryUpdateImageVertices();
 	return GetBufferedVertices(info, VerticesSource::IMAGE_VERTICES);
+}
+
+Napi::Value Engine::GetShapeBufferedVertices(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+	return CreateBufferedVerticesArray(env, mesh_wrapper_shape_->GetDomainVertices());
+}
+Napi::Value Engine::GetPartialBufferedVertices(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+	return CreateBufferedVerticesArray(env, mesh_wrapper_partial_->GetDomainVertices());
 }
 
 Napi::Value Engine::GetDomainBufferedUvs(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
-
-	TryUpdateImageVertices();
 
 	return CreateBufferedUvsArray(env, mesh_wrapper_->GetImageVertices(), mesh_wrapper_->GetImageFaces());
 }
@@ -347,8 +214,6 @@ Napi::Value Engine::GetImageBufferedUvs(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
-
-	TryUpdateImageVertices();
 
 	return CreateBufferedUvsArray(env, mesh_wrapper_->GetImageVertices(), mesh_wrapper_->GetImageFaces());
 }
@@ -1051,7 +916,39 @@ Napi::Value Engine::LoadModel(const Napi::CallbackInfo& info)
 	 */
 	Napi::String value = info[0].As<Napi::String>();
 	std::string model_file_path = std::string(value);
-	mesh_wrapper_->LoadModel(model_file_path);
+	mesh_wrapper_shape_->LoadModel(model_file_path);
+
+	return env.Null();
+}
+
+Napi::Value Engine::LoadPartial(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	/**
+	 * Validate input arguments
+	 */
+	if (info.Length() >= 1)
+	{
+		if (!info[0].IsString())
+		{
+			Napi::TypeError::New(env, "First argument is expected to be a String").ThrowAsJavaScriptException();
+			return Napi::Value();
+		}
+	}
+	else
+	{
+		Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
+		return Napi::Value();
+	}
+
+	/**
+	 * Load model
+	 */
+	Napi::String value = info[0].As<Napi::String>();
+	std::string model_file_path = std::string(value);
+	mesh_wrapper_partial_->LoadModel(model_file_path);
 
 	return env.Null();
 }

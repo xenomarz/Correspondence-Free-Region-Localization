@@ -248,99 +248,12 @@ void MeshWrapper::GenerateRandom2DSoup(const Eigen::MatrixX3i& f_in, Eigen::Matr
 
 void MeshWrapper::GenerateIsometric2DSoup(const Eigen::MatrixX3i& f_in, const Eigen::MatrixX3d& v_in, const ED2EIMap& ed_2_ei, const EI2FIsMap& ei_2_fi, Eigen::MatrixX3i& f_out, Eigen::MatrixX2d& v_out)
 {
-	std::vector<RDS::FaceIndex> stack;
-	GenerateSoupFaces(f_in, f_out);
-	v_out = Eigen::MatrixX2d::Zero(3 * f_out.rows(), 2);
 
-	auto first_triangle = true;
-	stack.push_back(0);
-	while(!stack.empty())
-	{
-		auto current_face_index = stack.back();
-		auto current_face = f_in.row(current_face_index);
-		for (int i = 0; i < 3; i++)
-		{
-			int64_t current_vertex_index = current_face(i);
-			int64_t next_vertex_index = current_face((i + 1) % 3);
-			
-			RDS::EdgeIndex edge_index = ed_2_ei.at(std::make_pair(current_vertex_index , next_vertex_index));
-			auto adjacent_faces = ei_2_fi.at(edge_index);
-			for(auto adjacent_face_index : adjacent_faces)
-			{
-				if(adjacent_face_index != current_face_index)
-				{
-					
-				}
-			}
-		}
-		
-		
-		stack.pop_back();
-		auto adjacent_faces = fi_2_fi_in.at(current_face_index);
-		for(std::size_t i = 0; i < adjacent_faces.size(); i++)
-		{
-			stack.push_back(adjacent_faces[i]);
-		}
-
-		if(first_triangle)
-		{
-			auto face_vertex_indices = f_in.row(current_face_index);
-			const auto v0_index = face_vertex_indices[0];
-			const auto v1_index = face_vertex_indices[1];
-			const auto v2_index = face_vertex_indices[2];
-			auto v0 = v_in.row(v0_index);
-			auto v1 = v_in.row(v1_index);
-			auto v2 = v_in.row(v2_index);
-
-			Eigen::Vector3d axis0_in;
-			Eigen::Vector3d axis1_in;
-			
-			CalculateAxes(v0, v1, v2, axis0_in, axis1_in);
-
-			Eigen::Vector3d vec0 = v1 - v0;
-			Eigen::Vector3d vec1 = v2 - v0;
-
-			Eigen::Vector3d normal_in = v0.cross(v1);
-			normal_in.normalize();
-
-			Eigen::Matrix3d axis_rotation;
-			axis_rotation = Eigen::AngleAxisd(-M_PI / 2, normal_in);
-
-			Eigen::Vector3d axis0_in = vec0.normalized();
-			Eigen::Vector3d axis1_in = (axis_rotation * axis0_in).normalized();
-
-
-			
-			Eigen::Vector3d v0_out = Eigen::Vector3d::Zero();
-		}
-	}
 }
 
 void MeshWrapper::ProjectVertexToPlane(const Eigen::Vector3d& v0_in, const Eigen::Vector3d& v1_in, const Eigen::Vector3d& v2_in, const Eigen::Vector3d& v0_out, const Eigen::Vector3d& v1_out, Eigen::Vector3d& v2_out)
 {
-	const Eigen::Vector3d vec0_in = v1_in - v0_in;
-	const Eigen::Vector3d vec1_in = v2_in - v0_in;
 
-	Eigen::Vector3d rotation_axis_in = vec0_in.cross(vec1_in);
-	rotation_axis_in.normalize();
-
-	Eigen::Matrix3d rotation_in;
-	rotation_in = Eigen::AngleAxisd(-M_PI / 2, rotation_axis_in);
-
-	const Eigen::Vector3d axis0_in = vec0_in.normalized();
-	const Eigen::Vector3d axis1_in = (rotation_in * axis0_in).normalized();
-
-	double axis0_projection = axis0_in.dot(vec1_in);
-	double axis1_projection = axis1_in.dot(vec1_in);
-
-	const Eigen::Vector3d roation_axis_out = Eigen::Vector3d(0, 0, 1);
-	Eigen::Matrix3d rotation_out;
-	rotation_out = Eigen::AngleAxisd(-M_PI / 2, roation_axis_out);
-	const Eigen::Vector3d vec0_out = v1_out - v0_out;
-	const Eigen::Vector3d axis0_out = vec0_out.normalized();
-	const Eigen::Vector3d axis1_out = (rotation_out * axis0_out).normalized();
-
-	v2_out = v0_out + axis0_projection * axis0_out + axis1_projection * axis1_out;
 }
 
 void MeshWrapper::CalculateAxes(const Eigen::Vector3d& v0, const Eigen::Vector3d& v1, const Eigen::Vector3d& v2, Eigen::Vector3d& axis0, Eigen::Vector3d& axis1)

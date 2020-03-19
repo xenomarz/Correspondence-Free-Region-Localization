@@ -38,6 +38,7 @@ import {
     CHANGE_OPTIMIZATION_DATA_MONITOR_VISIBILITY,
     CHANGE_SOLVER_STATE,
     CHANGE_MODEL_FILENAME,
+    CHANGE_PARTIAL_FILENAME,
     CHANGE_MODULE_FILENAME,
     CHANGE_MODEL_STATE,
     CHANGE_MODULE_STATE,
@@ -85,6 +86,7 @@ const INITIAL_STATE = {
     optimizationDataMonitorVisibility: EnumsExports.Visibility.VISIBLE,
     solverState: EnumsExports.SolverState.OFF,
     modelFilename: '',
+    partialFilename: '',
     moduleFilename: require('path').join(appRoot, 'node-addon.node'),
     modelState: EnumsExports.LoadState.UNLOADED,
     moduleState: EnumsExports.LoadState.UNLOADED,
@@ -369,7 +371,6 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 gridTextureSize: action.size
             };
-
         case CHANGE_GRID_LINE_WIDTH:
             return {
                 ...state,
@@ -400,6 +401,11 @@ export const reducer = (state = INITIAL_STATE, action) => {
                 ...state,
                 modelFilename: action.filename
             };
+        case CHANGE_PARTIAL_FILENAME:
+            return {
+                ...state,
+                partialFilename: action.filename
+            };            
         case CHANGE_MODULE_FILENAME:
             return {
                 ...state,
@@ -418,32 +424,12 @@ export const reducer = (state = INITIAL_STATE, action) => {
         case CHANGE_OBJECTIVE_FUNCTION_PROPERTY_COLOR:
             var newState = {
                 ...state
-            }
-
-            newState.objectiveFunctionsProperties = [...newState.objectiveFunctionsProperties];
-            for(let objectiveFunctionProperty of newState.objectiveFunctionsProperties)
-            {
-                if(matchObjectiveFunctionProperty(objectiveFunctionProperty, action)) {
-                    objectiveFunctionProperty.color = action.color;
-                    break;
-                }
-            }
-            
+            }   
             return newState;
         case CHANGE_OBJECTIVE_FUNCTION_PROPERTY_VISIBILITY:
             var newState = {
                 ...state
             }
-
-            newState.objectiveFunctionsProperties = [...newState.objectiveFunctionsProperties];
-            for(let objectiveFunctionProperty of newState.objectiveFunctionsProperties)
-            {
-                if(matchObjectiveFunctionProperty(objectiveFunctionProperty, action)) {
-                    objectiveFunctionProperty.visibility = action.visibility;
-                    break;
-                }
-            }
-
             return newState;
         default:
             return state;

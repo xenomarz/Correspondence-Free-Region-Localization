@@ -65,19 +65,16 @@ export class AutoquadsSideBar extends SideBar {
     render() {
         return html`
             <side-bar-collapsable-section
-                caption="Algorithms">
-                <vaadin-checkbox
-                    ?checked=${HelpersExports.isAutoquadsEnabled(this._algorithmType)}
-                    @change="${this._autoquadsEnabledInputChanged}">
-                    <span>Enable Autoquads</span>
-                </vaadin-checkbox>             
-            </side-bar-collapsable-section>
-            <side-bar-collapsable-section
                 caption="Model Options">
                 <vaadin-button
                     theme="contrast primary"
                     @click="${this._loadModel}">
-                    <span>Load Model...</span>
+                    <span>Load Shape...</span>
+                </vaadin-button>
+                <vaadin-button
+                    theme="contrast primary"
+                    @click="${this._loadModel}">
+                    <span>Load Partial...</span>
                 </vaadin-button>
                 <vaadin-checkbox
                     ?checked=${HelpersExports.isVisible(this._modelWireframeVisibility)}
@@ -103,194 +100,7 @@ export class AutoquadsSideBar extends SideBar {
                     checked>
                     <span>Show Soup Fat Wireframe</span>
                 </vaadin-checkbox>             
-            </side-bar-collapsable-section>
-            <side-bar-collapsable-section
-                caption="Numeric Properties">
-                <side-bar-parameter-input
-                    id="autocuts-weight"
-                    increase-key="f"
-                    decrease-key="g"
-                    value="${this._autocutsWeight}"
-                    min="0"
-                    max="1000000"
-                    step="2"
-                    label="Autocuts Weight"
-                    @value-changed="${this._autocutsWeightInputChanged}">
-                </side-bar-parameter-input>
-                <side-bar-parameter-input
-                    id="lambda"
-                    increase-key="d"
-                    decrease-key="a"
-                    value="${this._lambda}"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    label="Lambda"
-                    @value-changed="${this._lambdaInputChanged}">
-                </side-bar-parameter-input>
-                <side-bar-parameter-input
-                    id="delta"
-                    increase-key="w"
-                    decrease-key="s"
-                    value="${this._delta}"
-                    min="0"
-                    max="1"
-                    step="2"
-                    label="Delta"
-                    @value-changed="${this._deltaInputChanged}"
-                    is-exponential>
-                </side-bar-parameter-input>
-                <side-bar-parameter-input
-                    id="zeta"
-                    increase-key=","
-                    decrease-key="m"
-                    value="${this._zeta}"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    label="Zeta"
-                    @value-changed="${this._zetaInputChanged}">
-                </side-bar-parameter-input>
-                <side-bar-parameter-input
-                    id="seamless-weight"
-                    increase-key="x"
-                    decrease-key="z"
-                    value="${this._seamlessWeight}"
-                    min="0"
-                    max="300"
-                    step="0.01"
-                    label="Seamless Weight"
-                    @value-changed="${this._seamlessWeightInputChanged}">
-                </side-bar-parameter-input>
-                <side-bar-parameter-input
-                    id="singularity-weight"
-                    increase-key="l"
-                    decrease-key="k"
-                    value="${this._singularityWeight}"
-                    min="0"
-                    max="300"
-                    step="0.001"
-                    label="Singularity Weight"
-                    @value-changed="${this._singularityWeightInputChanged}">
-                </side-bar-parameter-input>
-                <side-bar-parameter-input
-                    id="singularity-interval"
-                    increase-key="i"
-                    decrease-key="u"
-                    value="${this._singularityInterval}"
-                    min="0"
-                    max="10000"
-                    step="1.1"
-                    label="Singularity Interval"
-                    @value-changed="${this._singularityIntervalInputChanged}"
-                    is-exponential>
-                </side-bar-parameter-input>
-                <side-bar-parameter-input
-                    id="position-weight"
-                    increase-key="/"
-                    decrease-key="."
-                    value="${this._positionWeight}"
-                    min="0"
-                    max="10000"
-                    step="1"
-                    label="Position Weight"
-                    @value-changed="${this._positionWeightInputChanged}">
-                </side-bar-parameter-input>
-                <side-bar-parameter-input
-                    id="selected-edge-seamless-angle-weight"
-                    increase-key="v"
-                    decrease-key="c"
-                    value="${this._selectedEdgeSeamlessAngleWeight}"
-                    min="0"
-                    max="300"
-                    step="0.01"
-                    label="Seamless Angle Weight (Selected Edge)"
-                    @value-changed="${this._selectedEdgeSeamlessAngleWeightInputChanged}">
-                </side-bar-parameter-input>
-                <side-bar-parameter-input
-                    id="selected-edge-seamless-length-weight"
-                    increase-key="n"
-                    decrease-key="b"
-                    value="${this._selectedEdgeSeamlessLengthWeight}"
-                    min="0"
-                    max="300"
-                    step="0.01"
-                    label="Seamless Length Weight (Selected Edge)"
-                    @value-changed="${this._selectedEdgeSeamlessLengthWeightInputChanged}">
-                </side-bar-parameter-input>
-            </side-bar-collapsable-section>
-            <side-bar-collapsable-section
-                caption="Vertex Visual Properties">
-                ${this.objectiveFunctionsProperties.filter(item => { 
-                    return item.propertyEffectType === EnumsExports.PropertyEffectType.VERTEX_COLOR; 
-                }).map(item => html`
-                    <autoquads-side-bar-objective-function-visual-property
-                        objective-function-id=${item.objectiveFunctionId}
-                        property-id=${item.propertyId}
-                        objective-function-name=${item.objectiveFunctionName}
-                        property-name=${item.propertyName}
-                        color=${item.color}
-                        ?selected=${item.selected}
-                        @color-changed="${this._objectiveFunctionVisualPropertyColorInputChanged}"
-                        @selected-changed="${this._objectiveFunctionVisualPropertyVisibilityInputChanged}">
-                    </autoquads-side-bar-objective-function-visual-property>
-                `)}
-            </side-bar-collapsable-section>
-            <side-bar-collapsable-section
-                caption="Edge Visual Properties">
-                ${this.objectiveFunctionsProperties.filter(item => { 
-                    return item.propertyEffectType === EnumsExports.PropertyEffectType.EDGE_COLOR; 
-                }).map(item => html`
-                    <autoquads-side-bar-objective-function-visual-property
-                        objective-function-id=${item.objectiveFunctionId}
-                        property-id=${item.propertyId}
-                        objective-function-name=${item.objectiveFunctionName}
-                        property-name=${item.propertyName}
-                        color=${item.color}
-                        ?selected=${item.selected}
-                        @color-changed="${this._objectiveFunctionVisualPropertyColorInputChanged}"
-                        @selected-changed="${this._objectiveFunctionVisualPropertyVisibilityInputChanged}">
-                    </autoquads-side-bar-objective-function-visual-property>
-                `)}
-            </side-bar-collapsable-section>           
-            <side-bar-collapsable-section
-                caption="Solver">
-                <paper-toggle-button
-                    class="solver"
-                    ?checked="${HelpersExports.isSolverOn(this.solverState)}"
-                    ?disabled="${!HelpersExports.isModelLoaded(this.modelState)}"
-                    @change="${this._solverStateInputChanged}">
-                    <span>${HelpersExports.solverStateText(this.solverState)}</span>
-                </paper-toggle-button>
-            </side-bar-collapsable-section>
-            <side-bar-collapsable-section
-                caption="Interaction">
-                <side-bar-color-picker
-                    caption="Highlighted Face Color"
-                    color="${this._highlightedFaceColor}"
-                    @color-changed="${this._highlightedFaceColorInputChanged}">
-                </side-bar-color-picker>
-                <side-bar-color-picker
-                    caption="Dragged Face Color"
-                    color="${this._draggedFaceColor}"
-                    @color-changed="${this._draggedFaceColorInputChanged}">
-                </side-bar-color-picker>
-                <side-bar-color-picker
-                    caption="Fixed Face Color"
-                    color="${this._fixedFaceColor}"
-                    @color-changed="${this._fixedFaceColorInputChanged}">
-                </side-bar-color-picker>
-                <side-bar-color-picker
-                    caption="Highlighted Edge Color"
-                    color="${this._highlightedEdgeColor}"
-                    @color-changed="${this._highlightedEdgeColorInputChanged}">
-                </side-bar-color-picker>
-                <side-bar-color-picker
-                    caption="Edited Edge Color"
-                    color="${this._editedEdgeColor}"
-                    @color-changed="${this._editedEdgeColorInputChanged}">
-                </side-bar-color-picker>                
-            </side-bar-collapsable-section>
+            </side-bar-collapsable-section>         
             <side-bar-collapsable-section
                 caption="Viewports">
                 <vaadin-dropdown-menu
@@ -350,52 +160,6 @@ export class AutoquadsSideBar extends SideBar {
                     @change="${this._optimizationDataMonitorVisibilityInputChanged}">
                     <span>Show Optimization Data Monitor</span>
                 </vaadin-checkbox>
-            </side-bar-collapsable-section>
-            <side-bar-collapsable-section
-                caption="Grid">
-                <side-bar-color-picker
-                    color="${this._gridHorizontalColor}"
-                    caption="Horizontal Color"
-                    @color-changed="${this._gridHorizontalColorInputChanged}">
-                </side-bar-color-picker>
-                <side-bar-color-picker
-                    color="${this._gridVerticalColor}"
-                    caption="Vertical Color"
-                    @color-changed="${this._gridVerticalColorInputChanged}"></side-bar-color-picker>
-                <side-bar-color-picker
-                    color="${this._gridBackgroundColor1}"
-                    caption="Background Color 1"
-                    @color-changed="${this._gridBackgroundColor1InputChanged}">
-                </side-bar-color-picker>
-                <side-bar-color-picker
-                    caption="Background Color 2"
-                    color="${this._gridBackgroundColor2}"
-                    @color-changed="${this._gridBackgroundColor2InputChanged}">
-                </side-bar-color-picker>
-                <vaadin-number-field
-                    label="Grid Unit Size (2^exp)"
-                    value="${this._gridSize}"
-                    min="0"
-                    step="1"
-                    always-float-label
-                    @change="${this._gridSizeInputChanged}">
-                </vaadin-number-field>
-                <vaadin-number-field
-                    label="Grid Texture Size (2^exp)"
-                    value="${this._gridTextureSize}"
-                    min="0"
-                    step="1"
-                    always-float-label
-                    @change="${this._gridTextureSizeInputChanged}">
-                </vaadin-number-field>
-                <vaadin-number-field
-                    label="Grid Line Width"
-                    value="${this._gridLineWidth}"
-                    min="0"
-                    step="1"
-                    always-float-label
-                    @change="${this._gridLineWidthInputChanged}">
-                </vaadin-number-field>
             </side-bar-collapsable-section>
         `;
     }
@@ -980,6 +744,16 @@ export class AutoquadsSideBar extends SideBar {
         return this._modelFilename;
     }
 
+    set partialFilename(value) {
+        const oldValue = this._partialFilename;
+        this._partialFilename = value;
+        this.requestUpdate('partialFilename', oldValue);
+    }
+
+    get partialFilename() {
+        return this._partialFilename;
+    }
+
     set modelState(value) {
         const oldValue = this._modelState;
         this._modelState = value;
@@ -1094,6 +868,25 @@ export class AutoquadsSideBar extends SideBar {
         });
 
         store.dispatch(ActionsExports.loadModelFile(files[0])); 
+    }
+
+    _loadPartial() {
+        const { dialog } = require('electron').remote;
+        let files = dialog.showOpenDialogSync({
+            properties: ['openFile'],
+            filters: [
+                {
+                    name: '3D Model Files',
+                    extensions: ['obj', 'off']
+                },
+                {
+                    name: 'All Files',
+                    extensions: ['*']
+                }
+            ]
+        });
+
+        store.dispatch(ActionsExports.loadPartialFile(files[0])); 
     }
 
     _splitOrientationInputChanged(e) {

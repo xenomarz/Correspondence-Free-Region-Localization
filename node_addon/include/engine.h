@@ -132,6 +132,7 @@ private:
 	Napi::Value GetObjectiveFunctionProperty(const Napi::CallbackInfo& info);
 	Napi::Value SetObjectiveFunctionProperty(const Napi::CallbackInfo& info);
 	Napi::Value LoadModel(const Napi::CallbackInfo& info);
+	Napi::Value LoadPartial(const Napi::CallbackInfo& info);
 	Napi::Value ResumeSolver(const Napi::CallbackInfo& info);
 	Napi::Value PauseSolver(const Napi::CallbackInfo& info);
 	Napi::Value SetAlgorithmType(const Napi::CallbackInfo& info);
@@ -139,6 +140,13 @@ private:
 	Napi::Value UpdateConstrainedFacePosition(const Napi::CallbackInfo& info);
 	Napi::Value UnconstrainFacePosition(const Napi::CallbackInfo& info);
 	Napi::Value ReconstrainFacePosition(const Napi::CallbackInfo& info);
+
+
+
+	Napi::Value GetShapeBufferedVertices(const Napi::CallbackInfo& info);
+	Napi::Value GetPartialBufferedVertices(const Napi::CallbackInfo& info);
+
+	
 
 	/**
 	 * Regular private instance methods
@@ -302,8 +310,10 @@ private:
 	 */
 	std::unordered_map<RDS::Face, std::shared_ptr<FacePositionObjective<Eigen::StorageOptions::RowMajor>>, RDS::VectorHash, RDS::VectorEquals> face_to_position_objective_map_;
 	std::unordered_map<RDS::Face, std::shared_ptr<FaceDataProvider>, RDS::VectorHash, RDS::VectorEquals> face_to_face_data_provider_map_;
-	
+
 	std::shared_ptr<MeshWrapper> mesh_wrapper_;
+	std::shared_ptr<MeshWrapper> mesh_wrapper_shape_;
+	std::shared_ptr<MeshWrapper> mesh_wrapper_partial_;
 	
 	std::shared_ptr<PlainDataProvider> plain_data_provider_;
 	std::shared_ptr<EmptyDataProvider> empty_data_provider_;

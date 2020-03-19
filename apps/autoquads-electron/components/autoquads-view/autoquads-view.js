@@ -12,8 +12,8 @@ import { connect } from '../../web_modules/pwa-helpers.js';
 import '../mesh-view/mesh-view.js';
 import '../autoquads-side-bar/autoquads-side-bar.js';
 import { MeshProvider } from '../mesh-provider/mesh-provider.js';
-import { AutoquadsModelMeshProvider } from '../autoquads-model-mesh-provider/autoquads-model-mesh-provider.js';
-import { AutoquadsSoupMeshProvider } from '../autoquads-soup-mesh-provider/autoquads-soup-mesh-provider.js';
+import { AutoquadsShapeMeshProvider } from '../autoquads-shape-mesh-provider/autoquads-shape-mesh-provider.js';
+import { AutoquadsPartialMeshProvider } from '../autoquads-partial-mesh-provider/autoquads-partial-mesh-provider.js';
 import * as ReducerExports from '../../redux/reducer.js';
 import * as ActionsExports from '../../redux/actions.js';
 import * as EnumsExports from '../../redux/enums.js';
@@ -55,12 +55,12 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 <autoquads-side-bar></autoquads-side-bar>
                 <vaadin-split-layout orientation="horizontal" class="inner-split">
                     <mesh-view 
-                        id="model-mesh-view"
-                        class="${classMap(this._modelMeshViewClasses)}"
+                        id="shape-mesh-view"
+                        class="${classMap(this._shapeMeshViewClasses)}"
                         use-lights
                         enable-mesh-rotation
                         enable-vertex-selection
-                        caption="Mesh View"
+                        caption="Shape View"
                         grid-horizontal-color="${this.gridHorizontalColor}"
                         grid-vertical-color="${this.gridVerticalColor}"
                         grid-background-color1="${this.gridBackgroundColor1}"
@@ -68,11 +68,11 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         grid-size="${this.gridSize}"
                         grid-texture-size="${this.gridTextureSize}"
                         grid-line-width="${this.gridLineWidth}"
-                        ?show-wireframe="${HelpersExports.isVisible(this.modelWireframeVisibility)}"
-                        ?show-fat-wireframe="${HelpersExports.isVisible(this.modelFatWireframeVisibility)}"
-                        background-color="${this.modelViewportColor}"
-                        mesh-color="${this.modelColor}"
-                        .meshProvider="${this._modelMeshProvider}"
+                        ?show-wireframe="${HelpersExports.isVisible(this.shapeWireframeVisibility)}"
+                        ?show-fat-wireframe="${HelpersExports.isVisible(this.shapeFatWireframeVisibility)}"
+                        background-color="${this.shapeViewportColor}"
+                        mesh-color="${this.shapeColor}"
+                        .meshProvider="${this._shapeMeshProvider}"
                         mesh-interaction="${this.meshInteraction}"
                         highlighted-face-color="${this.highlightedFaceColor}"
                         highlighted-edge-color="${this.highlightedEdgeColor}"
@@ -97,7 +97,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         ?show-fat-wireframe="${HelpersExports.isVisible(this.soupFatWireframeVisibility)}"
                         background-color="${this.soupViewportColor}"
                         mesh-color="${this.soupColor}"
-                        .meshProvider="${this._soupMeshProvider}"
+                        .meshProvider="${this._partialMeshProvider}"
                         mesh-interaction="${this.meshInteraction}"
                         highlighted-face-color="${this.highlightedFaceColor}"
                         highlighted-edge-color="${this.highlightedEdgeColor}"
@@ -122,41 +122,41 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: String,
                 attribute: 'split-orientation'
             },
-            modelViewportColor: {
+            shapeViewportColor: {
                 type: String,
-                attribute: 'model-viewport-color'
+                attribute: 'shape-viewport-color'
             },
             soupViewportColor: {
                 type: String,
                 attribute: 'soup-viewport-color'
             },
-            modelColor: {
+            shapeColor: {
                 type: String,
-                attribute: 'model-color'
+                attribute: 'shape-color'
             },
-            soupColor: {
+            partialColor: {
                 type: String,
-                attribute: 'soup-color'
+                attribute: 'partial-color'
             },
-            modelWireframeVisibility: {
+            shapeWireframeVisibility: {
                 type: String,
-                attribute: 'model-wireframe-visibility'
+                attribute: 'shape-wireframe-visibility'
             },
             soupWireframeVisibility: {
                 type: String,
                 attribute: 'soup-wireframe-visibility'
             },
-            modelFatWireframeVisibility: {
+            shapeFatWireframeVisibility: {
                 type: String,
-                attribute: 'model-fat-wireframe-visibility'
+                attribute: 'shape-fat-wireframe-visibility'
             },
             soupFatWireframeVisibility: {
                 type: String,
                 attribute: 'soup-fat-wireframe-visibility'
             },            
-            modelViewVisibility: {
+            shapeViewVisibility: {
                 type: String,
-                attribute: 'model-view-visibility'
+                attribute: 'shape-view-visibility'
             },
             soupViewVisibility: {
                 type: String,
@@ -307,10 +307,10 @@ export class AutoquadsView extends connect(store)(LitElement) {
      */
     constructor() {
         super();
-        this._modelMeshProvider = new MeshProvider();
-        this._soupMeshProvider = new MeshProvider();
-        this._modelMeshViewClasses = { hidden: false };
-        this._soupMeshViewClasses = { hidden: false };
+        this._shapeMeshProvider = new MeshProvider();
+        this._partialMeshProvider = new MeshProvider();
+        this._shapeMeshViewClasses = { hidden: false };
+        this._partialMeshViewClasses = { hidden: false };
         this._selectedEdge = null;      
     }
 
@@ -327,56 +327,56 @@ export class AutoquadsView extends connect(store)(LitElement) {
         return this._splitOrientation;
     }
     
-    set modelViewportColor(value) {
-        const oldValue = this._modelViewportColor;
-        this._modelViewportColor = value;
-        this.requestUpdate('modelViewportColor', oldValue);
+    set shapeViewportColor(value) {
+        const oldValue = this._shapeViewportColor;
+        this._shapeViewportColor = value;
+        this.requestUpdate('shapeViewportColor', oldValue);
     }
 
-    get modelViewportColor() {
-        return this._modelViewportColor;
+    get shapeViewportColor() {
+        return this._shapeViewportColor;
     }
 
-    set soupViewportColor(value) {
-        const oldValue = this._soupViewportColor;
-        this._soupViewportColor = value;
-        this.requestUpdate('soupViewportColor', oldValue);
+    set partialViewportColor(value) {
+        const oldValue = this._partialViewportColor;
+        this._partialViewportColor = value;
+        this.requestUpdate('partialViewportColor', oldValue);
     }
 
-    get soupViewportColor() {
-        return this._soupViewportColor;
+    get partialViewportColor() {
+        return this._partialViewportColor;
     }
 
-    set modelColor(value) {
-        const oldValue = this._modelColor;
-        this._modelColor = value;
-        this._modelMeshProvider.meshColor = this._modelColor;
-        this.requestUpdate('modelColor', oldValue);
+    set shapeColor(value) {
+        const oldValue = this._shapeColor;
+        this._shapeColor = value;
+        this._shapeMeshProvider.meshColor = this._shapeColor;
+        this.requestUpdate('shapeColor', oldValue);
     }
 
-    get modelColor() {
-        return this._modelColor;
+    get shapeColor() {
+        return this._shapeColor;
     }
 
-    set soupColor(value) {
-        const oldValue = this._soupColor;
-        this._soupColor = value;
-        this._soupMeshProvider.meshColor = this._soupColor;
-        this.requestUpdate('soupColor', oldValue);
+    set partialColor(value) {
+        const oldValue = this._partialColor;
+        this._partialColor = value;
+        this._partialColorMeshProvider.meshColor = this._partialColor;
+        this.requestUpdate('partialColor', oldValue);
     }
 
-    get soupColor() {
-        return this._soupColor;
+    get partialColor() {
+        return this._partialColor;
     }
 
-    set modelWireframeVisibility(value) {
-        const oldValue = this._modelWireframeVisibility;
-        this._modelWireframeVisibility = value;
-        this.requestUpdate('modelWireframeVisibility', oldValue);
+    set shapeWireframeVisibility(value) {
+        const oldValue = this._shapeWireframeVisibility;
+        this._shapeWireframeVisibility = value;
+        this.requestUpdate('shapeWireframeVisibility', oldValue);
     }
 
-    get modelWireframeVisibility() {
-        return this._modelWireframeVisibility;        
+    get shapeWireframeVisibility() {
+        return this._shapeWireframeVisibility;        
     }
 
     set soupWireframeVisibility(value) {
@@ -399,17 +399,17 @@ export class AutoquadsView extends connect(store)(LitElement) {
         return this._optimizationDataMonitorVisibility;        
     }
 
-    set modelViewVisibility(value) {
-        const oldValue = this._modelViewVisibility;
-        this._modelViewVisibility = value;
-        this._modelMeshViewClasses = {
+    set shapeViewVisibility(value) {
+        const oldValue = this._shapeViewVisibility;
+        this._shapeViewVisibility = value;
+        this._shapeMeshViewClasses = {
             hidden: !HelpersExports.isVisible(value)
         }
-        this.requestUpdate('modelViewVisibility', oldValue);
+        this.requestUpdate('shapeViewVisibility', oldValue);
     }
 
-    get modelViewVisibility() {
-        return this._modelViewVisibility;
+    get shapeViewVisibility() {
+        return this._shapeViewVisibility;
     }
 
     set soupViewVisibility(value) {
@@ -744,27 +744,50 @@ export class AutoquadsView extends connect(store)(LitElement) {
         return this._solverState;
     }
 
-    set modelFilename(value) {
+    set shapeFilename(value) {
         if(value) {
-            const oldValue = this._modelFilename;
-            this._modelFilename = value;
-            this._loadModel(this._modelFilename);
-            this.requestUpdate('modelFilename', oldValue);
+            const oldValue = this._shapeFilename;
+            this._shapeFilename = value;
+            this._loadShape(this._shapeFilename);
+            this.requestUpdate('shapeFilename', oldValue);
         }
     }
 
-    get modelFilename() {
-        return this._modelFilename;
+    get shapeFilename() {
+        return this._shapeFilename;
     }
 
-    set modelState(value) {
-        const oldValue = this._modelState;
-        this._modelState = value;
-        this.requestUpdate('modelState', oldValue);
+    set partialFilename(value) {
+        if(value) {
+            const oldValue = this._partialFilename;
+            this._partialFilename = value;
+            this._loadPartial(this._partialFilename);
+            this.requestUpdate('partialFilename', oldValue);
+        }
     }
 
-    get modelState() {
-        return this._modelState;
+    get partialFilename() {
+        return this._partialFilename;
+    }
+
+    set shapeState(value) {
+        const oldValue = this._shapeState;
+        this._shapeState = value;
+        this.requestUpdate('shapeState', oldValue);
+    }
+
+    get shapeState() {
+        return this._shapeState;
+    }
+
+    set partialState(value) {
+        const oldValue = this._partialState;
+        this._partialState = value;
+        this.requestUpdate('partialState', oldValue);
+    }
+
+    get partialState() {
+        return this._partialState;
     }
 
     set moduleFilename(value) {
@@ -790,106 +813,11 @@ export class AutoquadsView extends connect(store)(LitElement) {
         return this._moduleState;
     }
 
-    set objectiveFunctionsProperties(value) {
-        const oldValue = this._objectiveFunctionsProperties;
-        this._objectiveFunctionsProperties = value;
-        this._modelMeshProvider.objectiveFunctionsProperties = value;
-        this._soupMeshProvider.objectiveFunctionsProperties = value;
-        this.requestUpdate('objectiveFunctionsProperties', oldValue);
-    }
-
-    get objectiveFunctionsProperties() {
-        return this._objectiveFunctionsProperties;
-    }
-
-    set algorithmType(value) {
-        if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            const oldValue = this._algorithmType;
-            this._algorithmType = value;
-            this._engine.setAlgorithmType(this._algorithmType);
-            this.requestUpdate('algorithmType', oldValue);
-        }
-    }
-
-    get algorithmType() {
-        return this._algorithmType;
-    }
-
     /**
      * Element life-cycle callbacks
      */
     connectedCallback() {
         super.connectedCallback();
-
-        /**
-         * Face highlighting
-         */
-        this._meshViewFaceHighlightedSubscriptionToken = PubSub.subscribe('mesh-view-face-highlighted', (name, payload) => {
-            PubSub.publish('mesh-view-highlight-face', payload);
-        });
-
-        this._meshViewFaceUnhighlightedSubscriptionToken = PubSub.subscribe('mesh-view-face-unhighlighted', (name, payload) => {
-            PubSub.publish('mesh-view-unhighlight-face', payload);
-        });
-
-        /**
-         * Face dragging
-         */
-        this._meshViewFaceDraggingBeginSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging-begin', (name, payload) => {
-            if(!payload.faceSelected) {
-                this._engine.constrainFacePosition(payload.face.id);
-            }
-            PubSub.publish('mesh-view-set-dragged-face', payload);
-        });
-
-        this._meshViewFaceDraggingSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging', (name, payload) => {
-            this._engine.updateConstrainedFacePosition(payload.face.id, payload.offset.x, payload.offset.y);
-        });
-
-        this._meshViewFaceDraggingEndSubscriptionToken = PubSub.subscribe('mesh-view-face-dragging-end', (name, payload) => {
-            if(!payload.faceSelected) {
-                this._engine.unconstrainFacePosition(payload.face.id);
-            }
-            else {
-                this._engine.reconstrainFacePosition(payload.face.id);
-            }
-            PubSub.publish('mesh-view-reset-dragged-face', payload);
-        });
-
-        /**
-         * Face selection
-         */
-        this._meshViewFaceSelectedSubscriptionToken = PubSub.subscribe('mesh-view-face-selected', (name, payload) => {
-            this._engine.constrainFacePosition(payload.face.id);
-            PubSub.publish('mesh-view-select-face', payload);
-        });
-
-        this._meshViewFaceUnselectedSubscriptionToken = PubSub.subscribe('mesh-view-face-unselected', (name, payload) => {
-            this._engine.unconstrainFacePosition(payload.face.id);
-            PubSub.publish('mesh-view-unselect-face', payload);
-        });
-        
-        /**
-         * Edge selection
-         */
-        this._meshViewEdgeSelectedSubscriptionToken = PubSub.subscribe('mesh-view-edge-selected', (name, payload) => {
-            let previousSelectedEdge = this._selectedEdge;
-            if(previousSelectedEdge) {
-                payload.edge = previousSelectedEdge;
-                PubSub.publish('mesh-view-unselect-edge', payload);
-            }
-
-            this._selectedEdge = payload.edge;   
-
-            let edgeAngleWeight = this._engine.getObjectiveFunctionProperty('Seamless', 'edge_angle_weight', 'none', this._selectedEdge.id);
-            let edgeLengthWeight = this._engine.getObjectiveFunctionProperty('Seamless', 'edge_length_weight', 'none', this._selectedEdge.id);
-            store.dispatch(ActionsExports.setSelectedEdgeSeamlessAngleWeight(edgeAngleWeight));
-            store.dispatch(ActionsExports.setSelectedEdgeSeamlessLengthWeight(edgeLengthWeight));
-        });
-
-        this._meshViewEdgeUnselectedSubscriptionToken = PubSub.subscribe('mesh-view-edge-unselected', (name, payload) => {
-            this._selectedEdge = null;
-        });
     }
     
     disconnectedCallback() {
@@ -901,22 +829,38 @@ export class AutoquadsView extends connect(store)(LitElement) {
      * Private Methods
      */
 
-    _loadModel(modelFilename) {
+    _loadShape(shapeFilename) {
         if(HelpersExports.isModuleLoaded(this.moduleState)) {
-            store.dispatch(ActionsExports.setModelState(EnumsExports.LoadState.LOADING));
+            store.dispatch(ActionsExports.setShapeState(EnumsExports.LoadState.LOADING));
             try {
-                this._engine.loadModel(modelFilename);
-                this._modelMeshProvider = new AutoquadsModelMeshProvider(this._engine, this.modelColor, this.objectiveFunctionsProperties);
-                this._soupMeshProvider = new AutoquadsSoupMeshProvider(this._engine, this.soupColor, this.objectiveFunctionsProperties);  
-                console.log("Model loaded: " + modelFilename);
-                store.dispatch(ActionsExports.setModelState(EnumsExports.LoadState.LOADED));
+                this._engine.loadModel(shapeFilename);
+                this._shapeMeshProvider = new AutoquadsShapeMeshProvider(this._engine, this.shapeColor); 
+                console.log("Shape loaded: " + shapeFilename);
+                store.dispatch(ActionsExports.setShapeState(EnumsExports.LoadState.LOADED));
             }
             catch(e) {
-                this._modelMeshProvider = new MeshProvider();
-                this._soupMeshProvider = new MeshProvider();   
-                alert("Couldn't load model file");
-                console.error("Failed to load model: " + modelFilename);
-                store.dispatch(ActionsExports.setModelState(EnumsExports.LoadState.UNLOADED));
+                this._shapeMeshProvider = new MeshProvider();   
+                alert("Couldn't load shape file");
+                console.error("Failed to load shape: " + shapeFilename);
+                store.dispatch(ActionsExports.setShapeState(EnumsExports.LoadState.UNLOADED));
+            }
+        }
+    }
+
+    _loadPartial(partialFilename) {
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            store.dispatch(ActionsExports.setPartialState(EnumsExports.LoadState.LOADING));
+            try {
+                this._engine.loadModel(partialFilename);
+                this._partialMeshProvider = new AutoquadsPartialMeshProvider(this._engine, this.partialColor);
+                console.log("Partial loaded: " + partialFilename);
+                store.dispatch(ActionsExports.setPartialState(EnumsExports.LoadState.LOADED));
+            }
+            catch(e) {
+                this._partialMeshProvider = new MeshProvider();
+                alert("Couldn't load partial file");
+                console.error("Failed to load partial: " + partialFilename);
+                store.dispatch(ActionsExports.setPartialState(EnumsExports.LoadState.UNLOADED));
             }
         }
     }
@@ -936,14 +880,15 @@ export class AutoquadsView extends connect(store)(LitElement) {
             store.dispatch(ActionsExports.setModuleState(EnumsExports.LoadState.UNLOADED));
         }
         finally {
-            this._modelMeshProvider = new MeshProvider();
-            this._soupMeshProvider = new MeshProvider();
+            this._shapeMeshProvider = new MeshProvider();
+            this._partialMeshProvider = new MeshProvider();
         }
     }
 
     _reloadModule() {
         this._loadModule();
-        this._loadModel(this._modelFilename);
+        this._loadShape(this._shapeFilename);
+        this._loadPartial(this._partialFilename);
     }
 }
 

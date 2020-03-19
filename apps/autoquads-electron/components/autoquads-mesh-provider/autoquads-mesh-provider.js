@@ -6,40 +6,18 @@ import * as HelpersExports from '../../redux/helpers.js';
 export class AutoquadsMeshProvider extends MeshProvider {
     constructor(
         engine, 
-        meshColor, 
-        objectiveFunctionsProperties, 
-        associatedView) {
+        meshColor) {
         // Call base constructor
         super();
 
         // Set backend C++ engine reference
         this._engine = engine;
 
-        // Set associated view
-        this._associatedView = associatedView;
-
         // Set faces
         this._bufferedFaces = this._engine.getDomainBufferedFaces();
         this._bufferedFacesCount = this._bufferedFaces.length;
 
-        // Set edge count
-        switch(this._associatedView) {
-            case EnumsExports.View.MODEL:
-                this._edgeCount = this._engine.getDomainEdgesCount();
-                this._propertyModifier = 'domain';
-                this._faceEdgeAdjacency = this._engine.getDomainFaceEdgeAdjacency();
-                this._edgeFaceAdjacency = this._engine.getDomainEdgeFaceAdjacency();
-                break;
-            case EnumsExports.View.SOUP:
-                this._edgeCount = this._engine.getImageEdgesCount();
-                this._propertyModifier = 'image';
-                this._faceEdgeAdjacency = this._engine.getImageFaceEdgeAdjacency();
-                this._edgeFaceAdjacency = this._engine.getImageEdgeFaceAdjacency();
-                break;                
-        }
-
         this.meshColor = meshColor;
-        this.objectiveFunctionsProperties = objectiveFunctionsProperties;
     }
 
     getBufferedColors(elementCount, colorsPerElement, propertyEffectType, associatedView, defaultColor) {
@@ -56,22 +34,6 @@ export class AutoquadsMeshProvider extends MeshProvider {
                 bufferedColors[baseIndex + componentsPerColor * j + 2] = defaultColor.b;
             }
         }
-
-        for(let objectiveFunctionProperty of this._objectiveFunctionsProperties) {
-            if(HelpersExports.isVisible(objectiveFunctionProperty.visibility) && (objectiveFunctionProperty.propertyEffectType === propertyEffectType)) {
-                let vector = this._engine.getObjectiveFunctionProperty(objectiveFunctionProperty.objectiveFunctionId, objectiveFunctionProperty.propertyId, this._propertyModifier, '');
-                let color = new THREE.Color(objectiveFunctionProperty.color);
-                let colorArray = color.toArray();
-                let defaultColorArray = defaultColor.toArray();
-                for (let i = 0; i < elementCount; i++) {
-                    let baseIndex = componentsPerElement * i;
-                    let factor = Math.min(vector[i] * objectiveFunctionProperty.weight, 1);
-                    for(let j = 0; j < componentsPerElement; j++) { 
-                        bufferedColors[baseIndex + j] = defaultColorArray[j % 3] * (1 - factor) + colorArray[j % 3] * (factor);
-                    }
-                }
-            }
-        }
         
         return bufferedColors;
     }
@@ -85,14 +47,7 @@ export class AutoquadsMeshProvider extends MeshProvider {
     }
 
     getBufferedUvs() {
-        let bufferedUvs = this._engine.getImageBufferedUvs();
-        let interval = this._engine.getObjectiveFunctionProperty('Singular Points Position', 'interval', 'none', '');
-        for(let i = 0; i < bufferedUvs.length; i++)
-        {
-            bufferedUvs[i] = bufferedUvs[i] / interval;
-        }
-
-        return bufferedUvs;
+        return []];
     }
 
     set meshColor(value) {
@@ -101,21 +56,5 @@ export class AutoquadsMeshProvider extends MeshProvider {
 
     get meshColor() {
         return this._meshColor;
-    }
-
-    set objectiveFunctionsProperties(value) {
-        this._objectiveFunctionsProperties = value;
-    }
-
-    get objectiveFunctionsProperties() {
-        return this._objectiveFunctionsProperties;
-    }
-
-    get faceEdgeAdjacency() {
-        return this._faceEdgeAdjacency;
-    }
-
-    get edgeFaceAdjacency() {
-        return this._edgeFaceAdjacency;
     }
 }
