@@ -5,6 +5,8 @@
 // LIBIGL includes
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
+#include <igl/cotmatrix.h>
+#include <igl/massmatrix.h>
 
 // Optimization lib includes
 #include "../include/engine.h"

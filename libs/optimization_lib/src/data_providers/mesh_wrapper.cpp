@@ -13,8 +13,17 @@
 #include <igl/doublearea.h>
 #include <igl/per_face_normals.h>
 #include <igl/adjacency_matrix.h>
+#include <igl/cotmatrix.h>
+#include <igl/massmatrix.h>
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
+
+// Spectra
+#include <Spectra/SymEigsShiftSolver.h>
+#include <Spectra/MatOp/SparseSymShiftSolve.h>
+#include <Spectra/MatOp/DenseSymMatProd.h>
+#include <Spectra/MatOp/SparseSymMatProd.h>
+#include <Spectra/SymEigsSolver.h>
 
 MeshWrapper::MeshWrapper()
 {
@@ -201,6 +210,32 @@ void MeshWrapper::LoadModel(const std::string& model_file_path)
 
 	v_dom_ = v;
 	f_dom_ = f;
+
+	W_.resize(v.rows(), v.rows());
+	A_.resize(v.rows(), v.rows());
+	
+	igl::cotmatrix(v, f, W_);
+	W_ = -W_;
+
+	igl::massmatrix(v, f, igl::MassMatrixType::MASSMATRIX_TYPE_VORONOI, A_);
+
+	//Spectra::SparseSymShiftSolve<double> op(W_);
+	//Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftSolve<double>> eigs(&op, 20, 100, 0.0);
+	//eigs.init();
+	//eigs.compute();
+	//if (eigs.info() == Spectra::SUCCESSFUL)
+	//{
+	//	Eigen::VectorXd evalues = eigs.eigenvalues();
+	//}
+
+	//Spectra::SparseSymMatProd<double> op2(W_);
+	//Spectra::SymEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>> eigs2(&op2, 20, 100);
+	//eigs2.init();
+	//eigs2.compute();
+	//if (eigs2.info() == Spectra::SUCCESSFUL)
+	//{
+	//	Eigen::VectorXd evalues = eigs2.eigenvalues();
+	//}
 
 	Initialize();
 
@@ -775,4 +810,14 @@ RDS::EdgeIndices MeshWrapper::GetDomainAdjacentEdgeIndicesByVertex(RDS::VertexIn
 RDS::EdgeIndices MeshWrapper::GetImageAdjacentEdgeIndicesByVertex(RDS::VertexIndex vertex_index) const
 {
 	return v_im_2_e_im_.at(vertex_index);
+}
+
+const Eigen::SparseMatrix<double>& MeshWrapper::GetLaplacian() const
+{
+	return W_;
+}
+
+const Eigen::SparseMatrix<double>& MeshWrapper::GetMassMatrix() const
+{
+	return A_;
 }

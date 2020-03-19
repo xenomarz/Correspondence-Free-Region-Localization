@@ -102,6 +102,7 @@ add_library(rds::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
 	PRIVATE
 		${Boost_INCLUDE_DIRS}
+		${CMAKE_SOURCE_DIR}/spectra/include
 		${PROJECT_SOURCE_DIR}/include)
 
 # Link Libraries

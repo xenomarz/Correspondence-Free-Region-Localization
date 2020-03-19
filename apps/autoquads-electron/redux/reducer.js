@@ -54,7 +54,7 @@ const INITIAL_STATE = {
     splitOrientation: EnumsExports.SplitOrientation.HORIZONTAL,
     shapeViewportColor: 'rgb(200,200,200)',
     partialViewportColor: 'rgb(200,200,200)',
-    shapeColor: 'rgb(220, 220, 220)',
+    shapeColor: 'rgb(220, 0, 0)',
     partialColor: 'rgb(220, 220, 220)',
     shapeWireframeVisibility: EnumsExports.Visibility.VISIBLE,
     partialWireframeVisibility: EnumsExports.Visibility.VISIBLE,

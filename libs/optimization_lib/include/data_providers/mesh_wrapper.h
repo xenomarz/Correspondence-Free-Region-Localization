@@ -78,6 +78,9 @@ public:
 	const FI2VIsMap& GetImageFaceVertexAdjacency() const;
 	const FI2EIsMap& GetImageFaceEdgeAdjacency() const;
 
+	const Eigen::SparseMatrix<double>& GetLaplacian() const;
+	const Eigen::SparseMatrix<double>& GetMassMatrix() const;
+	
 	/**
 	 * Overrides
 	 */
@@ -255,6 +258,10 @@ private:
 	FI2VIsMap fi_dom_2_vi_dom_;
 	FI2EIsMap fi_dom_2_ei_dom_;
 	FI2FIsMap fi_dom_2_fi_dom_;
+
+	// Laplacian and mass matrices
+	Eigen::SparseMatrix<double> W_;
+	Eigen::SparseMatrix<double> A_;
 	
 	// Boost signals
 	boost::signals2::signal<ModelLoadedCallback> model_loaded_signal_;
