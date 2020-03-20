@@ -76,18 +76,28 @@ void Engine::InitializeSolver()
 		/**
 		 * Create projected gradient descent solver
 		 */
+		//Eigen::SparseMatrix<double> W = mesh_wrapper_partial_->GetLaplacian();
+		//Spectra::SparseSymMatProd<double> op(W);
+		//Spectra::SymEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>> eigs(&op, RDS_NEV, RDS_NCV);
+		//eigs.init();
+		//eigs.compute();
+
 		Eigen::SparseMatrix<double> W = mesh_wrapper_partial_->GetLaplacian();
-		Spectra::SparseSymMatProd<double> op(W);
-		Spectra::SymEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>> eigs(&op, RDS_NEV, RDS_NCV);
-		eigs.init();
-		eigs.compute();
-		if (eigs.info() == Spectra::SUCCESSFUL)
+		Eigen::SparseMatrix<double> A = mesh_wrapper_partial_->GetMassMatrix();
+		Eigen::SparseMatrix<double> lhs = W;
+		Eigen::SparseMatrix<double> rhs = A;
+		Spectra::SparseSymMatProd<double> lhs_op(lhs);
+		Spectra::SparseRegularInverse<double> rhs_op(rhs);
+		Spectra::SymGEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>, Spectra::SparseRegularInverse<double>, Spectra::GEIGS_REGULAR_INVERSE > geigs(&lhs_op, &rhs_op, RDS_NEV, RDS_NCV);
+		geigs.init();
+		int nconv = geigs.compute();
+		if (geigs.info() == Spectra::SUCCESSFUL)
 		{
 			empty_data_provider_ = std::make_shared<EmptyDataProvider>(mesh_wrapper_shape_);
-			Eigen::VectorXd mu = eigs.eigenvalues();
+			Eigen::VectorXd mu = geigs.eigenvalues();
 			region_localization_ = std::make_shared<RegionLocalizationObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_shape_, mu, empty_data_provider_);
-			//auto v0 = Eigen::VectorXd::Random(mesh_wrapper_shape_->GetDomainVerticesCount());
-			auto v0 = mesh_wrapper_shape_->GetRandomVerticesGaussian();
+			//Eigen::VectorXd v0 = Eigen::VectorXd::Random(mesh_wrapper_shape_->GetDomainVerticesCount()) + Eigen::VectorXd::Ones(mesh_wrapper_shape_->GetDomainVerticesCount());
+			Eigen::VectorXd v0 = mesh_wrapper_shape_->GetRandomVerticesGaussian();
 			projected_gradient_descent_ = std::make_unique<ProjectedGradientDescent<Eigen::StorageOptions::RowMajor>>(region_localization_, v0);
 			projected_gradient_descent_->DisableFlipAvoidingLineSearch();
 		}
@@ -1016,7 +1026,7 @@ Napi::Value Engine::GetV(const Napi::CallbackInfo& info)
 	Napi::HandleScope scope(env);
 
 	Eigen::VectorXd v;
-	if (shape_ready_ && partial_ready_)
+	if (projected_gradient_descent_ && shape_ready_ && partial_ready_)
 	{
 		v = projected_gradient_descent_->GetX();
 	}

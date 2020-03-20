@@ -26,7 +26,7 @@ public:
 		x_(x0),
 		p_(Eigen::VectorXd::Zero(x0.size())),
 		thread_state_(ThreadState::Terminated),
-		max_backtracking_iterations_(12),
+		max_backtracking_iterations_(10),
 		flip_avoiding_line_search_enabled_(false),
 		approximation_invalidated_(false)
 	{
@@ -162,18 +162,7 @@ private:
 		 * Calculate maximal flip avoiding step-size
 		 * https://github.com/libigl/libigl/blob/master/include/igl/flip_avoiding_line_search.cpp
 		 */
-		double step_size;
-		if (flip_avoiding_line_search_enabled_)
-		{
-			Eigen::MatrixX2d mat_x = Eigen::Map<Eigen::MatrixX2d>(x_.data(), x_.rows() / 2, 2);
-			Eigen::MatrixXd mat_p = Eigen::Map<const Eigen::MatrixX2d>(p.data(), p.rows() / 2, 2);
-			double min_step_to_singularity = igl::flip_avoiding::compute_max_step_from_singularities(mat_x, F_, mat_p);
-			step_size = std::min(1., min_step_to_singularity * 0.8);
-		}
-		else
-		{
-			step_size = 1;
-		}
+		double step_size = 1;
 
 		/**
 		 * Perform backtracking (armijo rule)
@@ -185,7 +174,8 @@ private:
 		Eigen::MatrixXd current_x;
 		while (current_iteration < max_backtracking_iterations_)
 		{
-			current_x = x_ + step_size * p;
+			Eigen::VectorXd normalized_p = p.normalized();
+			current_x = x_ + step_size * normalized_p;
 			objective_function_->UpdateLayers(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::Value);
 			updated_value = objective_function_->GetValue();
 

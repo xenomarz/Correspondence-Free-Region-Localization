@@ -67,7 +67,7 @@ private:
 		{
 			double diff = lambda_.coeff(i) - mu_.coeff(i);
 			double factor = 1 / (mu_.coeff(i) * mu_.coeff(i));
-			f += factor * diff;
+			f += factor * (diff * diff);
 		}
 	}
 
@@ -108,8 +108,8 @@ private:
 		Eigen::SparseMatrix<double> lhs = W + A * diag_v;
 		Eigen::SparseMatrix<double> rhs = A;
 		Spectra::SparseSymMatProd<double> lhs_op(lhs);
-		Spectra::SparseCholesky<double> rhs_op(rhs);
-		Spectra::SymGEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>, Spectra::SparseCholesky<double>, Spectra::GEIGS_CHOLESKY> geigs(&lhs_op, &rhs_op, RDS_NEV, RDS_NCV);
+		Spectra::SparseRegularInverse<double> rhs_op(rhs);
+		Spectra::SymGEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>, Spectra::SparseRegularInverse<double>, Spectra::GEIGS_REGULAR_INVERSE > geigs(&lhs_op, &rhs_op, RDS_NEV, RDS_NCV);
 		
 		geigs.init();
 		int nconv = geigs.compute();
