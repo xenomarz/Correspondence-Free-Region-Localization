@@ -33,4 +33,34 @@ export class AutoquadsShapeMeshProvider extends AutoquadsMeshProvider {
     getBufferedVertices() {
         return this._engine.getShapeBufferedVertices();
     }
+
+    getBufferedColors(elementCount, colorsPerElement, propertyEffectType, associatedView, defaultColor) {
+        let componentsPerColor = 3;
+        let componentsPerElement = componentsPerColor * colorsPerElement;
+        let componenetsCount = componentsPerElement * elementCount;
+        let bufferedColors = new Float32Array(componenetsCount);
+
+        let v = this._engine.getV();
+
+        for (let i = 0; i < elementCount; i++) {
+            let baseIndex = componentsPerElement * i;
+            for(let j = 0; j < colorsPerElement; j++) {
+                if(v[i] < 0.01)
+                {
+                    bufferedColors[baseIndex + componentsPerColor * j + 0] = 1;
+                    bufferedColors[baseIndex + componentsPerColor * j + 1] = 1;
+                    bufferedColors[baseIndex + componentsPerColor * j + 2] = 1;
+                }
+                else
+                {
+                    bufferedColors[baseIndex + componentsPerColor * j + 0] = defaultColor.r;
+                    bufferedColors[baseIndex + componentsPerColor * j + 1] = defaultColor.g;
+                    bufferedColors[baseIndex + componentsPerColor * j + 2] = defaultColor.b;
+                }
+
+            }
+        }
+        
+        return bufferedColors;
+    }
 }

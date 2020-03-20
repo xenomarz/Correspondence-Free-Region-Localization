@@ -15,8 +15,8 @@
 // Optimization lib includes
 #include "./utils.h"
 
-#define RDS_NEV 20
-#define RDS_NCV 28
+#define RDS_NEV 15
+#define RDS_NCV 60
 
 namespace RDS
 {

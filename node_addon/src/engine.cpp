@@ -40,7 +40,8 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("getShapeBufferedFaces", &Engine::GetShapeBufferedFaces),
 		InstanceMethod("getPartialBufferedFaces", &Engine::GetPartialBufferedFaces),
 		InstanceMethod("resumeSolver", &Engine::ResumeSolver),
-		InstanceMethod("pauseSolver", &Engine::PauseSolver)
+		InstanceMethod("pauseSolver", &Engine::PauseSolver),
+		InstanceMethod("getV", &Engine::GetV)
 	});
 
 	constructor = Napi::Persistent(func);
@@ -1007,6 +1008,41 @@ Napi::Value Engine::LoadPartial(const Napi::CallbackInfo& info)
 	mesh_wrapper_partial_->LoadModel(model_file_path);
 
 	return env.Null();
+}
+
+Napi::Value Engine::GetV(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	Eigen::VectorXd v;
+	if (shape_ready_ && partial_ready_)
+	{
+		v = projected_gradient_descent_->GetX();
+	}
+	else
+	{
+		v = Eigen::VectorXd::Ones(mesh_wrapper_shape_->GetDomainVerticesCount());
+	}
+	
+	const uint32_t entries_per_face = 3;
+	auto F = mesh_wrapper_shape_->GetDomainFaces();
+	int64_t face_count = mesh_wrapper_shape_->GetDomainFaces().rows();
+	Napi::Float32Array v_array = Napi::Float32Array::New(env, entries_per_face * face_count);
+
+	#pragma omp parallel for
+	for (int32_t face_index = 0; face_index < face_count; face_index++)
+	{
+		const int base_index = entries_per_face * face_index;
+		for (uint32_t i = 0; i < 3; i++)
+		{
+			uint32_t vertex_index = F(face_index, i);
+			const int entry_index = base_index + i;
+			v_array[entry_index] = v.coeff(vertex_index);
+		}
+	}
+
+	return v_array;
 }
 
 Engine::ModelFileType Engine::GetModelFileType(std::string modelFilePath)

@@ -83,9 +83,20 @@ private:
 	
 	void CalculateGradient(Eigen::VectorXd& g) override
 	{
-		Eigen::MatrixXd phi_squared = phi_.cwiseProduct(phi_);
+		Eigen::MatrixXd phi_squared = Eigen::MatrixXd::Zero(phi_.rows(), phi_.cols());
+
+		#pragma omp parallel for
+		for(int64_t row = 0; row < phi_.rows(); row++)
+		{
+			for (int64_t col = 0; col < phi_.cols(); col++)
+			{
+				phi_squared.coeffRef(row, col) = phi_.coeffRef(row, col) * phi_.coeffRef(row, col);
+			}
+		}
+		
+		//Eigen::MatrixXd phi_squared = phi_.cwiseProduct(phi_);
 		Eigen::VectorXd mu_squared = mu_.cwiseProduct(mu_);
-		Eigen::MatrixXd diff = (lambda_ - mu_).cwiseQuotient(mu_squared);
+		Eigen::VectorXd diff = (lambda_ - mu_).cwiseQuotient(mu_squared);
 		g = 2 * phi_squared * diff;
 	}
 	

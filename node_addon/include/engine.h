@@ -147,6 +147,7 @@ private:
 	Napi::Value GetPartialBufferedVertices(const Napi::CallbackInfo& info);
 	Napi::Value GetShapeBufferedFaces(const Napi::CallbackInfo& info);
 	Napi::Value GetPartialBufferedFaces(const Napi::CallbackInfo& info);
+	Napi::Value GetV(const Napi::CallbackInfo& info);
 
 	/**
 	 * Regular private instance methods

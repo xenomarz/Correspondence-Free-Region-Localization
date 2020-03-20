@@ -642,7 +642,7 @@ export class MeshView extends LitElement {
             });
         }
 
-        material.color = this.meshProvider.meshColor;
+        material.color = new THREE.Color(255,255,255);
 
         // if (this.showGridTexture) {
         //     material.map = this._gridTexture;
@@ -1460,8 +1460,8 @@ export class MeshView extends LitElement {
         this._mesh.geometry.attributes.position.array = this.meshProvider.getBufferedVertices(BufferedPrimitiveType.TRIANGLE);
         // this._mesh.geometry.attributes.uv.array = this.meshProvider.getBufferedUvs();
         let bufferedVertexColors = this.meshProvider.getBufferedVertexColors();
-        this._updateVertexColors();
-        this._overrideAttributeArray(this._vertexColors, bufferedVertexColors);
+        // this._updateVertexColors();
+        // this._overrideAttributeArray(this._vertexColors, bufferedVertexColors);
         this._mesh.geometry.attributes.color.array = bufferedVertexColors;
 
         /**
