@@ -106,6 +106,8 @@ public:
 	RDS::EdgeIndices GetImageAdjacentEdgeIndicesByVertex(RDS::VertexIndex vertex_index) const override;
 	const Eigen::SparseMatrix<double>& GetLaplacian() const override;
 	const Eigen::SparseMatrix<double>& GetMassMatrix() const override;
+	double GetArea() const override;
+	Eigen::VectorXd GetRandomVerticesGaussian() override;
 	
 	/**
 	 * Public methods
@@ -261,6 +263,9 @@ private:
 	// Laplacian and mass matrices
 	Eigen::SparseMatrix<double> W_;
 	Eigen::SparseMatrix<double> A_;
+
+	// Area
+	double area_;
 	
 	// Boost signals
 	boost::signals2::signal<ModelLoadedCallback> model_loaded_signal_;

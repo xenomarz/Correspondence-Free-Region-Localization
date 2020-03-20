@@ -723,23 +723,23 @@ export class AutoquadsView extends connect(store)(LitElement) {
     } 
 
     set solverState(value) {
-        // if(HelpersExports.isModuleLoaded(this.moduleState)) {
-        //     const oldValue = this._solverState;
-        //     this._solverState = value;
-        //     switch(this._solverState) {
-        //         case EnumsExports.SolverState.ON:
-        //             this._engine.resumeSolver();
-        //             break;
-        //         case EnumsExports.SolverState.OFF:
-        //             this._engine.pauseSolver();
-        //             break;                
-        //     }
-        //     this.requestUpdate('solverState', oldValue);
-        // }
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            const oldValue = this._solverState;
+            this._solverState = value;
+            switch(this._solverState) {
+                case EnumsExports.SolverState.ON:
+                    this._engine.resumeSolver();
+                    break;
+                case EnumsExports.SolverState.OFF:
+                    this._engine.pauseSolver();
+                    break;                
+            }
+            this.requestUpdate('solverState', oldValue);
+        }
     }
 
     get solverState() {
-        // return this._solverState;
+        return this._solverState;
     }
 
     set shapeFilename(value) {

@@ -17,6 +17,14 @@
 #include "libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_angle_objective.h"
 #include "libs/optimization_lib/include/objective_functions/edge_pair/edge_pair_length_objective.h"
 #include "libs/optimization_lib/include/objective_functions/singularity/singular_points_position_objective.h"
+#include "libs/optimization_lib/include/objective_functions/region_localization_objective.h"
+
+// Spectra
+#include <Spectra/SymEigsShiftSolver.h>
+#include <Spectra/MatOp/SparseSymShiftSolve.h>
+#include <Spectra/MatOp/DenseSymMatProd.h>
+#include <Spectra/MatOp/SparseSymMatProd.h>
+#include <Spectra/SymEigsSolver.h>
 
 Napi::FunctionReference Engine::constructor;
 
@@ -31,6 +39,8 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("getPartialBufferedVertices", &Engine::GetPartialBufferedVertices),
 		InstanceMethod("getShapeBufferedFaces", &Engine::GetShapeBufferedFaces),
 		InstanceMethod("getPartialBufferedFaces", &Engine::GetPartialBufferedFaces),
+		InstanceMethod("resumeSolver", &Engine::ResumeSolver),
+		InstanceMethod("pauseSolver", &Engine::PauseSolver)
 	});
 
 	constructor = Napi::Persistent(func);
@@ -43,17 +53,45 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 Engine::Engine(const Napi::CallbackInfo& info) : 
 	Napi::ObjectWrap<Engine>(info),
 	mesh_wrapper_shape_(std::make_shared<MeshWrapper>()),
-	mesh_wrapper_partial_(std::make_shared<MeshWrapper>())
+	mesh_wrapper_partial_(std::make_shared<MeshWrapper>()),
+	shape_ready_(false),
+	partial_ready_(false)
 {
 	mesh_wrapper_shape_->RegisterModelLoadedCallback([this]() {
-
+		shape_ready_ = true;
+		InitializeSolver();
 	});
 
 	mesh_wrapper_partial_->RegisterModelLoadedCallback([this]() {
-
+		partial_ready_ = true;
+		InitializeSolver();
 	});
 }
 
+void Engine::InitializeSolver()
+{
+	if(shape_ready_ && partial_ready_)
+	{
+		/**
+		 * Create projected gradient descent solver
+		 */
+		Eigen::SparseMatrix<double> W = mesh_wrapper_partial_->GetLaplacian();
+		Spectra::SparseSymMatProd<double> op(W);
+		Spectra::SymEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>> eigs(&op, RDS_NEV, RDS_NCV);
+		eigs.init();
+		eigs.compute();
+		if (eigs.info() == Spectra::SUCCESSFUL)
+		{
+			empty_data_provider_ = std::make_shared<EmptyDataProvider>(mesh_wrapper_shape_);
+			Eigen::VectorXd mu = eigs.eigenvalues();
+			region_localization_ = std::make_shared<RegionLocalizationObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_shape_, mu, empty_data_provider_);
+			//auto v0 = Eigen::VectorXd::Random(mesh_wrapper_shape_->GetDomainVerticesCount());
+			auto v0 = mesh_wrapper_shape_->GetRandomVerticesGaussian();
+			projected_gradient_descent_ = std::make_unique<ProjectedGradientDescent<Eigen::StorageOptions::RowMajor>>(region_localization_, v0);
+			projected_gradient_descent_->DisableFlipAvoidingLineSearch();
+		}
+	}
+}
 
 Napi::Value Engine::GetDomainVerticesCount(const Napi::CallbackInfo& info)
 {
@@ -992,9 +1030,9 @@ Napi::Value Engine::ResumeSolver(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	if (newton_method_) 
+	if (projected_gradient_descent_)
 	{
-		newton_method_->Resume();
+		projected_gradient_descent_->Resume();
 	}
 
 	return env.Null();
@@ -1005,9 +1043,9 @@ Napi::Value Engine::PauseSolver(const Napi::CallbackInfo& info)
 	Napi::Env env = info.Env();
 	Napi::HandleScope scope(env);
 
-	if (newton_method_) 
+	if (projected_gradient_descent_)
 	{
-		newton_method_->Pause();
+		projected_gradient_descent_->Pause();
 	}
 
 	return env.Null();

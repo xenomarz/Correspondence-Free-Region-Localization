@@ -16,7 +16,7 @@ template <Eigen::StorageOptions StorageOrder_>
 class GradientDescent : public IterativeMethod<StorageOrder_>
 {
 public:
-	GradientDescent::GradientDescent(std::shared_ptr<ObjectiveFunction<StorageOrder_>> objective_function, const Eigen::VectorXd& x0) :
+	GradientDescent::GradientDescent(std::shared_ptr<ObjectiveFunction<StorageOrder_, Eigen::VectorXd>> objective_function, const Eigen::VectorXd& x0) :
 		IterativeMethod(objective_function, x0)
 	{
 

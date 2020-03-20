@@ -9,20 +9,20 @@
 #include <Eigen/Core>
 
 // Optimization lib includes
-#include "./iterative_methods/iterative_method.h"
+#include "./iterative_method.h"
 
 // https://en.wikipedia.org/wiki/Gradient_descent
 template <Eigen::StorageOptions StorageOrder_>
-class GradientDescent : public IterativeMethod<StorageOrder_>
+class ProjectedGradientDescent : public IterativeMethod<StorageOrder_>
 {
 public:
-	ProjectedGradientDescent::ProjectedGradientDescent(std::shared_ptr<ObjectiveFunction<StorageOrder_>> objective_function, const Eigen::VectorXd& x0) :
+	ProjectedGradientDescent(std::shared_ptr<ObjectiveFunction<StorageOrder_, Eigen::VectorXd>> objective_function, const Eigen::VectorXd& x0) :
 		IterativeMethod(objective_function, x0)
 	{
 
 	}
 
-	ProjectedGradientDescent::~ProjectedGradientDescent()
+	virtual ~ProjectedGradientDescent()
 	{
 
 	}
@@ -30,7 +30,7 @@ public:
 private:
 	void ComputeDescentDirection(Eigen::VectorXd& p) override
 	{
-		p = -this->GetObjectiveFunction()->GetGradient();
+		p = -this->GetObjectiveFunction()->GetGradient().cwiseMax(Eigen::VectorXd::Zero(p.rows()));
 	}
 };
 

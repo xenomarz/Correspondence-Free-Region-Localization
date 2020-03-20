@@ -26,7 +26,9 @@
 #include <libs/optimization_lib/include/objective_functions/symmetric_dirichlet_objective.h>
 #include <libs/optimization_lib/include/objective_functions/seamless_objective.h>
 #include <libs/optimization_lib/include/objective_functions/singularity/singular_points_position_objective.h>
+#include <libs/optimization_lib/include/objective_functions/region_localization_objective.h>
 #include <libs/optimization_lib/include/iterative_methods/newton_method.h>
+#include <libs/optimization_lib/include/iterative_methods/projected_gradient_descent.h>
 #include <libs/optimization_lib/include/solvers/eigen_sparse_solver.h>
 #include <libs/optimization_lib/include/solvers/pardiso_solver.h>
 
@@ -169,6 +171,7 @@ private:
 	AlgorithmType StringToAlgorithmType(const std::string& algorithm_type_string);
 	Napi::Value CreateObjectiveFunctionDataObject(Napi::Env env, std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>> objective_function) const;
 	std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>> GetObjectiveFunctionByName(const std::string& name);
+	void InitializeSolver();
 	
 	/**
 	 * Regular private templated instance methods
@@ -332,13 +335,16 @@ private:
 	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> autocuts_objective_functions_;
 	std::vector<std::shared_ptr<ObjectiveFunction<Eigen::StorageOptions::RowMajor, Eigen::VectorXd>>> autoquads_objective_functions_;
 
-
-	
 	std::unique_ptr<NewtonMethod<PardisoSolver, Eigen::StorageOptions::RowMajor>> newton_method_;
+	std::unique_ptr<ProjectedGradientDescent<Eigen::StorageOptions::RowMajor>> projected_gradient_descent_;
 	std::vector<Eigen::DenseIndex> constrained_faces_indices;
 	Eigen::MatrixX2d image_vertices_;
 	std::unordered_map<std::string, uint32_t> properties_map_;
 	std::unordered_map<std::string, uint32_t> property_modifiers_map_;
+
+	std::shared_ptr<RegionLocalizationObjective<Eigen::StorageOptions::RowMajor>> region_localization_;
+	bool shape_ready_;
+	bool partial_ready_;
 };
 
 #endif

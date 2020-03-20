@@ -29,7 +29,8 @@ target_include_directories(${PROJECT_NAME}
 		${CMAKE_JS_INC}
 		${CMAKE_SOURCE_DIR}
 		${NODE_ADDON_API_DIR}
-		${Boost_INCLUDE_DIRS})
+		${Boost_INCLUDE_DIRS}
+		${CMAKE_SOURCE_DIR}/spectra/include)
 
 # Link Libraries
 target_link_libraries(${PROJECT_NAME}

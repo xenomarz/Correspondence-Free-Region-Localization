@@ -19,6 +19,7 @@
 #include <igl/readOBJ.h>
 
 // Spectra
+#include <random>
 #include <Spectra/SymEigsShiftSolver.h>
 #include <Spectra/MatOp/SparseSymShiftSolve.h>
 #include <Spectra/MatOp/DenseSymMatProd.h>
@@ -219,6 +220,11 @@ void MeshWrapper::LoadModel(const std::string& model_file_path)
 
 	igl::massmatrix(v, f, igl::MassMatrixType::MASSMATRIX_TYPE_VORONOI, A_);
 
+	Eigen::VectorXd area_per_face;
+	area_per_face.resize(f.rows());
+	igl::doublearea(v, f, area_per_face);
+	area_ = area_per_face.sum() / 2;
+
 	//Spectra::SparseSymShiftSolve<double> op(W_);
 	//Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftSolve<double>> eigs(&op, 20, 100, 0.0);
 	//eigs.init();
@@ -228,14 +234,14 @@ void MeshWrapper::LoadModel(const std::string& model_file_path)
 	//	Eigen::VectorXd evalues = eigs.eigenvalues();
 	//}
 
-	Spectra::SparseSymMatProd<double> op2(W_);
-	Spectra::SymEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>> eigs2(&op2, 20, 100);
-	eigs2.init();
-	eigs2.compute();
-	if (eigs2.info() == Spectra::SUCCESSFUL)
-	{
-		Eigen::VectorXd evalues = eigs2.eigenvalues();
-	}
+	//Spectra::SparseSymMatProd<double> op2(W_);
+	//Spectra::SymEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>> eigs2(&op2, 20, 100);
+	//eigs2.init();
+	//eigs2.compute();
+	//if (eigs2.info() == Spectra::SUCCESSFUL)
+	//{
+	//	Eigen::VectorXd evalues = eigs2.eigenvalues();
+	//}
 
 	Initialize();
 
@@ -820,4 +826,34 @@ const Eigen::SparseMatrix<double>& MeshWrapper::GetLaplacian() const
 const Eigen::SparseMatrix<double>& MeshWrapper::GetMassMatrix() const
 {
 	return A_;
+}
+
+double MeshWrapper::GetArea() const
+{
+	return area_;
+}
+
+Eigen::VectorXd MeshWrapper::GetRandomVerticesGaussian()
+{
+	Eigen::VectorXd g = Eigen::VectorXd::Zero(v_dom_.rows());
+	
+	std::random_device dev;
+	std::mt19937 rng(dev());
+	std::uniform_int_distribution<std::mt19937::result_type> dist(0, v_dom_.rows() - 1);
+	auto vertex_index = dist(rng);
+	Eigen::Vector3d center_vertex = v_dom_.row(vertex_index);
+
+	for(int64_t i = 0; i < v_dom_.rows(); i++)
+	{
+		Eigen::Vector3d current_vertex = v_dom_.row(i);
+		Eigen::Vector3d diff = current_vertex - center_vertex;
+		double dot = diff.dot(diff);
+		double var = sqrt(area_);
+		//double var_squared = var * var;
+		double exponent = -0.5 * ((1000 * dot) / var);
+		double factor = 1 / (sqrt(var) * sqrt(2 * M_PI));
+		g.coeffRef(i) = factor * exp(exponent);
+	}
+
+	return g;
 }
