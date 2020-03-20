@@ -24,6 +24,7 @@ file(GLOB SOURCES
 	src/objective_functions/composite_objective.cpp
 	src/objective_functions/symmetric_dirichlet_objective.cpp
 	src/objective_functions/separation_objective.cpp
+	src/objective_functions/region_localization_objective.cpp
 	src/objective_functions/periodic_objective.cpp
 	src/objective_functions/parabolic_objective.cpp
 	src/objective_functions/coordinate_objective.cpp
@@ -44,6 +45,7 @@ file(GLOB SOURCES
 	src/iterative_methods/iterative_method.cpp
 	src/iterative_methods/newton_method.cpp
 	src/iterative_methods/gradient_descent.cpp
+	src/iterative_methods/projected_gradient_descent.cpp
 	src/solvers/solver.cpp
 	src/solvers/eigen_sparse_solver.cpp
 	src/solvers/pardiso_solver.cpp
@@ -70,6 +72,7 @@ file(GLOB SOURCES
 	include/objective_functions/composite_objective.h
 	include/objective_functions/symmetric_dirichlet_objective.h
 	include/objective_functions/separation_objective.h
+	include/objective_functions/region_localization_objective.h
 	include/objective_functions/periodic_objective.h
 	include/objective_functions/parabolic_objective.h
 	include/objective_functions/coordinate_objective.h
@@ -90,6 +93,7 @@ file(GLOB SOURCES
 	include/iterative_methods/iterative_method.h
 	include/iterative_methods/newton_method.h
 	include/iterative_methods/gradient_descent.h
+	include/iterative_methods/projected_gradient_descent.h
 	include/solvers/solver.h	
 	include/solvers/eigen_sparse_solver.h
 	include/solvers/pardiso_solver.h)

@@ -228,14 +228,14 @@ void MeshWrapper::LoadModel(const std::string& model_file_path)
 	//	Eigen::VectorXd evalues = eigs.eigenvalues();
 	//}
 
-	//Spectra::SparseSymMatProd<double> op2(W_);
-	//Spectra::SymEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>> eigs2(&op2, 20, 100);
-	//eigs2.init();
-	//eigs2.compute();
-	//if (eigs2.info() == Spectra::SUCCESSFUL)
-	//{
-	//	Eigen::VectorXd evalues = eigs2.eigenvalues();
-	//}
+	Spectra::SparseSymMatProd<double> op2(W_);
+	Spectra::SymEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>> eigs2(&op2, 20, 100);
+	eigs2.init();
+	eigs2.compute();
+	if (eigs2.info() == Spectra::SUCCESSFUL)
+	{
+		Eigen::VectorXd evalues = eigs2.eigenvalues();
+	}
 
 	Initialize();
 

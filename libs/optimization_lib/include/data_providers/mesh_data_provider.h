@@ -32,6 +32,8 @@ public:
 	virtual RDS::EdgeIndex GetImageEdgeIndex(RDS::EdgeDescriptor image_edge_descriptor) const = 0;
 	virtual RDS::EdgeIndices GetDomainAdjacentEdgeIndicesByVertex(RDS::VertexIndex vertex_index) const = 0;
 	virtual RDS::EdgeIndices GetImageAdjacentEdgeIndicesByVertex(RDS::VertexIndex vertex_index) const = 0;
+	virtual const Eigen::SparseMatrix<double>& GetLaplacian() const = 0;
+	virtual const Eigen::SparseMatrix<double>& GetMassMatrix() const = 0;
 	
 	// Relevant for objective functions that operate on triangle soups
 	virtual const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const = 0;

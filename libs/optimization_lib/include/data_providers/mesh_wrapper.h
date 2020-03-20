@@ -77,9 +77,6 @@ public:
 	const EI2FIsMap& GetImageEdgeFaceAdjacency() const;
 	const FI2VIsMap& GetImageFaceVertexAdjacency() const;
 	const FI2EIsMap& GetImageFaceEdgeAdjacency() const;
-
-	const Eigen::SparseMatrix<double>& GetLaplacian() const;
-	const Eigen::SparseMatrix<double>& GetMassMatrix() const;
 	
 	/**
 	 * Overrides
@@ -107,6 +104,8 @@ public:
 	RDS::EdgeIndex GetImageEdgeIndex(RDS::EdgeDescriptor image_edge_descriptor) const override;
 	RDS::EdgeIndices GetDomainAdjacentEdgeIndicesByVertex(RDS::VertexIndex vertex_index) const override;
 	RDS::EdgeIndices GetImageAdjacentEdgeIndicesByVertex(RDS::VertexIndex vertex_index) const override;
+	const Eigen::SparseMatrix<double>& GetLaplacian() const override;
+	const Eigen::SparseMatrix<double>& GetMassMatrix() const override;
 	
 	/**
 	 * Public methods

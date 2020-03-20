@@ -139,6 +139,16 @@ export class AutoquadsSideBar extends SideBar {
                     <span>Show Partial View</span>
                 </vaadin-checkbox>
             </side-bar-collapsable-section>
+            <side-bar-collapsable-section
+                caption="Solver">
+                <paper-toggle-button
+                    class="solver"
+                    ?checked="${HelpersExports.isSolverOn(this.solverState)}"
+                    ?disabled="${!HelpersExports.isShapeLoaded(this.shapeState) || !HelpersExports.isPartialLoaded(this.partialState)}"
+                    @change="${this._solverStateInputChanged}">
+                    <span>${HelpersExports.solverStateText(this.solverState)}</span>
+                </paper-toggle-button>
+            </side-bar-collapsable-section>
         `;
     }
 
