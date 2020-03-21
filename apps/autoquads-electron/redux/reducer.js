@@ -22,6 +22,7 @@ import {
     CHANGE_SINGULARITY_INTERVAL,
     CHANGE_POSITION_WEIGHT,
     CHANGE_SIGMA_THRESHOLD,
+    CHANGE_INITIAL_STEP_SIZE,
     CHANGE_GRID_HORIZONTAL_COLOR,
     CHANGE_GRID_VERTICAL_COLOR,
     CHANGE_GRID_BACKGROUND_COLOR1,
@@ -72,6 +73,7 @@ const INITIAL_STATE = {
     singularityInterval: 1,
     positionWeight: 100,
     sigmaThreshold: 0.001,
+    initialStepSize: 1000,
     gridHorizontalColor: 'rgb(0,0,0)',
     gridVerticalColor: 'rgb(0,0,0)',
     gridBackgroundColor1: 'rgb(170,170,170)',
@@ -324,6 +326,11 @@ export const reducer = (state = INITIAL_STATE, action) => {
             return {
                 ...state,
                 sigmaThreshold: action.threshold
+            };
+        case CHANGE_INITIAL_STEP_SIZE:
+            return {
+                ...state,
+                initialStepSize: action.initialStepSize
             };
         case CHANGE_GRID_HORIZONTAL_COLOR:
             return {

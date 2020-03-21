@@ -208,6 +208,10 @@ export class AutoquadsView extends connect(store)(LitElement) {
                 type: Number,
                 attribute: 'sigma-threshold'
             },
+            initialStepSize: {
+                type: Number,
+                attribute: 'initial-step-size'
+            },
             gridHorizontalColor: {
                 type: String,
                 attribute: 'grid-horizontal-color'
@@ -585,6 +589,19 @@ export class AutoquadsView extends connect(store)(LitElement) {
 
     get sigmaThreshold() {
         return this._sigmaThreshold;
+    }
+
+    set initialStepSize(value) {
+        if(HelpersExports.isModuleLoaded(this.moduleState)) {
+            const oldValue = this._initialStepSize;
+            this._initialStepSize = value;
+            this._engine.setInitialStepSize(value);
+            this.requestUpdate('initialStepSize', oldValue);
+        }
+    }
+
+    get initialStepSize() {
+        return this._initialStepSize;
     }
 
     set gridHorizontalColor(value) {

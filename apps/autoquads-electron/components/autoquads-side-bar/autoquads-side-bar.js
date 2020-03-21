@@ -153,14 +153,25 @@ export class AutoquadsSideBar extends SideBar {
                 caption="Numeric Properties">
                 <side-bar-parameter-input
                     id="threshold"
-                    increase-key="a"
-                    decrease-key="s"
+                    increase-key="s"
+                    decrease-key="a"
                     value="${this._sigmaThreshold}"
                     min="0"
                     max="1"
                     step="0.0001"
                     label="Sigma Threshold"
                     @value-changed="${this._sigmaThresholdInputChanged}">
+                </side-bar-parameter-input>
+                <side-bar-parameter-input
+                    id="initial-step-size"
+                    increase-key="x"
+                    decrease-key="z"
+                    value="${this._initialStepSize}"
+                    min="0"
+                    max="1000000"
+                    step="1"
+                    label="Initial Step Size"
+                    @value-changed="${this._initialStepSizeInputChanged}">
                 </side-bar-parameter-input>
             </side-bar-collapsable-section>
         `;
@@ -259,6 +270,10 @@ export class AutoquadsSideBar extends SideBar {
             sigmaThreshold: {
                 type: Number,
                 attribute: 'sigma-threshold'
+            },
+            initialStepSize: {
+                type: Number,
+                attribute: 'initial-step-size'
             },
             gridHorizontalColor: {
                 type: String,
@@ -584,6 +599,16 @@ export class AutoquadsSideBar extends SideBar {
 
     get sigmaThreshold() {
         return this._sigmaThreshold;
+    }
+
+    set initialStepSize(value) {
+        const oldValue = this._initialStepSize;
+        this._initialStepSize = value;
+        this.requestUpdate('initialStepSize', oldValue);
+    }
+
+    get initialStepSize() {
+        return this._initialStepSize;
     }
 
     set gridHorizontalColor(value) {
@@ -1055,6 +1080,10 @@ export class AutoquadsSideBar extends SideBar {
 
     _sigmaThresholdInputChanged(e) {
         store.dispatch(ActionsExports.setSigmaThreshold(e.srcElement.value)); 
+    }
+
+    _initialStepSizeInputChanged(e) {
+        store.dispatch(ActionsExports.setInitialStepSize(e.srcElement.value)); 
     }
 
     _solverStateInputChanged(e) {

@@ -17,6 +17,7 @@
 #include <igl/massmatrix.h>
 #include <igl/readOFF.h>
 #include <igl/readOBJ.h>
+#include <igl/exact_geodesic.h>
 
 // Spectra
 #include <random>
@@ -841,6 +842,26 @@ Eigen::VectorXd MeshWrapper::GetRandomVerticesGaussian()
 	std::mt19937 rng(dev());
 	std::uniform_int_distribution<std::mt19937::result_type> dist(0, v_dom_.rows() - 1);
 	auto vertex_index = dist(rng);
+
+	Eigen::VectorXi vs;
+	vs.resize(1);
+	vs.coeffRef(0) = vertex_index;
+
+	Eigen::VectorXi vt;
+	vt.resize(v_dom_.rows());
+	for(int64_t i = 0; i < v_dom_.rows(); i++)
+	{
+		vt.coeffRef(i) = i;
+	}
+
+	Eigen::VectorXi fs;
+	Eigen::VectorXi ft;
+
+	Eigen::VectorXd D;
+	D.resize(v_dom_.rows());
+	
+	igl::exact_geodesic(v_dom_, f_dom_, vs, fs, vt, ft, D);
+	
 	Eigen::Vector3d center_vertex = v_dom_.row(vertex_index);
 
 	for(int64_t i = 0; i < v_dom_.rows(); i++)
@@ -848,9 +869,13 @@ Eigen::VectorXd MeshWrapper::GetRandomVerticesGaussian()
 		Eigen::Vector3d current_vertex = v_dom_.row(i);
 		Eigen::Vector3d diff = current_vertex - center_vertex;
 		double dot = diff.dot(diff);
+
+		double geodesic = D.coeff(i);
+		
 		double var = sqrt(area_);
 		//double var_squared = var * var;
-		double exponent = -0.5 * ((1000 * dot) / var);
+		//double exponent = -0.5 * (dot / var);
+		double exponent = -0.5 * (geodesic / var);
 		double factor = 1 / (sqrt(var) * sqrt(2 * M_PI));
 		g.coeffRef(i) = factor * exp(exponent);
 	}

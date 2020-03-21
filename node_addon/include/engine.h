@@ -156,6 +156,7 @@ private:
 	Napi::Value GetIteration(const Napi::CallbackInfo& info);
 	Napi::Value GetLineSearchIteration(const Napi::CallbackInfo& info);
 	Napi::Value GetStepSize(const Napi::CallbackInfo& info);
+	Napi::Value SetInitialStepSize(const Napi::CallbackInfo& info);
 	
 	/**
 	 * Regular private instance methods

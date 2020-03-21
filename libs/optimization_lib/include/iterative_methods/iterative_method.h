@@ -166,6 +166,11 @@ public:
 		return value_;
 	}
 
+	void SetInitialStepSize(double initial_step_size)
+	{
+		initial_step_size_ = initial_step_size;
+	}
+
 private:
 	/**
 	 * Private data type definitions

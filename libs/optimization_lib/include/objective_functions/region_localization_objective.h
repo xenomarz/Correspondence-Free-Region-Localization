@@ -152,7 +152,9 @@ private:
 		if (geigs.info() == Spectra::SUCCESSFUL)
 		{
 			lambda_ = geigs.eigenvalues();
+			lambda_.conservativeResize(lambda_.rows() - 1);
 			phi_ = geigs.eigenvectors();
+			phi_.conservativeResize(phi_.rows(), phi_.cols() - 1);
 		}
 	}
 	

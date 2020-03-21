@@ -56,7 +56,8 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("getValue", &Engine::GetValue),
 		InstanceMethod("getIteration", &Engine::GetIteration),
 		InstanceMethod("getLineSearchIteration", &Engine::GetLineSearchIteration),
-		InstanceMethod("getStepSize", &Engine::GetStepSize)
+		InstanceMethod("getStepSize", &Engine::GetStepSize),
+		InstanceMethod("setInitialStepSize", &Engine::SetInitialStepSize)
 	});
 
 	constructor = Napi::Persistent(func);
@@ -110,6 +111,7 @@ void Engine::InitializeSolver()
 		{
 			empty_data_provider_ = std::make_shared<EmptyDataProvider>(mesh_wrapper_shape_);
 			Eigen::VectorXd mu = geigs.eigenvalues();
+			mu.conservativeResize(mu.rows() - 1);
 			region_localization_ = std::make_shared<RegionLocalizationObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_shape_, mu, empty_data_provider_);
 			//Eigen::VectorXd v0 = Eigen::VectorXd::Random(mesh_wrapper_shape_->GetDomainVerticesCount()) + Eigen::VectorXd::Ones(mesh_wrapper_shape_->GetDomainVerticesCount());
 			Eigen::VectorXd v0 = mesh_wrapper_shape_->GetRandomVerticesGaussian();
@@ -1175,6 +1177,37 @@ Napi::Value Engine::GetStepSize(const Napi::CallbackInfo& info)
 		return Napi::Number::New(env, projected_gradient_descent_->GetStepSize());
 	}
 
+	return env.Null();
+}
+
+Napi::Value Engine::SetInitialStepSize(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	if (projected_gradient_descent_ != nullptr)
+	{
+		/**
+		 * Validate input arguments
+		 */
+		if (info.Length() >= 1)
+		{
+			if (!info[0].IsNumber())
+			{
+				Napi::TypeError::New(env, "First argument is expected to be a number").ThrowAsJavaScriptException();
+				return Napi::Value();
+			}
+		}
+		else
+		{
+			Napi::TypeError::New(env, "Invalid number of arguments").ThrowAsJavaScriptException();
+			return Napi::Value();
+		}
+
+		double initial_step_size = info[0].ToNumber();
+		projected_gradient_descent_->SetInitialStepSize(initial_step_size);
+	}
+	
 	return env.Null();
 }
 
