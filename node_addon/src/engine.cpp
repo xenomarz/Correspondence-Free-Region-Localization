@@ -32,6 +32,14 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 {
 	Napi::HandleScope scope(env);
 
+	Napi::Value GetTau(const Napi::CallbackInfo & info);
+	Napi::Value GetLambda(const Napi::CallbackInfo & info);
+	Napi::Value GetMu(const Napi::CallbackInfo & info);
+	Napi::Value GetValue(const Napi::CallbackInfo & info);
+	Napi::Value GetIteration(const Napi::CallbackInfo & info);
+	Napi::Value GetLineSearchIteration(const Napi::CallbackInfo & info);
+	Napi::Value GetStepSize(const Napi::CallbackInfo & info);
+	
 	Napi::Function func = DefineClass(env, "Engine", {
 		InstanceMethod("loadShape", &Engine::LoadShape),
 		InstanceMethod("loadPartial", &Engine::LoadPartial),
@@ -41,7 +49,14 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
 		InstanceMethod("getPartialBufferedFaces", &Engine::GetPartialBufferedFaces),
 		InstanceMethod("resumeSolver", &Engine::ResumeSolver),
 		InstanceMethod("pauseSolver", &Engine::PauseSolver),
-		InstanceMethod("getV", &Engine::GetV)
+		InstanceMethod("getV", &Engine::GetV),
+		InstanceMethod("getTau", &Engine::GetTau),
+		InstanceMethod("getLambda", &Engine::GetLambda),
+		InstanceMethod("getMu", &Engine::GetMu),
+		InstanceMethod("getValue", &Engine::GetValue),
+		InstanceMethod("getIteration", &Engine::GetIteration),
+		InstanceMethod("getLineSearchIteration", &Engine::GetLineSearchIteration),
+		InstanceMethod("getStepSize", &Engine::GetStepSize)
 	});
 
 	constructor = Napi::Persistent(func);
@@ -853,39 +868,39 @@ Napi::Value Engine::GetSeamlessWeight(const Napi::CallbackInfo& info)
 	return env.Null();
 }
 
-void Engine::SetLambda(const Napi::CallbackInfo& info, const Napi::Value& value)
-{
-	Napi::Env env = info.Env();
-	Napi::HandleScope scope(env);
+//void Engine::SetLambda(const Napi::CallbackInfo& info, const Napi::Value& value)
+//{
+//	Napi::Env env = info.Env();
+//	Napi::HandleScope scope(env);
+//
+//	/**
+//	 * Validate input arguments
+//	 */
+//	if (!value.IsNumber())
+//	{
+//		Napi::TypeError::New(env, "value is expected to be a Number").ThrowAsJavaScriptException();
+//		return;
+//	}
+//
+//	/**
+//	 * Set lambda
+//	 */
+//	Napi::Number number = value.As<Napi::Number>();
+//	double lambda = number.DoubleValue();
+//
+//	separation_->SetWeight(lambda);
+//	symmetric_dirichlet_->SetWeight(1.0 - lambda);
+//}
 
-	/**
-	 * Validate input arguments
-	 */
-	if (!value.IsNumber())
-	{
-		Napi::TypeError::New(env, "value is expected to be a Number").ThrowAsJavaScriptException();
-		return;
-	}
-
-	/**
-	 * Set lambda
-	 */
-	Napi::Number number = value.As<Napi::Number>();
-	double lambda = number.DoubleValue();
-
-	separation_->SetWeight(lambda);
-	symmetric_dirichlet_->SetWeight(1.0 - lambda);
-}
-
-Napi::Value Engine::GetLambda(const Napi::CallbackInfo& info)
-{
-	Napi::Env env = info.Env();
-	Napi::HandleScope scope(env);
-
-	Napi::Number lambda = Napi::Number::New(env, separation_->GetWeight());
-
-	return lambda;
-}
+//Napi::Value Engine::GetLambda(const Napi::CallbackInfo& info)
+//{
+//	Napi::Env env = info.Env();
+//	Napi::HandleScope scope(env);
+//
+//	Napi::Number lambda = Napi::Number::New(env, separation_->GetWeight());
+//
+//	return lambda;
+//}
 
 void Engine::SetDelta(const Napi::CallbackInfo& info, const Napi::Value& value)
 {
@@ -1028,7 +1043,7 @@ Napi::Value Engine::GetV(const Napi::CallbackInfo& info)
 	Eigen::VectorXd v;
 	if (projected_gradient_descent_ && shape_ready_ && partial_ready_)
 	{
-		v = projected_gradient_descent_->GetX();
+		v = region_localization_->GetSigma();
 	}
 	else
 	{
@@ -1053,6 +1068,114 @@ Napi::Value Engine::GetV(const Napi::CallbackInfo& info)
 	}
 
 	return v_array;
+}
+
+Napi::Value Engine::GetTau(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+	
+	if (region_localization_)
+	{
+		return Napi::Number::New(env, region_localization_->GetTau());
+	}
+
+	return env.Null();
+}
+
+Napi::Value Engine::GetLambda(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	if (region_localization_)
+	{
+		Eigen::VectorXd lambda = region_localization_->GetLambda();
+
+		Napi::Float32Array lambda_array = Napi::Float32Array::New(env, lambda.rows());
+		for (int32_t i = 0; i < lambda.rows(); i++)
+		{
+			lambda_array[i] = lambda.coeff(i);
+		}
+
+		return lambda_array;
+	}
+
+	return env.Null();
+}
+
+Napi::Value Engine::GetMu(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+	
+	if (region_localization_)
+	{
+		Eigen::VectorXd mu = region_localization_->GetMu();
+
+		Napi::Float32Array mu_array = Napi::Float32Array::New(env, mu.rows());
+		for (int32_t i = 0; i < mu.rows(); i++)
+		{
+			mu_array[i] = mu.coeff(i);
+		}
+
+		return mu_array;
+	}
+
+	return env.Null();
+}
+
+Napi::Value Engine::GetValue(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	if (projected_gradient_descent_)
+	{
+		return Napi::Number::New(env, projected_gradient_descent_->GetValue());
+	}
+
+	return env.Null();
+}
+
+Napi::Value Engine::GetIteration(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+	
+	if (projected_gradient_descent_)
+	{
+		return Napi::Number::New(env, projected_gradient_descent_->GetIteration());
+	}
+
+	return env.Null();
+}
+
+
+Napi::Value Engine::GetLineSearchIteration(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	if (projected_gradient_descent_)
+	{
+		return Napi::Number::New(env, projected_gradient_descent_->GetLineSearchIteration());
+	}
+
+	return env.Null();
+}
+
+Napi::Value Engine::GetStepSize(const Napi::CallbackInfo& info)
+{
+	Napi::Env env = info.Env();
+	Napi::HandleScope scope(env);
+
+	if (projected_gradient_descent_)
+	{
+		return Napi::Number::New(env, projected_gradient_descent_->GetStepSize());
+	}
+
+	return env.Null();
 }
 
 Engine::ModelFileType Engine::GetModelFileType(std::string modelFilePath)

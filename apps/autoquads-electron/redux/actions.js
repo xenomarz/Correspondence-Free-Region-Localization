@@ -24,6 +24,7 @@ export const CHANGE_SELECTED_EDGE_SEAMLESS_LENGTH_WEIGHT = 'CHANGE_SELECTED_EDGE
 export const CHANGE_SINGULARITY_WEIGHT = 'CHANGE_SINGULARITY_WEIGHT';
 export const CHANGE_SINGULARITY_INTERVAL = 'CHANGE_SINGULARITY_INTERVAL';
 export const CHANGE_POSITION_WEIGHT = 'CHANGE_POSITION_WEIGHT';
+export const CHANGE_SIGMA_THRESHOLD = 'CHANGE_SIGMA_THRESHOLD';
 export const CHANGE_GRID_HORIZONTAL_COLOR = 'CHANGE_GRID_HORIZONTAL_COLOR';
 export const CHANGE_GRID_VERTICAL_COLOR = 'CHANGE_GRID_VERTICAL_COLOR';
 export const CHANGE_GRID_BACKGROUND_COLOR1 = 'CHANGE_GRID_BACKGROUND_COLOR1';
@@ -242,6 +243,13 @@ export const setPositionWeight = weight => {
     return {
         type: CHANGE_POSITION_WEIGHT,
         weight: weight
+    };
+};
+
+export const setSigmaThreshold = threshold => {
+    return {
+        type: CHANGE_SIGMA_THRESHOLD,
+        threshold: threshold
     };
 };
 

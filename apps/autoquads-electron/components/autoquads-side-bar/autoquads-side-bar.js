@@ -149,6 +149,20 @@ export class AutoquadsSideBar extends SideBar {
                     <span>${HelpersExports.solverStateText(this.solverState)}</span>
                 </paper-toggle-button>
             </side-bar-collapsable-section>
+            <side-bar-collapsable-section
+                caption="Numeric Properties">
+                <side-bar-parameter-input
+                    id="threshold"
+                    increase-key="a"
+                    decrease-key="s"
+                    value="${this._sigmaThreshold}"
+                    min="0"
+                    max="1"
+                    step="0.0001"
+                    label="Sigma Threshold"
+                    @value-changed="${this._sigmaThresholdInputChanged}">
+                </side-bar-parameter-input>
+            </side-bar-collapsable-section>
         `;
     }
 
@@ -241,6 +255,10 @@ export class AutoquadsSideBar extends SideBar {
             positionWeight: {
                 type: Number,
                 attribute: 'position-weight'
+            },
+            sigmaThreshold: {
+                type: Number,
+                attribute: 'sigma-threshold'
             },
             gridHorizontalColor: {
                 type: String,
@@ -556,6 +574,16 @@ export class AutoquadsSideBar extends SideBar {
 
     get positionWeight() {
         return this._positionWeight;
+    }
+
+    set sigmaThreshold(value) {
+        const oldValue = this._sigmaThreshold;
+        this._sigmaThreshold = value;
+        this.requestUpdate('sigmaThreshold', oldValue);
+    }
+
+    get sigmaThreshold() {
+        return this._sigmaThreshold;
     }
 
     set gridHorizontalColor(value) {
@@ -1023,6 +1051,10 @@ export class AutoquadsSideBar extends SideBar {
 
     _positionWeightInputChanged(e) {
         store.dispatch(ActionsExports.setPositionWeight(e.srcElement.value)); 
+    }
+
+    _sigmaThresholdInputChanged(e) {
+        store.dispatch(ActionsExports.setSigmaThreshold(e.srcElement.value)); 
     }
 
     _solverStateInputChanged(e) {

@@ -57,7 +57,7 @@ export class MeshView extends LitElement {
                 display: flex;
                 flex-direction: column;
                 font-family: Consolas;
-                font-size: 16px;
+                font-size: 14px;
                 font-weight: bold;
             }
 
@@ -99,7 +99,7 @@ export class MeshView extends LitElement {
                         <span>${this.caption}</span>
                     </div>
                     <!-- TODO: extract the debug-data markup into an external custom element -->
-                    <!-- ${this.showDebugData ? html`
+                    ${this.showDebugData ? html`
                         <div class="debug-data">
                             ${this.debugData.map(item => html`
                                 <div class="debug-data-item">
@@ -119,7 +119,7 @@ export class MeshView extends LitElement {
                                 </div>
                             `)}
                         </div>
-                    `: ''} -->
+                    `: ''}
                 </div>
             </div>
         `;
@@ -1384,7 +1384,7 @@ export class MeshView extends LitElement {
         /**
          * Update debug data
          */
-        // this._updateDebugData();
+        this._updateDebugData();
 
         /**
          * Handle window reesize

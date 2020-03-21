@@ -28,8 +28,13 @@ public:
 		thread_state_(ThreadState::Terminated),
 		max_backtracking_iterations_(10),
 		flip_avoiding_line_search_enabled_(false),
-		approximation_invalidated_(false)
+		approximation_invalidated_(false),
+		iteration_(0),
+		line_search_iteration_(0),
+		initial_step_size_(1000),
+		value_(0)
 	{
+		step_size_ = initial_step_size_;
 		objective_function_->UpdateLayers(x0);
 	}
 
@@ -66,6 +71,7 @@ public:
 					objective_function_->UpdateLayers(x_, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::Gradient | DenseObjectiveFunction<StorageOrder_>::UpdateOptions::Hessian);
 					ComputeDescentDirection(p_);
 					LineSearch(p_);
+					iteration_++;
 				}
 				});
 			break;
@@ -140,6 +146,26 @@ public:
 		flip_avoiding_line_search_enabled_ = false;
 	}
 
+	int64_t GetIteration() const
+	{
+		return iteration_;
+	}
+
+	int64_t GetLineSearchIteration() const
+	{
+		return line_search_iteration_;
+	}
+
+	double GetStepSize() const
+	{
+		return step_size_;
+	}
+
+	double GetValue() const
+	{
+		return value_;
+	}
+
 private:
 	/**
 	 * Private data type definitions
@@ -162,33 +188,33 @@ private:
 		 * Calculate maximal flip avoiding step-size
 		 * https://github.com/libigl/libigl/blob/master/include/igl/flip_avoiding_line_search.cpp
 		 */
-		double step_size = 1;
+		step_size_ = initial_step_size_;
 
 		/**
 		 * Perform backtracking (armijo rule)
 		 * https://en.wikipedia.org/wiki/Backtracking_line_search
 		 */
-		double current_value = objective_function_->GetValue();
-		double updated_value;
-		int current_iteration = 0;
+		value_ = objective_function_->GetValue();
+		const double current_value = value_;
+		line_search_iteration_ = 0;
 		Eigen::MatrixXd current_x;
-		while (current_iteration < max_backtracking_iterations_)
+		while (line_search_iteration_ < max_backtracking_iterations_)
 		{
 			Eigen::VectorXd normalized_p = p.normalized();
-			current_x = x_ + step_size * normalized_p;
+			current_x = x_ + step_size_ * normalized_p;
 			objective_function_->UpdateLayers(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::Value);
-			updated_value = objective_function_->GetValue();
 
-			if (updated_value >= current_value)
+			value_ = objective_function_->GetValue();
+			if (value_ >= current_value)
 			{
-				step_size /= 10;
+				step_size_ /= 10;
 			}
 			else
 			{
 				break;
 			}
 
-			current_iteration++;
+			line_search_iteration_++;
 		}
 
 		//objective_function_->UpdateLayers(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::ValuePerVertex | DenseObjectiveFunction<StorageOrder_>::UpdateOptions::ValuePerEdge);
@@ -225,6 +251,13 @@ private:
 
 	// Faces
 	Eigen::MatrixX3i F_;
+
+	// Iteration status
+	int64_t iteration_;
+	int64_t line_search_iteration_;
+	double step_size_;
+	double initial_step_size_;
+	double value_;
 };
 
 #endif

@@ -100,7 +100,7 @@ private:
 	 */
 	Napi::Value GetPositionWeight(const Napi::CallbackInfo& info);
 	Napi::Value GetSeamlessWeight(const Napi::CallbackInfo& info);
-	Napi::Value GetLambda(const Napi::CallbackInfo& info);
+	//Napi::Value GetLambda(const Napi::CallbackInfo& info);
 	Napi::Value GetDelta(const Napi::CallbackInfo& info);
 	Napi::Value GetObjectiveFunctionsData(const Napi::CallbackInfo& info);
 
@@ -149,6 +149,14 @@ private:
 	Napi::Value GetPartialBufferedFaces(const Napi::CallbackInfo& info);
 	Napi::Value GetV(const Napi::CallbackInfo& info);
 
+	Napi::Value GetTau(const Napi::CallbackInfo& info);
+	Napi::Value GetLambda(const Napi::CallbackInfo& info);
+	Napi::Value GetMu(const Napi::CallbackInfo& info);
+	Napi::Value GetValue(const Napi::CallbackInfo& info);
+	Napi::Value GetIteration(const Napi::CallbackInfo& info);
+	Napi::Value GetLineSearchIteration(const Napi::CallbackInfo& info);
+	Napi::Value GetStepSize(const Napi::CallbackInfo& info);
+	
 	/**
 	 * Regular private instance methods
 	 */

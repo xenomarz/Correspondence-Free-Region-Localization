@@ -79,6 +79,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         dragged-face-color="${this.draggedFaceColor}"
                         selected-face-color="${this.fixedFaceColor}"
                         selected-edge-color="${this.editedEdgeColor}"
+                        ?show-debug-data="${HelpersExports.isVisible(this.optimizationDataMonitorVisibility)}"
                         show-grid-texture>
                     </mesh-view>
                     <mesh-view 
@@ -106,7 +107,6 @@ export class AutoquadsView extends connect(store)(LitElement) {
                         dragged-face-color="${this.draggedFaceColor}"
                         selected-face-color="${this.fixedFaceColor}"
                         selected-edge-color="${this.editedEdgeColor}"
-                        ?show-debug-data="${HelpersExports.isVisible(this.optimizationDataMonitorVisibility)}"
                         show-grid-texture="${this.showGridTextureInPartialView}">
                     </mesh-view>
                 </vaadin-split-layout>
@@ -203,6 +203,10 @@ export class AutoquadsView extends connect(store)(LitElement) {
             positionWeight: {
                 type: Number,
                 attribute: 'position-weight'
+            },
+            sigmaThreshold: {
+                type: Number,
+                attribute: 'sigma-threshold'
             },
             gridHorizontalColor: {
                 type: String,
@@ -572,6 +576,17 @@ export class AutoquadsView extends connect(store)(LitElement) {
         // return this._positionWeight;
     }
 
+    set sigmaThreshold(value) {
+        const oldValue = this._sigmaThreshold;
+        this._sigmaThreshold = value;
+        this._shapeMeshProvider.sigmaThreshold = value;
+        this.requestUpdate('sigmaThreshold', oldValue);
+    }
+
+    get sigmaThreshold() {
+        return this._sigmaThreshold;
+    }
+
     set gridHorizontalColor(value) {
         const oldValue = this._gridHorizontalColor;
         this._gridHorizontalColor = value;
@@ -832,7 +847,7 @@ export class AutoquadsView extends connect(store)(LitElement) {
             store.dispatch(ActionsExports.setShapeState(EnumsExports.LoadState.LOADING));
             try {
                 this._engine.loadShape(shapeFilename);
-                this._shapeMeshProvider = new AutoquadsShapeMeshProvider(this._engine, this.shapeColor); 
+                this._shapeMeshProvider = new AutoquadsShapeMeshProvider(this._engine, this.shapeColor, this.sigmaThreshold); 
                 console.log("Shape loaded: " + shapeFilename);
                 store.dispatch(ActionsExports.setShapeState(EnumsExports.LoadState.LOADED));
             }

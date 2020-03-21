@@ -36,8 +36,10 @@ public:
 	 */
 	RegionLocalizationObjective(const std::shared_ptr<MeshDataProvider>& mesh_data_provider, const Eigen::VectorXd& mu, const std::shared_ptr<EmptyDataProvider>& empty_data_provider) :
 		DenseObjectiveFunction(mesh_data_provider, empty_data_provider, "Region Localization", 0, false),
-		mu_(mu)
+		mu_(mu),
+		tau_(10 * mu.coeff(0))
 	{
+		half_tau_ = tau_ / 2;
 		this->Initialize();
 	}
 
@@ -53,7 +55,25 @@ public:
 	/**
 	 * Getters
 	 */
+	double GetTau() const
+	{
+		return tau_;
+	}
 
+	const Eigen::VectorXd& GetSigma() const
+	{
+		return sigma_;
+	}
+
+	const Eigen::VectorXd& GetMu() const
+	{
+		return mu_;
+	}
+
+	const Eigen::VectorXd& GetLambda() const
+	{
+		return lambda_;
+	}
 
 private:
 
@@ -93,23 +113,39 @@ private:
 				phi_squared.coeffRef(row, col) = phi_.coeffRef(row, col) * phi_.coeffRef(row, col);
 			}
 		}
+
+		Eigen::VectorXd v_tanh_squared = Eigen::VectorXd::Zero(v_.rows());
 		
-		//Eigen::MatrixXd phi_squared = phi_.cwiseProduct(phi_);
+		#pragma omp parallel for
+		for (int64_t row = 0; row < v_.rows(); row++)
+		{
+			v_tanh_squared.coeffRef(row) = v_tanh_.coeffRef(row) * v_tanh_.coeffRef(row);
+		}
+		
 		Eigen::VectorXd mu_squared = mu_.cwiseProduct(mu_);
 		Eigen::VectorXd diff = (lambda_ - mu_).cwiseQuotient(mu_squared);
 		g = 2 * phi_squared * diff;
+
+		#pragma omp parallel for
+		for (int64_t row = 0; row < v_.rows(); row++)
+		{
+			g.coeffRef(row) = half_tau_ * g.coeffRef(row) * (1 - v_tanh_squared.coeffRef(row));
+		}
 	}
 	
 	void PreUpdate(const Eigen::VectorXd& v) override
 	{
-		Eigen::SparseMatrix<double> diag_v = v.asDiagonal().toDenseMatrix().sparseView();
+		v_ = v;
+		v_tanh_ = v_.array().tanh();
+		sigma_ = half_tau_ * (v_tanh_ + Eigen::VectorXd::Ones(v_.rows()));
+		Eigen::SparseMatrix<double> diag_v = sigma_.asDiagonal().toDenseMatrix().sparseView();
 		Eigen::SparseMatrix<double> W = this->GetMeshDataProvider()->GetLaplacian();
 		Eigen::SparseMatrix<double> A = this->GetMeshDataProvider()->GetMassMatrix();
 		Eigen::SparseMatrix<double> lhs = W + A * diag_v;
 		Eigen::SparseMatrix<double> rhs = A;
 		Spectra::SparseSymMatProd<double> lhs_op(lhs);
 		Spectra::SparseRegularInverse<double> rhs_op(rhs);
-		Spectra::SymGEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>, Spectra::SparseRegularInverse<double>, Spectra::GEIGS_REGULAR_INVERSE > geigs(&lhs_op, &rhs_op, RDS_NEV, RDS_NCV);
+		Spectra::SymGEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>, Spectra::SparseRegularInverse<double>, Spectra::GEIGS_REGULAR_INVERSE> geigs(&lhs_op, &rhs_op, RDS_NEV, RDS_NCV);
 		
 		geigs.init();
 		int nconv = geigs.compute();
@@ -136,16 +172,16 @@ private:
 	}
 	
 	/**
-	 * Private methods
+	 * Fields
 	 */
+	Eigen::VectorXd v_tanh_;
+	Eigen::VectorXd v_;
 	Eigen::VectorXd mu_;
 	Eigen::VectorXd lambda_;
 	Eigen::MatrixXd phi_;
-	
-	/**
-	 * Fields
-	 */
-	std::shared_ptr<MeshDataProvider> mesh_data_provider_partial_;
+	Eigen::VectorXd sigma_;
+	double tau_;
+	double half_tau_;
 };
 
 #endif
