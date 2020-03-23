@@ -73,7 +73,7 @@ const INITIAL_STATE = {
     singularityInterval: 1,
     positionWeight: 100,
     sigmaThreshold: 0.001,
-    initialStepSize: 1000,
+    initialStepSize: 0.00001,
     gridHorizontalColor: 'rgb(0,0,0)',
     gridVerticalColor: 'rgb(0,0,0)',
     gridBackgroundColor1: 'rgb(170,170,170)',

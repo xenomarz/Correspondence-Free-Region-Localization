@@ -20,6 +20,7 @@
 #include "libs/optimization_lib/include/objective_functions/region_localization_objective.h"
 
 // Spectra
+#include <random>
 #include <Spectra/SymEigsShiftSolver.h>
 #include <Spectra/MatOp/SparseSymShiftSolve.h>
 #include <Spectra/MatOp/DenseSymMatProd.h>
@@ -98,6 +99,11 @@ void Engine::InitializeSolver()
 		//eigs.init();
 		//eigs.compute();
 
+		std::random_device dev;
+		std::mt19937 rng(dev());
+		std::uniform_int_distribution<std::mt19937::result_type> dist(0, mesh_wrapper_shape_->GetDomainVerticesCount() - 1);
+		int64_t vertex_index = dist(rng);
+		
 		Eigen::SparseMatrix<double> W = mesh_wrapper_partial_->GetLaplacian();
 		Eigen::SparseMatrix<double> A = mesh_wrapper_partial_->GetMassMatrix();
 		Eigen::SparseMatrix<double> lhs = W;
@@ -113,8 +119,11 @@ void Engine::InitializeSolver()
 			Eigen::VectorXd mu = geigs.eigenvalues();
 			mu.conservativeResize(mu.rows() - 1);
 			region_localization_ = std::make_shared<RegionLocalizationObjective<Eigen::StorageOptions::RowMajor>>(mesh_wrapper_shape_, mu, empty_data_provider_);
-			//Eigen::VectorXd v0 = Eigen::VectorXd::Random(mesh_wrapper_shape_->GetDomainVerticesCount()) + Eigen::VectorXd::Ones(mesh_wrapper_shape_->GetDomainVerticesCount());
-			Eigen::VectorXd v0 = mesh_wrapper_shape_->GetRandomVerticesGaussian();
+			//Eigen::VectorXd v0 = (Eigen::VectorXd::Random(mesh_wrapper_shape_->GetDomainVerticesCount()) + Eigen::VectorXd::Ones(mesh_wrapper_shape_->GetDomainVerticesCount())) / 2;
+
+
+			
+			Eigen::VectorXd v0 = mesh_wrapper_shape_->GetRandomVerticesGaussian(vertex_index);
 			projected_gradient_descent_ = std::make_unique<ProjectedGradientDescent<Eigen::StorageOptions::RowMajor>>(region_localization_, v0);
 			projected_gradient_descent_->DisableFlipAvoidingLineSearch();
 		}
@@ -1045,7 +1054,7 @@ Napi::Value Engine::GetV(const Napi::CallbackInfo& info)
 	Eigen::VectorXd v;
 	if (projected_gradient_descent_ && shape_ready_ && partial_ready_)
 	{
-		v = region_localization_->GetSigma();
+		v = projected_gradient_descent_->GetX();
 	}
 	else
 	{
@@ -1057,7 +1066,6 @@ Napi::Value Engine::GetV(const Napi::CallbackInfo& info)
 	int64_t face_count = mesh_wrapper_shape_->GetDomainFaces().rows();
 	Napi::Float32Array v_array = Napi::Float32Array::New(env, entries_per_face * face_count);
 
-	#pragma omp parallel for
 	for (int32_t face_index = 0; face_index < face_count; face_index++)
 	{
 		const int base_index = entries_per_face * face_index;

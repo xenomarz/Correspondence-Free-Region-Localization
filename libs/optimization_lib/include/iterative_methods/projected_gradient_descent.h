@@ -30,7 +30,9 @@ public:
 private:
 	void ComputeDescentDirection(Eigen::VectorXd& p) override
 	{
-		//p = -this->GetObjectiveFunction()->GetGradient().cwiseMax(Eigen::VectorXd::Zero(p.rows()));
+		//Eigen::VectorXd g = this->GetObjectiveFunction()->GetGradient();
+		//Eigen::VectorXd g_max = g.cwiseMax(Eigen::VectorXd::Zero(p.rows()));
+		//p = -g_max;
 		p = -this->GetObjectiveFunction()->GetGradient();
 	}
 };

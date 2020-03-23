@@ -35,7 +35,7 @@ public:
 	virtual const Eigen::SparseMatrix<double>& GetLaplacian() const = 0;
 	virtual const Eigen::SparseMatrix<double>& GetMassMatrix() const = 0;
 	virtual double GetArea() const = 0;
-	virtual Eigen::VectorXd GetRandomVerticesGaussian() = 0;
+	virtual Eigen::VectorXd GetRandomVerticesGaussian(int64_t vertex_index) = 0;
 	
 	// Relevant for objective functions that operate on triangle soups
 	virtual const Eigen::SparseMatrix<double>& GetCorrespondingVertexPairsCoefficients() const = 0;

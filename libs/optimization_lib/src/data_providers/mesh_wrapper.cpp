@@ -834,14 +834,11 @@ double MeshWrapper::GetArea() const
 	return area_;
 }
 
-Eigen::VectorXd MeshWrapper::GetRandomVerticesGaussian()
+Eigen::VectorXd MeshWrapper::GetRandomVerticesGaussian(int64_t vertex_index)
 {
 	Eigen::VectorXd g = Eigen::VectorXd::Zero(v_dom_.rows());
 	
-	std::random_device dev;
-	std::mt19937 rng(dev());
-	std::uniform_int_distribution<std::mt19937::result_type> dist(0, v_dom_.rows() - 1);
-	auto vertex_index = dist(rng);
+
 
 	Eigen::VectorXi vs;
 	vs.resize(1);

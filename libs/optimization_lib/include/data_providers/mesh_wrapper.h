@@ -107,7 +107,7 @@ public:
 	const Eigen::SparseMatrix<double>& GetLaplacian() const override;
 	const Eigen::SparseMatrix<double>& GetMassMatrix() const override;
 	double GetArea() const override;
-	Eigen::VectorXd GetRandomVerticesGaussian() override;
+	Eigen::VectorXd GetRandomVerticesGaussian(int64_t vertex_index) override;
 	
 	/**
 	 * Public methods

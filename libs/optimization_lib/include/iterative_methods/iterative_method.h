@@ -31,7 +31,7 @@ public:
 		approximation_invalidated_(false),
 		iteration_(0),
 		line_search_iteration_(0),
-		initial_step_size_(1000),
+		initial_step_size_(0.000001),
 		value_(0)
 	{
 		step_size_ = initial_step_size_;
@@ -203,24 +203,24 @@ private:
 		const double current_value = value_;
 		line_search_iteration_ = 0;
 		Eigen::MatrixXd current_x;
-		while (line_search_iteration_ < max_backtracking_iterations_)
-		{
+		//while (line_search_iteration_ < max_backtracking_iterations_)
+		//{
 			Eigen::VectorXd normalized_p = p.normalized();
-			current_x = x_ + step_size_ * normalized_p;
+			current_x = x_ + initial_step_size_ * normalized_p;
 			objective_function_->UpdateLayers(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::Value);
 
 			value_ = objective_function_->GetValue();
-			if (value_ >= current_value)
-			{
-				step_size_ /= 10;
-			}
-			else
-			{
-				break;
-			}
+			//if (value_ >= current_value)
+			//{
+			//	step_size_ /= 10;
+			//}
+			//else
+			//{
+			//	break;
+			//}
 
 			line_search_iteration_++;
-		}
+		//}
 
 		//objective_function_->UpdateLayers(current_x, DenseObjectiveFunction<StorageOrder_>::UpdateOptions::ValuePerVertex | DenseObjectiveFunction<StorageOrder_>::UpdateOptions::ValuePerEdge);
 

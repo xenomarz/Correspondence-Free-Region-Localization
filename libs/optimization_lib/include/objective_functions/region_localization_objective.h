@@ -105,32 +105,34 @@ private:
 	{
 		Eigen::MatrixXd phi_squared = Eigen::MatrixXd::Zero(phi_.rows(), phi_.cols());
 
-		#pragma omp parallel for
-		for(int64_t row = 0; row < phi_.rows(); row++)
-		{
-			for (int64_t col = 0; col < phi_.cols(); col++)
-			{
-				phi_squared.coeffRef(row, col) = phi_.coeffRef(row, col) * phi_.coeffRef(row, col);
-			}
-		}
+		//#pragma omp parallel for
+		//for(int64_t row = 0; row < phi_.rows(); row++)
+		//{
+		//	for (int64_t col = 0; col < phi_.cols(); col++)
+		//	{
+		//		phi_squared.coeffRef(row, col) = phi_.coeffRef(row, col) * phi_.coeffRef(row, col);
+		//	}
+		//}
 
-		Eigen::VectorXd v_tanh_squared = Eigen::VectorXd::Zero(v_.rows());
+		phi_squared = phi_.cwiseProduct(phi_);
 		
-		#pragma omp parallel for
-		for (int64_t row = 0; row < v_.rows(); row++)
-		{
-			v_tanh_squared.coeffRef(row) = v_tanh_.coeffRef(row) * v_tanh_.coeffRef(row);
-		}
+		//Eigen::VectorXd v_tanh_squared = Eigen::VectorXd::Zero(v_.rows());
+		//
+		//#pragma omp parallel for
+		//for (int64_t row = 0; row < v_.rows(); row++)
+		//{
+		//	v_tanh_squared.coeffRef(row) = v_tanh_.coeffRef(row) * v_tanh_.coeffRef(row);
+		//}
 		
 		Eigen::VectorXd mu_squared = mu_.cwiseProduct(mu_);
 		Eigen::VectorXd diff = (lambda_ - mu_).cwiseQuotient(mu_squared);
 		g = 2 * phi_squared * diff;
 
-		#pragma omp parallel for
-		for (int64_t row = 0; row < v_.rows(); row++)
-		{
-			g.coeffRef(row) = half_tau_ * g.coeffRef(row) * (1 - v_tanh_squared.coeffRef(row));
-		}
+		//#pragma omp parallel for
+		//for (int64_t row = 0; row < v_.rows(); row++)
+		//{
+		//	g.coeffRef(row) = half_tau_ * g.coeffRef(row) * (1 - v_tanh_squared.coeffRef(row));
+		//}
 	}
 	
 	void PreUpdate(const Eigen::VectorXd& v) override
@@ -138,14 +140,14 @@ private:
 		v_ = v;
 		v_tanh_ = v_.array().tanh();
 		sigma_ = half_tau_ * (v_tanh_ + Eigen::VectorXd::Ones(v_.rows()));
-		Eigen::SparseMatrix<double> diag_v = sigma_.asDiagonal().toDenseMatrix().sparseView();
+		Eigen::SparseMatrix<double> diag_v = v_.asDiagonal().toDenseMatrix().sparseView();
 		Eigen::SparseMatrix<double> W = this->GetMeshDataProvider()->GetLaplacian();
 		Eigen::SparseMatrix<double> A = this->GetMeshDataProvider()->GetMassMatrix();
 		Eigen::SparseMatrix<double> lhs = W + A * diag_v;
 		Eigen::SparseMatrix<double> rhs = A;
 		Spectra::SparseSymMatProd<double> lhs_op(lhs);
-		Spectra::SparseRegularInverse<double> rhs_op(rhs);
-		Spectra::SymGEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>, Spectra::SparseRegularInverse<double>, Spectra::GEIGS_REGULAR_INVERSE> geigs(&lhs_op, &rhs_op, RDS_NEV, RDS_NCV);
+		Spectra::SparseCholesky<double> rhs_op(rhs);
+		Spectra::SymGEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseSymMatProd<double>, Spectra::SparseCholesky<double>, Spectra::GEIGS_CHOLESKY> geigs(&lhs_op, &rhs_op, RDS_NEV, RDS_NCV);
 		
 		geigs.init();
 		int nconv = geigs.compute();
@@ -156,6 +158,15 @@ private:
 			phi_ = geigs.eigenvectors();
 			phi_.conservativeResize(phi_.rows(), phi_.cols() - 1);
 		}
+		else
+		{
+			bla = geigs.info();
+		}
+
+		//lambda_ = geigs.eigenvalues();
+		//lambda_.conservativeResize(lambda_.rows() - 1);
+		//phi_ = geigs.eigenvectors();
+		//phi_.conservativeResize(phi_.rows(), phi_.cols() - 1);
 	}
 	
 	void PreInitialize() override
@@ -184,6 +195,7 @@ private:
 	Eigen::VectorXd sigma_;
 	double tau_;
 	double half_tau_;
+	int bla;
 };
 
 #endif

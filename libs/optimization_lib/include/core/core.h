@@ -16,7 +16,7 @@
 #include "./utils.h"
 
 #define RDS_NEV 21
-#define RDS_NCV 100
+#define RDS_NCV 80
 
 namespace RDS
 {
