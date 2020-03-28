@@ -18,4 +18,7 @@
       3. `npm install`
 
 ## Build instructions:
- 1. Open command prompt, and navigate to the project's root folder. Run the following command `cmake-js configure`.
+ 1. Open command prompt, and navigate to a folder named `boost` inside the repository's root folder. Run the following commands:
+    - ./bootstrap.sh
+    - ./b2 headers
+ 2. Open command prompt, and navigate to the repository's root folder. Run the following command `cmake-js configure`.
