@@ -18,10 +18,4 @@
       3. `npm install`
 
 ## Build instructions:
- 1. Clone repository recursively - `git clone --recursive https://github.com/HaifaGraphics/RDS.git`
- 2. Generate Visual Studio project:
-    - For native applications:
-       1. Generate Visual Studio project using CMake GUI.
-    - For electron applications:
-      1. Open command prompt, and navigate to the project's root folder.:
-         1. `cmake-js configure`
+ 1. Open command prompt, and navigate to the project's root folder. Run the following command `cmake-js configure`.
