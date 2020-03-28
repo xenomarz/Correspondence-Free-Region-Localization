@@ -766,6 +766,13 @@ export class AutoquadsView extends connect(store)(LitElement) {
                     this._engine.pauseSolver();
                     break;                
             }
+
+            console.log("Lambda:");
+            console.log(this._engine.getLambda());
+
+            console.log("Mu:");
+            console.log(this._engine.getMu());
+
             this.requestUpdate('solverState', oldValue);
         }
     }

@@ -615,7 +615,7 @@ export class MeshView extends LitElement {
      * Initialization
      */
     _initializeLights() {
-        let ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+        let ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
         this._pointLight = new THREE.PointLight(0xffffff, 0.8, 0);
 
         if (this.useLights) {
@@ -628,7 +628,6 @@ export class MeshView extends LitElement {
         let geometry = new THREE.BufferGeometry();
 
         geometry.addAttribute('position', new THREE.BufferAttribute(this.meshProvider.getBufferedVertices(BufferedPrimitiveType.TRIANGLE), 3));
-        // geometry.addAttribute('uv', new THREE.BufferAttribute(this.meshProvider.getBufferedUvs(), 2));
         geometry.addAttribute('color', new THREE.BufferAttribute(this.meshProvider.getBufferedVertexColors(), 3, true));
 
         let material;
@@ -642,12 +641,7 @@ export class MeshView extends LitElement {
             });
         }
 
-        material.color = new THREE.Color(255,255,255);
-
-        // if (this.showGridTexture) {
-        //     material.map = this._gridTexture;
-        // }
-
+        material.color = new THREE.Color(1,1,1);
         geometry.computeVertexNormals();
 
         this._mesh = new THREE.Mesh(geometry, material);
@@ -835,7 +829,7 @@ export class MeshView extends LitElement {
         });
 
         this._interactionService = interpret(this._interactionMachine).onTransition(state => {
-            console.log(state.value);
+
         });
 
         this._interactionService.start();
