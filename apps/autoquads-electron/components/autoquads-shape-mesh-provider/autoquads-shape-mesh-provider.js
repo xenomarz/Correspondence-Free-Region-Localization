@@ -76,9 +76,9 @@ export class AutoquadsShapeMeshProvider extends AutoquadsMeshProvider {
                 data: {
                     "Value": this._engine.getValue(),
                     "Iteration": this._engine.getIteration(),
-                    "Line search iteration": this._engine.getLineSearchIteration(),
+                    // "Line search iteration": this._engine.getLineSearchIteration(),
                     "Step size": this._engine.getStepSize(),
-                    "Tau": this._engine.getTau()
+                    // "Tau": this._engine.getTau()
                 }
             },
             {

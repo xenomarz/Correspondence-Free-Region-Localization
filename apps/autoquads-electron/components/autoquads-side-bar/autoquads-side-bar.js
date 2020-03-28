@@ -170,7 +170,7 @@ export class AutoquadsSideBar extends SideBar {
                     min="0"
                     max="1000000"
                     step="1"
-                    label="Initial Step Size"
+                    label="Step Size"
                     @value-changed="${this._initialStepSizeInputChanged}">
                 </side-bar-parameter-input>
             </side-bar-collapsable-section>
